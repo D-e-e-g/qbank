@@ -157,7 +157,9 @@ final class PracticeUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Weeks 1-3"].appears(timeout: 5))
         let set = app.buttons["course.set.\(Self.set)"]
         XCTAssertTrue(set.appears(timeout: 5))
-        XCTAssertTrue(set.label.contains("Done today · 2 of 8 fully right"), set.label)
+        // The folder reads the course again once practice has closed, so the line says how the set
+        // stood before until that read lands.
+        waitForLabel(set, containing: "Done today · 2 of 8 fully right")
     }
 
     @MainActor
