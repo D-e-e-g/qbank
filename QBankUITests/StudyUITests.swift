@@ -320,8 +320,18 @@ final class StudyUITests: XCTestCase {
         openFolder(app, "Weeks 1-3")
         XCTAssertEqual(app.staticTexts["folder.note"].label, "On no page · 1 set · 8 questions")
 
-        // Rename: only the name changes.
-        app.buttons["folder.rename"].tap()
+        // Rename, in More: only the name changes.
+        let more = app.buttons["folder.more"]
+        XCTAssertTrue(more.appears(timeout: 5))
+        XCTAssertEqual(more.label, "More for Weeks 1-3")
+        XCTAssertFalse(app.buttons["Rename"].isHittable, "Rename is not a button on the screen")
+        attachLooks(app, "C folder")
+        more.tap()
+        let rename = app.buttons["folder.more.rename"]
+        XCTAssertTrue(rename.appears(timeout: 5))
+        XCTAssertEqual(rename.label, "Rename")
+        attachLooks(app, "C folder, More")
+        chooseFromMenu(rename)
         let name = app.textFields["renameFolder.name"]
         XCTAssertTrue(name.appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["Only the name changes. Its sets, their progress, its page and your past exams stay with it."].exists)
@@ -373,10 +383,11 @@ final class StudyUITests: XCTestCase {
         // A name its list already has is refused in the server's words.
         openFolder(app, "Week 2", on: "Exam 1")
         XCTAssertTrue(app.buttons["course.set.Mixed Clinical Judgment"].exists, "the moved set is here")
-        app.buttons["folder.rename"].tap()
-        let rename = app.textFields["renameFolder.name"]
-        XCTAssertTrue(rename.appears(timeout: 5))
-        rename.clearAndType("week 1")
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(app.buttons["folder.more.rename"])
+        let renamed = app.textFields["renameFolder.name"]
+        XCTAssertTrue(renamed.appears(timeout: 5))
+        renamed.clearAndType("week 1")
         app.buttons["renameFolder.save"].tap()
         XCTAssertTrue(app.staticTexts["Exam 1 already has a folder named Week 1."].appears(timeout: 5))
         attach(app, "C rename folder, refused")

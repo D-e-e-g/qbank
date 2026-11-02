@@ -43,11 +43,11 @@ struct CourseView: View {
         .qbankScreenBackground()
         .navigationTitle(model.course.map(Wording.name) ?? route.name ?? "Course")
         .screenColumnTitle()
-        .courseTopBar(showsAdd: model.isStudent && model.course != nil, showsRename: showsRename) {
+        .plusMenu(model.isStudent && model.course != nil, more: showsRename) {
             if let course = model.course {
                 addMenu(course)
             }
-        } rename: {
+        } more: {
             renameMenu
         }
         .refreshable { await model.load() }
@@ -169,20 +169,15 @@ struct CourseView: View {
         return course.kind == .topic || course.semester != nil
     }
 
-    /// More, beside +: Rename opens the same sheet Home opens from holding the card. The menu
-    /// has no heading. Its button is named "More for NURS 310", or "More for" a topic's title.
+    /// More, beside +: Rename opens the same sheet Home opens from holding the card. Its button
+    /// is named "More for NURS 310", or "More for" a topic's title.
     private var renameMenu: some View {
-        let name = model.course.map(Wording.name) ?? ""
-        return Menu {
+        MoreMenu(name: model.course.map(Wording.name) ?? "", identifier: "course.more") {
             Button("Rename", systemImage: "pencil") {
                 renamesCourse = true
             }
             .accessibilityIdentifier("course.rename")
-        } label: {
-            Image(systemName: "ellipsis")
         }
-        .accessibilityLabel("More for \(name)")
-        .accessibilityIdentifier("course.more")
     }
 
     @ViewBuilder
@@ -393,53 +388,6 @@ private struct ExamCover: ViewModifier {
             break
         }
         exit = nil
-    }
-}
-
-/// More and +, at the top right, while this screen is the one on screen. A toolbar menu left on
-/// a screen with another pushed over it kept the signed-in screens from going at sign-out, so
-/// signing in again brought them back as they were. The same guard as `plusMenu`. More is the
-/// first trailing item, so it sits just left of +. On iOS 26 a fixed spacer keeps each one its
-/// own circle, the same glass as the back button, instead of one shared pill.
-private struct CourseTopBar<Add: View, Rename: View>: ViewModifier {
-    let showsAdd: Bool
-    let showsRename: Bool
-    let add: Add
-    let rename: Rename
-    @State private var isOnScreen = false
-
-    func body(content: Content) -> some View {
-        content
-            .toolbar {
-                if isOnScreen {
-                    if showsRename {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            rename
-                        }
-                    }
-                    if showsRename, showsAdd, #available(iOS 26.0, *) {
-                        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                    }
-                    if showsAdd {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            add
-                        }
-                    }
-                }
-            }
-            .onAppear { isOnScreen = true }
-            .onDisappear { isOnScreen = false }
-    }
-}
-
-private extension View {
-    func courseTopBar<Add: View, Rename: View>(
-        showsAdd: Bool,
-        showsRename: Bool,
-        @ViewBuilder add: () -> Add,
-        @ViewBuilder rename: () -> Rename
-    ) -> some View {
-        modifier(CourseTopBar(showsAdd: showsAdd, showsRename: showsRename, add: add(), rename: rename()))
     }
 }
 
