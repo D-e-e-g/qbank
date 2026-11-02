@@ -1,7 +1,7 @@
 import XCTest
 
 /// Rename from the screen that is already open, against the fake student of the Debug launch seam.
-/// Edit page sits under the page title and opens the page editor in one step. Rename is in More,
+/// Edit page is in More, beside + on a page's screen, and opens the page editor. Rename is in More,
 /// beside + on a topic's or a course's screen, and opens the same sheet Home opens from holding
 /// the card. Only the name changes: folders, pages, sets and past exams stay.
 final class RenameVisibilityUITests: XCTestCase {
@@ -16,14 +16,15 @@ final class RenameVisibilityUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
         open(app.buttons["course.page.Exam 1"], titled: "Exam 1", in: app)
 
-        let editPage = app.buttons["page.editPageDirect"]
-        XCTAssertTrue(editPage.appears(timeout: 5))
-        XCTAssertEqual(editPage.label, "Edit page")
+        let more = app.buttons["page.more"]
+        XCTAssertTrue(more.appears(timeout: 5))
+        XCTAssertEqual(more.label, "More for Exam 1")
+        XCTAssertFalse(app.buttons["Edit page"].isHittable, "Edit page is not a row on the screen")
         XCTAssertEqual(app.staticTexts["page.note"].label, "2 folders · 3 practice sets · 43 questions")
         // Study material's Edit still orders folders. Name and folders stays hidden until then.
         XCTAssertEqual(app.buttons["page.edit"].label, "Edit study material")
         XCTAssertFalse(app.buttons["page.editPage"].exists)
-        attachLooks(app, "after page, Edit page")
+        attachLooks(app, "after page")
 
         app.buttons["page.edit"].tap()
         let buried = app.buttons["page.editPage"]
@@ -32,7 +33,12 @@ final class RenameVisibilityUITests: XCTestCase {
         app.buttons["page.edit"].tap()
         XCTAssertTrue(buried.disappears(timeout: 5))
 
-        tapWhenStill(editPage)
+        tapWhenStill(more)
+        let editPage = app.buttons["page.more.editPage"]
+        XCTAssertTrue(editPage.appears(timeout: 5))
+        XCTAssertEqual(editPage.label, "Edit page")
+        attachLooks(app, "after page, More")
+        chooseFromMenu(editPage)
         XCTAssertTrue(app.navigationBars["Edit Exam 1"].appears(timeout: 5))
         let name = app.textFields["editPage.name"]
         XCTAssertEqual(name.value as? String, "Exam 1")
@@ -50,7 +56,7 @@ final class RenameVisibilityUITests: XCTestCase {
         XCTAssertTrue(app.buttons["folder.Week 1"].exists)
         XCTAssertTrue(app.buttons["folder.Week 2"].exists)
         XCTAssertTrue(app.buttons["page.sitting.e0000000-0000-4000-8000-000000000001"].exists)
-        XCTAssertEqual(app.buttons["page.editPageDirect"].label, "Edit page")
+        XCTAssertEqual(app.buttons["page.more"].label, "More for First exam")
         attachLooks(app, "after page renamed")
 
         goBack(app, from: "First exam")

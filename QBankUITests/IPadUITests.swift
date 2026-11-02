@@ -199,7 +199,11 @@ final class IPadUITests: XCTestCase {
                     XCTAssertTrue(app.buttons["course.page.Exam 1"].appears(timeout: 5))
                 }
 
-                openFolder(app, "Week 2", on: "Exam 1")
+                open(app.buttons["course.page.Exam 1"], titled: "Exam 1", in: app)
+                XCTAssertTrue(app.buttons["page.more"].appears(timeout: 5))
+                attach(app, "ipad page, \(tag)")
+                openFolder(app, "Week 2")
+                XCTAssertTrue(app.buttons["folder.more"].appears(timeout: 5))
                 attach(app, "ipad folder, \(tag)")
                 mentalHealth.tap()
                 XCTAssertTrue(app.buttons["course.page.Exam 1"].appears(timeout: 5))

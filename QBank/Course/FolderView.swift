@@ -2,10 +2,10 @@ import QBankDesign
 import QBankKit
 import SwiftUI
 
-/// A folder: which exam page it is on and how far she is, Rename, Exam page and Delete, its sets,
-/// and its exam bank. Select puts a check circle on each set and a Move bar at the bottom, as Files
-/// does. Touching and holding a set offers Delete. Deleting the folder deletes its sets too, after a
-/// warning that names them.
+/// A folder: which exam page it is on and how far she is, Exam page, Import here and Delete, its
+/// sets, and its exam bank. More, at the top right, renames it. Select puts a check circle on each
+/// set and a Move bar at the bottom, as Files does. Touching and holding a set offers Delete.
+/// Deleting the folder deletes its sets too, after a warning that names them.
 struct FolderView: View {
     let app: AppModel
     let model: CourseModel
@@ -54,6 +54,11 @@ struct FolderView: View {
         .qbankScreenBackground()
         .navigationTitle(model.folder(id)?.name ?? "Folder")
         .screenColumnTitle()
+        .moreMenu(model.canEdit && model.folder(id) != nil) {
+            if let folder = model.folder(id) {
+                more(folder)
+            }
+        }
         .refreshable { await model.load() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if let selection, !selection.isEmpty, let folder = model.folder(id) {
@@ -119,12 +124,6 @@ struct FolderView: View {
             // The buttons keep their words on one line and wrap as a row when they do not fit.
             FlowLayout(spacing: QBankSpacing.space2, lineSpacing: QBankSpacing.space2) {
                 Button {
-                    sheet = .rename
-                } label: {
-                    Label("Rename", systemImage: "pencil")
-                }
-                .accessibilityIdentifier("folder.rename")
-                Button {
                     sheet = .page
                 } label: {
                     Label(model.page(of: folder)?.name ?? "Page", systemImage: "square.stack.3d.up")
@@ -151,6 +150,18 @@ struct FolderView: View {
             sets(folder)
                 .padding(.top, QBankSpacing.space3)
         }
+    }
+
+    /// More: Rename opens the rename sheet. Offline, More is not shown, and while she selects sets
+    /// it waits.
+    private func more(_ folder: Folder) -> some View {
+        MoreMenu(name: folder.name, identifier: "folder.more") {
+            Button("Rename", systemImage: "pencil") {
+                sheet = .rename
+            }
+            .accessibilityIdentifier("folder.more.rename")
+        }
+        .disabled(selection != nil)
     }
 
     private func sets(_ folder: Folder) -> some View {
