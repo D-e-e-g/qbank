@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "PUT",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folder-order",
@@ -28,17 +29,17 @@
               "title": "Week 1 - Set 1: Invented week 1",
               "description": "Invented practice questions for week 1.",
               "questionCount": 3,
-              "importedAt": "2026-10-15T02:12:18.171Z",
-              "activeSince": "2026-10-15T02:12:18.171Z",
+              "importedAt": "2026-11-03T21:24:23.523Z",
+              "activeSince": "2026-11-03T21:24:23.523Z",
               "status": "imported",
               "canRestore": false,
-              "answeredCount": 2,
-              "fullyRightCount": 2,
-              "lastAnsweredAt": "2026-10-15T02:12:18.333Z",
+              "answeredCount": 0,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000020008",
-                "9e000000-0000-4000-8000-000000020000",
-                "9e000000-0000-4000-8000-000000020002"
+                "00000000-0000-4000-8013-000000000003",
+                "00000000-0000-4000-8013-000000000004",
+                "00000000-0000-4000-8013-000000000005"
               ],
               "importedByAgent": null
             }
@@ -57,16 +58,16 @@
               "title": "Week 2 - Set 1: Invented week 2",
               "description": "Invented practice questions for week 2.",
               "questionCount": 2,
-              "importedAt": "2026-10-15T02:12:18.200Z",
-              "activeSince": "2026-10-15T02:12:18.200Z",
+              "importedAt": "2026-11-03T21:24:23.530Z",
+              "activeSince": "2026-11-03T21:24:23.530Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000020007",
-                "9e000000-0000-4000-8000-000000020005"
+                "00000000-0000-4000-8013-000000000006",
+                "00000000-0000-4000-8013-000000000007"
               ],
               "importedByAgent": null
             }

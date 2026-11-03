@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/attempts",
@@ -6,7 +7,7 @@
     "authorization": "Bearer synthetic-session-token",
     "body": {
       "clientAttemptId": "66666666-6666-4666-8666-000000000002",
-      "questionId": "840dbb5e-49c5-4682-b80a-b194defad93b",
+      "questionId": "00000000-0000-4000-8010-000000000007",
       "response": {
         "type": "match",
         "choices": [
@@ -30,13 +31,13 @@
     "headers": {},
     "body": {
       "clientAttemptId": "66666666-6666-4666-8666-000000000002",
-      "questionId": "840dbb5e-49c5-4682-b80a-b194defad93b",
-      "courseId": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+      "questionId": "00000000-0000-4000-8010-000000000007",
+      "courseId": "c0000000-0000-4000-8000-000000000201",
       "status": "partial",
       "points": 1,
       "maxPoints": 2,
       "guessed": false,
-      "answeredAt": "2026-10-15T02:12:18.736Z",
+      "answeredAt": "2026-11-03T21:24:21.327Z",
       "inReview": true,
       "label": "Partly correct",
       "pointsText": "1 of 2 points",

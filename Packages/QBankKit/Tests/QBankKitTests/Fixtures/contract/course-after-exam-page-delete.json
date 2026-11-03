@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000901",
@@ -40,17 +41,17 @@
               "title": "Heart A",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-10-29T02:59:27.180Z",
-              "activeSince": "2026-10-29T02:59:27.180Z",
+              "importedAt": "2026-11-03T21:24:26.638Z",
+              "activeSince": "2026-11-03T21:24:26.638Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000901",
-                "9e000000-0000-4000-8000-000000000902",
-                "9e000000-0000-4000-8000-000000000903"
+                "00000000-0000-4000-8017-000000000008",
+                "00000000-0000-4000-8017-000000000009",
+                "00000000-0000-4000-8017-000000000010"
               ],
               "importedByAgent": null
             }
@@ -65,16 +66,16 @@
               "title": "Lungs A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.191Z",
-              "activeSince": "2026-10-29T02:59:27.191Z",
+              "importedAt": "2026-11-03T21:24:26.644Z",
+              "activeSince": "2026-11-03T21:24:26.644Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 1,
-              "lastAnsweredAt": "2026-10-29T02:59:27.258Z",
+              "lastAnsweredAt": "2026-11-03T21:24:26.685Z",
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000904",
-                "9e000000-0000-4000-8000-000000000905"
+                "00000000-0000-4000-8017-000000000002",
+                "00000000-0000-4000-8017-000000000003"
               ],
               "importedByAgent": null
             }
@@ -89,17 +90,17 @@
               "title": "Kidneys A",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-10-29T02:59:27.199Z",
-              "activeSince": "2026-10-29T02:59:27.199Z",
+              "importedAt": "2026-11-03T21:24:26.652Z",
+              "activeSince": "2026-11-03T21:24:26.652Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000906",
-                "9e000000-0000-4000-8000-000000000907",
-                "9e000000-0000-4000-8000-000000000908"
+                "00000000-0000-4000-8017-000000000011",
+                "00000000-0000-4000-8017-000000000012",
+                "00000000-0000-4000-8017-000000000013"
               ],
               "importedByAgent": null
             }
@@ -110,20 +111,20 @@
           "label": "Week 5",
           "sets": [
             {
-              "id": "5e700000-0000-4000-8000-000000000905",
+              "id": "5e700000-0000-4000-8000-000000000904",
               "title": "Skin A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.213Z",
-              "activeSince": "2026-10-29T02:59:27.213Z",
+              "importedAt": "2026-11-03T21:24:26.663Z",
+              "activeSince": "2026-11-03T21:24:26.663Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000909",
-                "9e000000-0000-4000-8000-000000000910"
+                "00000000-0000-4000-8017-000000000006",
+                "00000000-0000-4000-8017-000000000007"
               ],
               "importedByAgent": null
             }
@@ -134,20 +135,20 @@
           "label": "First Pass",
           "sets": [
             {
-              "id": "5e700000-0000-4000-8000-000000000906",
+              "id": "5e700000-0000-4000-8000-000000000905",
               "title": "Mixed A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.219Z",
-              "activeSince": "2026-10-29T02:59:27.219Z",
+              "importedAt": "2026-11-03T21:24:26.668Z",
+              "activeSince": "2026-11-03T21:24:26.668Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000911",
-                "9e000000-0000-4000-8000-000000000912"
+                "00000000-0000-4000-8017-000000000014",
+                "00000000-0000-4000-8017-000000000015"
               ],
               "importedByAgent": null
             }
@@ -167,17 +168,17 @@
               "title": "Heart A",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-10-29T02:59:27.180Z",
-              "activeSince": "2026-10-29T02:59:27.180Z",
+              "importedAt": "2026-11-03T21:24:26.638Z",
+              "activeSince": "2026-11-03T21:24:26.638Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000901",
-                "9e000000-0000-4000-8000-000000000902",
-                "9e000000-0000-4000-8000-000000000903"
+                "00000000-0000-4000-8017-000000000008",
+                "00000000-0000-4000-8017-000000000009",
+                "00000000-0000-4000-8017-000000000010"
               ],
               "importedByAgent": null
             }
@@ -192,20 +193,20 @@
           "sortOrder": 5,
           "sets": [
             {
-              "id": "5e700000-0000-4000-8000-000000000906",
+              "id": "5e700000-0000-4000-8000-000000000905",
               "title": "Mixed A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.219Z",
-              "activeSince": "2026-10-29T02:59:27.219Z",
+              "importedAt": "2026-11-03T21:24:26.668Z",
+              "activeSince": "2026-11-03T21:24:26.668Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000911",
-                "9e000000-0000-4000-8000-000000000912"
+                "00000000-0000-4000-8017-000000000014",
+                "00000000-0000-4000-8017-000000000015"
               ],
               "importedByAgent": null
             }
@@ -224,16 +225,16 @@
               "title": "Lungs A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.191Z",
-              "activeSince": "2026-10-29T02:59:27.191Z",
+              "importedAt": "2026-11-03T21:24:26.644Z",
+              "activeSince": "2026-11-03T21:24:26.644Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 1,
-              "lastAnsweredAt": "2026-10-29T02:59:27.258Z",
+              "lastAnsweredAt": "2026-11-03T21:24:26.685Z",
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000904",
-                "9e000000-0000-4000-8000-000000000905"
+                "00000000-0000-4000-8017-000000000002",
+                "00000000-0000-4000-8017-000000000003"
               ],
               "importedByAgent": null
             }
@@ -252,17 +253,17 @@
               "title": "Kidneys A",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-10-29T02:59:27.199Z",
-              "activeSince": "2026-10-29T02:59:27.199Z",
+              "importedAt": "2026-11-03T21:24:26.652Z",
+              "activeSince": "2026-11-03T21:24:26.652Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000906",
-                "9e000000-0000-4000-8000-000000000907",
-                "9e000000-0000-4000-8000-000000000908"
+                "00000000-0000-4000-8017-000000000011",
+                "00000000-0000-4000-8017-000000000012",
+                "00000000-0000-4000-8017-000000000013"
               ],
               "importedByAgent": null
             }
@@ -270,7 +271,7 @@
           "examBankCount": 2,
           "examSets": [
             {
-              "id": "5e700000-0000-4000-8000-000000000904",
+              "id": "00000000-0000-4000-8017-000000000001",
               "title": "Kidneys A exam",
               "questionCount": 2,
               "importedByAgent": null
@@ -284,20 +285,20 @@
           "sortOrder": 3,
           "sets": [
             {
-              "id": "5e700000-0000-4000-8000-000000000905",
+              "id": "5e700000-0000-4000-8000-000000000904",
               "title": "Skin A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-10-29T02:59:27.213Z",
-              "activeSince": "2026-10-29T02:59:27.213Z",
+              "importedAt": "2026-11-03T21:24:26.663Z",
+              "activeSince": "2026-11-03T21:24:26.663Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "9e000000-0000-4000-8000-000000000909",
-                "9e000000-0000-4000-8000-000000000910"
+                "00000000-0000-4000-8017-000000000006",
+                "00000000-0000-4000-8017-000000000007"
               ],
               "importedByAgent": null
             }

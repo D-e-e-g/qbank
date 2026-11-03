@@ -1,9 +1,11 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000404/cancel",
     "query": {},
-    "authorization": "Bearer synthetic-session-token"
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
   },
   "response": {
     "status": 200,
@@ -81,9 +83,9 @@
       "title": null,
       "photoCount": 0,
       "sets": [],
-      "createdAt": "2026-10-15 20:08:23.27+00",
-      "updatedAt": "2026-10-15 20:08:23.275+00",
-      "finishedAt": "2026-10-15 20:08:23.275+00",
+      "createdAt": "2026-11-03 16:24:28.282-05",
+      "updatedAt": "2026-11-03 16:24:28.287-05",
+      "finishedAt": "2026-11-03 16:24:28.287-05",
       "failure": null,
       "warnings": [],
       "usage": {

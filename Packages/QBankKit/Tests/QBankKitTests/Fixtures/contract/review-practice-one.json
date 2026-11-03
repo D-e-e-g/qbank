@@ -1,9 +1,10 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
-    "path": "/api/courses/7a7665d2-2bbe-4093-ae10-a2cf1c968283/review/practice",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/practice",
     "query": {
-      "question": "ac544ab7-34aa-4521-bc6a-6f36a1b6468a"
+      "question": "00000000-0000-4000-8010-000000000002"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null
@@ -12,15 +13,15 @@
     "status": 200,
     "headers": {},
     "body": {
-      "id": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
-      "courseId": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+      "id": "c0000000-0000-4000-8000-000000000201",
+      "courseId": "c0000000-0000-4000-8000-000000000201",
       "title": "Review question",
       "weekLabel": "",
       "folderId": null,
       "kind": "practice",
       "questions": [
         {
-          "id": "ac544ab7-34aa-4521-bc6a-6f36a1b6468a",
+          "id": "00000000-0000-4000-8010-000000000002",
           "publicId": "Q1",
           "position": 1,
           "type": "single",

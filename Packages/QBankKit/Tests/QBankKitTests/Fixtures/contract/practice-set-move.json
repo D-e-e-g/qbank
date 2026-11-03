@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000004/move",
@@ -22,16 +23,16 @@
           "title": "Week 3 - Set 2: Invented mixed review",
           "description": "Invented practice questions for week 3.",
           "questionCount": 2,
-          "importedAt": "2026-10-15T02:12:18.248Z",
-          "activeSince": "2026-10-15T02:12:18.248Z",
+          "importedAt": "2026-11-03T21:24:23.541Z",
+          "activeSince": "2026-11-03T21:24:23.541Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 0,
           "fullyRightCount": 0,
           "lastAnsweredAt": null,
           "questionIds": [
-            "9e000000-0000-4000-8000-000000020006",
-            "9e000000-0000-4000-8000-000000020001"
+            "00000000-0000-4000-8013-000000000001",
+            "00000000-0000-4000-8013-000000000002"
           ],
           "importedByAgent": null
         }

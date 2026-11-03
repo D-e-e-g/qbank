@@ -1,12 +1,13 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
-    "path": "/api/courses/7a7665d2-2bbe-4093-ae10-a2cf1c968283/exams",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
     "query": {},
     "authorization": "Bearer synthetic-session-token",
     "body": {
       "folderIds": [
-        "31e05eea-ece9-409f-9696-b035a99c94c4"
+        "f0000000-0000-4000-8000-000000000202"
       ],
       "pool": "wrong"
     }

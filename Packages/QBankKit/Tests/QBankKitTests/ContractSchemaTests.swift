@@ -3,7 +3,7 @@ import Testing
 @testable import QBankKit
 
 /// The pinned OpenAPI file is the server's schema at the commit in `Fixtures/pin.json`.
-/// Every live recording is from that commit, no other file claims one, every key the kit reads while decoding a recording is
+/// Every fixture is a live recording from that commit, every key the kit reads while decoding a recording is
 /// a property of the schema, and every recorded response key is one that schema allows.
 @Suite("Contract: pinned schema")
 struct ContractSchemaTests {
@@ -17,7 +17,7 @@ struct ContractSchemaTests {
         return try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: url))
     }
 
-    @Test func onlyLiveRecordingsAreStampedWithThePinnedCommit() throws {
+    @Test func everyFixtureIsALiveRecordingFromThePinnedCommit() throws {
         let pin = try Self.pin()
         #expect(pin.repository == "D-e-e-g/qbank-server")
         #expect(pin.path == "apps/api/openapi.json")
@@ -25,13 +25,8 @@ struct ContractSchemaTests {
         #expect(pin.image.hasPrefix("ghcr.io/"))
         let fixtures = try Fixture.all()
         #expect(fixtures.count > 200)
-        let live: Set<String> = ["topic", "topic-create", "topic-order", "semesters-with-topics", "place-topic"]
         for fixture in fixtures {
-            if live.contains(fixture.name) {
-                #expect(fixture.recordedFrom == pin.commit, "\(fixture.name) was recorded from \(fixture.recordedFrom ?? "nothing")")
-            } else {
-                #expect(fixture.recordedFrom == nil, "\(fixture.name) claims a live recording the recorder does not make")
-            }
+            #expect(fixture.recordedFrom == pin.commit, "\(fixture.name) was recorded from \(fixture.recordedFrom ?? "nothing")")
         }
     }
 
@@ -64,24 +59,27 @@ struct ContractSchemaTests {
         "result.byStep.[].folderId",
     ]
 
-    private static let decodedResponses: [(String, any Decodable.Type)] = [
-        ("agent-keys", AgentKeysResponse.self),
-        ("attempt-saved", SavedAttempt.self),
-        ("course", CourseDetail.self),
-        ("course-with-exams", CourseDetail.self),
-        ("course-after-exam-page-delete", CourseDetail.self),
-        ("course-deleted", RecentlyDeleted.self),
-        ("exam-ended", Exam.self),
-        ("exam-setup-after", ExamSetup.self),
-        ("exam-setup-course-exams", ExamSetup.self),
-        ("exam-start", Exam.self),
-        ("practice-set", PracticeSet.self),
-        ("review", ReviewList.self),
-        ("semesters", Catalog.self),
-        ("semesters-edited", Catalog.self),
-        ("semesters-with-topics", Catalog.self),
-        ("terms", TermsResponse.self),
-    ]
+    /// Computed, so no shared state holds the non-Sendable metatypes.
+    private static var decodedResponses: [(String, any Decodable.Type)] {
+        [
+            ("agent-keys", AgentKeysResponse.self),
+            ("attempt-saved", SavedAttempt.self),
+            ("course", CourseDetail.self),
+            ("course-with-exams", CourseDetail.self),
+            ("course-after-exam-page-delete", CourseDetail.self),
+            ("course-deleted", RecentlyDeleted.self),
+            ("exam-ended", Exam.self),
+            ("exam-setup-after", ExamSetup.self),
+            ("exam-setup-course-exams", ExamSetup.self),
+            ("exam-start", Exam.self),
+            ("practice-set", PracticeSet.self),
+            ("review", ReviewList.self),
+            ("semesters", Catalog.self),
+            ("semesters-edited", Catalog.self),
+            ("semesters-with-topics", Catalog.self),
+            ("terms", TermsResponse.self),
+        ]
+    }
 
     @Test func everyRecordedKeyIsInThePinnedSchema() throws {
         let spec = try Self.spec()

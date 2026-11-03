@@ -1,7 +1,8 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
-    "path": "/api/practice-sets/f2c2a4ec-52f9-4332-a1ee-48f9e467dc4c",
+    "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000201",
     "query": {},
     "authorization": "Bearer synthetic-session-token",
     "body": null
@@ -10,15 +11,15 @@
     "status": 200,
     "headers": {},
     "body": {
-      "id": "f2c2a4ec-52f9-4332-a1ee-48f9e467dc4c",
-      "courseId": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+      "id": "5e700000-0000-4000-8000-000000000201",
+      "courseId": "c0000000-0000-4000-8000-000000000201",
       "title": "Week 1 - Set 1: Invented basics",
       "weekLabel": "Week 1",
-      "folderId": "de55efe2-6662-4fea-bf71-2c26199059b2",
+      "folderId": "f0000000-0000-4000-8000-000000000201",
       "kind": "practice",
       "questions": [
         {
-          "id": "ac544ab7-34aa-4521-bc6a-6f36a1b6468a",
+          "id": "00000000-0000-4000-8010-000000000002",
           "publicId": "Q1",
           "position": 1,
           "type": "single",
@@ -93,7 +94,7 @@
           ]
         },
         {
-          "id": "9f34ee17-2d1d-41c5-af75-f7656a0810cc",
+          "id": "00000000-0000-4000-8010-000000000003",
           "publicId": "Q2",
           "position": 2,
           "type": "priority",
@@ -150,7 +151,7 @@
           "terms": []
         },
         {
-          "id": "386c7a73-e49f-42bf-b6e1-5a5637b8cd58",
+          "id": "00000000-0000-4000-8010-000000000004",
           "publicId": "Q3",
           "position": 3,
           "type": "sata",
@@ -188,7 +189,7 @@
           "terms": []
         },
         {
-          "id": "9c6443ba-3c55-4885-8262-d90898974789",
+          "id": "00000000-0000-4000-8010-000000000005",
           "publicId": "Q4",
           "position": 4,
           "type": "highlight",
@@ -225,7 +226,7 @@
           "terms": []
         },
         {
-          "id": "2a601fef-df72-401a-9c7f-3ddcb39951d6",
+          "id": "00000000-0000-4000-8010-000000000006",
           "publicId": "Q5",
           "position": 5,
           "type": "order",
@@ -254,7 +255,7 @@
           "terms": []
         },
         {
-          "id": "840dbb5e-49c5-4682-b80a-b194defad93b",
+          "id": "00000000-0000-4000-8010-000000000007",
           "publicId": "Q6",
           "position": 6,
           "type": "match",
@@ -288,7 +289,7 @@
           "terms": []
         },
         {
-          "id": "34793561-87b1-4dcd-a26b-b039f2b35a53",
+          "id": "00000000-0000-4000-8010-000000000008",
           "publicId": "Q7",
           "position": 7,
           "type": "matrix",
@@ -320,7 +321,7 @@
           "terms": []
         },
         {
-          "id": "3500ac88-16e1-48ca-b46e-ceeae9edee38",
+          "id": "00000000-0000-4000-8010-000000000009",
           "publicId": "Q8",
           "position": 8,
           "type": "cloze",

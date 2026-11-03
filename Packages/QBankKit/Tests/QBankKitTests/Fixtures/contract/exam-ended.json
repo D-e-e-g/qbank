@@ -1,7 +1,8 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
-    "path": "/api/exams/30724e62-e3f2-425a-9f78-c336f8e4b5ca",
+    "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
     "query": {},
     "authorization": "Bearer synthetic-session-token",
     "body": null
@@ -10,8 +11,8 @@
     "status": 200,
     "headers": {},
     "body": {
-      "id": "30724e62-e3f2-425a-9f78-c336f8e4b5ca",
-      "courseId": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+      "id": "e0000000-0000-4000-8000-000000000201",
+      "courseId": "c0000000-0000-4000-8000-000000000201",
       "courseCode": "NURS 101",
       "courseTitle": "Invented Nursing Basics",
       "weeks": [
@@ -19,52 +20,56 @@
         "Week 2"
       ],
       "folderIds": [
-        "de55efe2-6662-4fea-bf71-2c26199059b2",
-        "31e05eea-ece9-409f-9696-b035a99c94c4"
+        "f0000000-0000-4000-8000-000000000201",
+        "f0000000-0000-4000-8000-000000000202"
       ],
       "pool": "all",
       "practiceWeeks": [
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-10-15T02:12:18.782Z",
-      "endsAt": "2026-10-15T02:18:18.782Z",
-      "finishedAt": "2026-10-15T02:12:18.808Z",
+      "startedAt": "2026-11-03T21:24:21.405Z",
+      "endsAt": "2026-11-03T21:30:21.405Z",
+      "finishedAt": "2026-11-03T21:24:21.434Z",
       "endReason": "finished",
-      "serverNow": "2026-10-15T02:12:18.818Z",
+      "serverNow": "2026-11-03T21:24:21.440Z",
       "questions": [
         {
-          "id": "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
-          "publicId": "R1",
+          "id": "00000000-0000-4000-8010-000000000012",
+          "publicId": "E1",
           "position": 1,
           "type": "single",
-          "topic": "Invented week 2 topic 1",
+          "topic": "Invented exam topic 1",
           "cj": "Analyze cues",
-          "stem": "An invented stem.",
+          "stem": "An invented exam stem.",
           "ask": "Which is right?",
-          "rationale": "Invented rationale.",
-          "takeaway": "Invented takeaway.",
+          "rationale": "Invented exam rationale.",
+          "takeaway": "Invented exam takeaway.",
           "body": {
+            "twinOf": "Q1",
             "options": [
               {
                 "t": "Right",
-                "ok": true
+                "ok": true,
+                "why": "Yes."
               },
               {
-                "t": "Wrong"
+                "t": "Wrong",
+                "why": "No."
               },
               {
-                "t": "Also wrong"
+                "t": "Also wrong",
+                "why": "No."
               }
             ]
           },
           "table": null,
           "images": [],
           "terms": [],
-          "weekLabel": "Week 2"
+          "weekLabel": "Week 1"
         },
         {
-          "id": "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de",
+          "id": "00000000-0000-4000-8010-000000000011",
           "publicId": "R2",
           "position": 2,
           "type": "single",
@@ -94,7 +99,7 @@
           "weekLabel": "Week 2"
         },
         {
-          "id": "d183e185-e117-4ba3-b745-8f1c46f772f6",
+          "id": "00000000-0000-4000-8010-000000000013",
           "publicId": "E2",
           "position": 3,
           "type": "single",
@@ -128,42 +133,38 @@
           "weekLabel": "Week 1"
         },
         {
-          "id": "7d227ed4-0954-4ce2-9db8-cdd8922c9852",
-          "publicId": "E1",
+          "id": "00000000-0000-4000-8010-000000000010",
+          "publicId": "R1",
           "position": 4,
           "type": "single",
-          "topic": "Invented exam topic 1",
+          "topic": "Invented week 2 topic 1",
           "cj": "Analyze cues",
-          "stem": "An invented exam stem.",
+          "stem": "An invented stem.",
           "ask": "Which is right?",
-          "rationale": "Invented exam rationale.",
-          "takeaway": "Invented exam takeaway.",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
           "body": {
-            "twinOf": "Q1",
             "options": [
               {
                 "t": "Right",
-                "ok": true,
-                "why": "Yes."
+                "ok": true
               },
               {
-                "t": "Wrong",
-                "why": "No."
+                "t": "Wrong"
               },
               {
-                "t": "Also wrong",
-                "why": "No."
+                "t": "Also wrong"
               }
             ]
           },
           "table": null,
           "images": [],
           "terms": [],
-          "weekLabel": "Week 1"
+          "weekLabel": "Week 2"
         }
       ],
       "answeredQuestionIds": [
-        "b8d0578b-68eb-4e23-a3dc-257af888dbc0"
+        "00000000-0000-4000-8010-000000000010"
       ],
       "result": {
         "questionCount": 4,
@@ -180,13 +181,13 @@
         "examBankWrong": 0,
         "byFolder": [
           {
-            "folderId": "de55efe2-6662-4fea-bf71-2c26199059b2",
+            "folderId": "f0000000-0000-4000-8000-000000000201",
             "label": "Week 1",
             "right": 0,
             "total": 2
           },
           {
-            "folderId": "31e05eea-ece9-409f-9696-b035a99c94c4",
+            "folderId": "f0000000-0000-4000-8000-000000000202",
             "label": "Week 2",
             "right": 1,
             "total": 2
@@ -213,7 +214,37 @@
         ],
         "items": [
           {
-            "questionId": "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
+            "questionId": "00000000-0000-4000-8010-000000000012",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
+          },
+          {
+            "questionId": "00000000-0000-4000-8010-000000000011",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
+          },
+          {
+            "questionId": "00000000-0000-4000-8010-000000000013",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
+          },
+          {
+            "questionId": "00000000-0000-4000-8010-000000000010",
             "status": "correct",
             "label": "Correct",
             "points": 1,
@@ -231,36 +262,6 @@
                 1
               ]
             }
-          },
-          {
-            "questionId": "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
-          },
-          {
-            "questionId": "d183e185-e117-4ba3-b745-8f1c46f772f6",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
-          },
-          {
-            "questionId": "7d227ed4-0954-4ce2-9db8-cdd8922c9852",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
           }
         ]
       }
