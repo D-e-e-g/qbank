@@ -9,12 +9,13 @@
 #   test/sim.sh -- xcodebuild test -project QBank.xcodeproj -scheme QBank \
 #     -destination 'platform=iOS Simulator,id={{UDID}}'
 #
-# The device uses the newest available iOS simulator runtime and the first
-# --device name that runtime supports (default order: iPhone 17 Pro,
-# iPhone 17, iPhone 16 Pro, iPhone 16; otherwise the runtime's last listed
-# device of the first name's family, iPhone or iPad). It is booted
-# headlessly, and shut down and deleted on every exit path. Devices left
-# behind by an earlier run that was killed are reaped first.
+# The device uses the newest available iOS simulator runtime (of equal
+# versions, the one with the most device types) and the first --device name
+# that runtime supports (default order: iPhone 17 Pro, iPhone 17,
+# iPhone 16 Pro, iPhone 16; otherwise the runtime's last listed device of the
+# first name's family, iPhone or iPad). It is booted headlessly, and shut down
+# and deleted on every exit path. Devices left behind by an earlier run that
+# was killed are reaped first.
 # COMMAND is stopped after --timeout seconds (default 3600).
 #
 # Compatible with the bash 3.2 that ships with macOS.
@@ -103,7 +104,12 @@ runtimes = [
 ]
 if not runtimes:
     sys.exit("no available iOS simulator runtime; install one with: xcodebuild -downloadPlatform iOS")
-runtime = max(runtimes, key=lambda r: tuple(int(p) for p in r["version"].split(".")))
+# Of equal versions, the runtime with the most device types: Xcode can also
+# hold a runtime made for one new device, with the same version number.
+runtime = max(runtimes, key=lambda r: (
+    tuple(int(p) for p in r["version"].split(".")),
+    len(r.get("supportedDeviceTypes", [])),
+))
 types = runtime.get("supportedDeviceTypes", [])
 by_name = {t["name"]: t for t in types}
 chosen = next((by_name[n] for n in preferred if n in by_name), None)
