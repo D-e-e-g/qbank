@@ -1,17 +1,14 @@
-// Re-records QBankKit's contract fixtures against the server this file is copied into.
+// Records QBankKit's live contract fixtures against the server this file is copied into.
 //
 // test/record-contract.sh copies this file to apps/api/scripts in a scratch
 // checkout and runs it with that package's tsx. The imports below are the
 // server's own source; they do not resolve from the iPhone repository.
-// The script reads the server, boots a throwaway in-memory database, and
-// writes fixtures. It does not fetch and it does not modify the checkout.
-//
-// Existing recordings keep their ids, dates, and wording. Keys the running
-// server now sends on every response are filled in only after a live response
-// has shown that key. A key the server stopped sending, or a required key this
-// script cannot fill from a live response, stops the run before it writes.
+// The script boots a throwaway in-memory database, drives each scenario through
+// the real routes, and writes the responses it got, stamped with the commit.
+// It also copies openapi.json and writes pin.json. It does not fetch, does not
+// modify the checkout, and leaves every fixture it has no scenario for as it is.
 
-import { copyFileSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -88,119 +85,13 @@ function assertWarning(body: Record<string, Json>, what: string) {
   }
 }
 
-// Keys a current response always carries. availableAt is absent on purpose:
-// the maker omits it when it is null, and the schema does not require it.
-const FILL: Record<string, (object: Record<string, unknown>) => unknown> = {
-  badge: () => null,
-  linkUrl: () => null,
-  importedByAgent: () => null,
-  deletedByAgent: () => null,
-  archivedAt: () => null,
-  setDeletedAt: () => null,
-  deletedAt: () => null,
-  palette: () => "dusk",
-  examSets: () => [],
-  topics: () => [],
-  examPages: () => [],
-  kind: (object) => {
-    if (typeof object.code === "string" && object.code !== "") return "course";
-    if (object.semester && typeof object.semester === "object") return "course";
-    throw new Error(`refusing to invent kind on ${JSON.stringify(object).slice(0, 180)}`);
-  },
-  warning: (object) => {
-    if (typeof object.message !== "string") {
-      throw new Error(`refusing to invent a delete warning without a message on ${JSON.stringify(object).slice(0, 180)}`);
-    }
-    return deleteWarning(object.message, previewName(object));
-  },
-};
-
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
-
-interface Schema {
-  type?: string | string[];
-  properties?: Record<string, Schema>;
-  required?: string[];
-  items?: Schema;
-  additionalProperties?: boolean | Schema | Record<string, never>;
-  oneOf?: Schema[];
-  anyOf?: Schema[];
-  allOf?: Schema[];
-  $ref?: string;
-}
 
 const commit = process.argv[2];
 const fixturesDir = process.argv[3];
 const openapiPath = process.argv[4];
 if (!commit || !fixturesDir || !openapiPath || !/^[0-9a-f]{40}$/.test(commit)) {
   throw new Error("usage: record-contract.ts <full-commit> <Fixtures-dir> <openapi.json>");
-}
-
-const spec = JSON.parse(readFileSync(openapiPath, "utf8")) as {
-  paths: Record<string, Record<string, { responses?: Record<string, Schema> }>>;
-  components: { schemas: Record<string, Schema> };
-};
-
-function resolve(schema: Schema | undefined, depth = 0): Schema {
-  if (!schema || depth > 24) return schema ?? {};
-  if (schema.$ref) {
-    const name = schema.$ref.split("/").pop() ?? "";
-    const target = spec.components.schemas[name];
-    if (!target) throw new Error(`missing schema ${schema.$ref}`);
-    return resolve(target, depth + 1);
-  }
-  if (schema.allOf) {
-    const merged: Schema = { type: "object", properties: {}, required: [] };
-    for (const part of schema.allOf) {
-      const sub = resolve(part, depth + 1);
-      Object.assign(merged.properties!, sub.properties ?? {});
-      merged.required!.push(...(sub.required ?? []));
-      if (sub.items) merged.items = sub.items;
-      if (sub.additionalProperties !== undefined) merged.additionalProperties = sub.additionalProperties;
-      if (sub.type && !sub.properties) merged.type = sub.type;
-    }
-    for (const [key, value] of Object.entries(schema)) {
-      if (key === "allOf") continue;
-      if (key === "properties") Object.assign(merged.properties!, value as Schema["properties"]);
-      else if (key === "required") merged.required!.push(...(value as string[]));
-      else (merged as Record<string, unknown>)[key] = value;
-    }
-    return merged;
-  }
-  return schema;
-}
-
-function variants(schema: Schema): Schema[] {
-  const resolved = resolve(schema);
-  const list = resolved.oneOf ?? resolved.anyOf;
-  if (!list) return [resolved];
-  return list.flatMap((part) => variants(part));
-}
-
-function matchTemplate(template: string, path: string): boolean {
-  const left = template.split("/");
-  const right = path.split("/");
-  return left.length === right.length && left.every((part, index) => part.startsWith("{") || part === right[index]);
-}
-
-function operation(method: string, path: string) {
-  const direct = spec.paths[path]?.[method.toLowerCase()];
-  if (direct) return direct;
-  for (const [template, item] of Object.entries(spec.paths)) {
-    if (matchTemplate(template, path) && item[method.toLowerCase()]) return item[method.toLowerCase()];
-  }
-  return undefined;
-}
-
-function responseSchema(method: string, path: string, status: number): Schema | undefined {
-  const op = operation(method, path);
-  if (!op) throw new Error(`no operation ${method} ${path}`);
-  const response = op.responses?.[String(status)];
-  if (!response) throw new Error(`no response ${status} for ${method} ${path}`);
-  const resolved = resolve(response);
-  const content = (resolved as { content?: Record<string, { schema?: Schema }> }).content;
-  const json = content?.["application/json"] ?? content?.["application/problem+json"];
-  return json?.schema ? resolve(json.schema) : undefined;
 }
 
 function queryable(client: PGlite): Queryable {
@@ -285,20 +176,6 @@ function source(title: string, questions: ReturnType<typeof question>[]) {
   });
 }
 
-const proved = new Set<string>();
-
-function observe(value: unknown) {
-  if (Array.isArray(value)) {
-    for (const item of value) observe(item);
-    return;
-  }
-  if (!value || typeof value !== "object") return;
-  for (const [key, inner] of Object.entries(value)) {
-    if (key in FILL) proved.add(key);
-    observe(inner);
-  }
-}
-
 function rewrite(value: Json, ids: Map<string, string>): Json {
   if (typeof value === "string") return (ids.get(value) as Json) ?? value;
   if (Array.isArray(value)) return value.map((item) => rewrite(item, ids));
@@ -324,69 +201,6 @@ function envelope(method: string, path: string, status: number, body: Json, requ
   };
 }
 
-function choose(body: unknown, schema: Schema): Schema {
-  let best = resolve(schema);
-  let bestScore = -100;
-  for (const candidate of variants(schema)) {
-    let score = 0;
-    if (body === null) score = candidate.type === "null" ? 8 : -2;
-    else if (Array.isArray(body)) score = candidate.items || candidate.type === "array" ? 4 : -2;
-    else if (body && typeof body === "object") {
-      const props = candidate.properties ?? {};
-      const keys = Object.keys(body);
-      score = keys.filter((key) => key in props).length;
-      score -= (candidate.required ?? []).filter((key) => !(key in (body as object))).length * 3;
-      if (candidate.properties) score += 1;
-    }
-    if (score > bestScore) {
-      best = candidate;
-      bestScore = score;
-    }
-  }
-  return best;
-}
-
-function fillValue(value: unknown, schema: Schema | undefined, where: string) {
-  if (!schema || value === null || value === undefined) return;
-  const chosen = choose(value, schema);
-  if (Array.isArray(value)) {
-    if (chosen.items) for (const item of value) fillValue(item, chosen.items, `${where}[]`);
-    return;
-  }
-  if (!value || typeof value !== "object") return;
-  const object = value as Record<string, unknown>;
-  const props = chosen.properties ?? {};
-  for (const [key, property] of Object.entries(props)) {
-    if (!(key in object)) {
-      const produce = FILL[key];
-      if (!produce) continue;
-      if (!proved.has(key)) {
-        throw new Error(`${where}.${key} is missing and no live response showed ${key}`);
-      }
-      object[key] = produce(object);
-    } else {
-      fillValue(object[key], property, `${where}.${key}`);
-    }
-  }
-}
-
-function missingRequired(value: unknown, schema: Schema | undefined, where: string, missing: string[]) {
-  if (!schema || value === null || value === undefined) return;
-  const chosen = choose(value, schema);
-  if (Array.isArray(value)) {
-    if (chosen.items) for (const item of value) missingRequired(item, chosen.items, `${where}[]`, missing);
-    return;
-  }
-  if (!value || typeof value !== "object") return;
-  const object = value as Record<string, unknown>;
-  for (const key of chosen.required ?? []) {
-    if (!(key in object)) missing.push(`${where}.${key}`);
-  }
-  for (const [key, property] of Object.entries(chosen.properties ?? {})) {
-    if (key in object) missingRequired(object[key], property, `${where}.${key}`, missing);
-  }
-}
-
 async function boot() {
   const client = new PGlite();
   await applyMigrations(queryable(client));
@@ -399,7 +213,6 @@ async function boot() {
     200,
     "sign-in",
   );
-  observe(signed);
   const token = String(signed.token);
   return {
     client,
@@ -408,7 +221,6 @@ async function boot() {
     async ok(path: string, status: number, init?: { method?: string; json?: unknown }) {
       const result = await call(app, path, token, init);
       const body = expectStatus(result, status, `${init?.method ?? "GET"} ${path}`);
-      observe(body);
       return body;
     },
   };
@@ -615,47 +427,11 @@ async function recordTopics() {
   return recorded;
 }
 
-function patchFixtures() {
-  const directory = join(fixturesDir, "contract");
-  const names = readdirSync(directory).filter((name) => name.endsWith(".json")).sort();
-  let filled = 0;
-  const written: { name: string; json: unknown }[] = [];
-  for (const name of names) {
-    const fixture = JSON.parse(readFileSync(join(directory, name), "utf8")) as {
-      recordedFrom: string;
-      request: { method: string; path: string };
-      response: { status: number; body: unknown };
-    };
-    const body = fixture.response.body;
-    if (body !== null) {
-      const response = responseSchema(fixture.request.method, fixture.request.path, fixture.response.status);
-      const before = JSON.stringify(body);
-      fillValue(body, response, name);
-      if (JSON.stringify(body) !== before) filled += 1;
-      const missing: string[] = [];
-      missingRequired(body, response, name, missing);
-      if (missing.length > 0) {
-        throw new Error(`${name} is still missing required keys:\n${missing.join("\n")}`);
-      }
-    }
-    fixture.recordedFrom = commit;
-    written.push({ name, json: fixture });
-  }
-  return { written, filled };
-}
-
 const recorded = await recordTopics();
-const patched = patchFixtures();
-for (const key of ["badge", "linkUrl", "kind", "importedByAgent", "examSets", "archivedAt", "topics", "examPages", "deletedByAgent", "palette", "setDeletedAt", "deletedAt", "warning"]) {
-  if (!proved.has(key)) throw new Error(`refusing to write: never saw live key ${key}`);
-}
 
 const image = process.env.QBANK_API_IMAGE || IMAGES[commit];
 if (!image) throw new Error(`No API image for ${commit}. Set QBANK_API_IMAGE to the image built from it.`);
 
-for (const file of patched.written) {
-  writeFileSync(join(fixturesDir, "contract", file.name), `${JSON.stringify(file.json, null, 2)}\n`);
-}
 for (const [name, fixture] of Object.entries(recorded)) {
   writeFileSync(join(fixturesDir, "contract", `${name}.json`), `${JSON.stringify(fixture, null, 2)}\n`);
 }
@@ -664,4 +440,4 @@ writeFileSync(
   join(fixturesDir, "pin.json"),
   `${JSON.stringify({ repository: "D-e-e-g/qbank-server", commit, path: "apps/api/openapi.json", image }, null, 2)}\n`,
 );
-console.log(`recorded ${Object.keys(recorded).length} topic fixtures, patched ${patched.filled} existing fixtures at ${commit}`);
+console.log(`recorded ${Object.keys(recorded).length} fixtures live at ${commit}`);

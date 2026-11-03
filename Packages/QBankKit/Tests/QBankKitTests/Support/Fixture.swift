@@ -24,7 +24,8 @@ struct Fixture: Decodable {
     }
 
     let name: String
-    let recordedFrom: String
+    /// The server commit this exchange was recorded from live, or nil for a file not recorded live.
+    let recordedFrom: String?
     let request: Request
     let response: Response
 
@@ -35,7 +36,7 @@ struct Fixture: Decodable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = ""
-        recordedFrom = try container.decode(String.self, forKey: .recordedFrom)
+        recordedFrom = try container.decodeIfPresent(String.self, forKey: .recordedFrom)
         request = try container.decode(Request.self, forKey: .request)
         response = try container.decode(Response.self, forKey: .response)
     }

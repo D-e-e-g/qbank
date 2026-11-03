@@ -3,7 +3,7 @@ import Testing
 @testable import QBankKit
 
 /// The pinned OpenAPI file is the server's schema at the commit in `Fixtures/pin.json`.
-/// Every recording is from that commit, every key the kit reads while decoding a recording is
+/// Every live recording is from that commit, no other file claims one, every key the kit reads while decoding a recording is
 /// a property of the schema, and every recorded response key is one that schema allows.
 @Suite("Contract: pinned schema")
 struct ContractSchemaTests {
@@ -17,7 +17,7 @@ struct ContractSchemaTests {
         return try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: url))
     }
 
-    @Test func everyRecordingIsFromThePinnedCommit() throws {
+    @Test func onlyLiveRecordingsAreStampedWithThePinnedCommit() throws {
         let pin = try Self.pin()
         #expect(pin.repository == "D-e-e-g/qbank-server")
         #expect(pin.path == "apps/api/openapi.json")
@@ -25,11 +25,13 @@ struct ContractSchemaTests {
         #expect(pin.image.hasPrefix("ghcr.io/"))
         let fixtures = try Fixture.all()
         #expect(fixtures.count > 200)
-        for name in ["topic", "topic-create", "topic-order", "semesters-with-topics", "place-topic"] {
-            #expect(fixtures.contains { $0.name == name }, "\(name) was not recorded")
-        }
+        let live: Set<String> = ["topic", "topic-create", "topic-order", "semesters-with-topics", "place-topic"]
         for fixture in fixtures {
-            #expect(fixture.recordedFrom == pin.commit, "\(fixture.name) was recorded from \(fixture.recordedFrom)")
+            if live.contains(fixture.name) {
+                #expect(fixture.recordedFrom == pin.commit, "\(fixture.name) was recorded from \(fixture.recordedFrom ?? "nothing")")
+            } else {
+                #expect(fixture.recordedFrom == nil, "\(fixture.name) claims a live recording the recorder does not make")
+            }
         }
     }
 

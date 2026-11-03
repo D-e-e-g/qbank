@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000502/cancel",

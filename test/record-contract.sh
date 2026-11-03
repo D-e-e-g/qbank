@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Re-records the QBankKit contract fixtures from a local qbank-server checkout.
+# Records the live QBankKit contract fixtures from a local qbank-server checkout.
 #
 # usage: test/record-contract.sh SERVER_CHECKOUT
 #
