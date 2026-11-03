@@ -1,0 +1,17 @@
+{
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "request": {
+    "method": "GET",
+    "path": "/api/me/place",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "courseId": "70000000-0000-4000-8000-000000000001"
+    }
+  }
+}

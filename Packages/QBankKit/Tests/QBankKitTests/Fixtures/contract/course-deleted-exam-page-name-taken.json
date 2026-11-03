@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "4de36443ffecd8065d104b79bc6d3690e9adf04f",
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
@@ -34,7 +34,8 @@
           "deletedAt": "2026-10-29T02:59:27.348Z",
           "undoUntil": "2026-11-28T02:59:27.348Z",
           "undoRefusal": "This course already has an exam named Exam 2. Rename one of them, then bring this one back.",
-          "deletedByAgent": null
+          "deletedByAgent": null,
+          "badge": null
         }
       ],
       "folders": [],

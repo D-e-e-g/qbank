@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "a7902ee866d377d7a58a2a2c6ab3520af791fed3",
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
   "request": {
     "method": "POST",
     "path": "/api/imports",
@@ -28,7 +28,8 @@
       "examPageId": "ce000000-0000-4000-8000-000000000301",
       "questionCount": 2,
       "termCount": 1,
-      "warnings": []
+      "warnings": [],
+      "importedByAgent": null
     }
   }
 }

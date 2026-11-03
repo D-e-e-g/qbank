@@ -1,0 +1,154 @@
+{
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "request": {
+    "method": "GET",
+    "path": "/api/courses/70000000-0000-4000-8000-000000000001",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "id": "70000000-0000-4000-8000-000000000001",
+      "kind": "topic",
+      "code": "",
+      "title": "Invented Pharmacology Review",
+      "archivedAt": null,
+      "semester": null,
+      "questionCount": 3,
+      "examQuestionCount": 3,
+      "examTimeLimitSeconds": 270,
+      "weekCount": 2,
+      "folderCount": 2,
+      "termCount": 0,
+      "reviewCount": 1,
+      "answeredCount": 1,
+      "fullyRightCount": 0,
+      "points": 0,
+      "maxPoints": 1,
+      "weeks": [
+        {
+          "label": "Cardiac drugs",
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000701",
+              "title": "Invented cardiac drugs",
+              "description": "Invented practice questions.",
+              "questionCount": 2,
+              "importedAt": "2026-11-03T20:05:56.890Z",
+              "activeSince": "2026-11-03T20:05:56.890Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 1,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": "2026-11-03T20:05:56.927Z",
+              "questionIds": [
+                "9e000000-0000-4000-8000-000000070001",
+                "9e000000-0000-4000-8000-000000070002"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0
+        },
+        {
+          "label": "Unsorted",
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000702",
+              "title": "Invented loose questions",
+              "description": "Invented practice questions.",
+              "questionCount": 1,
+              "importedAt": "2026-11-03T20:05:56.896Z",
+              "activeSince": "2026-11-03T20:05:56.896Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 0,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": null,
+              "questionIds": [
+                "9e000000-0000-4000-8000-000000070003"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0
+        }
+      ],
+      "folders": [
+        {
+          "id": "f0000000-0000-4000-8000-000000000701",
+          "name": "Cardiac drugs",
+          "examPageId": "ce000000-0000-4000-8000-000000000701",
+          "sortOrder": 1,
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000701",
+              "title": "Invented cardiac drugs",
+              "description": "Invented practice questions.",
+              "questionCount": 2,
+              "importedAt": "2026-11-03T20:05:56.890Z",
+              "activeSince": "2026-11-03T20:05:56.890Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 1,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": "2026-11-03T20:05:56.927Z",
+              "questionIds": [
+                "9e000000-0000-4000-8000-000000070001",
+                "9e000000-0000-4000-8000-000000070002"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0,
+          "examSets": []
+        },
+        {
+          "id": "f0000000-0000-4000-8000-000000000702",
+          "name": "Unsorted",
+          "examPageId": null,
+          "sortOrder": 0,
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000702",
+              "title": "Invented loose questions",
+              "description": "Invented practice questions.",
+              "questionCount": 1,
+              "importedAt": "2026-11-03T20:05:56.896Z",
+              "activeSince": "2026-11-03T20:05:56.896Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 0,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": null,
+              "questionIds": [
+                "9e000000-0000-4000-8000-000000070003"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      ],
+      "exams": [
+        {
+          "id": "ce000000-0000-4000-8000-000000000701",
+          "name": "Page 1",
+          "sortOrder": 1,
+          "weekLabels": [
+            "Cardiac drugs"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000701"
+          ],
+          "linkUrl": "https://primer.invalid/cardiac-drugs",
+          "badge": null
+        }
+      ]
+    }
+  }
+}

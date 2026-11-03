@@ -1,0 +1,32 @@
+{
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "request": {
+    "method": "POST",
+    "path": "/api/topics",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": {
+      "title": "Invented Systems Design"
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {},
+    "body": {
+      "id": "70000000-0000-4000-8000-000000000003",
+      "kind": "topic",
+      "code": "",
+      "title": "Invented Systems Design",
+      "sortOrder": 3,
+      "archivedAt": null,
+      "questionCount": 0,
+      "weekCount": 0,
+      "folderCount": 0,
+      "reviewCount": 0,
+      "answeredCount": 0,
+      "fullyRightCount": 0,
+      "points": 0,
+      "maxPoints": 0
+    }
+  }
+}

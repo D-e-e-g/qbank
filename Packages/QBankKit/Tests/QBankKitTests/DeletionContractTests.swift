@@ -307,7 +307,7 @@ struct DeletionContractTests {
         #expect(taken.examPages.first?.undoRefusal == "This course already has an exam named Exam 2. Rename one of them, then bring this one back.")
     }
 
-    /// Recently deleted from a server before exam pages could be deleted has no `examPages`.
+    /// An empty `examPages` list, including a recording from before pages could be deleted, lists none.
     @Test func recentlyDeletedFromBeforeExamPagesListsNone() throws {
         let deleted = try Fixture.load("course-deleted").decodeBody(RecentlyDeleted.self)
         #expect(deleted.examPages.isEmpty)

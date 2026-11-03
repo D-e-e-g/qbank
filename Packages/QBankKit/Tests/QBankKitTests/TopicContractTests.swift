@@ -5,9 +5,9 @@ import FoundationNetworking
 import Testing
 @testable import QBankKit
 
-/// The calls the study topic screens make, against the server's contract at qbank-server `c1ac3f4`
+/// The calls the study topic screens make, against the pinned server contract
 /// (`Fixtures/openapi.json`): what each sends, that its route and fields are documented there, and
-/// that the answers in `Fixtures/topics`, written by hand to that contract, decode.
+/// that the recorded answers decode.
 @Suite("Contract: study topics")
 struct TopicContractTests {
     static func body(_ name: String) throws -> Data {

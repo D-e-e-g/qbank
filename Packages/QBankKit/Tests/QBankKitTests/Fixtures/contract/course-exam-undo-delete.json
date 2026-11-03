@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "4de36443ffecd8065d104b79bc6d3690e9adf04f",
+  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
   "request": {
     "method": "POST",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",
@@ -24,7 +24,8 @@
         "f0000000-0000-4000-8000-000000000903",
         "f0000000-0000-4000-8000-000000000904"
       ],
-      "linkUrl": null
+      "linkUrl": null,
+      "badge": null
     }
   }
 }
