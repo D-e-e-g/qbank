@@ -1,10 +1,12 @@
 name: Xcode
 
-# Builds and tests the app on a Mac. Runs only for trusted code: qbank-v* tags
-# and manual runs. It must never run on pull requests, because MAC_RUNNER may
-# point at a self-hosted Mac (see docs/ci.md).
+# Builds and tests the app on a Mac. Runs only for trusted code: pushes to
+# main, qbank-v* tags, and manual runs. It must never run on pull requests,
+# because MAC_RUNNER may point at a self-hosted Mac (see docs/ci.md).
 on:
   push:
+    branches:
+      - main
     tags:
       - 'qbank-v*'
   workflow_dispatch:
@@ -12,15 +14,36 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: xcode-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  # A push to main builds only on the self-hosted MAC_RUNNER. With no
+  # MAC_RUNNER the build would fall back to a GitHub-hosted Mac on every merge,
+  # so it is skipped and this job says why.
+  mac-runner-unset:
+    name: Mac build skipped
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MAC_RUNNER == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Explain the skip
+        run: |
+          message="MAC_RUNNER is not set, so this push to main skips the Mac build. Set it to the self-hosted runner's label (see docs/ci.md)."
+          echo "::notice title=Mac build skipped::$message"
+          echo "$message" >> "$GITHUB_STEP_SUMMARY"
+
   build-and-test:
     name: Build and test
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != ''
     runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 90
+
+    # One Mac job at a time across every run of this workflow, because a
+    # self-hosted MAC_RUNNER shares its Mac with other CI. A new run waits for
+    # the running one; GitHub keeps one waiting run and replaces it with a newer
+    # one, so a burst of pushes to main builds the latest.
+    concurrency:
+      group: xcode-mac
+      cancel-in-progress: false
 
     env:
       PROJECT_PATH: QBank.xcodeproj

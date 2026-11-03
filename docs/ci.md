@@ -18,25 +18,38 @@ The workflow references no secrets, reads the repository with a `contents: read`
 
 ## Trusted code: `xcode.yml`
 
-`qbank-v*` tags and manual runs (Actions > Xcode > Run workflow, or `gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>`) run one Mac job; a push to `main` does not:
+Pushes to `main`, `qbank-v*` tags, and manual runs (Actions > Xcode > Run workflow, or `gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>`) run one Mac job:
 
 1. `test/package-tests.sh --macos`: `swift test` in every package under `Packages/` on the Mac host
 2. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves
 3. a Release build for `generic/platform=iOS` without signing, which proves Debug-only code stays out of Release
 
-It never runs on pull requests, because its machine may be the captain's own Mac.
+It never runs on pull requests, because its machine may be the owner's own Mac.
+
+The Mac job runs one at a time across every run of the workflow (the `xcode-mac` concurrency group), because a self-hosted Mac also serves other CI. A new run waits for the running one. GitHub keeps only one waiting run: a newer run replaces it, so a burst of pushes to `main` builds the newest commit. A replaced tag or manual run can be run again from its page. The job stops after 90 minutes.
 
 ### Which Mac
 
-The job runs on `${{ vars.MAC_RUNNER || 'macos-26' }}`. With no `MAC_RUNNER` repository variable it uses GitHub's hosted `macos-26` image, free on a public repository, with that image's default Xcode at `/Applications/Xcode.app`.
+The job runs on `${{ vars.MAC_RUNNER || 'macos-26' }}`.
 
-To move the job to the self-hosted MacBook runner once it is registered with the label `macbook-14` (Xcode installed at `/Applications/Xcode.app`, a dedicated macOS user with nothing else on it):
+- With no `MAC_RUNNER` repository variable, tags and manual runs use GitHub's hosted `macos-26` image, free on a public repository, with that image's default Xcode at `/Applications/Xcode.app`. A push to `main` skips the Mac job instead, so merges do not each start a hosted Mac; the run's `Mac build skipped` job says why.
+- With `MAC_RUNNER` set, every run uses the self-hosted runner with that label, including each push to `main`.
+
+To move the job to the MacBook Pro 14 once its runner is registered to this repository with the label `qbank-macbook-14` and Xcode at `/Applications/Xcode.app`:
 
 ```sh
-gh variable set MAC_RUNNER --repo D-e-e-g/qbank --body macbook-14
+gh variable set MAC_RUNNER --repo D-e-e-g/qbank --body qbank-macbook-14
 ```
 
-Delete the variable to go back to the hosted Mac. The job uses `DEVELOPER_DIR` rather than `sudo`, so the runner user needs no administrator rights.
+Delete the variable to go back to the hosted Mac for tags and manual runs; pushes to `main` then skip the Mac build. The job uses `DEVELOPER_DIR` rather than `sudo`, so the runner user needs no administrator rights.
+
+### Keeping pull requests off the self-hosted Mac
+
+`test/release-checks.sh` refuses a Mac or self-hosted job in any workflow here that a pull request, comment, review or `workflow_run` can start. That covers this repository's own workflows only: a pull request from a fork runs its own copy of the workflow files, which can name the runner's label. So before `MAC_RUNNER` names a self-hosted runner, all of these must hold:
+
+- Workflows from fork pull requests wait for approval for all outside collaborators, and the owner is the only collaborator. Approve a fork's run only after reading its diff, and never one that changes `.github/`.
+- The runner is registered to this repository only, under its own label and none of the default ones (`self-hosted`, `macOS`, `ARM64`), so no other repository's jobs land on it and it takes no job that asks for a generic Mac.
+- The runner's job-started hook refuses any job that is not `xcode.yml` running for a push to `main`, a `qbank-v*` tag, or a manual run, so even an approved fork run fails before it checks anything out. The hook lives on the Mac, not in this repository.
 
 ### Package hosts
 

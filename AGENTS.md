@@ -10,7 +10,7 @@ Unit tests use Swift Testing in `QBankTests`. UI tests use XCTest in `QBankUITes
 
 Local Swift packages live under `Packages/` and are tested by `test/package-tests.sh`: on Linux in pull requests unless the package holds a `.apple-only` marker file, and on macOS in `xcode.yml`, so every package declares a `.macOS` platform next to `.iOS(.v18)`.
 
-`docs/ci.md` is authoritative for CI, runner selection, and the trust boundary: pull requests run only Linux checks with no secrets; the Mac build and tests run only for `qbank-v*` tags and manual runs, on `vars.MAC_RUNNER` with GitHub's `macos-26` as the fallback. Never give a Mac job a pull request trigger. `test/release-checks.sh` guards these rules and the project settings; run it after touching `.github/`, `scripts/`, `test/`, or the Xcode project.
+`docs/ci.md` is authoritative for CI, runner selection, and the trust boundary: pull requests run only Linux checks with no secrets; the Mac build and tests run only for pushes to `main`, `qbank-v*` tags, and manual runs, on `vars.MAC_RUNNER` with GitHub's `macos-26` as the fallback. Never give a Mac job a pull request trigger. `test/release-checks.sh` guards these rules and the project settings; run it after touching `.github/`, `scripts/`, `test/`, or the Xcode project.
 
 ## Maintaining this file
 
