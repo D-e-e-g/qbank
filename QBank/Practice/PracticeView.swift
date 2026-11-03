@@ -164,7 +164,7 @@ private struct QuestionPage: View {
                 .foregroundStyle(.qbank(.text1))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
-            if let score = attempt.score {
+            if let feedback = attempt.feedback {
                 VStack(alignment: .leading, spacing: QBankSpacing.space4) {
                     if model.isWaitingToSend {
                         Group {
@@ -176,7 +176,7 @@ private struct QuestionPage: View {
                         }
                         .accessibilityIdentifier("practice.savedOnPhone")
                     }
-                    FeedbackBox(score: score, type: question.type, guessed: attempt.guessed)
+                    FeedbackBox(feedback: feedback, guessed: attempt.guessed)
                 }
                 .id(RunnerScroll.feedback)
             }
@@ -209,7 +209,7 @@ private struct QuestionPage: View {
             withAnimation(QBankMotion.reveal) {
                 scroll.scroll(to: RunnerScroll.feedback)
             }
-            AccessibilityNotification.Announcement(attempt.score?.label ?? "").post()
+            AccessibilityNotification.Announcement(attempt.feedback?.label ?? "").post()
         }
     }
 }
@@ -217,14 +217,15 @@ private struct QuestionPage: View {
 /// The verdict under the question: Correct, Partly correct or Not correct, the points of a
 /// multi-part answer, the scoring rule, and whether it was a guess.
 private struct FeedbackBox: View {
-    let score: Score
-    let type: QuestionType?
+    let feedback: Feedback
     let guessed: Bool
+
+    private var score: Score { feedback.score }
 
     var body: some View {
         VStack(alignment: .leading, spacing: QBankSpacing.space2) {
             Label {
-                Text(score.label)
+                Text(feedback.label)
             } icon: {
                 Image(systemName: icon)
                     .fontWeight(.semibold)
@@ -232,10 +233,10 @@ private struct FeedbackBox: View {
             .qbankFont(.headline)
             .foregroundStyle(.qbank(tone))
             Group {
-                if let type, let points = score.pointsText(for: type) {
+                if let points = feedback.pointsText {
                     Text(points)
                 }
-                if let rule = type?.scoringRule {
+                if let rule = feedback.ruleText {
                     Text(rule)
                 }
                 if guessed {

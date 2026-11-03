@@ -20,8 +20,11 @@ final class PracticeModel {
         var struck: Set<Int> = []
         /// Made once per opening, so a retried send is never counted twice.
         let clientAttemptID: String
-        /// Her score once she has checked: the server's, or the phone's while the answer waits to be sent.
-        var score: Score?
+        /// The verdict once she has checked: the server's score and words, or the phone's while
+        /// the answer waits to be sent.
+        var feedback: Feedback?
+
+        var score: Score? { feedback?.score }
     }
 
     enum Phase: Equatable {
@@ -213,10 +216,10 @@ final class PracticeModel {
         attempts[index].guessed = guessed
     }
 
-    /// Sends the answer and shows the score the server gave it. Without a connection, or when
-    /// QBank cannot be reached, the answer is kept on the phone and sent later with the same id, so
-    /// it is never counted twice; she sees the phone's score, which uses the server's rules. A
-    /// refusal is said in her words.
+    /// Sends the answer and shows the score and words the server gave it. Without a connection, or
+    /// when QBank cannot be reached, the answer is kept on the phone and sent later with the same id,
+    /// so it is never counted twice; she sees the phone's score and words, which follow the server's
+    /// rules. A refusal is said in her words.
     func check() async {
         guard canCheck, let question, let attempt, let response = attempt.draft.response else { return }
         problem = nil
@@ -228,8 +231,9 @@ final class PracticeModel {
             problem = error.message
             return
         }
+        let phoneFeedback = Feedback(phone: phoneScore, type: question.type)
         if isSample {
-            attempts[index].score = phoneScore
+            attempts[index].feedback = phoneFeedback
             return
         }
         let checking = index
@@ -242,17 +246,17 @@ final class PracticeModel {
             guessed: attempt.guessed,
             shuffle: attempt.layout
         )
-        let score: Score
+        let feedback: Feedback
         do {
             switch try await app.submit(submission, courseID: courseID) {
             case .sent(let saved):
-                score = Score(saved)
+                feedback = Feedback(saved)
             case .waiting(let reason):
                 // A session that ended goes to sign-in; the answer waits for her on the phone.
                 if app.handle(reason) { return }
-                score = phoneScore
+                feedback = phoneFeedback
             case .accepted:
-                score = phoneScore
+                feedback = phoneFeedback
             }
         } catch {
             if error == .cancelled || app.handle(error) { return }
@@ -264,7 +268,7 @@ final class PracticeModel {
             return
         }
         guard attempts.indices.contains(checking), attempts[checking].score == nil else { return }
-        attempts[checking].score = score
+        attempts[checking].feedback = feedback
     }
 
     /// The next question, or the set result after the last one.

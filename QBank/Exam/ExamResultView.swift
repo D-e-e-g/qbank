@@ -309,16 +309,16 @@ private struct ExamResultQuestion: View {
         }
     }
 
-    /// "Correct", "Guessed - Partly correct", "Not answered", as the web marks exam questions.
+    /// The server's word, "Correct" or "Not answered", and "Guessed - Partly correct" for a guess,
+    /// as the web marks exam questions.
     private var mark: (status: QBankAnswerStatus, label: String) {
-        let scored: (QBankAnswerStatus, ScoreStatus)
+        let status: QBankAnswerStatus
         switch item.status {
-        case .unanswered: return (.unanswered, "Not answered")
-        case .correct: scored = (.correct, .correct)
-        case .partial: scored = (.partial, .partial)
-        case .incorrect: scored = (.wrong, .incorrect)
+        case .unanswered: return (.unanswered, item.label)
+        case .correct: status = .correct
+        case .partial: status = .partial
+        case .incorrect: status = .wrong
         }
-        let word = Score(points: item.points, maxPoints: item.maxPoints, status: scored.1, answered: true).label
-        return item.guessed ? (.guessed, "Guessed - \(word)") : (scored.0, word)
+        return item.guessed ? (.guessed, "Guessed - \(item.label)") : (status, item.label)
     }
 }

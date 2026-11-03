@@ -47,6 +47,36 @@ public struct Score: Sendable, Equatable {
     }
 }
 
+/// The verdict under a checked question: its score and the banner's words, the mark, the points
+/// of a multi-part answer and how the format is scored. The words are the server's, as the web
+/// shows them; the phone writes its own only for a score it gave itself, while the answer waits
+/// to be sent or for a sample that is never sent.
+public struct Feedback: Sendable, Equatable {
+    public let score: Score
+    /// Correct, Partly correct, or Not correct.
+    public let label: String
+    /// "1 of 3 points", or nil for single answer and priority.
+    public let pointsText: String?
+    /// How the format is scored, or nil for the formats that add no rule.
+    public let ruleText: String?
+
+    /// The server's score and words for a saved answer.
+    public init(_ saved: SavedAttempt) {
+        score = Score(saved)
+        label = saved.label
+        pointsText = saved.pointsText
+        ruleText = saved.ruleText
+    }
+
+    /// The phone's words for a score it gave, worded as the server words them.
+    public init(phone score: Score, type: QuestionType?) {
+        self.score = score
+        label = score.label
+        pointsText = type.flatMap(score.pointsText(for:))
+        ruleText = type?.scoringRule
+    }
+}
+
 /// An answer in a different format from its question, or a question format this version cannot score.
 public struct ScoringError: Error, Sendable, Equatable {
     public let message: String

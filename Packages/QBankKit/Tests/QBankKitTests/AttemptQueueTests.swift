@@ -76,7 +76,7 @@ extension SavedAttempt {
         SavedAttempt(
             clientAttemptID: id, questionID: questionID, courseID: "course-1", status: .correct, points: 1,
             maxPoints: 1, guessed: false, answeredAt: Date(timeIntervalSince1970: 1_790_000_000), inReview: false,
-            label: "Correct", replayed: false
+            label: "Correct", pointsText: nil, ruleText: nil, replayed: false
         )
     }
 }

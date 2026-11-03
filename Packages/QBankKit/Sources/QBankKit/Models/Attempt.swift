@@ -73,11 +73,15 @@ public struct SavedAttempt: Codable, Sendable, Equatable {
     public let inReview: Bool
     /// The banner text, such as "Correct".
     public let label: String
+    /// The banner's point line, "1 of 3 points", for a multi-part format; nil for single answer and priority.
+    public let pointsText: String?
+    /// How the format is scored, the banner's rule line; nil for the formats that add none.
+    public let ruleText: String?
     /// True when this id was already saved and nothing new was written.
     public let replayed: Bool
 
     enum CodingKeys: String, CodingKey {
-        case status, points, maxPoints, guessed, answeredAt, inReview, label, replayed
+        case status, points, maxPoints, guessed, answeredAt, inReview, label, pointsText, ruleText, replayed
         case clientAttemptID = "clientAttemptId"
         case questionID = "questionId"
         case courseID = "courseId"

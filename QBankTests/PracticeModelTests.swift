@@ -20,8 +20,12 @@ struct PracticeModelTests {
         """#
     }
 
-    static func saved(id: String, question: String, status: String, points: Int, max: Int, guessed: Bool = false) -> String {
-        #"{"clientAttemptId":"\#(id)","questionId":"\#(question)","courseId":"c1","status":"\#(status)","points":\#(points),"maxPoints":\#(max),"guessed":\#(guessed),"answeredAt":"2026-10-13T00:00:00.000Z","inReview":true,"label":"x","replayed":false}"#
+    static func saved(
+        id: String, question: String, status: String, points: Int, max: Int, guessed: Bool = false,
+        label: String = "x", pointsText: String? = nil, ruleText: String? = nil
+    ) -> String {
+        let text = { (value: String?) in value.map { "\"\($0)\"" } ?? "null" }
+        return #"{"clientAttemptId":"\#(id)","questionId":"\#(question)","courseId":"c1","status":"\#(status)","points":\#(points),"maxPoints":\#(max),"guessed":\#(guessed),"answeredAt":"2026-10-13T00:00:00.000Z","inReview":true,"label":"\#(label)","pointsText":\#(text(pointsText)),"ruleText":\#(text(ruleText)),"replayed":false}"#
     }
 
     /// A model whose shuffles keep the stored order, whose ids count up, and whose clock is under
@@ -151,6 +155,52 @@ struct PracticeModelTests {
         #expect(!model.canCheck)
         model.update(.sata([0]))
         #expect(model.attempt?.draft == .sata([2, 0]), "a checked answer cannot change")
+    }
+
+    @Test func aSentAnswerShowsTheServersWords() async throws {
+        // Words the phone would never write, so only the server's can show.
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.practiceSet()),
+            "POST /api/attempts": StubServer.Reply(status: 201, body: Self.saved(
+                id: "attempt-1", question: "q-sata", status: "partial", points: 1, max: 2,
+                label: "Partly right", pointsText: "1 point of 2", ruleText: "A rule the server changed"
+            )),
+        ])
+        let (model, _) = Self.model(server)
+        await model.load()
+        model.update(.sata([0]))
+        await model.check()
+        #expect(!model.isWaitingToSend)
+        let feedback = try #require(model.attempt?.feedback)
+        #expect(feedback.score == Score(points: 1, maxPoints: 2, status: .partial, answered: true))
+        #expect(feedback.label == "Partly right")
+        #expect(feedback.pointsText == "1 point of 2")
+        #expect(feedback.ruleText == "A rule the server changed")
+
+        model.next()
+        model.update(.single(0))
+        server["POST /api/attempts"] = StubServer.Reply(status: 201, body: Self.saved(id: "attempt-2", question: "q-single", status: "correct", points: 1, max: 1, label: "Correct"))
+        await model.check()
+        #expect(model.attempt?.feedback?.pointsText == nil, "the server sends no point line for a single answer")
+        #expect(model.attempt?.feedback?.ruleText == nil)
+        model.next()
+        #expect(model.result?.rows.map(\.mark) == ["Partly right", "Correct"], "the result lists the server's words too")
+    }
+
+    @Test func aWaitingAnswerShowsThePhonesWords() async throws {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.practiceSet()),
+            "POST /api/attempts": .offline,
+        ])
+        let (model, _) = Self.model(server)
+        await model.load()
+        model.update(.sata([0]))
+        await model.check()
+        #expect(model.isWaitingToSend)
+        let feedback = try #require(model.attempt?.feedback)
+        #expect(feedback.label == "Partly correct")
+        #expect(feedback.pointsText == "1 of 2 points")
+        #expect(feedback.ruleText == "+1 for each correct choice, -1 for each wrong one")
     }
 
     @Test func struckChoicesStayOnThePhoneAndEndWithTheAnswer() async throws {
