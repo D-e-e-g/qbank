@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702/delete-preview",
@@ -50,7 +50,11 @@
       "message": "Delete Heart B? Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days.",
       "refusal": null,
       "confirm": "e1ce33d296348989",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete Heart B?",
+        "body": "Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days."
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703/delete-preview",
@@ -50,7 +50,11 @@
       "message": "Delete Heart A exam from Week 1's exam bank? Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days.",
       "refusal": "An exam in progress asks questions from Heart A exam. Finish or leave that exam first.",
       "confirm": "b4e96e9e99e17fe4",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete Heart A exam from Week 1's exam bank?",
+        "body": "Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days."
+      }
     }
   }
 }

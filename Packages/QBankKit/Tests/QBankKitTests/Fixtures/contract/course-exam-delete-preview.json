@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -63,7 +63,11 @@
       "message": "Delete Exam 2? Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days.",
       "refusal": null,
       "confirm": "0a8ebda3b1da4351",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete Exam 2?",
+        "body": "Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days."
+      }
     }
   }
 }

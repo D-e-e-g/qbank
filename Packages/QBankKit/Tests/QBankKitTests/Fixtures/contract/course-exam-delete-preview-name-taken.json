@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000903/delete-preview",
@@ -57,7 +57,11 @@
       "message": "Delete Exam 2? Its folder First Pass stays, with its sets and your progress, under Folders. You can undo this for 30 days.",
       "refusal": "NURS 101 already has a folder named First Pass in its Folders list. Rename one of them before deleting Exam 2.",
       "confirm": "39a0458ed50cf404",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete Exam 2?",
+        "body": "Its folder First Pass stays, with its sets and your progress, under Folders. You can undo this for 30 days."
+      }
     }
   }
 }

@@ -4136,6 +4136,9 @@
             "type": "string",
             "description": "The warning, as a sentence or two to show her: what goes, her answers, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4162,6 +4165,7 @@
           "reviewCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4216,6 +4220,24 @@
           "after"
         ],
         "description": "One count, now and once it is deleted."
+      },
+      "DeleteWarning": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The question the sheet titles with, such as \"Delete Week 1?\" or \"Delete NURS 220 and its 146 questions?\"."
+          },
+          "body": {
+            "type": "string",
+            "description": "The rest of the warning: what goes with it, her answers, and Undo, in the same words as `message`."
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "description": "`message` split into its question and the rest, so a client does not parse `message`. `message` stays as it is."
       },
       "DeletionError": {
         "type": "object",
@@ -4289,6 +4311,9 @@
             "type": "string",
             "description": "The warning, as a few sentences to show her: its sets by name, her answers, its page, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4315,6 +4340,7 @@
           "pastExamCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4405,6 +4431,9 @@
             "type": "string",
             "description": "The warning, as a few sentences to show her: its folders by name, that they stay, her past exams, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4432,6 +4461,7 @@
           "pastExamCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4505,6 +4535,9 @@
             "type": "string",
             "description": "The warning, as a few sentences to show her: her answers, Review and Wrong questions, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4530,6 +4563,7 @@
           "unansweredCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4616,6 +4650,9 @@
             "type": "string",
             "description": "The question to ask her once, such as \"Delete NURS 220 and its 146 questions? You can bring it back for 30 days.\""
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4644,6 +4681,7 @@
           "reviewCount",
           "pastExamCount",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"

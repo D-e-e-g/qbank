@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "d0db2444f2c236c3591aab3d9a0532631385ff85",
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000701/delete-preview",
@@ -48,7 +48,11 @@
       "message": "Delete this exam? Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days.",
       "refusal": null,
       "confirm": "3b71b71bc2530c3b",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete this exam?",
+        "body": "Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days."
+      }
     }
   }
 }

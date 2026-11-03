@@ -36,6 +36,8 @@ const STUDENT: AccountSpec = {
 const IMAGES: Record<string, string> = {
   d0db2444f2c236c3591aab3d9a0532631385ff85:
     "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:1b96e033f30450ce38b951cd77704a7b9afe0f216b8e50a554720b56ba4513bf",
+  "6b807f891e952f9dc3483c0f8b10ca032cd22983":
+    "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:dce87fedb83d25371c9aad8d2f3ae2dd72159cb230ea2c2b0e5b13f17a872060",
 };
 
 const PHARMA = "70000000-0000-4000-8000-000000000001";
@@ -52,6 +54,39 @@ const UNSORTED_SET = "5e700000-0000-4000-8000-000000000702";
 const QUESTION_1 = "9e000000-0000-4000-8000-000000070001";
 const QUESTION_2 = "9e000000-0000-4000-8000-000000070002";
 const QUESTION_3 = "9e000000-0000-4000-8000-000000070003";
+
+// The server's own split of a delete warning: the "?" after the doomed name.
+// message stays the recorded sentence; warning is that sentence cut in two.
+function deleteWarning(message: string, doomedName: string): { title: string; body: string } {
+  const text = message.trim();
+  const from = text.indexOf(doomedName);
+  const end = text.indexOf("?", from === -1 ? 0 : from + doomedName.length);
+  if (end === -1) return { title: "Delete?", body: text };
+  return { title: text.slice(0, end + 1), body: text.slice(end + 1).trim() };
+}
+
+// Which name the server passed to that split, from the fields the preview already carries.
+function previewName(object: Record<string, unknown>): string {
+  if ("setId" in object && typeof object.title === "string") return object.title;
+  if ("folderId" in object && typeof object.name === "string") return object.name;
+  if ("examPageId" in object && typeof object.name === "string") return object.name;
+  if ("examId" in object) return "this exam";
+  if (object.kind === "topic" && typeof object.title === "string") return object.title;
+  if (object.kind === "course" && typeof object.code === "string") return object.code;
+  throw new Error(`refusing to invent a delete warning for ${JSON.stringify(object).slice(0, 180)}`);
+}
+
+function assertWarning(body: Record<string, Json>, what: string) {
+  const warning = body.warning;
+  if (typeof body.message !== "string" || !warning || typeof warning !== "object" || Array.isArray(warning)) {
+    throw new Error(`${what} omitted warning: ${JSON.stringify(body).slice(0, 300)}`);
+  }
+  const expected = deleteWarning(body.message, previewName(body));
+  const got = warning as { title?: Json; body?: Json };
+  if (got.title !== expected.title || got.body !== expected.body) {
+    throw new Error(`${what} warning was ${JSON.stringify(got)} but the message splits to ${JSON.stringify(expected)}`);
+  }
+}
 
 // Keys a current response always carries. availableAt is absent on purpose:
 // the maker omits it when it is null, and the schema does not require it.
@@ -71,6 +106,12 @@ const FILL: Record<string, (object: Record<string, unknown>) => unknown> = {
     if (typeof object.code === "string" && object.code !== "") return "course";
     if (object.semester && typeof object.semester === "object") return "course";
     throw new Error(`refusing to invent kind on ${JSON.stringify(object).slice(0, 180)}`);
+  },
+  warning: (object) => {
+    if (typeof object.message !== "string") {
+      throw new Error(`refusing to invent a delete warning without a message on ${JSON.stringify(object).slice(0, 180)}`);
+    }
+    return deleteWarning(object.message, previewName(object));
   },
 };
 
@@ -502,6 +543,11 @@ async function recordTopics() {
     json: { name: "Proof page", folderIds: [proofFolder.id] },
   });
   const preview = await server.ok(`/api/course-exams/${String(proofPage.id)}/delete-preview`, 200);
+  assertWarning(preview, "page preview");
+  assertWarning(await server.ok(`/api/practice-sets/${cardiacDetail.sets[0].id}/delete-preview`, 200), "set preview");
+  assertWarning(await server.ok(`/api/folders/${cardiacDetail.id}/delete-preview`, 200), "folder preview");
+  assertWarning(await server.ok(`/api/courses/${String(course.id)}/delete-preview`, 200), "course preview");
+  assertWarning(await server.ok(`/api/courses/${String(pharma.id)}/delete-preview`, 200), "topic preview");
   // 204 has no JSON body.
   const removed = await call(
     server.app,
@@ -519,10 +565,12 @@ async function recordTopics() {
   const user = session.user as { palette?: string };
   if (user.palette !== "dusk") throw new Error(`a new account palette was ${String(user.palette)}`);
   // An exam is a study session. The export always sends deletedAt on one; prove that on a live row.
-  await server.ok(`/api/courses/${String(pharma.id)}/exams`, 201, {
+  const started = await server.ok(`/api/courses/${String(pharma.id)}/exams`, 201, {
     method: "POST",
     json: { folderIds: [cardiacDetail.id], pool: "all" },
   });
+  if (typeof started.id !== "string") throw new Error("exam start omitted id");
+  assertWarning(await server.ok(`/api/exams/${started.id}/delete-preview`, 200), "exam preview");
   const exported = await server.ok("/api/me/export", 200);
   const sessions = exported.studySessions as { deletedAt?: Json }[];
   const questions = exported.questions as { setDeletedAt?: Json }[];
@@ -598,7 +646,7 @@ function patchFixtures() {
 
 const recorded = await recordTopics();
 const patched = patchFixtures();
-for (const key of ["badge", "linkUrl", "kind", "importedByAgent", "examSets", "archivedAt", "topics", "examPages", "deletedByAgent", "palette", "setDeletedAt", "deletedAt"]) {
+for (const key of ["badge", "linkUrl", "kind", "importedByAgent", "examSets", "archivedAt", "topics", "examPages", "deletedByAgent", "palette", "setDeletedAt", "deletedAt", "warning"]) {
   if (!proved.has(key)) throw new Error(`refusing to write: never saw live key ${key}`);
 }
 
