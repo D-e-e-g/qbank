@@ -33,6 +33,26 @@ struct CourseModelTests {
         #expect(!model.isLoading)
     }
 
+    /// Each exam page's Start exam line is the server's plan over its folders, kept when a later
+    /// read of the plans fails.
+    @Test func examPagesSayTheServersPlan() async throws {
+        let plan = StudyBodies.preview([("f1", "Week 1", 10, 8, "practice"), ("f2", "Week 2", 10, 7, "practice")], questions: 15, seconds: 900)
+        let server = StubServer([
+            "GET /api/courses/c1": .ok(StudyBodies.course(pages: [("x1", "Exam 1", ["f1", "f2"])])),
+            "GET /api/courses/c1/exams": .ok(StudyBodies.setup(folders: StudyBodies.threePools, pages: [("x1", plan)])),
+        ])
+        let (app, _) = TestApp.make(server, account: .student())
+        let model = CourseModel(app: app, id: "c1")
+        await model.load()
+        let page = try #require(model.layout?.page("x1"))
+        let draw = try #require(model.plan(for: page).flatMap(FolderWording.examDraw))
+        #expect(draw == "15 questions from the 20 in these 2 folders, or Wrong questions only.")
+
+        server["GET /api/courses/c1/exams"] = .error(500, "internal_error", "Something went wrong.")
+        await model.load()
+        #expect(model.plan(for: page)?.questionCount == 15)
+    }
+
     @Test func missingCourseSaysTheServersWords() async {
         let server = StubServer(["GET /api/courses/gone": .error(404, "request_refused", "That course is not in the app.")])
         let (app, _) = TestApp.make(server, account: .student())

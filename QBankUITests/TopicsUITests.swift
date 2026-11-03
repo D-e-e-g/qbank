@@ -96,7 +96,9 @@ final class TopicsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts[topic].exists, "the topic's name alone, with no code")
         XCTAssertTrue(app.staticTexts["Page 1"].exists, "the folders by page")
         reveal(app.buttons["exam.start"], in: app)
-        XCTAssertEqual(app.descendants(matching: .any)["exam.summary.count"].label, "3 questions, in 4.5 minutes")
+        let count = app.descendants(matching: .any)["exam.summary.count"]
+        waitForLabel(count, containing: "3 questions, in 4.5 minutes")
+        XCTAssertEqual(count.label, "3 questions, in 4.5 minutes")
         attachLooks(app, "T-7 exam setup")
         app.buttons["exam.start"].tap()
         XCTAssertTrue(app.buttons["exam.end"].appears(timeout: 10))

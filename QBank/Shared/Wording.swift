@@ -128,11 +128,12 @@ nonisolated enum Wording {
         return Int((Double(answered) / Double(course.questionCount) * 100).rounded())
     }
 
-    /// How long an exam over every folder takes: 60 minutes for 40 questions, or 1.5 minutes a
-    /// question when there are fewer. "Not ready" without questions.
-    static func examLength(questionCount: Int) -> String {
-        guard questionCount > 0 else { return "Not ready" }
-        let minutes = Double(min(questionCount, 40) * 90) / 60
+    /// How long an exam over every folder takes, as the server's rules give it: "60 min", "7.5 min".
+    /// "Not ready" without questions, and "Timed" from a copy saved before the app read the time.
+    static func examTime(_ course: CourseDetail) -> String {
+        guard course.examQuestionCount > 0 else { return "Not ready" }
+        guard let seconds = course.examTimeLimitSeconds else { return "Timed" }
+        let minutes = Double(seconds) / 60
         return minutes.rounded() == minutes ? "\(Int(minutes)) min" : String(format: "%.1f min", minutes)
     }
 

@@ -20,9 +20,19 @@ struct WordingTests {
         #expect(Wording.when(now.addingTimeInterval(-9 * 86_400), now: now, calendar: calendar) != "today")
     }
 
-    @Test(arguments: [(0, "Not ready"), (4, "6 min"), (5, "7.5 min"), (39, "58.5 min"), (40, "60 min"), (134, "60 min")])
-    func examLength(questions: Int, expected: String) {
-        #expect(Wording.examLength(questionCount: questions) == expected)
+    /// The Exam tile says the server's time for an exam over every folder, whatever the old rules
+    /// would have made of the question count.
+    @Test(arguments: [
+        (0, 0, "Not ready"), (4, 360, "6 min"), (5, 450, "7.5 min"), (40, 3600, "60 min"), (134, 3600, "60 min"),
+        (134, 2700, "45 min"), (30, 1500, "25 min"), (30, nil, "Timed"),
+    ] as [(Int, Int?, String)])
+    func examTime(questions: Int, seconds: Int?, expected: String) {
+        let course = CourseDetail(
+            id: "c1", code: "NURS 101", title: "Invented Basics", archivedAt: nil, semester: nil, questionCount: questions,
+            examQuestionCount: questions, weekCount: 0, termCount: 0, reviewCount: 0, answeredCount: 0, fullyRightCount: 0,
+            points: 0, maxPoints: 0, weeks: [], examTimeLimitSeconds: seconds
+        )
+        #expect(Wording.examTime(course) == expected)
     }
 
     @Test func setStatusLines() throws {

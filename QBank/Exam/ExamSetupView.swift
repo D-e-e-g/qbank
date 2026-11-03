@@ -26,6 +26,8 @@ struct ExamSetupView: View {
     @State private var asksToReplace = false
     /// The past exam she asked to delete, while its warning is open.
     @State private var deleting: DeleteRequest?
+    /// The pick whose plan is taking a moment, so the last plan is dimmed rather than read as its.
+    @State private var slowPick: ExamSetupModel.Pick?
     @Environment(HomeNavigator.self) private var navigator: HomeNavigator?
 
     init(app: AppModel, route: ExamSetupRoute) {
@@ -68,6 +70,14 @@ struct ExamSetupView: View {
         }
         .deleteSheet(app: app, request: $deleting)
         .sensoryFeedback(.selection, trigger: model.ticked)
+        .onChange(of: model.pick) {
+            // Not cancelled by the next tick: a late answer is dropped by the model instead.
+            Task { await model.readPlan() }
+        }
+        .task(id: model.pick) {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled { slowPick = model.pick }
+        }
         .confirmSheet(
             isPresented: $asksToReplace,
             title: "Start a new exam?",
@@ -182,6 +192,7 @@ struct ExamSetupView: View {
                             isTicked: model.isTicked(folder),
                             canTick: model.canTick(folder),
                             drawn: model.drawn(folder),
+                            isUpdating: isPlanSlow,
                             isStudent: model.isStudent
                         ) {
                             model.toggle(folder)
@@ -201,28 +212,32 @@ struct ExamSetupView: View {
     private var summary: some View {
         QBankCard {
             VStack(alignment: .leading, spacing: QBankSpacing.space3) {
-                if let count = model.summaryCount {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(count)
-                            .qbankFont(.title3, weight: .bold)
-                            .foregroundStyle(.qbank(.text1))
-                        Text(model.summaryTime)
-                            .qbankFont(.body)
-                            .foregroundStyle(.qbank(.text2))
+                VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+                    if let count = model.summaryCount, let time = model.summaryTime {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(count)
+                                .qbankFont(.title3, weight: .bold)
+                                .foregroundStyle(.qbank(.text1))
+                            Text(time)
+                                .qbankFont(.body)
+                                .foregroundStyle(.qbank(.text2))
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("exam.summary.count")
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("exam.summary.count")
-                }
-                Text(model.summarySplit)
-                    .qbankFont(.subheadline)
-                    .foregroundStyle(.qbank(.text1))
-                    .accessibilityIdentifier("exam.summary.split")
-                if let fallback = model.fallbackLine {
-                    Text(fallback)
+                    Text(model.summarySplit)
                         .qbankFont(.subheadline)
                         .foregroundStyle(.qbank(.text1))
-                        .accessibilityIdentifier("exam.summary.fallback")
+                        .accessibilityIdentifier("exam.summary.split")
+                    if let fallback = model.fallbackLine {
+                        Text(fallback)
+                            .qbankFont(.subheadline)
+                            .foregroundStyle(.qbank(.text1))
+                            .accessibilityIdentifier("exam.summary.fallback")
+                    }
                 }
+                .opacity(isPlanSlow ? 0.45 : 1)
+                .animation(.default, value: isPlanSlow)
                 Text("Feedback comes at the end. Leaving midway ends the exam and scores what you answered.")
                     .qbankFont(.footnote)
                     .foregroundStyle(.qbank(.text3))
@@ -314,6 +329,11 @@ struct ExamSetupView: View {
         }
     }
 
+    /// The plan on screen is the last one and the new one is taking a moment.
+    private var isPlanSlow: Bool {
+        model.isPlanUpdating && slowPick == model.pick
+    }
+
     private func start() {
         Task {
             if let exam = await model.start() {
@@ -345,6 +365,8 @@ private struct FolderPickRow: View {
     let isTicked: Bool
     let canTick: Bool
     let drawn: Int?
+    /// The drawn count is the last plan's while the next one is on its way.
+    let isUpdating: Bool
     let isStudent: Bool
     let toggle: () -> Void
 
@@ -370,6 +392,7 @@ private struct FolderPickRow: View {
                     Text("\(drawn) in exam")
                         .qbankFont(.footnote, weight: .semibold)
                         .foregroundStyle(.qbank(.text2))
+                        .opacity(isUpdating ? 0.45 : 1)
                 }
             }
             .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)

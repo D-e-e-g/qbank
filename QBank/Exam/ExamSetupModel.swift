@@ -17,7 +17,15 @@ final class ExamSetupModel {
         var id: String { title ?? "" }
     }
 
+    /// The ticked folders and the pool: what the summary shows the server's plan for, and what a
+    /// twin job is asked for.
+    struct Pick: Equatable {
+        let folderIDs: Set<String>
+        let pool: ExamPool
+    }
+
     let route: ExamSetupRoute
+    /// The setup as last read, with the server's plan (`preview`) for `setupPick`.
     private(set) var setup: ExamSetup?
     /// The course, for its exam pages and her order of their folders.
     private(set) var detail: CourseDetail?
@@ -36,7 +44,13 @@ final class ExamSetupModel {
     private(set) var isTwinning = false
     /// A refusal of exam twins, with the folders and pool it was about: it shows only until she
     /// changes them.
-    private var twinRefusal: (pick: TwinPick, message: String)?
+    private var twinRefusal: (pick: Pick, message: String)?
+    /// The folders and pool `setup` was read for.
+    private var setupPick: Pick?
+    /// The folders and pool of the newest read, done or on its way.
+    private var requested: Pick?
+    /// Counts reads, so an answer that comes back after a newer read started is dropped.
+    private var reads = 0
 
     private let app: AppModel
     private let now: () -> Date
@@ -132,14 +146,32 @@ final class ExamSetupModel {
         folders.filter(isTicked)
     }
 
-    var plan: ExamPlan {
-        ExamPlan(picked.map { ExamPlan.Pool(id: $0.id, name: name($0), questionCount: poolSize($0)) })
+    var pick: Pick {
+        Pick(folderIDs: Set(picked.map(\.id)), pool: wrongOnly ? .wrong : .all)
+    }
+
+    /// The server's plan the summary shows. After a tick, the plan for the folders ticked before
+    /// stays until the new one arrives (`isPlanUpdating`), as on the web. Without a connection no
+    /// new plan can arrive, so then only a plan for the folders ticked now shows.
+    var plan: ExamPreview? {
+        guard !picked.isEmpty, let preview = setup?.preview else { return nil }
+        return setupPick == pick || !needsConnection ? preview : nil
+    }
+
+    /// Whether the plan on screen is still the one for the folders ticked before.
+    var isPlanUpdating: Bool {
+        plan != nil && setupPick != pick
     }
 
     /// "4 in exam" beside a ticked folder.
     func drawn(_ folder: ExamSetup.Folder) -> Int? {
         guard isTicked(folder) else { return nil }
-        return plan.draws.first { $0.id == folder.id }?.drawn
+        return plan?.folders.first { $0.id == folder.id }?.drawn
+    }
+
+    /// A folder of the plan by the name its row shows.
+    private func name(_ folder: ExamPreview.Folder) -> String {
+        setup?.folders.first { $0.id == folder.id }.map(name) ?? folder.name
     }
 
     /// "27 questions", or "7 wrong of 20" with Wrong questions only on, and "· exam bank" when the
@@ -151,17 +183,17 @@ final class ExamSetupModel {
         return folder.source == .exam ? "\(count) · exam bank" : count
     }
 
-    /// The summary's first line: "11 questions", with its time beside it. Nil before a tick.
+    /// The summary's first line: "11 questions", with its time beside it. Nil without a plan.
     var summaryCount: String? {
-        picked.isEmpty ? nil : Wording.count(plan.questionCount, "question")
+        plan.map { Wording.count($0.questionCount, "question") }
     }
 
-    var summaryTime: String {
-        "in \(Wording.minutes(seconds: plan.timeLimitSeconds))"
+    var summaryTime: String? {
+        plan.map { "in \(Wording.minutes(seconds: $0.timeLimitSeconds))" }
     }
 
     /// "4 from Week 1 · 7 from Week 2 · Fewer than 40, so it’s all of them at 1.5 minutes each.",
-    /// or what to tick.
+    /// with the numbers of the server's plan and rules, or what to tick.
     var summarySplit: String {
         if picked.isEmpty {
             if !wrongOnly { return "Tick at least one folder." }
@@ -169,15 +201,18 @@ final class ExamSetupModel {
                 ? "No wrong questions in this \(words.container) right now."
                 : "Tick at least one folder with wrong questions."
         }
-        let split = plan.draws.map { "\($0.drawn) from \($0.name)" }.joined(separator: " · ")
-        guard plan.questionCount < ExamPlan.maxQuestions else { return split }
-        return "\(split) · Fewer than \(ExamPlan.maxQuestions), so it’s all of them at 1.5 minutes each."
+        guard let plan, let rules = setup?.rules else {
+            return needsConnection ? "What the exam draws shows once you’re back online." : "Working out what the exam draws."
+        }
+        let split = plan.folders.map { "\($0.drawn) from \(name($0))" }.joined(separator: " · ")
+        guard plan.questionCount < rules.maxQuestions else { return split }
+        return "\(split) · Fewer than \(rules.maxQuestions), so it’s all of them at \(Wording.minutes(seconds: rules.secondsPerQuestion)) each."
     }
 
-    /// The ticked folders without an exam bank, named only once the course has one, as the server does.
+    /// The planned folders without an exam bank, named only once the course has one, as the server does.
     var fallbackLine: String? {
-        guard folders.contains(where: { $0.source == .exam }) else { return nil }
-        let practice = picked.filter { $0.source == .practice }.map(name)
+        guard let plan, plan.practiceWeeks != nil else { return nil }
+        let practice = plan.folders.filter { $0.source == .practice }.map(name)
         return practice.isEmpty ? nil : Wording.practiceFolders(practice, before: true)
     }
 
@@ -208,28 +243,49 @@ final class ExamSetupModel {
 
     // MARK: Loading and starting
 
-    /// Loads the setup, the course for its exam pages, and whether she may write exam twins. A
-    /// course that cannot be read leaves the folders ungrouped.
+    /// Loads the setup with the server's plan for the ticked folders, the course for its exam
+    /// pages, and whether she may write exam twins. The first load asks for the plan over the
+    /// folders an exam page ticked. A course that cannot be read leaves the folders ungrouped.
     func load() async {
         async let reading = courseDetail()
         async let twins: Void = loadTwins()
+        await read(hasTicked ? pick : Pick(folderIDs: Set(route.folderIDs), pool: pick.pool))
+        if let read = await reading {
+            detail = read
+        }
+        await twins
+    }
+
+    /// Reads the setup again after she changed the folders or the pool, for the server's plan over
+    /// them. Nothing to do when the setup on screen, or the read on its way, is already for them.
+    func readPlan() async {
+        guard hasTicked, pick != requested else { return }
+        await read(pick)
+    }
+
+    private func read(_ pick: Pick) async {
+        reads += 1
+        let read = reads
+        requested = pick
         do {
-            let loaded = try await app.client.examSetup(courseID: course.id)
+            let loaded = try await app.client.examSetup(courseID: course.id, folderIDs: pick.folderIDs.sorted(), pool: pick.pool)
+            guard read == reads else { return }
             setup = loaded
+            setupPick = pick
             loadedAt = now()
             problem = nil
             if !hasTicked {
                 hasTicked = true
                 let ids = Set(loaded.folders.map(\.id))
                 ticked = Set(route.folderIDs.filter(ids.contains))
+                // The server left out the folders it does not have, so its plan is for the rest.
+                setupPick = Pick(folderIDs: pick.folderIDs.intersection(ids), pool: pick.pool)
+                requested = setupPick
             }
         } catch {
+            guard read == reads else { return }
             report(error)
         }
-        if let read = await reading {
-            detail = read
-        }
-        await twins
     }
 
     /// The Twin option and her twin jobs, for the one account that may make questions. Every other
@@ -268,16 +324,6 @@ final class ExamSetupModel {
 
     // MARK: Exam twins
 
-    /// The ticked folders and the pool, as a twin job is asked for them.
-    struct TwinPick: Equatable {
-        let folderIDs: [String]
-        let pool: ExamPool
-    }
-
-    private var twinPick: TwinPick {
-        TwinPick(folderIDs: picked.map(\.id), pool: wrongOnly ? .wrong : .all)
-    }
-
     /// Write exam twins shows while the server says she may make questions now.
     var canTwin: Bool {
         isStudent && Twins.canTwin(maker)
@@ -285,7 +331,7 @@ final class ExamSetupModel {
 
     /// Why the server would not twin the folders and pool ticked now, in its words.
     var twinProblem: String? {
-        guard let twinRefusal, twinRefusal.pick == twinPick else { return nil }
+        guard let twinRefusal, twinRefusal.pick == pick else { return nil }
         return twinRefusal.message
     }
 
@@ -294,12 +340,13 @@ final class ExamSetupModel {
     /// the pool.
     func writeTwins() async -> TwinJob? {
         guard canTwin, !picked.isEmpty, !isStarting, !isTwinning, !needsConnection else { return nil }
-        let pick = twinPick
+        let pick = pick
+        let folderIDs = picked.map(\.id)
         isTwinning = true
         twinRefusal = nil
         defer { isTwinning = false }
         do {
-            let job = try await app.client.startTwinJob(NewTwinJob(courseID: course.id, folderIDs: pick.folderIDs, pool: pick.pool))
+            let job = try await app.client.startTwinJob(NewTwinJob(courseID: course.id, folderIDs: folderIDs, pool: pick.pool))
             twinJobs = [job] + (twinJobs ?? []).filter { $0.id != job.id }
             return job
         } catch {

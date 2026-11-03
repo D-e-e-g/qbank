@@ -444,7 +444,13 @@ struct DebugLaunchScenarioTests {
         #expect(setup.setup?.exams.map(\.courseExamID) == [FakeStudy.exam1, nil, FakeStudy.exam1])
         setup.wrongOnly = true
         for folder in setup.folders.prefix(2) { setup.toggle(folder) }
+        await setup.readPlan()
         #expect(setup.summaryCount == "11 questions")
+        #expect(setup.summaryTime == "in 16.5 minutes")
+        #expect(setup.summarySplit == "4 from Week 1 · 7 from Week 2 · Fewer than 40, so it’s all of them at 1.5 minutes each.")
+        #expect(setup.setup?.courseExams.map(\.courseExamID) == [FakeStudy.exam1, FakeStudy.exam2], "a plan for each page")
+        #expect(setup.setup?.courseExams.first?.preview.questionCount == 40)
+        #expect(try await app.client.course(id: course.id).examTimeLimitSeconds == 3600)
         let exam = try #require(await setup.start())
         #expect(exam.questions.count == 11)
         #expect(exam.practiceWeeks == ["Week 2"])

@@ -79,7 +79,6 @@ struct CourseFoldersTests {
         #expect(FolderWording.pageNote(exam1) == "2 folders · 3 practice sets · 20 questions")
         #expect(FolderWording.examTwins(exam1) == nil, "Week 1 and Week 2 have no exam twins")
         #expect(FolderWording.state(exam1.progress) == "12 of 20")
-        #expect(FolderWording.examDraw(exam1) == "All 20 questions in these 2 folders, or Wrong questions only.")
         #expect(layout.looseFolders.isEmpty, "a folder on a page is listed only there")
     }
 
@@ -93,20 +92,27 @@ struct CourseFoldersTests {
         let page = try #require(CourseLayout(course: try course(pages: [("x1", "Exam 1", [])]), sittings: []).page("x1"))
         #expect(FolderWording.pageRow(page) == "No folders yet")
         #expect(FolderWording.pageNote(page) == "No folders yet")
-        #expect(FolderWording.examDraw(page) == nil)
+        #expect(page.examQuestionCount == 0, "so it offers no Start exam")
+        #expect(FolderWording.examDraw(try plan([])) == nil)
+    }
+
+    private func plan(_ folders: [StudyBodies.Draw], questions: Int? = nil, seconds: Int = 0) throws -> ExamPreview {
+        try QBankJSON.decoder.decode(ExamPreview.self, from: Data(StudyBodies.preview(folders, questions: questions, seconds: seconds).utf8))
     }
 
     @Test func examDrawSaysHowManyComeFromTheFolders() throws {
-        let page = try #require(CourseLayout(course: try course(pages: [("x1", "Exam 1", ["f2", "f3"])]), sittings: []).page("x1"))
-        #expect(page.examQuestionCount == 30, "Week 2's 10 practice questions and Week 3's exam bank of 20")
-        #expect(FolderWording.examDraw(page) == "All 30 questions in these 2 folders, or Wrong questions only.")
-        let one = try #require(CourseLayout(course: try course(pages: [("x1", "Exam 1", ["f3"])]), sittings: []).page("x1"))
+        let two = try plan([("f2", "Week 2", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")])
+        #expect(FolderWording.examDraw(two) == "All 30 questions in these 2 folders, or Wrong questions only.")
+        let one = try plan([("f3", "Week 3", 20, 20, "exam")])
         #expect(FolderWording.examDraw(one) == "All 20 questions in this folder, or Wrong questions only.")
-        let all = try #require(CourseLayout(course: try course(pages: [("x1", "Exam 1", ["f1", "f2", "f3"])]), sittings: []).page("x1"))
-        #expect(FolderWording.examDraw(all) == "All 40 questions in these 3 folders, or Wrong questions only.")
-        let folders = [try folder("A", [(30, 0, 0)]), try folder("B", [(14, 0, 0), (16, 0, 0)])]
-        let large = ExamPage(exam: CourseExam(id: "x", name: "Exam 3", sortOrder: 1, weekLabels: []), folders: folders, sittings: [], progress: FolderProgress(sets: folders.flatMap(\.sets)))
+        let large = try plan([("a", "A", 30, 20, "practice"), ("b", "B", 30, 20, "practice")])
         #expect(FolderWording.examDraw(large) == "40 questions from the 60 in these 2 folders, or Wrong questions only.")
+    }
+
+    /// The count is the server's plan, so a change to its rules reaches the page without an update.
+    @Test func examDrawFollowsTheServersCount() throws {
+        let page = try plan([("f1", "Week 1", 17, 10, "exam"), ("f2", "Week 2", 26, 15, "practice")], questions: 25)
+        #expect(FolderWording.examDraw(page) == "25 questions from the 43 in these 2 folders, or Wrong questions only.")
     }
 
     @Test func examTwinsSitBesideStartExamWhenAFolderHasThem() throws {

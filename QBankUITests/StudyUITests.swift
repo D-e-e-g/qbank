@@ -124,10 +124,12 @@ final class StudyUITests: XCTestCase {
         week1.tap()
         week2.tap()
         XCTAssertTrue(week1.isSelected)
-        XCTAssertTrue(week1.label.contains("4 in exam"), week1.label)
-        XCTAssertTrue(week2.label.contains("7 in exam"), week2.label)
+        // The plan is the server's, read again after each tick.
+        waitForLabel(week1, containing: "4 in exam")
+        waitForLabel(week2, containing: "7 in exam")
         let count = app.descendants(matching: .any)["exam.summary.count"]
         reveal(app.buttons["exam.start"], in: app)
+        waitForLabel(count, containing: "11 questions, in 16.5 minutes")
         XCTAssertEqual(count.label, "11 questions, in 16.5 minutes")
         XCTAssertEqual(
             app.staticTexts["exam.summary.split"].label,
@@ -252,7 +254,9 @@ final class StudyUITests: XCTestCase {
         exam1.tap()
         XCTAssertTrue(app.navigationBars["Exam 1"].appears(timeout: 5))
         XCTAssertEqual(app.staticTexts["page.note"].label, "2 folders · 3 practice sets · 43 questions")
-        XCTAssertEqual(app.staticTexts["page.draw"].label, "40 questions from the 43 in these 2 folders, or Wrong questions only.")
+        let draw = app.staticTexts["page.draw"]
+        XCTAssertTrue(draw.appears(timeout: 5), "the server's plan for the page")
+        XCTAssertEqual(draw.label, "40 questions from the 43 in these 2 folders, or Wrong questions only.")
         XCTAssertTrue(app.staticTexts["Study material"].exists)
         XCTAssertTrue(
             app.descendants(matching: .any)["page.twins"].label.contains("Exam twins: 17 in Week 1 · exams draw from these first")
@@ -296,7 +300,9 @@ final class StudyUITests: XCTestCase {
         XCTAssertFalse(app.buttons["exam.folder.Week 3"].isSelected)
         attach(app, "C exam setup from Exam 1")
         reveal(app.buttons["exam.start"], in: app)
-        XCTAssertEqual(app.descendants(matching: .any)["exam.summary.count"].label, "40 questions, in 60 minutes")
+        let pageCount = app.descendants(matching: .any)["exam.summary.count"]
+        waitForLabel(pageCount, containing: "40 questions, in 60 minutes")
+        XCTAssertEqual(pageCount.label, "40 questions, in 60 minutes")
         attach(app, "C exam setup from Exam 1, summary")
 
         // The exam she takes from here shows under the page's Past exams when she comes back.

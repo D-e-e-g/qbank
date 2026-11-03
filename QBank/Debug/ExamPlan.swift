@@ -1,8 +1,10 @@
+#if DEBUG
 import Foundation
+import QBankKit
 
-/// How many questions an exam over the ticked folders takes from each, and its time: the
-/// server's `planExam` (`packages/questions/src/exam.ts`), so the summary she reads before Start
-/// is the exam she gets.
+/// The fake server's `planExam` (`packages/questions/src/exam.ts`): how many questions an exam
+/// over the ticked folders takes from each, and its time. The app shows the plan the server sends;
+/// only the fake, playing the server, works it out.
 ///
 /// Up to 40 questions in 60 minutes. When the folders hold fewer than 40, the exam is all of them
 /// at 1.5 minutes each. A larger pool is split in proportion to each folder's size by largest
@@ -25,27 +27,27 @@ nonisolated struct ExamPlan: Equatable {
         let drawn: Int
     }
 
-    static let maxQuestions = 40
-    static let fullSeconds = 60 * 60
-    static let secondsPerQuestion = 90
+    /// The rules the fake server plans by and sends as `ExamSetup.rules`.
+    static let rules = ExamRules(maxQuestions: 40, fullTimeSeconds: 60 * 60, secondsPerQuestion: 90)
 
     let questionCount: Int
     let timeLimitSeconds: Int
     let draws: [Draw]
 
-    init(_ pools: [Pool]) {
+    init(_ pools: [Pool], rules: ExamRules = Self.rules) {
         let sizes = pools.map { max(0, $0.questionCount) }
         let pool = sizes.reduce(0, +)
-        guard pool > Self.maxQuestions else {
+        let maxQuestions = rules.maxQuestions
+        guard pool > maxQuestions else {
             questionCount = pool
-            timeLimitSeconds = pool * Self.secondsPerQuestion
+            timeLimitSeconds = pool * rules.secondsPerQuestion
             draws = zip(pools, sizes).map { Draw(id: $0.id, name: $0.name, questionCount: $1, drawn: $1) }
             return
         }
 
-        let quotas = sizes.map { Double($0 * Self.maxQuestions) / Double(pool) }
+        let quotas = sizes.map { Double($0 * maxQuestions) / Double(pool) }
         var drawn = quotas.map { Int($0.rounded(.down)) }
-        var left = Self.maxQuestions - drawn.reduce(0, +)
+        var left = maxQuestions - drawn.reduce(0, +)
         let byRemainder = quotas.indices.sorted { a, b in
             let ra = quotas[a] - quotas[a].rounded(.down), rb = quotas[b] - quotas[b].rounded(.down)
             if ra != rb { return ra > rb }
@@ -58,7 +60,7 @@ nonisolated struct ExamPlan: Equatable {
         }
 
         // A small folder next to large ones can round to 0. It borrows one from the folder that is
-        // furthest over its share, so the total stays 40.
+        // furthest over its share, so the total stays at the most.
         let surplus = { (index: Int) in Double(drawn[index]) - quotas[index] }
         for index in drawn.indices where sizes[index] > 0 && drawn[index] == 0 {
             var lender: Int?
@@ -71,8 +73,9 @@ nonisolated struct ExamPlan: Equatable {
             drawn[index] = 1
         }
 
-        questionCount = Self.maxQuestions
-        timeLimitSeconds = Self.fullSeconds
+        questionCount = maxQuestions
+        timeLimitSeconds = rules.fullTimeSeconds
         draws = pools.indices.map { Draw(id: pools[$0].id, name: pools[$0].name, questionCount: sizes[$0], drawn: drawn[$0]) }
     }
 }
+#endif

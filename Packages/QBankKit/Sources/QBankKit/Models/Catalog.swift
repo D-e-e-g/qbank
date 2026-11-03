@@ -160,6 +160,9 @@ public struct CourseDetail: Codable, Sendable, Equatable, Identifiable {
     public let questionCount: Int
     /// How many questions an exam over every folder draws from.
     public let examQuestionCount: Int
+    /// The time an exam over every folder gets, as the server's rules give it. Nil in a copy saved
+    /// on the phone before the app read it.
+    public let examTimeLimitSeconds: Int?
     /// Folder names that hold sets, counted once each: what an app from before folders shows.
     public let weekCount: Int
     /// Her folders in the course, empty ones included.
@@ -186,7 +189,7 @@ public struct CourseDetail: Codable, Sendable, Equatable, Identifiable {
         id: String, kind: CourseKind = .course, code: String, title: String, archivedAt: Date?, semester: SemesterRef?,
         questionCount: Int, examQuestionCount: Int, weekCount: Int, termCount: Int, reviewCount: Int,
         answeredCount: Int, fullyRightCount: Int, points: Int, maxPoints: Int, weeks: [Week], exams: [CourseExam] = [],
-        folders: [Folder]? = nil, folderCount: Int? = nil
+        folders: [Folder]? = nil, folderCount: Int? = nil, examTimeLimitSeconds: Int? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -196,6 +199,7 @@ public struct CourseDetail: Codable, Sendable, Equatable, Identifiable {
         self.semester = semester
         self.questionCount = questionCount
         self.examQuestionCount = examQuestionCount
+        self.examTimeLimitSeconds = examTimeLimitSeconds
         self.weekCount = weekCount
         self.termCount = termCount
         self.reviewCount = reviewCount
@@ -210,7 +214,7 @@ public struct CourseDetail: Codable, Sendable, Equatable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, code, title, archivedAt, semester, questionCount, examQuestionCount, weekCount, folderCount, termCount
+        case id, kind, code, title, archivedAt, semester, questionCount, examQuestionCount, examTimeLimitSeconds, weekCount, folderCount, termCount
         case reviewCount, answeredCount, fullyRightCount, points, maxPoints, weeks, exams, folders
     }
 
@@ -226,6 +230,7 @@ public struct CourseDetail: Codable, Sendable, Equatable, Identifiable {
         semester = try container.decodeIfPresent(SemesterRef.self, forKey: .semester)
         questionCount = try container.decode(Int.self, forKey: .questionCount)
         examQuestionCount = try container.decode(Int.self, forKey: .examQuestionCount)
+        examTimeLimitSeconds = try container.decodeIfPresent(Int.self, forKey: .examTimeLimitSeconds)
         weekCount = try container.decode(Int.self, forKey: .weekCount)
         termCount = try container.decode(Int.self, forKey: .termCount)
         reviewCount = try container.decode(Int.self, forKey: .reviewCount)

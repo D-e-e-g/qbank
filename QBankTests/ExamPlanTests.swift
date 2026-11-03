@@ -1,8 +1,10 @@
+import QBankKit
 import Testing
 @testable import QBank
 
-/// The server's `planExam` cases (`packages/questions/src/exam.test.ts`) and the web's exam
-/// wording (`apps/web/src/exam/weeks.test.ts`), so the summary before Start matches the exam.
+/// The fake server's plan held to the server's `planExam` cases (`packages/questions/src/exam.test.ts`),
+/// so the UI tests see the exams the server would give, and the web's exam wording
+/// (`apps/web/src/exam/weeks.test.ts`).
 struct ExamPlanTests {
     private func plan(_ sizes: [Int]) -> ExamPlan {
         ExamPlan(sizes.enumerated().map { ExamPlan.Pool(id: "f\($0.offset + 1)", name: "Week \($0.offset + 1)", questionCount: $0.element) })
@@ -47,6 +49,16 @@ struct ExamPlanTests {
     @Test func breaksAnEvenSplitTheSameWayEveryTime() {
         #expect(plan([30, 30, 30]).draws.map(\.drawn) == [14, 13, 13])
         #expect(plan([30, 30, 30]).draws.map(\.drawn) == [14, 13, 13])
+    }
+
+    @Test func plansByTheRulesItIsGiven() {
+        let rules = ExamRules(maxQuestions: 25, fullTimeSeconds: 1800, secondsPerQuestion: 60)
+        let pools = [10, 30].enumerated().map { ExamPlan.Pool(id: "f\($0.offset + 1)", name: "Week \($0.offset + 1)", questionCount: $0.element) }
+        let plan = ExamPlan(pools, rules: rules)
+        #expect(plan.draws.map(\.drawn) == [6, 19])
+        #expect(plan.questionCount == 25)
+        #expect(plan.timeLimitSeconds == 1800)
+        #expect(ExamPlan(Array(pools.prefix(1)), rules: rules).timeLimitSeconds == 600)
     }
 
     @Test func drawsNothingFromNothing() {
