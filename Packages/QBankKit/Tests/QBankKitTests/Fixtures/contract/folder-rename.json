@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "9fa05c0b3f85764a60f8c8afaa8ca702241aded7",
   "request": {
     "method": "PATCH",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000011",
@@ -18,7 +17,8 @@
       "examPageId": null,
       "sortOrder": 4,
       "sets": [],
-      "examBankCount": 0
+      "examBankCount": 0,
+      "examSets": []
     }
   }
 }

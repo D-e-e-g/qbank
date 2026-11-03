@@ -3,25 +3,29 @@ import Testing
 @testable import QBankKit
 
 /// A server with study topics: a topic is a course row of kind `topic` with no semester and an
-/// empty code. The bodies in `Fixtures/topics` are written by hand to the server's contract at
-/// qbank-server `c1ac3f4` (`Fixtures/openapi.json`), not recorded; they must decode, and her courses
+/// empty code. The bodies are the recorded contract fixtures; they must decode, and her courses
 /// must read exactly as before.
 @Suite("Topics on the server, before the app shows them")
 struct TopicToleranceTests {
     static let topicID = "70000000-0000-4000-8000-000000000001"
 
+    /// The recorded response body. `semesters` and `place` keep the names the tests were written
+    /// with; their files are the topic recordings, not the course-only ones.
     static func body(_ name: String) throws -> Data {
-        let url = try #require(
-            Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures/topics"),
-            "No topics fixture named \(name)"
-        )
-        return try Data(contentsOf: url)
+        let recorded = [
+            "semesters": "semesters-with-topics",
+            "place": "place-topic",
+        ]
+        return try Fixture.load(recorded[name] ?? name).responseData
     }
 
     /// The body with every `"kind": "topic"` made a kind this version does not know.
     static func withUnknownKind(_ name: String) throws -> Data {
-        let text = String(decoding: try body(name), as: UTF8.self)
-        return Data(text.replacingOccurrences(of: #""kind": "topic""#, with: #""kind": "shelf""#).utf8)
+        var text = String(decoding: try body(name), as: UTF8.self)
+        for spaced in [#""kind": "topic""#, #""kind" : "topic""#, #""kind":"topic""#] {
+            text = text.replacingOccurrences(of: spaced, with: spaced.replacingOccurrences(of: "topic", with: "shelf"))
+        }
+        return Data(text.utf8)
     }
 
     static func object(_ value: JSONValue) throws -> [String: JSONValue] {

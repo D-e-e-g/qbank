@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "01efcb8ed7a46bc276f71671872233e6e6e0f9a0",
   "request": {
     "method": "DELETE",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000801",

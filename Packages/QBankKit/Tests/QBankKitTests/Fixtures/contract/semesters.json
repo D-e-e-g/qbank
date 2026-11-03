@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "9fa05c0b3f85764a60f8c8afaa8ca702241aded7",
   "request": {
     "method": "GET",
     "path": "/api/semesters",
@@ -32,11 +31,14 @@
               "answeredCount": 0,
               "fullyRightCount": 0,
               "points": 0,
-              "maxPoints": 0
+              "maxPoints": 0,
+              "kind": "course"
             }
-          ]
+          ],
+          "archivedAt": null
         }
-      ]
+      ],
+      "topics": []
     }
   }
 }

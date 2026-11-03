@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "b11d26264edc454dc17155a007e05775c9a3ac61",
   "request": {
     "method": "POST",
     "path": "/api/agent-keys/4d1c3f8e-0000-4000-8000-000000000404/revoke",

@@ -1,0 +1,87 @@
+{
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "request": {
+    "method": "GET",
+    "path": "/api/semesters",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "semesters": [
+        {
+          "id": "3d9a9957-5eb2-4949-b1f7-086f1e51ff61",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": [
+            {
+              "id": "c0000000-0000-4000-8000-000000000101",
+              "kind": "course",
+              "code": "NURS 101",
+              "title": "Invented Nursing Basics",
+              "sortOrder": 1,
+              "archivedAt": null,
+              "questionCount": 0,
+              "weekCount": 0,
+              "folderCount": 0,
+              "reviewCount": 0,
+              "answeredCount": 0,
+              "fullyRightCount": 0,
+              "points": 0,
+              "maxPoints": 0
+            }
+          ]
+        },
+        {
+          "id": "3d9a9957-5eb2-4949-b1f7-086f1e51ff62",
+          "number": 2,
+          "name": "Semester 2",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": "2026-11-03T20:18:45.275Z",
+          "courses": []
+        }
+      ],
+      "topics": [
+        {
+          "id": "70000000-0000-4000-8000-000000000001",
+          "kind": "topic",
+          "code": "",
+          "title": "Invented Pharmacology Review",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 3,
+          "weekCount": 2,
+          "folderCount": 2,
+          "reviewCount": 1,
+          "answeredCount": 1,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 1
+        },
+        {
+          "id": "70000000-0000-4000-8000-000000000002",
+          "kind": "topic",
+          "code": "",
+          "title": "Invented Spanish Verbs",
+          "sortOrder": 2,
+          "archivedAt": "2026-11-03T20:18:45.422Z",
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      ]
+    }
+  }
+}

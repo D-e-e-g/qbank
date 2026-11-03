@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "01efcb8ed7a46bc276f71671872233e6e6e0f9a0",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000801/delete-preview",
@@ -31,7 +30,11 @@
       "message": "Delete NURS 220 and its 5 questions? You can bring it back for 30 days.",
       "refusal": "An exam in NURS 220 is still going. Finish or leave that exam first.",
       "confirm": "bed4d3e1a5eaf8b4",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete NURS 220 and its 5 questions?",
+        "body": "You can bring it back for 30 days."
+      }
     }
   }
 }

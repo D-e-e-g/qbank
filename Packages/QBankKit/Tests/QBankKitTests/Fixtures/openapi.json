@@ -7,7 +7,7 @@
   "tags": [
     {
       "name": "Agents",
-      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `finishedAt` null with `endsAt` past means the user's time ran out and the end is recorded when their app next opens the exam; until then it has no `result`.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on an exam page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Exam pages (study pages, in a topic): `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders and its primer link). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or an exam page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
+      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `finishedAt` null with `endsAt` past means the user's time ran out and the end is recorded when their app next opens the exam; until then it has no `result`.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
     },
     {
       "name": "Agent keys",
@@ -101,7 +101,7 @@
                     "course",
                     "topic"
                   ],
-                  "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                  "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                 },
                 "code": {
                   "type": "string",
@@ -203,7 +203,7 @@
               "course",
               "topic"
             ],
-            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
           },
           "code": {
             "type": "string",
@@ -312,14 +312,14 @@
             "items": {
               "$ref": "#/components/schemas/Folder"
             },
-            "description": "Every folder of the course, empty ones included: each exam page's folders, pages in the order of exams, then the folders on no exam page (the course's Folders list); each list in her order."
+            "description": "Every folder of the course, empty ones included: each page's folders, pages in the order of exams, then the folders on no page (the course's Folders list); each list in her order."
           },
           "exams": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CourseExam"
             },
-            "description": "The course's exam pages, such as Exam 1, each with its folders, in the order they were added. Empty until one is made."
+            "description": "The course's pages, such as Exam 1, each with its folders, in the order they were added. Empty until one is made."
           }
         },
         "required": [
@@ -452,7 +452,7 @@
           },
           "name": {
             "type": "string",
-            "description": "Unique within its list, ignoring case: within its exam page, or within the course's Folders list (no exam page). Two exam pages may each have a First Pass."
+            "description": "Unique within its list, ignoring case: within its page, or within the course's Folders list (no page). Two pages may each have a First Pass."
           },
           "examPageId": {
             "type": [
@@ -460,11 +460,11 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The exam page (CourseDetail.exams) it is on, or null when it is only in the course's Folders list. A folder is on one exam page at most. A folder of an exam page she deleted is null, in the Folders list after the folders there, until Undo puts it back on the page."
+            "description": "The page (CourseDetail.exams) it is on, or null when it is only in the course's Folders list. A folder is on one page at most. A folder of a page she deleted is null, in the Folders list after the folders there, until Undo puts it back on the page."
           },
           "sortOrder": {
             "type": "integer",
-            "description": "Its place in its list (its exam page's folders, or the Folders list), smallest first. Her own order: PUT /api/courses/{id}/folder-order."
+            "description": "Its place in its list (its page's folders, or the Folders list), smallest first. Her own order: PUT /api/courses/{id}/folder-order."
           },
           "sets": {
             "type": "array",
@@ -561,6 +561,17 @@
               "null"
             ],
             "description": "The page's primer: a web address she opens from the page, or null. QBank shows it as a link and renders nothing."
+          },
+          "badge": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PageBadge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the page is for, or null for no badge. Set and taken off with PUT /api/course-exams/{id}; a new page has none unless POST sent one."
           }
         },
         "required": [
@@ -569,8 +580,18 @@
           "sortOrder",
           "weekLabels",
           "folderIds",
-          "linkUrl"
+          "linkUrl",
+          "badge"
         ]
+      },
+      "PageBadge": {
+        "type": "string",
+        "enum": [
+          "exam",
+          "concept",
+          "study"
+        ],
+        "description": "What a page is for, shown as a small tag beside its name: `exam` (Exam), `concept` (Concept) or `study` (Study)."
       },
       "CourseExamInput": {
         "type": "object",
@@ -585,7 +606,7 @@
               "format": "uuid"
             },
             "maxItems": 200,
-            "description": "The folders on this exam page, in the order she wants them. A folder of another exam page is refused with 409, naming it (\"First Pass is in Exam 2.\"); move it with PATCH /api/folders/{id} first. A folder taken off the page goes to the end of the course's Folders list. Send folderIds or weekLabels, not both; with neither, POST makes an empty page and PUT keeps its folders."
+            "description": "The folders on this page, in the order she wants them. A folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"); move it with PATCH /api/folders/{id} first. A folder taken off the page goes to the end of the course's Folders list. Send folderIds or weekLabels, not both; with neither, POST makes an empty page and PUT keeps its folders."
           },
           "weekLabels": {
             "type": "array",
@@ -593,14 +614,25 @@
               "type": "string"
             },
             "maxItems": 200,
-            "description": "Legacy, for clients from before folders: folder names, each meaning the folder of that name already on this page, else the one on no exam page. The page holds them in week order."
+            "description": "Legacy, for clients from before folders: folder names, each meaning the folder of that name already on this page, else the one on no page. The page holds them in week order."
           },
           "linkUrl": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Its primer link, an http or https address of at most 2,000 characters. Null or empty takes it off; left out, PUT keeps the page's link."
+            "description": "Its primer link, an http or https address of at most 2,000 characters. A value with no scheme:// is stored with one added: http:// for a tailnet or local host (a name ending in .ts.net, a single-label host, an IP address, localhost, or any address with a port) and https:// otherwise. Null or empty takes it off; left out, PUT keeps the page's link."
+          },
+          "badge": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PageBadge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its badge. Null takes it off; left out, PUT keeps the page's badge and POST makes a page with none."
           }
         },
         "required": [
@@ -619,7 +651,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The exam page to make it on. Without it, or null, it goes in the course's Folders list."
+            "description": "The page to make it on. Without it, or null, it goes in the course's Folders list."
           }
         },
         "required": [
@@ -631,7 +663,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Its new name. Only the name changes: its sets, their progress, its exam page and her past exams stay with it."
+            "description": "Its new name. Only the name changes: its sets, their progress, its page and her past exams stay with it."
           },
           "examPageId": {
             "type": [
@@ -639,7 +671,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Put it on this exam page, at the end of its folders, or take it off its page with null, to the end of the Folders list. Leave it out to keep its page."
+            "description": "Put it on this page, at the end of its folders, or take it off its page with null, to the end of the Folders list. Leave it out to keep its page."
           }
         }
       },
@@ -666,7 +698,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The list to order: an exam page's folders, or null for the course's Folders list."
+            "description": "The list to order: a page's folders, or null for the course's Folders list."
           },
           "folderIds": {
             "type": "array",
@@ -1356,7 +1388,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The folder's exam page, or null when it is in the course's Folders list."
+            "description": "The folder's page, or null when it is in the course's Folders list."
           },
           "questionCount": {
             "type": "integer"
@@ -2118,7 +2150,7 @@
           },
           "folderName": {
             "type": "string",
-            "description": "That folder's name. Two exam pages may each have a folder of this name; CourseDetail.folders says which page it is on."
+            "description": "That folder's name. Two pages may each have a folder of this name; CourseDetail.folders says which page it is on."
           },
           "format": {
             "type": "string"
@@ -2986,7 +3018,7 @@
                     "null"
                   ],
                   "format": "uuid",
-                  "description": "Its exam page (CourseDetail.exams), or null when it is on none: Exam setup groups folders by page."
+                  "description": "Its page (CourseDetail.exams), or null when it is on none: Exam setup groups folders by page."
                 },
                 "questionCount": {
                   "type": "integer",
@@ -3014,7 +3046,7 @@
                 "source"
               ]
             },
-            "description": "Every folder with a current question, in the course's order: each exam page's folders, pages in order, then the folders on no exam page."
+            "description": "Every folder with a current question, in the course's order: each page's folders, pages in order, then the folders on no page."
           },
           "weeks": {
             "type": "array",
@@ -3095,7 +3127,7 @@
                       "$ref": "#/components/schemas/ExamPreview"
                     },
                     {
-                      "description": "The exam over every folder of that exam page, from all their questions."
+                      "description": "The exam over every folder of that page, from all their questions."
                     }
                   ]
                 }
@@ -3105,7 +3137,7 @@
                 "preview"
               ]
             },
-            "description": "One for each of the course's exam pages (CourseDetail.exams), in the same order."
+            "description": "One for each of the course's pages (CourseDetail.exams), in the same order."
           }
         },
         "required": [
@@ -3154,7 +3186,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The exam page (CourseDetail.exams) that holds every folder this exam was over, so exams taken before the page was made belong to it too. Null when no page does, as while she has that page deleted: the exam stays, and belongs to the page again once Undo brings it back."
+            "description": "The page (CourseDetail.exams) that holds every folder this exam was over, so exams taken before the page was made belong to it too. Null when no page does, as while she has that page deleted: the exam stays, and belongs to the page again once Undo brings it back."
           },
           "pool": {
             "type": "string",
@@ -4104,6 +4136,9 @@
             "type": "string",
             "description": "The warning, as a sentence or two to show her: what goes, her answers, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4130,6 +4165,7 @@
           "reviewCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4185,6 +4221,24 @@
         ],
         "description": "One count, now and once it is deleted."
       },
+      "DeleteWarning": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The question the sheet titles with, such as \"Delete Week 1?\" or \"Delete NURS 220 and its 146 questions?\"."
+          },
+          "body": {
+            "type": "string",
+            "description": "The rest of the warning: what goes with it, her answers, and Undo, in the same words as `message`."
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "description": "`message` split into its question and the rest, so a client does not parse `message`. `message` stays as it is."
+      },
       "DeletionError": {
         "type": "object",
         "properties": {
@@ -4216,7 +4270,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The exam page it is on (CourseDetail.exams), or null. It comes off the page."
+            "description": "The page it is on (CourseDetail.exams), or null. It comes off the page."
           },
           "examPageName": {
             "type": [
@@ -4255,7 +4309,10 @@
           },
           "message": {
             "type": "string",
-            "description": "The warning, as a few sentences to show her: its sets by name, her answers, its exam page, and Undo."
+            "description": "The warning, as a few sentences to show her: its sets by name, her answers, its page, and Undo."
+          },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
           },
           "refusal": {
             "type": [
@@ -4283,6 +4340,7 @@
           "pastExamCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4373,6 +4431,9 @@
             "type": "string",
             "description": "The warning, as a few sentences to show her: its folders by name, that they stay, her past exams, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4400,6 +4461,7 @@
           "pastExamCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4473,6 +4535,9 @@
             "type": "string",
             "description": "The warning, as a few sentences to show her: her answers, Review and Wrong questions, and Undo."
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4498,6 +4563,7 @@
           "unansweredCount",
           "progress",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4554,7 +4620,7 @@
           },
           "examPageCount": {
             "type": "integer",
-            "description": "Its exam pages (study pages, in a topic)."
+            "description": "Its pages."
           },
           "setCount": {
             "type": "integer",
@@ -4584,6 +4650,9 @@
             "type": "string",
             "description": "The question to ask her once, such as \"Delete NURS 220 and its 146 questions? You can bring it back for 30 days.\""
           },
+          "warning": {
+            "$ref": "#/components/schemas/DeleteWarning"
+          },
           "refusal": {
             "type": [
               "string",
@@ -4612,6 +4681,7 @@
           "reviewCount",
           "pastExamCount",
           "message",
+          "warning",
           "refusal",
           "confirm",
           "undoDays"
@@ -4754,7 +4824,7 @@
             "items": {
               "$ref": "#/components/schemas/DeletedExamPage"
             },
-            "description": "Exam pages (study pages, in a topic) she deleted, newest first."
+            "description": "Pages she deleted, newest first."
           },
           "folders": {
             "type": "array",
@@ -4796,6 +4866,17 @@
           },
           "name": {
             "type": "string"
+          },
+          "badge": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PageBadge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its badge, or null for none. It comes back with it."
           },
           "folders": {
             "type": "array",
@@ -4844,12 +4925,13 @@
               "string",
               "null"
             ],
-            "description": "Why Undo would be refused now (the course has another exam page of its name), or null."
+            "description": "Why Undo would be refused now (the course has another page of its name), or null."
           }
         },
         "required": [
           "id",
           "name",
+          "badge",
           "folders",
           "pastExamCount",
           "deletedAt",
@@ -4875,7 +4957,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "The exam page Undo puts it back on; null when it goes back to the Folders list (its page was removed since, or it was on none)."
+            "description": "The page Undo puts it back on; null when it goes back to the Folders list (its page was removed since, or it was on none)."
           },
           "sets": {
             "type": "array",
@@ -6602,7 +6684,7 @@
           "read",
           "manage"
         ],
-        "description": "What an agent key may do. `import`: check and import question files, and read the account's semesters, courses and sets to do it. `read`: read the account's answers (its standing by topic, Review lists, exams and export) and change nothing. `manage`: add, change and delete the account's own content as the user can in QBank (semesters, courses, study topics, folders, exam pages, sets, and their questions through Import, Replace and Restore), every delete with Undo, as well as everything `import` reaches. More may be added later; show one you do not know by its name."
+        "description": "What an agent key may do. `import`: check and import question files, and read the account's semesters, courses and sets to do it. `read`: read the account's answers (its standing by topic, Review lists, exams and export) and change nothing. `manage`: add, change and delete the account's own content as the user can in QBank (semesters, courses, study topics, folders, pages, sets, and their questions through Import, Replace and Restore), every delete with Undo, as well as everything `import` reaches. More may be added later; show one you do not know by its name."
       },
       "AgentKeyDelivered": {
         "type": "object",
@@ -6809,7 +6891,7 @@
     "/api/semesters": {
       "get": {
         "summary": "List her semesters, courses and study topics",
-        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, exam pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
+        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
         "tags": [
           "Courses",
           "Agents"
@@ -6861,7 +6943,7 @@
                               "course",
                               "topic"
                             ],
-                            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                           },
                           "code": {
                             "type": "string",
@@ -7291,7 +7373,7 @@
                         "course",
                         "topic"
                       ],
-                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                     },
                     "code": {
                       "type": "string",
@@ -7422,7 +7504,7 @@
     "/api/topics": {
       "post": {
         "summary": "Make a study topic",
-        "description": "A topic is a course with no semester, for questions that are not a course: a certification, a language, her own notes. It has folders, study pages (exam pages), sets, Review, terms and exams as a course does, and opens with GET /api/courses/{id}. Its name is unique among her topics, ignoring case (409). Her first import into it with no folder makes its Unsorted folder.",
+        "description": "A topic is a course with no semester, for questions that are not a course: a certification, a language, her own notes. It has folders, pages, sets, Review, terms and exams as a course does, and opens with GET /api/courses/{id}. Its name is unique among her topics, ignoring case (409). Her first import into it with no folder makes its Unsorted folder.",
         "tags": [
           "Courses",
           "Agents"
@@ -7476,7 +7558,7 @@
                         "course",
                         "topic"
                       ],
-                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                     },
                     "code": {
                       "type": "string",
@@ -7671,7 +7753,7 @@
                               "course",
                               "topic"
                             ],
-                            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                            "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                           },
                           "code": {
                             "type": "string",
@@ -7879,7 +7961,7 @@
                         "course",
                         "topic"
                       ],
-                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                     },
                     "code": {
                       "type": "string",
@@ -8007,8 +8089,8 @@
         }
       },
       "get": {
-        "summary": "A course or topic, its folders, its exam pages, and its sets",
-        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, exam pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
+        "summary": "A course or topic, its folders, its pages, and its sets",
+        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
         "tags": [
           "Courses",
           "Agents"
@@ -8121,7 +8203,7 @@
           "Agents"
         ],
         "summary": "Delete a course or topic",
-        "description": "Deletes a course or study topic with everything in it, as its preview named. It leaves Home (GET /api/semesters), the topic order, its own reads and everything in it (404, as an id that names nothing), study, Review, exams, Make questions and exam twins, the last course she used, and what an agent reads (GET /api/me/standing, and `courses` and `questions` of GET /api/me/export). Nothing in it is written: its folders, exam pages, sets, her answers, progress and past exams stay saved as they are, her answers count toward nothing while it is deleted, and an answer still on its way to one of its questions is saved. Its code, or a topic's name, is free again meanwhile. Refused with 409 `in_use` while a Make questions or twin job is still working in it, or an exam in it is in progress. GET /api/deleted-courses lists it for Undo. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
+        "description": "Deletes a course or study topic with everything in it, as its preview named. It leaves Home (GET /api/semesters), the topic order, its own reads and everything in it (404, as an id that names nothing), study, Review, exams, Make questions and exam twins, the last course she used, and what an agent reads (GET /api/me/standing, and `courses` and `questions` of GET /api/me/export). Nothing in it is written: its folders, pages, sets, her answers, progress and past exams stay saved as they are, her answers count toward nothing while it is deleted, and an answer still on its way to one of its questions is saved. Its code, or a topic's name, is free again meanwhile. Refused with 409 `in_use` while a Make questions or twin job is still working in it, or an exam in it is in progress. GET /api/deleted-courses lists it for Undo. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
         "security": [
           {
             "sessionCookie": []
@@ -8226,8 +8308,8 @@
     },
     "/api/courses/{id}/course-exams": {
       "post": {
-        "summary": "Add an exam to a course",
-        "description": "An exam page (a course exam; a study page, in a topic) is a name, an optional primer link, and the course's folders on it. A folder is on one exam page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this.",
+        "summary": "Add a page to a course or topic",
+        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this.",
         "tags": [
           "Courses",
           "Agents"
@@ -8268,7 +8350,7 @@
         },
         "responses": {
           "201": {
-            "description": "The new exam, after the course's other exams.",
+            "description": "The new page, after the course's other pages.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8342,8 +8424,8 @@
     },
     "/api/course-exams/{id}": {
       "put": {
-        "summary": "Rename an exam page and set its folders",
-        "description": "An exam page (a course exam; a study page, in a topic) is a name, an optional primer link, and the course's folders on it. A folder is on one exam page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this. The folders sent replace the page's folders, in the order sent.",
+        "summary": "Rename a page, set its badge and set its folders",
+        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this. The folders sent replace the page's folders, in the order sent.",
         "tags": [
           "Courses",
           "Agents"
@@ -8384,7 +8466,7 @@
         },
         "responses": {
           "200": {
-            "description": "The exam.",
+            "description": "The page.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8460,8 +8542,8 @@
           "Delete",
           "Agents"
         ],
-        "summary": "Delete an exam page",
-        "description": "Deletes the exam page, as its preview named, and nothing else: no folder, set, question, exam twin, answer, Review clear, progress or past exam is written. While it is deleted, it leaves CourseDetail.exams and Exam setup's `courseExams`, PUT /api/course-exams/{id} answers 404, and its name is free for another page. Its folders read as on no page (Folder.examPageId null): they show at the end of the course's Folders list, in the page's order, with their sets and her progress, and she studies, renames, moves and deletes them as any folder there. Her past exams over it stay in Exam setup and GET /api/exams/{id}, with `courseExamId` null. Without `confirm`, only a page with no folders is deleted (as before), and one with folders is refused with 409 `confirmation_required`. Refused with 409 when one of its folders has the name of a folder already in the Folders list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The student and the admin can both do this.",
+        "summary": "Delete a page",
+        "description": "Deletes the page, as its preview named, and nothing else: no folder, set, question, exam twin, answer, Review clear, progress or past exam is written. While it is deleted, it leaves CourseDetail.exams and Exam setup's `courseExams`, PUT /api/course-exams/{id} answers 404, and its name is free for another page. Its folders read as on no page (Folder.examPageId null): they show at the end of the course's Folders list, in the page's order, with their sets and her progress, and she studies, renames, moves and deletes them as any folder there. Her past exams over it stay in Exam setup and GET /api/exams/{id}, with `courseExamId` null. Without `confirm`, only a page with no folders is deleted (as before), and one with folders is refused with 409 `confirmation_required`. Refused with 409 when one of its folders has the name of a folder already in the Folders list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -8567,7 +8649,7 @@
     "/api/courses/{id}/folders": {
       "post": {
         "summary": "Make a folder",
-        "description": "A new, empty folder at the end of its list. A name is unique within its list, ignoring case: one exam page's folders, or the course's Folders list (no exam page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this.",
+        "description": "A new, empty folder at the end of its list. A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this.",
         "tags": [
           "Folders",
           "Agents"
@@ -8682,8 +8764,8 @@
     },
     "/api/folders/{id}": {
       "patch": {
-        "summary": "Rename a folder, or put it on an exam page",
-        "description": "A name is unique within its list, ignoring case: one exam page's folders, or the course's Folders list (no exam page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this. Renaming it to its own name, or putting it on the page it is on, changes nothing.",
+        "summary": "Rename a folder, or put it on a page",
+        "description": "A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this. Renaming it to its own name, or putting it on the page it is on, changes nothing.",
         "tags": [
           "Folders",
           "Agents"
@@ -8801,7 +8883,7 @@
           "Agents"
         ],
         "summary": "Delete a folder and its sets",
-        "description": "Deletes the folder and every set in it, every version, as its preview named; it comes off its exam page. Its sets are hidden as DELETE /api/practice-sets/{id} hides one, and her answers to them stop counting while it is deleted. Her past exams over it stay, without it in their folders. Without `confirm`, only a folder that holds no set is deleted (as before), and one with sets is refused with 409 `confirmation_required`. Refused with 409 `in_use` while a Make questions job is measured against one of its sets or is still filing their exam twins, a twin job is twinning one of them, or an exam in progress asks their questions. A Make questions job that would file into it is not a refusal: its set goes to Unsorted, and the job says so. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Deletes the folder and every set in it, every version, as its preview named; it comes off its page. Its sets are hidden as DELETE /api/practice-sets/{id} hides one, and her answers to them stop counting while it is deleted. Her past exams over it stay, without it in their folders. Without `confirm`, only a folder that holds no set is deleted (as before), and one with sets is refused with 409 `confirmation_required`. Refused with 409 `in_use` while a Make questions job is measured against one of its sets or is still filing their exam twins, a twin job is twinning one of them, or an exam in progress asks their questions. A Make questions job that would file into it is not a refusal: its set goes to Unsorted, and the job says so. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -9023,7 +9105,7 @@
     "/api/courses/{id}/folder-order": {
       "put": {
         "summary": "Put one list of folders in her order",
-        "description": "Saves the order of one exam page's folders, or of the course's Folders list. A list that does not name exactly the folders it holds is refused with 409, so a stale screen cannot drop or misplace one. The user account and the admin can both do this.",
+        "description": "Saves the order of one page's folders, or of the course's Folders list. A list that does not name exactly the folders it holds is refused with 409, so a stale screen cannot drop or misplace one. The user account and the admin can both do this.",
         "tags": [
           "Folders",
           "Agents"
@@ -9570,7 +9652,7 @@
                   },
                   "folderName": {
                     "type": "string",
-                    "description": "A folder by name: the course's folder of that name on no exam page, else its only folder of that name, else a new folder at the end of its Folders list."
+                    "description": "A folder by name: the course's folder of that name on no page, else its only folder of that name, else a new folder at the end of its Folders list."
                   },
                   "weekLabel": {
                     "type": "string",
@@ -9822,7 +9904,7 @@
     "/api/admin/weeks/rename": {
       "post": {
         "summary": "Rename a week's label",
-        "description": "Legacy: renames the course's folder named fromLabel (the one on no exam page, else its only folder of that name), as PATCH /api/folders/{id} does. A name its list already has is refused with 409.",
+        "description": "Legacy: renames the course's folder named fromLabel (the one on no page, else its only folder of that name), as PATCH /api/folders/{id} does. A name its list already has is refused with 409.",
         "tags": [
           "Admin"
         ],
@@ -9937,7 +10019,7 @@
     "/api/admin/practice-sets/{id}/move": {
       "post": {
         "summary": "Move a set to another week in the same course",
-        "description": "Legacy: moves the set, every version of it, to the folder named weekLabel (on the set's exam page, else on no exam page, else its only folder of that name), or to a new folder of that name in the Folders list, as POST /api/practice-sets/{id}/move does.",
+        "description": "Legacy: moves the set, every version of it, to the folder named weekLabel (on the set's page, else on no page, else its only folder of that name), or to a new folder of that name in the Folders list, as POST /api/practice-sets/{id}/move does.",
         "tags": [
           "Admin"
         ],
@@ -10518,7 +10600,7 @@
           "Account"
         ],
         "summary": "Delete this user account",
-        "description": "Deletes the signed-in user account and everything it has, for good: its semesters, courses and study topics with their folders, exam pages, sets, questions and terms, its answers, progress, Review and past exams, its Make questions and exam twin jobs, its passkeys, and its agent keys and pairings. Nothing goes to Recently deleted and there is no Undo.\n\nThe account is always the one signed in: nothing in the request names another, and no other account's content or answers change. Send its current password, checked as sign-in checks it; a wrong one counts toward the same lock as sign-in, and deletes nothing.\n\nOnce deleted, every session of the account ends, on every device, and every agent key it approved stops working (401 `invalid_agent_key`). The answer also clears this device's session cookie.\n\nThe admin account is refused, and so is any request that carries an agent key, whatever its scopes.",
+        "description": "Deletes the signed-in user account and everything it has, for good: its semesters, courses and study topics with their folders, pages, sets, questions and terms, its answers, progress, Review and past exams, its Make questions and exam twin jobs, its passkeys, and its agent keys and pairings. Nothing goes to Recently deleted and there is no Undo.\n\nThe account is always the one signed in: nothing in the request names another, and no other account's content or answers change. Send its current password, checked as sign-in checks it; a wrong one counts toward the same lock as sign-in, and deletes nothing.\n\nOnce deleted, every session of the account ends, on every device, and every agent key it approved stops working (401 `invalid_agent_key`). The answer also clears this device's session cookie.\n\nThe admin account is refused, and so is any request that carries an agent key, whatever its scopes.",
         "requestBody": {
           "required": true,
           "content": {
@@ -12173,7 +12255,7 @@
           "Exams"
         ],
         "summary": "Exam setup: the course's folders and her exams",
-        "description": "Every folder with a current question: how many questions an exam over it draws from (its exam bank when it has one, otherwise its practice questions), how many of those she last answered not fully right, and which source it uses. Then her running exam in this course and her ended exams, newest first. An exam whose time has run out is ended first. The admin reads the same, read-only. Then what every exam follows (`rules`), what each exam page would draw (`courseExams`), and, when `folderIds` (or legacy `weeks`) are given, what starting an exam over them would draw (`preview`), worked out as POST does.",
+        "description": "Every folder with a current question: how many questions an exam over it draws from (its exam bank when it has one, otherwise its practice questions), how many of those she last answered not fully right, and which source it uses. Then her running exam in this course and her ended exams, newest first. An exam whose time has run out is ended first. The admin reads the same, read-only. Then what every exam follows (`rules`), what each page would draw (`courseExams`), and, when `folderIds` (or legacy `weeks`) are given, what starting an exam over them would draw (`preview`), worked out as POST does.",
         "parameters": [
           {
             "schema": {
@@ -12853,7 +12935,7 @@
           "Agents"
         ],
         "summary": "What deleting a folder takes with it",
-        "description": "For the warning before a folder is deleted: every set in it (count and titles), their questions, her answers to them, its exam page, her past exams over it, and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both do this.",
+        "description": "For the warning before a folder is deleted: every set in it (count and titles), their questions, her answers to them, its page, her past exams over it, and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -12959,7 +13041,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a folder",
-        "description": "Brings back a folder she deleted and the sets that went with it, as they were: on its exam page if that page is still there, else at its place in the Folders list. A set she had deleted on its own before stays deleted. Refused with 409 when its list has a folder of its name now, naming that list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Brings back a folder she deleted and the sets that went with it, as they were: on its page if that page is still there, else at its place in the Folders list. A set she had deleted on its own before stays deleted. Refused with 409 when its list has a folder of its name now, naming that list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -13064,8 +13146,8 @@
           "Delete",
           "Agents"
         ],
-        "summary": "What deleting an exam page changes",
-        "description": "For the warning before an exam page (a study page, in a topic) is deleted. The page alone goes: its folders (count and names), their sets and exam bank, her answers to them and her past exams over it all stay, and `progress` is the same before and after, since deleting a page changes no answer, Review list, score or Wrong question. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The student and the admin can both do this.",
+        "summary": "What deleting a page changes",
+        "description": "For the warning before a page is deleted. The page alone goes: its folders (count and names), their sets and exam bank, her answers to them and her past exams over it all stay, and `progress` is the same before and after, since deleting a page changes no answer, Review list, score or Wrong question. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -13170,8 +13252,8 @@
           "Delete",
           "Agents"
         ],
-        "summary": "Undo deleting an exam page",
-        "description": "Brings back an exam page she deleted, as it was: in its place among the course's pages, with its folders back on it in its order and her past exams over them on it again. A folder she put on another page meanwhile stays there, and one she deleted stays in Recently deleted, coming back to the page with its own Undo. Refused with 409 when the course has another exam page of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The student and the admin can both do this.",
+        "summary": "Undo deleting a page",
+        "description": "Brings back a page she deleted, as it was: in its place among the course's pages, with its folders back on it in its order and her past exams over them on it again. A folder she put on another page meanwhile stays there, and one she deleted stays in Recently deleted, coming back to the page with its own Undo. Refused with 409 when the course has another page of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
         "security": [
           {
             "sessionCookie": []
@@ -13461,7 +13543,7 @@
           "Agents"
         ],
         "summary": "What deleting a course or topic takes with it",
-        "description": "For the one question before a course or study topic is deleted: its folders, exam pages, sets, questions, her answers and past exams in it, and `message`, the question to ask her. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both read this.",
+        "description": "For the one question before a course or study topic is deleted: its folders, pages, sets, questions, her answers and past exams in it, and `message`, the question to ask her. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both read this.",
         "security": [
           {
             "sessionCookie": []
@@ -13567,7 +13649,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a course or topic",
-        "description": "Brings back a course or study topic she deleted, whole: its folders, exam pages, sets (one she had deleted on its own before stays in its Recently deleted), her answers counting again, and her past exams, in its semester or her topics as before. Refused with 409 when its semester has a course of its code now, or she has a topic of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
+        "description": "Brings back a course or study topic she deleted, whole: its folders, pages, sets (one she had deleted on its own before stays in its Recently deleted), her answers counting again, and her past exams, in its semester or her topics as before. Refused with 409 when its semester has a course of its code now, or she has a topic of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
         "security": [
           {
             "sessionCookie": []
@@ -13610,7 +13692,7 @@
                         "course",
                         "topic"
                       ],
-                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty) and whose exam pages they call study pages. Everything inside it works as in a course. `course` for every course."
+                      "description": "`topic` for a study topic: a course with no semester, which the screens call by its title (its code is empty). Everything inside it, its pages included, works as in a course. `course` for every course."
                     },
                     "code": {
                       "type": "string",
@@ -13810,7 +13892,7 @@
           "Agents"
         ],
         "summary": "What she deleted in a course, for Undo",
-        "description": "The course's exam pages, folders and sets deleted in the last 30 days, and her past exams deleted in that time, newest first: everything Undo can still bring back. Older deletes stay hidden and are not listed. The admin reads the same, with her exams.",
+        "description": "The course's pages, folders and sets deleted in the last 30 days, and her past exams deleted in that time, newest first: everything Undo can still bring back. Older deletes stay hidden and are not listed. The admin reads the same, with her exams.",
         "security": [
           {
             "sessionCookie": []

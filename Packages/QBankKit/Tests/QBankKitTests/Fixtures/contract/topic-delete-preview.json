@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "01efcb8ed7a46bc276f71671872233e6e6e0f9a0",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000802/delete-preview",
@@ -27,7 +26,11 @@
       "message": "Delete Pharmacology and its 3 questions? You can bring it back for 30 days.",
       "refusal": null,
       "confirm": "66e0600cee1dfbfb",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete Pharmacology and its 3 questions?",
+        "body": "You can bring it back for 30 days."
+      }
     }
   }
 }

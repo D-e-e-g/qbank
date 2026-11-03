@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "db503743c7b9d7da7341ef62ed67adcb110da862",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000701/deleted",
@@ -45,7 +44,8 @@
           ],
           "deletedAt": "2026-10-18T20:22:06.420Z",
           "undoUntil": "2026-11-17T20:22:06.420Z",
-          "undoRefusal": null
+          "undoRefusal": null,
+          "deletedByAgent": null
         }
       ],
       "sets": [
@@ -58,7 +58,8 @@
           "folderName": "Week 2",
           "deletedAt": "2026-10-18T20:22:06.438Z",
           "undoUntil": "2026-11-17T20:22:06.438Z",
-          "undoRefusal": null
+          "undoRefusal": null,
+          "deletedByAgent": null
         }
       ],
       "exams": [
@@ -90,7 +91,8 @@
           "deletedAt": "2026-10-18T20:22:06.429Z",
           "undoUntil": "2026-11-17T20:22:06.429Z"
         }
-      ]
+      ],
+      "examPages": []
     }
   }
 }

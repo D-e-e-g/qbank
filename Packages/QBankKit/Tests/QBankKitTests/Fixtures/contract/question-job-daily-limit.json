@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "fe9f73e7ea2e798593f98c2d269999405105c662",
   "request": {
     "method": "POST",
     "path": "/api/question-jobs",

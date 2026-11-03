@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "b87a25e9f36c45e17ef72d88e45df6fc04717cb5",
   "request": {
     "method": "GET",
     "path": "/api/twin-jobs/0e000000-0000-4000-8000-000000000501",

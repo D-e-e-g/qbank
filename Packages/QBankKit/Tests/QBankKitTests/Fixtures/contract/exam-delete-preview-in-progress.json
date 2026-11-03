@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "db503743c7b9d7da7341ef62ed67adcb110da862",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000702/delete-preview",
@@ -48,7 +47,11 @@
       "message": "Delete this exam? You answered none of its questions, so your progress stays as it is. You can undo this for 30 days.",
       "refusal": "This exam is still going. Finish or leave it, then delete it.",
       "confirm": "88eb901854610596",
-      "undoDays": 30
+      "undoDays": 30,
+      "warning": {
+        "title": "Delete this exam?",
+        "body": "You answered none of its questions, so your progress stays as it is. You can undo this for 30 days."
+      }
     }
   }
 }

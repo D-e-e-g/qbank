@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "9fa05c0b3f85764a60f8c8afaa8ca702241aded7",
   "request": {
     "method": "GET",
     "path": "/api/courses/7a7665d2-2bbe-4093-ae10-a2cf1c968283",
@@ -56,7 +55,8 @@
                 "840dbb5e-49c5-4682-b80a-b194defad93b",
                 "34793561-87b1-4dcd-a26b-b039f2b35a53",
                 "3500ac88-16e1-48ca-b46e-ceeae9edee38"
-              ]
+              ],
+              "importedByAgent": null
             }
           ],
           "examBankCount": 2
@@ -79,7 +79,8 @@
               "questionIds": [
                 "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
                 "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de"
-              ]
+              ],
+              "importedByAgent": null
             }
           ],
           "examBankCount": 0
@@ -113,10 +114,12 @@
                 "840dbb5e-49c5-4682-b80a-b194defad93b",
                 "34793561-87b1-4dcd-a26b-b039f2b35a53",
                 "3500ac88-16e1-48ca-b46e-ceeae9edee38"
-              ]
+              ],
+              "importedByAgent": null
             }
           ],
-          "examBankCount": 2
+          "examBankCount": 2,
+          "examSets": []
         },
         {
           "id": "31e05eea-ece9-409f-9696-b035a99c94c4",
@@ -139,13 +142,16 @@
               "questionIds": [
                 "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
                 "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de"
-              ]
+              ],
+              "importedByAgent": null
             }
           ],
-          "examBankCount": 0
+          "examBankCount": 0,
+          "examSets": []
         }
       ],
-      "exams": []
+      "exams": [],
+      "kind": "course"
     }
   }
 }

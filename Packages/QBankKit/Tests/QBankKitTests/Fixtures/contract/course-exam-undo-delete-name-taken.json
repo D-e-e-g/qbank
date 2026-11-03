@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "4de36443ffecd8065d104b79bc6d3690e9adf04f",
   "request": {
     "method": "POST",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",

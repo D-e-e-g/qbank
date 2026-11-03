@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "9fa05c0b3f85764a60f8c8afaa8ca702241aded7",
   "request": {
     "method": "POST",
     "path": "/api/sign-in/password",
@@ -20,7 +19,8 @@
         "email": "student@example.com",
         "name": "Sam Student",
         "role": "student",
-        "mustChangePassword": false
+        "mustChangePassword": false,
+        "palette": "dusk"
       },
       "expiresAt": "2027-11-19T02:12:18.610Z"
     }

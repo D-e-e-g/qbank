@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "a7902ee866d377d7a58a2a2c6ab3520af791fed3",
   "request": {
     "method": "POST",
     "path": "/api/imports",
@@ -28,7 +27,8 @@
       "examPageId": null,
       "questionCount": 1,
       "termCount": 1,
-      "warnings": []
+      "warnings": [],
+      "importedByAgent": null
     }
   }
 }

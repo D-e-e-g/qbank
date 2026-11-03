@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "c1ac3f4f59b48c760facffa39231345a01e2dc29",
   "request": {
     "method": "POST",
     "path": "/api/sign-up",

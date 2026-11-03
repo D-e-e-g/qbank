@@ -1,5 +1,4 @@
 {
-  "recordedFrom": "9fa05c0b3f85764a60f8c8afaa8ca702241aded7",
   "request": {
     "method": "GET",
     "path": "/api/me/export",
@@ -122,7 +121,8 @@
               "answeredAt": "2026-10-15T02:12:18.695Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             }
-          ]
+          ],
+          "kind": "course"
         }
       ],
       "questions": [
@@ -140,7 +140,8 @@
           "folderName": "Week 1",
           "type": "single",
           "format": "Single answer",
-          "topic": "Invented single topic"
+          "topic": "Invented single topic",
+          "setDeletedAt": null
         },
         {
           "id": "9f34ee17-2d1d-41c5-af75-f7656a0810cc",
@@ -156,7 +157,8 @@
           "folderName": "Week 1",
           "type": "priority",
           "format": "Priority / first action",
-          "topic": "Invented priority topic"
+          "topic": "Invented priority topic",
+          "setDeletedAt": null
         },
         {
           "id": "386c7a73-e49f-42bf-b6e1-5a5637b8cd58",
@@ -172,7 +174,8 @@
           "folderName": "Week 1",
           "type": "sata",
           "format": "Select all that apply",
-          "topic": "Invented select-all topic"
+          "topic": "Invented select-all topic",
+          "setDeletedAt": null
         },
         {
           "id": "9c6443ba-3c55-4885-8262-d90898974789",
@@ -188,7 +191,8 @@
           "folderName": "Week 1",
           "type": "highlight",
           "format": "Highlight",
-          "topic": "Invented highlight topic"
+          "topic": "Invented highlight topic",
+          "setDeletedAt": null
         },
         {
           "id": "2a601fef-df72-401a-9c7f-3ddcb39951d6",
@@ -204,7 +208,8 @@
           "folderName": "Week 1",
           "type": "order",
           "format": "Ordered response",
-          "topic": "Invented order topic"
+          "topic": "Invented order topic",
+          "setDeletedAt": null
         },
         {
           "id": "840dbb5e-49c5-4682-b80a-b194defad93b",
@@ -220,7 +225,8 @@
           "folderName": "Week 1",
           "type": "match",
           "format": "Matching",
-          "topic": "Invented match topic"
+          "topic": "Invented match topic",
+          "setDeletedAt": null
         },
         {
           "id": "34793561-87b1-4dcd-a26b-b039f2b35a53",
@@ -236,7 +242,8 @@
           "folderName": "Week 1",
           "type": "matrix",
           "format": "Matrix",
-          "topic": "Invented matrix topic"
+          "topic": "Invented matrix topic",
+          "setDeletedAt": null
         },
         {
           "id": "3500ac88-16e1-48ca-b46e-ceeae9edee38",
@@ -252,7 +259,8 @@
           "folderName": "Week 1",
           "type": "cloze",
           "format": "Drop-down cloze",
-          "topic": "Invented cloze topic"
+          "topic": "Invented cloze topic",
+          "setDeletedAt": null
         },
         {
           "id": "7d227ed4-0954-4ce2-9db8-cdd8922c9852",
@@ -268,7 +276,8 @@
           "folderName": "Week 1",
           "type": "single",
           "format": "Single answer",
-          "topic": "Invented exam topic 1"
+          "topic": "Invented exam topic 1",
+          "setDeletedAt": null
         },
         {
           "id": "d183e185-e117-4ba3-b745-8f1c46f772f6",
@@ -284,7 +293,8 @@
           "folderName": "Week 1",
           "type": "single",
           "format": "Single answer",
-          "topic": "Invented exam topic 2"
+          "topic": "Invented exam topic 2",
+          "setDeletedAt": null
         },
         {
           "id": "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
@@ -300,7 +310,8 @@
           "folderName": "Week 2",
           "type": "single",
           "format": "Single answer",
-          "topic": "Invented week 2 topic 1"
+          "topic": "Invented week 2 topic 1",
+          "setDeletedAt": null
         },
         {
           "id": "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de",
@@ -316,7 +327,8 @@
           "folderName": "Week 2",
           "type": "single",
           "format": "Single answer",
-          "topic": "Invented week 2 topic 2"
+          "topic": "Invented week 2 topic 2",
+          "setDeletedAt": null
         }
       ],
       "studySessions": [
@@ -355,7 +367,8 @@
             "reviewCount": 0,
             "questionCount": 4
           },
-          "endReason": "finished"
+          "endReason": "finished",
+          "deletedAt": null
         },
         {
           "id": "b2172b0c-3f62-466e-918c-5742f1427053",
@@ -377,7 +390,8 @@
           "startedAt": "2026-10-15T02:12:18.826Z",
           "finishedAt": null,
           "score": null,
-          "endReason": null
+          "endReason": null,
+          "deletedAt": null
         }
       ],
       "attempts": [
