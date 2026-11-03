@@ -181,37 +181,102 @@ struct ExamSetupModelTests {
         #expect(model.folders.map(\.id) == ["f1", "f2", "f3"])
     }
 
+    /// The query of each exam setup read, in order.
+    private func setupQueries(_ server: StubServer) -> [String] {
+        server.requests.filter { $0.url?.path() == "/api/courses/c1/exams" && $0.httpMethod == "GET" }.map { $0.url?.query() ?? "" }
+    }
+
+    /// The setup the server answers once she ticked folders, with its plan over them.
+    private func planned(_ preview: String, pools: [StudyBodies.Pool] = StudyBodies.threePools, rules: StudyBodies.Rules = StudyBodies.rules) -> StubServer.Reply {
+        .ok(StudyBodies.setup(folders: pools, rules: rules, preview: preview))
+    }
+
     @Test func sharedNamesSayTheirExamPage() async throws {
         let pools: [StudyBodies.Pool] = [("f1", "First Pass", "x1", 10, 0, "practice"), ("f2", "First Pass", nil, 10, 0, "practice")]
-        let model = model(server(pages: [("x1", "Exam 1", ["f1"])], pools: pools))
+        let server = server(pages: [("x1", "Exam 1", ["f1"])], pools: pools)
+        let model = model(server)
         await model.load()
         model.toggle(model.folders[0])
         model.toggle(model.folders[1])
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview([("f1", "First Pass", 10, 10, "practice"), ("f2", "First Pass", 10, 10, "practice")], seconds: 1800), pools: pools)])
+        await model.readPlan()
         #expect(model.summarySplit == "10 from First Pass (Exam 1) · 10 from First Pass (no page) · Fewer than 40, so it’s all of them at 1.5 minutes each.")
     }
 
-    @Test func tickedFoldersMakeThePlanAndItsSummary() async throws {
-        let model = model(server())
+    @Test func tickedFoldersShowTheServersPlanForThem() async throws {
+        let server = server()
+        let model = model(server)
         await model.load()
         model.toggle(model.folders[0])
         model.toggle(model.folders[2])
         #expect(model.picked.map(\.name) == ["Week 1", "Week 3"])
+        #expect(model.summaryCount == nil, "no plan until the server sends one")
+        #expect(model.summarySplit == "Working out what the exam draws.")
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
+            [("f1", "Week 1", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")], seconds: 2700, practice: ["Week 1"]
+        ))])
+        await model.readPlan()
+        #expect(setupQueries(server) == ["", "folderIds=f1&folderIds=f3&pool=all"])
         #expect(model.drawn(model.folders[0]) == 10)
         #expect(model.drawn(model.folders[1]) == nil)
         #expect(model.summaryCount == "30 questions")
         #expect(model.summaryTime == "in 45 minutes")
         #expect(model.summarySplit == "10 from Week 1 · 20 from Week 3 · Fewer than 40, so it’s all of them at 1.5 minutes each.")
         #expect(model.fallbackLine == "Week 1 has no exam bank yet, so it uses its practice questions.")
+        #expect(!model.isPlanUpdating)
+
         model.toggle(model.folders[1])
+        #expect(model.isPlanUpdating, "the last plan stays until the new one arrives")
+        #expect(model.summaryCount == "30 questions")
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
+            [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")],
+            seconds: 3600, practice: ["Week 1", "Week 2"]
+        ))])
+        await model.readPlan()
+        #expect(!model.isPlanUpdating)
         #expect(model.summaryCount == "40 questions")
         #expect(model.summarySplit == "10 from Week 1 · 10 from Week 2 · 20 from Week 3")
         #expect(model.fallbackLine == "Weeks 1-2 have no exam bank yet, so they use their practice questions.")
+        await model.readPlan()
+        #expect(setupQueries(server).count == 3, "the plan on screen is already for these folders")
         model.toggle(model.folders[1])
         #expect(model.picked.count == 2, "a second tap unticks")
     }
 
+    /// The numbers are the server's: a change to its rules shows on the phone without an update.
+    @Test func theSummaryFollowsTheServersRulesNotTheOldOnes() async throws {
+        let rules: StudyBodies.Rules = (25, 1800, 60)
+        let server = StubServer([
+            "GET /api/courses/c1": .ok(StudyBodies.course()),
+            "GET /api/courses/c1/exams": .ok(StudyBodies.setup(folders: StudyBodies.threePools, rules: rules)),
+        ])
+        let model = model(server)
+        await model.load()
+        model.toggle(model.folders[0])
+        model.toggle(model.folders[1])
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
+            [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice")], seconds: 1200, practice: nil
+        ), rules: rules)])
+        await model.readPlan()
+        #expect(model.summaryCount == "20 questions")
+        #expect(model.summaryTime == "in 20 minutes")
+        #expect(model.summarySplit == "10 from Week 1 · 10 from Week 2 · Fewer than 25, so it’s all of them at 1 minute each.")
+        #expect(model.fallbackLine == nil, "the server said the course has no exam bank")
+
+        model.toggle(model.folders[2])
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
+            [("f1", "Week 1", 10, 6, "practice"), ("f2", "Week 2", 10, 6, "practice"), ("f3", "Week 3", 20, 13, "exam")], seconds: 1800
+        ), rules: rules)])
+        await model.readPlan()
+        #expect(model.summaryCount == "25 questions")
+        #expect(model.summaryTime == "in 30 minutes")
+        #expect(model.summarySplit == "6 from Week 1 · 6 from Week 2 · 13 from Week 3")
+        #expect(model.drawn(model.folders[2]) == 13)
+    }
+
     @Test func wrongQuestionsOnlyCountsHerWrongOnesAndLocksEmptyFolders() async throws {
-        let model = model(server())
+        let server = server()
+        let model = model(server)
         await model.load()
         model.toggle(model.folders[2])
         model.wrongOnly = true
@@ -225,10 +290,14 @@ struct ExamSetupModelTests {
         #expect(model.picked.isEmpty, "a locked folder cannot be ticked")
         model.toggle(model.folders[0])
         model.toggle(model.folders[1])
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview([("f1", "Week 1", 2, 2, "practice"), ("f2", "Week 2", 3, 3, "practice")], seconds: 450))])
+        await model.readPlan()
+        #expect(setupQueries(server).last == "folderIds=f1&folderIds=f2&pool=wrong")
         #expect(model.summaryCount == "5 questions")
         #expect(model.summaryTime == "in 7.5 minutes")
         model.wrongOnly = false
         #expect(model.isTicked(model.folders[2]), "back with the switch off")
+        #expect(model.isPlanUpdating, "the plan was for her wrong questions")
     }
 
     @Test func noWrongQuestionsAnywhereSaysSo() async throws {
@@ -239,14 +308,51 @@ struct ExamSetupModelTests {
         #expect(model.fallbackLine == nil)
     }
 
+    /// Ticking without a connection: the plan for what she had ticked still shows, and a new tick
+    /// says its plan comes back with the connection, instead of showing the old numbers.
+    @Test func withoutAConnectionANewTickWaitsForThePlan() async throws {
+        let server = server()
+        let connection = Connection()
+        let (app, _) = TestApp.make(server, account: .student(), connection: connection)
+        let model = ExamSetupModel(app: app, route: ExamSetupRoute(course: Self.course))
+        await model.load()
+        model.toggle(model.folders[0])
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview([("f1", "Week 1", 10, 10, "practice")], seconds: 900))])
+        await model.readPlan()
+        connection.update(isOnline: false)
+        #expect(model.summaryCount == "10 questions", "still the plan for what is ticked")
+        model.toggle(model.folders[1])
+        server.script("GET /api/courses/c1/exams", [.offline])
+        await model.readPlan()
+        #expect(model.summaryCount == nil)
+        #expect(model.drawn(model.folders[0]) == nil)
+        #expect(model.summarySplit == "What the exam draws shows once you’re back online.")
+        #expect(model.problem == nil, "the screen already says exams need a connection")
+        model.toggle(model.folders[1])
+        #expect(model.summaryCount == "10 questions", "back to what the plan was for")
+
+        model.toggle(model.folders[1])
+        connection.update(isOnline: true)
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview([("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice")], seconds: 1800))])
+        await model.load()
+        #expect(model.summaryCount == "20 questions", "the reload with the connection reads the plan")
+    }
+
     @Test func anExamPagesStartButtonTicksItsFolders() async throws {
-        let model = model(server(), route: ExamSetupRoute(course: Self.course, folderIDs: ["f1", "f2", "gone"], examName: "Exam 1"))
+        let server = server()
+        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview([("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice")], seconds: 1800))])
+        let model = model(server, route: ExamSetupRoute(course: Self.course, folderIDs: ["f1", "f2", "gone"], examName: "Exam 1"))
         await model.load()
         #expect(model.picked.map(\.name) == ["Week 1", "Week 2"], "a folder the setup does not have is left out")
         #expect(model.preselectedLine == "Exam 1 · 2 folders ticked for you")
+        #expect(setupQueries(server) == ["folderIds=f1&folderIds=f2&folderIds=gone&pool=all"], "the first read asks for the page's plan")
+        #expect(model.summaryCount == "20 questions")
+        await model.readPlan()
+        #expect(setupQueries(server).count == 1, "the plan read first is already for the ticked folders")
         model.toggle(model.folders[0])
         await model.load()
         #expect(model.picked.map(\.name) == ["Week 2"], "a reload keeps what she changed")
+        #expect(setupQueries(server).last == "folderIds=f2&pool=all")
     }
 
     @Test func startSendsTheTickedFoldersAndThePool() async throws {

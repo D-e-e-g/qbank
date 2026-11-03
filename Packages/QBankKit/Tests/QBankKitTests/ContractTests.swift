@@ -244,6 +244,7 @@ struct ContentContractTests {
         #expect(course.weeks.map(\.label) == ["Week 1", "Week 2"])
         #expect(course.weeks.map(\.examBankCount) == [2, 0])
         #expect(course.examQuestionCount == 4)
+        #expect(course.examTimeLimitSeconds == 360, "the server's time for an exam over every folder")
         let set = try #require(course.weeks.first?.sets.first)
         #expect(set.questionIDs.count == 8)
         #expect(set.status == .imported)
@@ -544,6 +545,35 @@ struct ExamContractTests {
         #expect(setup.weeks.map(\.wrongCount) == [1, 0])
         #expect(setup.inProgress == nil)
         #expect(setup.exams.isEmpty)
+    }
+
+    @Test func setupCarriesTheServersRules() throws {
+        let setup = try Fixture.load("exam-setup").decodeBody(ExamSetup.self)
+        #expect(setup.rules == ExamRules(maxQuestions: 40, fullTimeSeconds: 3600, secondsPerQuestion: 90))
+        #expect(setup.preview == nil, "read without folders")
+        #expect(setup.courseExams.isEmpty, "the course has no exam pages")
+    }
+
+    /// With folders, the setup is read for the server's plan over them, from the pool asked for.
+    @Test func setupAsksForThePlanOverTheTickedFolders() async throws {
+        guard case .object(var body) = try Fixture.load("exam-setup-course-exams").response.body,
+              case .array(let pages)? = body["courseExams"], case .object(let page)? = pages.first else {
+            Issue.record("The exam setup fixture has no exam page plans")
+            return
+        }
+        body["preview"] = page["preview"]
+        let transport = FixtureTransport(status: 200, body: String(decoding: try JSONEncoder().encode(JSONValue.object(body)), as: UTF8.self))
+        let (client, _) = TestClient.make(transport)
+        let setup = try await client.examSetup(courseID: "c1", folderIDs: [FolderContractTests.week1, FolderContractTests.week2], pool: .wrong)
+        let url = try #require(transport.requests.first?.url)
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        #expect(components.path == "/api/courses/c1/exams")
+        #expect(components.query == "folderIds=\(FolderContractTests.week1)&folderIds=\(FolderContractTests.week2)&pool=wrong")
+        let plan = try #require(setup.preview)
+        #expect(plan.folders.map(\.drawn) == [3, 2])
+        #expect(plan.questionCount == 5)
+        #expect(plan.timeLimitSeconds == 450)
+        #expect(plan.practiceWeeks == nil)
     }
 
     @Test func setupWithARunningExam() throws {
@@ -899,6 +929,16 @@ struct FolderContractTests {
         #expect(setup.folders.map(\.examPageID) == [Self.examOne, Self.examOne, Self.examTwo, nil])
     }
 
+    /// Each exam page's plan, for its Start exam line: every question of its folders.
+    @Test func setupPlansAnExamOverEachPage() throws {
+        let setup = try Fixture.load("exam-setup-course-exams").decodeBody(ExamSetup.self)
+        #expect(setup.courseExams.map(\.courseExamID) == [Self.examOne, Self.examTwo])
+        #expect(setup.courseExams.map(\.preview.questionCount) == [5, 2])
+        #expect(setup.courseExams.map(\.preview.timeLimitSeconds) == [450, 180])
+        #expect(setup.courseExams.first?.preview.folders.map(\.id) == [Self.week1, Self.week2])
+        #expect(setup.courseExams.first?.preview.folders.map(\.source) == [.practice, .practice])
+    }
+
     @Test(arguments: [
         ("course-exam-create-folder-taken", 409, "Week 2 is in Exam 1."),
         ("course-exam-create-name-taken", 409, "This course already has a page named exam 1."),
@@ -968,9 +1008,11 @@ struct FolderContractTests {
             return
         }
         course["exams"] = nil
+        course["examTimeLimitSeconds"] = nil
         let detail = try JSONValue.object(course).decode(CourseDetail.self)
         #expect(detail.exams.isEmpty)
         #expect(detail.weeks.count == 2)
+        #expect(detail.examTimeLimitSeconds == nil, "as in a copy saved before the app read it")
 
         guard case .object(var setup) = try Fixture.load("exam-setup-in-progress").response.body,
               case .object(var running)? = setup["inProgress"] else {

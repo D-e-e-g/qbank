@@ -185,8 +185,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         if isOffline { throw URLError(.notConnectedToInternet) }
         let url = request.url ?? URL(string: "https://fake.invalid")!
+        // A repeated parameter, such as exam setup's folderIds, keeps every value, joined by commas:
+        // no id has one.
         let query = (URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [])
-            .reduce(into: [String: String]()) { $0[$1.name] = $1.value ?? "" }
+            .reduce(into: [String: String]()) { $0[$1.name] = [$0[$1.name], $1.value ?? ""].compactMap(\.self).joined(separator: ",") }
         let method = request.httpMethod ?? "GET"
         let token = request.value(forHTTPHeaderField: "Authorization")?.replacingOccurrences(of: "Bearer ", with: "")
         let fields = request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
@@ -737,7 +739,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         return [
             "id": Self.mentalHealthID, "code": "NURS 310", "title": "Mental Health", "archivedAt": NSNull(),
             "semester": ["id": "fake-semester-1", "number": 1, "name": "Semester 1"],
-            "questionCount": 86 + imported, "examQuestionCount": 134 + imported, "termCount": 180, "reviewCount": 12,
+            "questionCount": 86 + imported, "examQuestionCount": 134 + imported,
+            "examTimeLimitSeconds": FakeStudy.examTime(questionCount: 134 + imported), "termCount": 180, "reviewCount": 12,
             "answeredCount": 35 + added.answered, "fullyRightCount": 24 + added.right, "points": 61, "maxPoints": 92,
         ].merging(folders(Self.mentalHealthID)) { _, folders in folders }
     }
@@ -747,7 +750,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         return [
             "id": Self.fundamentalsID, "code": "NURS 220", "title": "Fundamentals", "archivedAt": NSNull(),
             "semester": ["id": "fake-semester-1", "number": 1, "name": "Semester 1"],
-            "questionCount": 146 + imported, "examQuestionCount": 146 + imported, "termCount": 212, "reviewCount": 5,
+            "questionCount": 146 + imported, "examQuestionCount": 146 + imported,
+            "examTimeLimitSeconds": FakeStudy.examTime(questionCount: 146 + imported), "termCount": 212, "reviewCount": 5,
             "answeredCount": 92 + added.answered, "fullyRightCount": 70 + added.right, "points": 131, "maxPoints": 170,
         ].merging(folders(Self.fundamentalsID)) { _, folders in folders }
     }
@@ -849,7 +853,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         }
         guard let imported else { return failure(404, "request_refused", "That course is not in the app.") }
         let counts: [String: Any] = [
-            "questionCount": imported, "examQuestionCount": imported, "answeredCount": 0, "fullyRightCount": 0, "points": 0, "maxPoints": 0,
+            "questionCount": imported, "examQuestionCount": imported, "examTimeLimitSeconds": FakeStudy.examTime(questionCount: imported),
+            "answeredCount": 0, "fullyRightCount": 0, "points": 0, "maxPoints": 0,
         ]
         return (200, counts.merging(folders(id)) { _, folders in folders }.merging(stored(id)) { _, stored in stored }.merging(studied(id)) { _, now in now })
     }

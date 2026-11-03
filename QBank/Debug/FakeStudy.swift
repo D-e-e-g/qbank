@@ -228,7 +228,9 @@ nonisolated final class FakeStudy: Sendable {
             case ("GET", "review"): return review(courseID, filter: query["filter"] ?? "all")
             case ("GET", "review/practice"): return reviewPractice(courseID, filter: query["filter"] ?? "all", questionID: query["question"])
             case ("POST", "review/clear"): return clearReview(courseID, confirmed: body["confirmed"] as? Bool ?? false)
-            case ("GET", "exams"): return (200, setup(courseID))
+            case ("GET", "exams"):
+                let folderIDs = query["folderIds"].map { $0.split(separator: ",").map(String.init) } ?? []
+                return (200, setup(courseID, folderIDs: folderIDs, pool: query["pool"].flatMap(ExamPool.init(rawValue:)) ?? .all))
             case ("POST", "exams"): return start(courseID, body: body)
             case ("POST", "course-exams"): return saveCourseExam(courseID: courseID, id: nil, body: body)
             case ("POST", "folders"): return Self.reply(createFolder(courseID: courseID, body: body), status: 201, folderJSON)
@@ -460,10 +462,13 @@ nonisolated final class FakeStudy: Sendable {
         latest[id].map { $0 != .correct } ?? wrongAtStart.contains(id)
     }
 
-    private func setup(_ courseID: String) -> [String: Any] {
+    /// The setup, with the server's rules, its plan over `folderIDs` from `pool` when some were
+    /// asked for, and its plan over each exam page's folders.
+    private func setup(_ courseID: String, folderIDs: [String], pool: ExamPool) -> [String: Any] {
         settleExpired()
         return state.withLock { state in
-            let folders = Self.ordered(state, courseID: courseID).filter { !Self.pool($0, sizes: state.sizes).isEmpty }
+            let course = Self.ordered(state, courseID: courseID)
+            let folders = course.filter { !Self.pool($0, sizes: state.sizes).isEmpty }
             let exams = state.exams.filter { $0.courseID == courseID }.sorted { $0.startedAt > $1.startedAt }
             let summaries = exams.map { summaryJSON($0, in: state) }
             let pools = folders.map { folder -> [String: Any] in
@@ -484,12 +489,51 @@ nonisolated final class FakeStudy: Sendable {
                     "source": same.contains { !$0.bank.isEmpty } ? "exam" : "practice",
                 ])
             }
+            let (sizes, latest, twinOf) = (state.sizes, state.latest, state.twinOf)
+            let all = { (folder: Folder) in Self.pool(folder, sizes: sizes) }
+            let draw = pool == .wrong ? { (folder: Folder) in Self.wrongPool(folder, sizes: sizes, latest: latest, twinOf: twinOf) } : all
+            let pages = state.courseExams.filter { $0.courseID == courseID }.sorted { $0.sortOrder < $1.sortOrder }
+            let rules = ExamPlan.rules
             return [
                 "courseId": courseID, "weeks": weeks, "folders": pools,
                 "inProgress": exams.firstIndex { $0.finishedAt == nil }.map { summaries[$0] } ?? NSNull(),
                 "exams": exams.indices.filter { exams[$0].finishedAt != nil }.map { summaries[$0] },
+                "rules": ["maxQuestions": rules.maxQuestions, "fullTimeSeconds": rules.fullTimeSeconds, "secondsPerQuestion": rules.secondsPerQuestion],
+                "preview": folderIDs.isEmpty ? NSNull() : Self.preview(course.filter { folderIDs.contains($0.id) }, in: course, draw: draw),
+                "courseExams": pages.map { page in
+                    ["courseExamId": page.id, "preview": Self.preview(course.filter { $0.examPageID == page.id }, in: course, draw: all)]
+                },
             ]
         }
+    }
+
+    /// The exam that starting over these folders would give, as the server's preview plans it: a
+    /// folder with nothing to draw is left out.
+    static func preview(_ ticked: [Folder], in course: [Folder], draw: (Folder) -> [String]) -> [String: Any] {
+        let drawing = ticked.filter { !draw($0).isEmpty }
+        let plan = ExamPlan(drawing.map { ExamPlan.Pool(id: $0.id, name: $0.name, questionCount: draw($0).count) })
+        let rows = zip(drawing, plan.draws).map { folder, row -> [String: Any] in
+            ["id": folder.id, "name": folder.name, "questionCount": row.questionCount, "drawn": row.drawn, "source": folder.bank.isEmpty ? "practice" : "exam"]
+        }
+        // An app from before folders reads the same draw by name.
+        var weeks: [[String: Any]] = []
+        for row in rows {
+            if let index = weeks.firstIndex(where: { $0["label"] as? String == row["name"] as? String }) {
+                weeks[index]["questionCount"] = (weeks[index]["questionCount"] as? Int ?? 0) + (row["questionCount"] as? Int ?? 0)
+                weeks[index]["drawn"] = (weeks[index]["drawn"] as? Int ?? 0) + (row["drawn"] as? Int ?? 0)
+            } else {
+                weeks.append(["label": row["name"] ?? "", "questionCount": row["questionCount"] ?? 0, "drawn": row["drawn"] ?? 0, "source": row["source"] ?? "practice"])
+            }
+        }
+        return [
+            "folders": rows, "weeks": weeks, "questionCount": plan.questionCount, "timeLimitSeconds": plan.timeLimitSeconds,
+            "practiceWeeks": course.contains { !$0.bank.isEmpty } ? drawing.filter(\.bank.isEmpty).map(\.name) : NSNull(),
+        ]
+    }
+
+    /// The time an exam over every folder gets, as a course's `examTimeLimitSeconds` says.
+    static func examTime(questionCount: Int) -> Int {
+        ExamPlan([ExamPlan.Pool(id: "", name: "", questionCount: questionCount)]).timeLimitSeconds
     }
 
     /// The exam page holding every folder an exam covered, as the server's `courseExamOf` rules.

@@ -528,12 +528,15 @@ public struct QBankClient: Sendable {
 
     // MARK: Exams
 
-    /// The folder picker with per-folder wrong counts, her running exam, and her ended exams.
-    public func examSetup(courseID: String) async throws(QBankError) -> ExamSetup {
-        try await send(Request(.get, "/api/courses/\(courseID)/exams"))
+    /// The folder picker with per-folder wrong counts, her running exam, her ended exams, and the
+    /// server's exam rules. With `folderIDs`, its `preview` is the exam that starting over them from
+    /// `pool` would give.
+    public func examSetup(courseID: String, folderIDs: [String] = [], pool: ExamPool = .all) async throws(QBankError) -> ExamSetup {
+        let query = folderIDs.isEmpty ? [] : folderIDs.map { ("folderIds", $0) } + [("pool", pool.rawValue)]
+        return try await send(Request(.get, "/api/courses/\(courseID)/exams", query: query))
     }
 
-    /// Starts an exam over the ticked folders: up to 40 questions, 90 seconds each, drawn from
+    /// Starts an exam over the ticked folders, sized and timed by the server's rules and drawn from
     /// their sets in proportion to each folder's size. With `.wrong`, only the questions she last
     /// answered not fully right; a ticked folder with none is refused with 400 `no_wrong_questions`.
     public func startExam(courseID: String, folderIDs: [String], pool: ExamPool = .all) async throws(QBankError) -> Exam {

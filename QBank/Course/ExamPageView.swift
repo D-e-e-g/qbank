@@ -163,18 +163,20 @@ struct ExamPageView: View {
             if let problem = problem ?? model.problem {
                 ProblemText(text: problem)
             }
-            if model.isStudent, let setup = model.examSetup(for: page), let draw = FolderWording.examDraw(page) {
+            if model.isStudent, page.examQuestionCount > 0, let setup = model.examSetup(for: page) {
                 VStack(alignment: .leading, spacing: QBankSpacing.space2) {
                     NavigationLink(value: StudyRoute.exam(setup)) {
                         Label("Start exam", systemImage: "timer")
                     }
                     .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
                     .accessibilityIdentifier("page.startExam")
-                    Text(draw)
-                        .qbankFont(.footnote)
-                        .foregroundStyle(.qbank(.text3))
-                        .padding(.horizontal, QBankSpacing.space1)
-                        .accessibilityIdentifier("page.draw")
+                    if let draw = model.plan(for: page).flatMap(FolderWording.examDraw) {
+                        Text(draw)
+                            .qbankFont(.footnote)
+                            .foregroundStyle(.qbank(.text3))
+                            .padding(.horizontal, QBankSpacing.space1)
+                            .accessibilityIdentifier("page.draw")
+                    }
                     if let twins = FolderWording.examTwins(page) {
                         Label {
                             QBankDetailText(twins)

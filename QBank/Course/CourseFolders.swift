@@ -104,13 +104,13 @@ nonisolated enum FolderWording {
         return "\(names.dropLast().joined(separator: ", ")) and \(last)"
     }
 
-    /// Under an exam page's Start exam: "40 questions from the 217 in these 5 folders, or Wrong
-    /// questions only.", or "All 26 questions in this folder, ...". Nil when its folders hold none.
-    static func examDraw(_ page: ExamPage) -> String? {
-        let folders = page.folders.filter { $0.examQuestionCount > 0 }
+    /// Under an exam page's Start exam, from the server's plan over its folders: "40 questions from
+    /// the 217 in these 5 folders, or Wrong questions only.", or "All 26 questions in this folder,
+    /// ...". Nil when its folders hold none.
+    static func examDraw(_ plan: ExamPreview) -> String? {
+        let folders = plan.folders
         guard !folders.isEmpty else { return nil }
-        let plan = ExamPlan(folders.map { ExamPlan.Pool(id: $0.id, name: $0.name, questionCount: $0.examQuestionCount) })
-        let total = page.examQuestionCount
+        let total = folders.reduce(0) { $0 + $1.questionCount }
         let place = folders.count == 1 ? "this folder" : "these \(folders.count) folders"
         let draw = plan.questionCount < total
             ? "\(Wording.count(plan.questionCount, "question")) from the \(total) in \(place)"

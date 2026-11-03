@@ -18,8 +18,58 @@ public enum ExamEndReason: String, Codable, Sendable {
     case timeout
 }
 
+/// How the server sizes and times an exam (`ExamSetup.rules`), as its `planExam` uses them.
+public struct ExamRules: Codable, Sendable, Equatable {
+    /// The most questions an exam draws.
+    public let maxQuestions: Int
+    /// The time for an exam of `maxQuestions`.
+    public let fullTimeSeconds: Int
+    /// The time per question when the folders hold fewer than `maxQuestions`, so the exam is all of them.
+    public let secondsPerQuestion: Int
+
+    public init(maxQuestions: Int, fullTimeSeconds: Int, secondsPerQuestion: Int) {
+        self.maxQuestions = maxQuestions
+        self.fullTimeSeconds = fullTimeSeconds
+        self.secondsPerQuestion = secondsPerQuestion
+    }
+}
+
+/// The exam that starting over some folders would give, as the server plans it.
+public struct ExamPreview: Codable, Sendable, Equatable {
+    /// A folder the exam draws from, and how many of its questions it takes.
+    public struct Folder: Codable, Sendable, Equatable, Identifiable {
+        public let id: String
+        public let name: String
+        /// The questions the folder holds in the pool.
+        public let questionCount: Int
+        /// How many of them the exam takes.
+        public let drawn: Int
+        public let source: ExamSetup.Week.Source
+    }
+
+    /// In the course's order. A folder that holds no question in the pool is left out.
+    public let folders: [Folder]
+    /// How many questions the exam draws: 0 when no folder is left.
+    public let questionCount: Int
+    public let timeLimitSeconds: Int
+    /// The folders without an exam bank, so the exam draws their practice questions. Nil when the
+    /// course has no exam bank at all.
+    public let practiceWeeks: [String]?
+}
+
 /// `GET /api/courses/{id}/exams`: the folder picker, her running exam, and her ended exams.
 public struct ExamSetup: Codable, Sendable, Equatable {
+    /// What an exam over every folder of one exam page draws.
+    public struct PagePreview: Codable, Sendable, Equatable {
+        public let courseExamID: String
+        public let preview: ExamPreview
+
+        enum CodingKeys: String, CodingKey {
+            case preview
+            case courseExamID = "courseExamId"
+        }
+    }
+
     /// A folder to tick, with what an exam over it draws from.
     public struct Folder: Codable, Sendable, Equatable, Identifiable {
         public let id: String
@@ -74,9 +124,14 @@ public struct ExamSetup: Codable, Sendable, Equatable {
     public let inProgress: ExamSummary?
     /// Newest first.
     public let exams: [ExamSummary]
+    public let rules: ExamRules
+    /// The exam over the folders and pool the setup was read with, or nil when it was read without folders.
+    public let preview: ExamPreview?
+    /// One for each of the course's exam pages, in their order.
+    public let courseExams: [PagePreview]
 
     enum CodingKeys: String, CodingKey {
-        case weeks, folders, inProgress, exams
+        case weeks, folders, inProgress, exams, rules, preview, courseExams
         case courseID = "courseId"
     }
 
@@ -89,6 +144,9 @@ public struct ExamSetup: Codable, Sendable, Equatable {
         }
         inProgress = try container.decodeIfPresent(ExamSummary.self, forKey: .inProgress)
         exams = try container.decode([ExamSummary].self, forKey: .exams)
+        rules = try container.decode(ExamRules.self, forKey: .rules)
+        preview = try container.decodeIfPresent(ExamPreview.self, forKey: .preview)
+        courseExams = try container.decode([PagePreview].self, forKey: .courseExams)
     }
 }
 

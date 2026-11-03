@@ -233,7 +233,7 @@ struct CourseView: View {
     private func tiles(_ course: CourseDetail, ref: CourseRef) -> some View {
         HStack(spacing: QBankSpacing.space3) {
             NavigationLink(value: StudyRoute.exam(ExamSetupRoute(course: ref))) {
-                Tile(systemImage: "timer", value: "Exam", label: Wording.examLength(questionCount: course.examQuestionCount))
+                Tile(systemImage: "timer", value: "Exam", label: Wording.examTime(course))
             }
             .accessibilityIdentifier("course.tile.exam")
             NavigationLink(value: StudyRoute.review(ref)) {

@@ -95,10 +95,36 @@ enum StudyBodies {
     /// A folder's pool in the exam setup.
     typealias Pool = (id: String, name: String, page: String?, count: Int, wrong: Int, source: String)
 
-    static func setup(folders: [Pool], inProgress: String? = nil, exams: [String] = []) -> String {
+    /// The server's rules: at most `max` questions in `full` seconds, or `each` seconds a question
+    /// when the folders hold fewer.
+    typealias Rules = (max: Int, full: Int, each: Int)
+
+    static let rules: Rules = (40, 3600, 90)
+
+    /// `preview` is the server's plan over the folders the setup was read for, and `pages` its plan
+    /// for each exam page, by page id.
+    static func setup(
+        folders: [Pool], inProgress: String? = nil, exams: [String] = [], rules: Rules = rules, preview: String? = nil,
+        pages: [(id: String, preview: String)] = []
+    ) -> String {
         let weekList = folders.map { #"{"label":"\#($0.name)","questionCount":\#($0.count),"wrongCount":\#($0.wrong),"source":"\#($0.source)"}"# }
         let folderList = folders.map { #"{"id":"\#($0.id)","name":"\#($0.name)","examPageId":\#($0.page.map { "\"\($0)\"" } ?? "null"),"questionCount":\#($0.count),"wrongCount":\#($0.wrong),"source":"\#($0.source)"}"# }
-        return #"{"courseId":"c1","weeks":[\#(weekList.joined(separator: ","))],"folders":[\#(folderList.joined(separator: ","))],"inProgress":\#(inProgress ?? "null"),"exams":[\#(exams.joined(separator: ","))]}"#
+        let ruleField = #""rules":{"maxQuestions":\#(rules.max),"fullTimeSeconds":\#(rules.full),"secondsPerQuestion":\#(rules.each)}"#
+        let pageList = pages.map { #"{"courseExamId":"\#($0.id)","preview":\#($0.preview)}"# }
+        return #"{"courseId":"c1","weeks":[\#(weekList.joined(separator: ","))],"folders":[\#(folderList.joined(separator: ","))],"inProgress":\#(inProgress ?? "null"),"exams":[\#(exams.joined(separator: ","))],\#(ruleField),"preview":\#(preview ?? "null"),"courseExams":[\#(pageList.joined(separator: ","))]}"#
+    }
+
+    /// A folder of the server's plan: the questions it holds in the pool and how many the exam takes.
+    typealias Draw = (id: String, name: String, count: Int, drawn: Int, source: String)
+
+    /// The server's plan for an exam over `folders`: its question count and time are the server's,
+    /// whatever the folders add up to. `practice` lists the folders without an exam bank, or nil
+    /// when the course has none.
+    static func preview(_ folders: [Draw], questions: Int? = nil, seconds: Int, practice: [String]? = nil) -> String {
+        let rows = folders.map { #"{"id":"\#($0.id)","name":"\#($0.name)","questionCount":\#($0.count),"drawn":\#($0.drawn),"source":"\#($0.source)"}"# }
+        let weeks = folders.map { #"{"label":"\#($0.name)","questionCount":\#($0.count),"drawn":\#($0.drawn),"source":"\#($0.source)"}"# }
+        let practiceField = practice.map { "[\($0.map { "\"\($0)\"" }.joined(separator: ","))]" } ?? "null"
+        return #"{"folders":[\#(rows.joined(separator: ","))],"weeks":[\#(weeks.joined(separator: ","))],"questionCount":\#(questions ?? folders.reduce(0) { $0 + $1.drawn }),"timeLimitSeconds":\#(seconds),"practiceWeeks":\#(practiceField)}"#
     }
 
     /// The setup of `course()`: Week 3 has an exam bank, and only Weeks 1 and 2 have wrong questions.

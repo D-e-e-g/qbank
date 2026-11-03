@@ -25,6 +25,8 @@ final class CourseModel {
     private(set) var course: CourseDetail?
     /// Her exams in this course, for the exam pages: the running one first, then newest first.
     private(set) var sittings: [ExamSummary] = []
+    /// The server's plan for an exam over each exam page's folders, by page id, for its Start exam line.
+    private(set) var pagePlans: [String: ExamPreview] = [:]
     private(set) var isLoading = false
     private(set) var problem: String?
     private(set) var isRestoring = false
@@ -92,9 +94,10 @@ final class CourseModel {
         course?.exams.first { $0.id == folder.examPageID }
     }
 
-    /// Loads the course and her exams in it. A failed reload keeps what is already on screen. Her
-    /// exams are only for the exam pages and come from QBank, so failing to read them, or having
-    /// no connection, leaves the course usable with the exams it showed last.
+    /// Loads the course, her exams in it, and the plan for each exam page. A failed reload keeps
+    /// what is already on screen. Her exams and the plans are only for the exam pages and come from
+    /// QBank, so failing to read them, or having no connection, leaves the course usable with the
+    /// ones it showed last.
     func load() async {
         loads += 1
         let load = loads
@@ -120,6 +123,7 @@ final class CourseModel {
         }
         if let setup = await setup, load == loads {
             sittings = (setup.inProgress.map { [$0] } ?? []) + setup.exams
+            pagePlans = Dictionary(setup.courseExams.map { ($0.courseExamID, $0.preview) }) { first, _ in first }
         }
     }
 
@@ -152,6 +156,11 @@ final class CourseModel {
             return
         }
         await load()
+    }
+
+    /// What an exam over an exam page's folders draws, as the server last said. Nil before it said.
+    func plan(for page: ExamPage) -> ExamPreview? {
+        pagePlans[page.id]
     }
 
     /// Exam setup with an exam page's folders ticked, from its Start exam button.
