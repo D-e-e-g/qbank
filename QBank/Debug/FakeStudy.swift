@@ -705,7 +705,8 @@ nonisolated final class FakeStudy: Sendable {
                 "clientAttemptId": clientAttemptID, "questionId": questionID, "courseId": exam.courseID,
                 "status": score.status.rawValue, "points": score.points, "maxPoints": score.maxPoints,
                 "guessed": guessed, "answeredAt": QBankJSON.formatDate(.now), "inReview": inReview,
-                "label": score.label, "replayed": false,
+                "label": score.label, "pointsText": question.type.flatMap(score.pointsText(for:)) ?? NSNull(),
+                "ruleText": question.type?.scoringRule ?? NSNull(), "replayed": false,
             ])
         }
     }
@@ -761,6 +762,7 @@ nonisolated final class FakeStudy: Sendable {
             }
             var item: [String: Any] = [
                 "questionId": served.id, "status": answer?.status.rawValue ?? "unanswered",
+                "label": answer.map { Score(points: $0.points, maxPoints: $0.maxPoints, status: $0.status, answered: true).label } ?? "Not answered",
                 "points": answer?.points ?? 0, "maxPoints": maxPoints, "guessed": answer?.guessed ?? false,
                 "response": NSNull(), "shuffle": NSNull(),
             ]

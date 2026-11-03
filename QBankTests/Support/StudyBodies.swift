@@ -153,12 +153,12 @@ enum StudyBodies {
     }
 
     static func result(count: Int = 3) -> String {
-        let items = (0..<count).map { #"{"questionId":"e1-q\#($0)","status":"\#($0 == 0 ? "correct" : "unanswered")","points":\#($0 == 0 ? 1 : 0),"maxPoints":1,"guessed":false,"response":\#($0 == 0 ? #"{"type":"single","choice":0}"# : "null"),"shuffle":null}"# }
+        let items = (0..<count).map { #"{"questionId":"e1-q\#($0)","status":"\#($0 == 0 ? "correct" : "unanswered")","label":"\#($0 == 0 ? "Correct" : "Not answered")","points":\#($0 == 0 ? 1 : 0),"maxPoints":1,"guessed":false,"response":\#($0 == 0 ? #"{"type":"single","choice":0}"# : "null"),"shuffle":null}"# }
         return #"{"questionCount":\#(count),"answered":1,"unanswered":\#(count - 1),"fullyRight":1,"partial":0,"missed":0,"guessed":0,"points":1,"maxPoints":\#(count),"minutesUsed":10,"reviewCount":0,"examBankWrong":0,"byWeek":[{"label":"Week 1","right":1,"total":\#(count)}],"byFolder":[{"folderId":"f1","label":"Week 1","right":1,"total":\#(count)}],"byStep":[{"label":"Take action","right":1,"total":\#(count)}],"items":[\#(items.joined(separator: ","))]}"#
     }
 
     static func saved(question: String, attempt: String, status: String = "correct") -> String {
-        #"{"clientAttemptId":"\#(attempt)","questionId":"\#(question)","courseId":"c1","status":"\#(status)","points":1,"maxPoints":1,"guessed":false,"answeredAt":"2026-10-12T00:06:00.000Z","inReview":false,"label":"Correct","replayed":false}"#
+        #"{"clientAttemptId":"\#(attempt)","questionId":"\#(question)","courseId":"c1","status":"\#(status)","points":1,"maxPoints":1,"guessed":false,"answeredAt":"2026-10-12T00:06:00.000Z","inReview":false,"label":"Correct","pointsText":null,"ruleText":null,"replayed":false}"#
     }
 
     static func review(filter: String = "all", counts: (Int, Int, Int, Int) = (2, 1, 1, 1), questions: [String] = [reviewQuestion("q1", status: "incorrect", guessed: true), reviewQuestion("q2", status: "partial")]) -> String {

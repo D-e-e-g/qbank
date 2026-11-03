@@ -1073,7 +1073,9 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             "courseId": find(set: setID)?.courseID ?? Self.mentalHealthID,
             "status": score.status.rawValue, "points": score.points, "maxPoints": score.maxPoints,
             "guessed": submission.guessed, "answeredAt": QBankJSON.formatDate(answeredAt),
-            "inReview": score.staysInReview(guessed: submission.guessed), "label": score.label, "replayed": false,
+            "inReview": score.staysInReview(guessed: submission.guessed), "label": score.label,
+            "pointsText": question.type.flatMap(score.pointsText(for:)) ?? NSNull(),
+            "ruleText": question.type?.scoringRule ?? NSNull(), "replayed": false,
         ]
         let record = (try? JSONSerialization.data(withJSONObject: saved)) ?? Data()
         let status = score.status.rawValue

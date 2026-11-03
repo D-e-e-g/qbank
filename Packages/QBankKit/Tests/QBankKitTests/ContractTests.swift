@@ -426,6 +426,11 @@ struct AttemptContractTests {
         #expect(score.points == saved.points)
         #expect(score.maxPoints == saved.maxPoints)
         #expect(score.status == saved.status)
+        // The words the phone shows while an answer waits are the ones the server sends once it has it.
+        let phone = Feedback(phone: score, type: question.type)
+        #expect(phone.label == saved.label)
+        #expect(phone.pointsText == saved.pointsText)
+        #expect(phone.ruleText == saved.ruleText)
         if name != "exam-attempt" {
             #expect(score.staysInReview(guessed: submission.guessed) == saved.inReview)
         }
@@ -679,11 +684,12 @@ struct ExamContractTests {
         let answered = try #require(result.items.first { $0.status != .unanswered })
         #expect(answered.questionID == exam.answeredQuestionIDs.first)
         #expect(answered.status == .correct)
+        #expect(answered.label == "Correct")
         #expect(answered.response == .single(choice: 0))
         #expect(answered.shuffle == .options(order: [0, 2, 1]))
         let unanswered = result.items.filter { $0.questionID != answered.questionID }
         #expect(unanswered.count == 3)
-        #expect(unanswered.allSatisfy { $0.status == .unanswered && $0.response == nil && $0.shuffle == nil })
+        #expect(unanswered.allSatisfy { $0.status == .unanswered && $0.label == "Not answered" && $0.response == nil && $0.shuffle == nil })
     }
 }
 
@@ -1330,7 +1336,8 @@ extension SavedAttempt {
         SavedAttempt(
             clientAttemptID: saved.clientAttemptID, questionID: saved.questionID, courseID: saved.courseID,
             status: saved.status, points: saved.points, maxPoints: saved.maxPoints, guessed: saved.guessed,
-            answeredAt: saved.answeredAt, inReview: saved.inReview, label: saved.label, replayed: true
+            answeredAt: saved.answeredAt, inReview: saved.inReview, label: saved.label, pointsText: saved.pointsText,
+            ruleText: saved.ruleText, replayed: true
         )
     }
 }

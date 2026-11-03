@@ -15,8 +15,10 @@ nonisolated struct PracticeResult: Equatable {
         /// 1-based, in the order she practiced.
         let number: Int
         let question: Question
-        let score: Score?
+        let feedback: Feedback?
         let guessed: Bool
+
+        var score: Score? { feedback?.score }
 
         /// The topic, or the question's id when it has none.
         var title: String { question.topic.isEmpty ? question.publicID : question.topic }
@@ -30,8 +32,8 @@ nonisolated struct PracticeResult: Equatable {
 
         /// "Correct", "Guessed - Partly correct", or "Not answered".
         var mark: String {
-            guard let score else { return "Not answered" }
-            return guessed ? "Guessed - \(score.label)" : score.label
+            guard let feedback else { return "Not answered" }
+            return guessed ? "Guessed - \(feedback.label)" : feedback.label
         }
     }
 
@@ -52,7 +54,8 @@ nonisolated struct PracticeResult: Equatable {
     let rows: [Row]
 
     init(title: String, isReview: Bool = false, questions: [Question], attempts: [PracticeModel.Attempt], elapsed: TimeInterval) {
-        let scores = questions.indices.map { attempts.indices.contains($0) ? attempts[$0].score : nil }
+        let verdicts = questions.indices.map { attempts.indices.contains($0) ? attempts[$0].feedback : nil }
+        let scores = verdicts.map { $0?.score }
         let guesses = questions.indices.map { attempts.indices.contains($0) && attempts[$0].guessed }
         self.title = title
         self.isReview = isReview
@@ -76,6 +79,6 @@ nonisolated struct PracticeResult: Equatable {
             counts[label] = count
         }
         steps = order.map { Step(label: $0, right: counts[$0]?.right ?? 0, total: counts[$0]?.total ?? 0) }
-        rows = questions.indices.map { Row(number: $0 + 1, question: questions[$0], score: scores[$0], guessed: guesses[$0]) }
+        rows = questions.indices.map { Row(number: $0 + 1, question: questions[$0], feedback: verdicts[$0], guessed: guesses[$0]) }
     }
 }

@@ -254,6 +254,8 @@ public struct ExamResult: Codable, Sendable, Equatable {
 
         public let questionID: String
         public let status: Status
+        /// The mark's word: Correct, Partly correct, Not correct, or Not answered.
+        public let label: String
         public let points: Int
         public let maxPoints: Int
         public let guessed: Bool
@@ -265,7 +267,7 @@ public struct ExamResult: Codable, Sendable, Equatable {
         public var id: String { questionID }
 
         enum CodingKeys: String, CodingKey {
-            case status, points, maxPoints, guessed, response, shuffle
+            case status, label, points, maxPoints, guessed, response, shuffle
             case questionID = "questionId"
         }
 
@@ -273,6 +275,7 @@ public struct ExamResult: Codable, Sendable, Equatable {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             questionID = try container.decode(String.self, forKey: .questionID)
             status = try container.decode(Status.self, forKey: .status)
+            label = try container.decode(String.self, forKey: .label)
             points = try container.decode(Int.self, forKey: .points)
             maxPoints = try container.decode(Int.self, forKey: .maxPoints)
             guessed = try container.decode(Bool.self, forKey: .guessed)

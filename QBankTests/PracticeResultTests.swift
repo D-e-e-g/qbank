@@ -12,7 +12,10 @@ struct PracticeResultTests {
     }
 
     static func attempt(_ score: Score?, guessed: Bool = false) -> PracticeModel.Attempt {
-        PracticeModel.Attempt(layout: .plain, draft: .single(nil), guessed: guessed, clientAttemptID: UUID().uuidString, score: score)
+        PracticeModel.Attempt(
+            layout: .plain, draft: .single(nil), guessed: guessed, clientAttemptID: UUID().uuidString,
+            feedback: score.map { Feedback(phone: $0, type: .single) }
+        )
     }
 
     static let right = Score(points: 2, maxPoints: 2, status: .correct, answered: true)
