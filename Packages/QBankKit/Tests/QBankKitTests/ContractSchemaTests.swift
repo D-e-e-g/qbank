@@ -3,8 +3,8 @@ import Testing
 @testable import QBankKit
 
 /// The pinned OpenAPI file is the server's schema at the commit in `Fixtures/pin.json`.
-/// Every recording is from that commit, every key a file-level model decodes is a property
-/// of the schema with the same name, and every recorded response key is one that schema allows.
+/// Every recording is from that commit, every key the kit reads while decoding a recording is
+/// a property of the schema, and every recorded response key is one that schema allows.
 @Suite("Contract: pinned schema")
 struct ContractSchemaTests {
     private static func pin() throws -> Pin {
@@ -33,24 +33,53 @@ struct ContractSchemaTests {
         }
     }
 
+    /// The kit decodes recorded responses through a decoder that logs every key it asks for.
     /// `CourseExam.badge` is the case a route-only check misses: the kit reads it, so the pin must name it.
     @Test func everyKeyTheKitDecodesIsInThePinnedSchema() throws {
         let spec = try Self.spec()
-        let schemas = try #require(spec["components"]?["schemas"])
-        let keys = try ModelKeys.fileLevelDecodeKeys()
-        #expect(keys["CourseExam"]?.contains("badge") == true, "CourseExam decodes badge")
-        var checked = 0
-        for (name, decoded) in keys.sorted(by: { $0.key < $1.key }) {
-            guard let schema = schemas[name] else { continue }
-            let resolved = DocSchema(schema, spec: spec)
-            guard !resolved.properties.isEmpty else { continue }
-            checked += 1
-            for key in decoded.sorted() where resolved.properties[key] == nil {
-                Issue.record("\(name) decodes \(key), which \(name) in the pinned schema does not declare")
+        var badgeRead = false
+        for (name, model) in Self.decodedResponses {
+            let fixture = try Fixture.load(name)
+            let schema = try #require(responseSchema(spec, method: fixture.request.method, path: fixture.request.path, status: fixture.response.status), "\(name) has no response schema")
+            let log = KeyLog()
+            _ = try model.init(from: RecordingDecoder(value: fixture.response.body, path: [], log: log))
+            #expect(!log.reads.isEmpty, "\(name) decoded no keys")
+            for read in log.reads where !schema.declares(read.key, at: read.path) && !Self.optionalLegacyReads.contains((read.path + [read.key]).joined(separator: ".")) {
+                Issue.record("\(name): the kit reads \((read.path + [read.key]).joined(separator: ".")), which the pinned schema does not declare")
+            }
+            if name == "course-with-exams" {
+                badgeRead = log.reads.contains { $0.key == "badge" }
             }
         }
-        #expect(checked > 10, "the schema named too few of the kit's models")
+        #expect(badgeRead, "decoding a course with exam pages never read badge")
     }
+
+    /// Keys the kit reads only when present: a question's own week from before folders, and the
+    /// folder of a By folder row, which `byWeek` and `byStep` rows share a type with but never carry.
+    private static let optionalLegacyReads: Set<String> = [
+        "questions.[].weekLabel",
+        "result.byWeek.[].folderId",
+        "result.byStep.[].folderId",
+    ]
+
+    private static let decodedResponses: [(String, any Decodable.Type)] = [
+        ("agent-keys", AgentKeysResponse.self),
+        ("attempt-saved", SavedAttempt.self),
+        ("course", CourseDetail.self),
+        ("course-with-exams", CourseDetail.self),
+        ("course-after-exam-page-delete", CourseDetail.self),
+        ("course-deleted", RecentlyDeleted.self),
+        ("exam-ended", Exam.self),
+        ("exam-setup-after", ExamSetup.self),
+        ("exam-setup-course-exams", ExamSetup.self),
+        ("exam-start", Exam.self),
+        ("practice-set", PracticeSet.self),
+        ("review", ReviewList.self),
+        ("semesters", Catalog.self),
+        ("semesters-edited", Catalog.self),
+        ("semesters-with-topics", Catalog.self),
+        ("terms", TermsResponse.self),
+    ]
 
     @Test func everyRecordedKeyIsInThePinnedSchema() throws {
         let spec = try Self.spec()
@@ -131,6 +160,20 @@ private final class DocSchema {
         if value["additionalProperties"] != nil {
             allowsExtraKeys = true
         }
+    }
+
+    func declares(_ key: String, at path: [String]) -> Bool {
+        var here = [self]
+        for step in path {
+            here = here.flatMap(\.alternatives).compactMap { step == "[]" ? $0.items : $0.properties[step] }
+        }
+        let candidates = here.flatMap(\.alternatives)
+        if candidates.contains(where: { $0.allowsExtraKeys || $0.questionBody || $0.properties[key] != nil }) { return true }
+        return candidates.allSatisfy { $0.properties.isEmpty }
+    }
+
+    private var alternatives: [DocSchema] {
+        [self] + variants.flatMap(\.alternatives)
     }
 
     func collectExtras(in body: JSONValue, at path: String, into extras: inout [String]) {
@@ -222,255 +265,174 @@ private func matches(template: String, path: String) -> Bool {
     return zip(left, right).allSatisfy { $0.hasPrefix("{") || $0 == $1 }
 }
 
-/// File-level Decodable models and the JSON keys they read. Nested types keep their own names,
-/// so a deletion preview's `Folder` is not the course `Folder` schema.
-private enum ModelKeys {
-    static func fileLevelDecodeKeys() throws -> [String: Set<String>] {
-        let root = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/QBankKit", isDirectory: true)
-        var keys: [String: Set<String>] = [:]
-        guard let enumerator = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil) else {
-            throw CocoaError(.fileReadNoSuchFile)
-        }
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            let text = try String(contentsOf: url, encoding: .utf8)
-            for (name, decoded) in Parser(text).fileLevelTypes() {
-                keys[name, default: []].formUnion(decoded)
-            }
-        }
-        return keys
+private final class KeyLog {
+    var reads: [(path: [String], key: String)] = []
+}
+
+private struct ReadError: Error {}
+
+/// A decoder over a recorded body that logs each key a model asks for, present or not.
+private struct RecordingDecoder: Decoder {
+    let value: JSONValue
+    let path: [String]
+    let log: KeyLog
+    var codingPath: [any CodingKey] { [] }
+    var userInfo: [CodingUserInfoKey: Any] { [:] }
+
+    func container<Key: CodingKey>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
+        guard case .object(let object) = value else { throw ReadError() }
+        return KeyedDecodingContainer(RecordingKeyed<Key>(object: object, path: path, log: log))
     }
 
-    private struct Parser {
-        let text: String
-        var index: String.Index
-        var depth = 0
-
-        init(_ text: String) {
-            self.text = text
-            index = text.startIndex
-        }
-
-        private struct Frame {
-            var name: String
-            var bodyDepth: Int
-            var decodable: Bool
-            var fileLevel: Bool
-            var keys: Set<String> = []
-            var properties: Set<String> = []
-            var sawCodingKeys = false
-        }
-
-        func fileLevelTypes() -> [String: Set<String>] {
-            var parser = self
-            var stack: [Frame] = []
-            var found: [String: Set<String>] = [:]
-            var previous = ""
-            func finishClosed() {
-                while let frame = stack.last, frame.bodyDepth > parser.depth {
-                    stack.removeLast()
-                    let decoded = frame.sawCodingKeys ? frame.keys : frame.properties
-                    if frame.fileLevel && frame.decodable && !decoded.isEmpty {
-                        found[frame.name, default: []].formUnion(decoded)
-                    }
-                }
-            }
-            while parser.index < parser.text.endIndex {
-                parser.skipTrivia()
-                guard parser.index < parser.text.endIndex else { break }
-                let character = parser.text[parser.index]
-                if character == "{" {
-                    parser.depth += 1
-                    parser.advance()
-                    continue
-                }
-                if character == "}" {
-                    parser.depth -= 1
-                    parser.advance()
-                    finishClosed()
-                    continue
-                }
-                guard let word = parser.readIdentifier() else {
-                    parser.advance()
-                    continue
-                }
-                if word == "enum", parser.peekIdentifier() == "CodingKeys", let frame = stack.indices.last {
-                    parser.skipTrivia()
-                    _ = parser.readIdentifier()
-                    parser.skipUntilBrace()
-                    stack[frame].sawCodingKeys = true
-                    stack[frame].keys.formUnion(parser.readCodingKeys())
-                    previous = word
-                    continue
-                }
-                if word == "let" || word == "var" {
-                    if word == "let", previous != "static", let frame = stack.indices.last, stack[frame].bodyDepth == parser.depth {
-                        parser.skipTrivia()
-                        if let name = parser.readIdentifier() {
-                            parser.skipTrivia()
-                            if parser.index < parser.text.endIndex, parser.text[parser.index] == ":" {
-                                stack[frame].properties.insert(name)
-                            }
-                        }
-                    }
-                    previous = word
-                    continue
-                }
-                if word == "struct" || word == "enum" || word == "class" || word == "extension" {
-                    parser.skipTrivia()
-                    let name = parser.readIdentifier() ?? ""
-                    let fileLevel = parser.depth == 0
-                    let header = parser.headerUntilBrace()
-                    let decodable = header.contains("Decodable") || header.contains("Codable")
-                    if word != "extension" {
-                        stack.append(Frame(name: name, bodyDepth: parser.depth, decodable: decodable, fileLevel: fileLevel))
-                    }
-                    previous = word
-                    continue
-                }
-                previous = word
-            }
-            return found
-        }
-
-        private mutating func readCodingKeys() -> Set<String> {
-            var keys: Set<String> = []
-            let body = depth
-            while index < text.endIndex, depth >= body {
-                skipTrivia()
-                guard index < text.endIndex else { break }
-                if text[index] == "{" {
-                    depth += 1
-                    advance()
-                    continue
-                }
-                if text[index] == "}" {
-                    depth -= 1
-                    advance()
-                    if depth < body { break }
-                    continue
-                }
-                guard readIdentifier() == "case" else { continue }
-                while index < text.endIndex {
-                    skipTrivia()
-                    guard let name = readIdentifier() else { break }
-                    skipTrivia()
-                    if index < text.endIndex, text[index] == "=" {
-                        advance()
-                        skipTrivia()
-                        if let literal = readString() {
-                            keys.insert(literal)
-                        } else {
-                            keys.insert(name)
-                        }
-                    } else {
-                        keys.insert(name)
-                    }
-                    skipTrivia()
-                    if index < text.endIndex, text[index] == "," {
-                        advance()
-                        continue
-                    }
-                    break
-                }
-            }
-            return keys
-        }
-
-        private mutating func headerUntilBrace() -> String {
-            let start = index
-            while index < text.endIndex, text[index] != "{" {
-                if text[index] == "\"" {
-                    _ = readString()
-                    continue
-                }
-                advance()
-            }
-            let header = String(text[start..<index])
-            if index < text.endIndex, text[index] == "{" {
-                depth += 1
-                advance()
-            }
-            return header
-        }
-
-        private mutating func skipUntilBrace() {
-            while index < text.endIndex, text[index] != "{" {
-                advance()
-            }
-            if index < text.endIndex {
-                depth += 1
-                advance()
-            }
-        }
-
-        private mutating func skipTrivia() {
-            while index < text.endIndex {
-                if text[index].isWhitespace {
-                    advance()
-                } else if text[index] == "/", text.index(after: index) < text.endIndex, text[text.index(after: index)] == "/" {
-                    while index < text.endIndex, text[index] != "\n" { advance() }
-                } else if text[index] == "/", text.index(after: index) < text.endIndex, text[text.index(after: index)] == "*" {
-                    advance()
-                    advance()
-                    while index < text.endIndex {
-                        if text[index] == "*", text.index(after: index) < text.endIndex, text[text.index(after: index)] == "/" {
-                            advance()
-                            advance()
-                            break
-                        }
-                        advance()
-                    }
-                } else {
-                    break
-                }
-            }
-        }
-
-        private mutating func readIdentifier() -> String? {
-            skipTrivia()
-            guard index < text.endIndex else { return nil }
-            let first = text[index]
-            guard first == "_" || first.isLetter else { return nil }
-            let start = index
-            advance()
-            while index < text.endIndex {
-                let character = text[index]
-                if character == "_" || character.isLetter || character.isNumber { advance() } else { break }
-            }
-            return String(text[start..<index])
-        }
-
-        private func peekIdentifier() -> String? {
-            var copy = self
-            return copy.readIdentifier()
-        }
-
-        private mutating func readString() -> String? {
-            guard index < text.endIndex, text[index] == "\"" else { return nil }
-            advance()
-            var value = ""
-            while index < text.endIndex, text[index] != "\"" {
-                if text[index] == "\\" {
-                    advance()
-                    if index < text.endIndex {
-                        value.append(text[index])
-                        advance()
-                    }
-                } else {
-                    value.append(text[index])
-                    advance()
-                }
-            }
-            if index < text.endIndex { advance() }
-            return value
-        }
-
-        private mutating func advance() {
-            if index < text.endIndex { index = text.index(after: index) }
-        }
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
+        guard case .array(let values) = value else { throw ReadError() }
+        return RecordingUnkeyed(values: values, path: path + ["[]"], log: log)
     }
+
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
+        RecordingSingle(value: value, path: path, log: log)
+    }
+}
+
+private func readValue<T: Decodable>(_ type: T.Type, from value: JSONValue, path: [String], log: KeyLog) throws -> T {
+    if type == Date.self {
+        return try QBankJSON.decoder.decode(T.self, from: JSONEncoder().encode(value))
+    }
+    return try T(from: RecordingDecoder(value: value, path: path, log: log))
+}
+
+private func readScalar<T: Decodable>(_ type: T.Type, from value: JSONValue) throws -> T {
+    try JSONDecoder().decode(T.self, from: JSONEncoder().encode(value))
+}
+
+private struct RecordingKeyed<Key: CodingKey>: KeyedDecodingContainerProtocol {
+    let object: [String: JSONValue]
+    let path: [String]
+    let log: KeyLog
+    var codingPath: [any CodingKey] { [] }
+    var allKeys: [Key] { object.keys.compactMap { Key(stringValue: $0) } }
+
+    private func read(_ key: Key) throws -> JSONValue {
+        log.reads.append((path, key.stringValue))
+        guard let value = object[key.stringValue] else { throw ReadError() }
+        return value
+    }
+
+    func contains(_ key: Key) -> Bool {
+        log.reads.append((path, key.stringValue))
+        return object[key.stringValue] != nil
+    }
+
+    func decodeNil(forKey key: Key) throws -> Bool {
+        log.reads.append((path, key.stringValue))
+        return object[key.stringValue].map(\.isNull) ?? true
+    }
+
+    func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
+        let value = try read(key)
+        return try readValue(type, from: value, path: path + [key.stringValue], log: log)
+    }
+
+    func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool { try readScalar(type, from: read(key)) }
+    func decode(_ type: String.Type, forKey key: Key) throws -> String { try readScalar(type, from: read(key)) }
+    func decode(_ type: Double.Type, forKey key: Key) throws -> Double { try readScalar(type, from: read(key)) }
+    func decode(_ type: Float.Type, forKey key: Key) throws -> Float { try readScalar(type, from: read(key)) }
+    func decode(_ type: Int.Type, forKey key: Key) throws -> Int { try readScalar(type, from: read(key)) }
+    func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 { try readScalar(type, from: read(key)) }
+    func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 { try readScalar(type, from: read(key)) }
+    func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 { try readScalar(type, from: read(key)) }
+    func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 { try readScalar(type, from: read(key)) }
+    func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt { try readScalar(type, from: read(key)) }
+    func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 { try readScalar(type, from: read(key)) }
+    func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 { try readScalar(type, from: read(key)) }
+    func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 { try readScalar(type, from: read(key)) }
+    func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 { try readScalar(type, from: read(key)) }
+
+    func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
+        try RecordingDecoder(value: read(key), path: path + [key.stringValue], log: log).container(keyedBy: type)
+    }
+
+    func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
+        try RecordingDecoder(value: read(key), path: path + [key.stringValue], log: log).unkeyedContainer()
+    }
+
+    func superDecoder() throws -> any Decoder { RecordingDecoder(value: .object(object), path: path, log: log) }
+    func superDecoder(forKey key: Key) throws -> any Decoder {
+        try RecordingDecoder(value: read(key), path: path + [key.stringValue], log: log)
+    }
+}
+
+private struct RecordingSingle: SingleValueDecodingContainer {
+    let value: JSONValue
+    let path: [String]
+    let log: KeyLog
+    var codingPath: [any CodingKey] { [] }
+
+    func decodeNil() -> Bool { value.isNull }
+    func decode<T: Decodable>(_ type: T.Type) throws -> T { try readValue(type, from: value, path: path, log: log) }
+    func decode(_ type: Bool.Type) throws -> Bool { try readScalar(type, from: value) }
+    func decode(_ type: String.Type) throws -> String { try readScalar(type, from: value) }
+    func decode(_ type: Double.Type) throws -> Double { try readScalar(type, from: value) }
+    func decode(_ type: Float.Type) throws -> Float { try readScalar(type, from: value) }
+    func decode(_ type: Int.Type) throws -> Int { try readScalar(type, from: value) }
+    func decode(_ type: Int8.Type) throws -> Int8 { try readScalar(type, from: value) }
+    func decode(_ type: Int16.Type) throws -> Int16 { try readScalar(type, from: value) }
+    func decode(_ type: Int32.Type) throws -> Int32 { try readScalar(type, from: value) }
+    func decode(_ type: Int64.Type) throws -> Int64 { try readScalar(type, from: value) }
+    func decode(_ type: UInt.Type) throws -> UInt { try readScalar(type, from: value) }
+    func decode(_ type: UInt8.Type) throws -> UInt8 { try readScalar(type, from: value) }
+    func decode(_ type: UInt16.Type) throws -> UInt16 { try readScalar(type, from: value) }
+    func decode(_ type: UInt32.Type) throws -> UInt32 { try readScalar(type, from: value) }
+    func decode(_ type: UInt64.Type) throws -> UInt64 { try readScalar(type, from: value) }
+}
+
+private struct RecordingUnkeyed: UnkeyedDecodingContainer {
+    let values: [JSONValue]
+    let path: [String]
+    let log: KeyLog
+    var currentIndex = 0
+    var codingPath: [any CodingKey] { [] }
+    var count: Int? { values.count }
+    var isAtEnd: Bool { currentIndex >= values.count }
+
+    private mutating func next() throws -> JSONValue {
+        guard !isAtEnd else { throw ReadError() }
+        defer { currentIndex += 1 }
+        return values[currentIndex]
+    }
+
+    mutating func decodeNil() throws -> Bool {
+        guard !isAtEnd else { throw ReadError() }
+        if values[currentIndex].isNull {
+            currentIndex += 1
+            return true
+        }
+        return false
+    }
+
+    mutating func decode<T: Decodable>(_ type: T.Type) throws -> T { try readValue(type, from: next(), path: path, log: log) }
+    mutating func decode(_ type: Bool.Type) throws -> Bool { try readScalar(type, from: next()) }
+    mutating func decode(_ type: String.Type) throws -> String { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Double.Type) throws -> Double { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Float.Type) throws -> Float { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Int.Type) throws -> Int { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Int8.Type) throws -> Int8 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Int16.Type) throws -> Int16 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Int32.Type) throws -> Int32 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: Int64.Type) throws -> Int64 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: UInt.Type) throws -> UInt { try readScalar(type, from: next()) }
+    mutating func decode(_ type: UInt8.Type) throws -> UInt8 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: UInt16.Type) throws -> UInt16 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: UInt32.Type) throws -> UInt32 { try readScalar(type, from: next()) }
+    mutating func decode(_ type: UInt64.Type) throws -> UInt64 { try readScalar(type, from: next()) }
+
+    mutating func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
+        try RecordingDecoder(value: next(), path: path, log: log).container(keyedBy: type)
+    }
+
+    mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
+        try RecordingDecoder(value: next(), path: path, log: log).unkeyedContainer()
+    }
+
+    mutating func superDecoder() throws -> any Decoder { RecordingDecoder(value: try next(), path: path, log: log) }
 }
