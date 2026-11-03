@@ -91,18 +91,21 @@ for workflow in "${WORKFLOWS[@]}"; do
   forbid_grep 'pull_request_target' "$workflow" "no pull_request_target trigger in $workflow"
   require_grep '^permissions:' "$workflow" "$workflow sets top-level permissions"
 
-  # A Mac job may run on the self-hosted MAC_RUNNER, so code from a pull
-  # request (possibly from a fork) must never reach it.
-  ruby_check "$workflow runs no Mac or self-hosted job on pull requests" "$workflow" '
+  # A job off GitHub's hosted Linux may run on the self-hosted MAC_RUNNER, so
+  # only events that need write access here may start it: pushes and manual
+  # runs. Code from a pull request (possibly from a fork), a comment, a review,
+  # or a workflow_run must never reach it. A fork's own workflow file is kept
+  # off the runner by repository settings instead (see docs/ci.md).
+  ruby_check "$workflow runs Mac or self-hosted jobs only on pushes and manual runs" "$workflow" '
     wf = YAML.load_file(ARGV[0])
     on = wf[true] || wf["on"]
     events = on.is_a?(Hash) ? on.keys.map(&:to_s) : Array(on).map(&:to_s)
-    exit 0 unless events.any? { |e| e.start_with?("pull_request") }
+    untrusted = events - %w[push workflow_dispatch]
+    exit 0 if untrusted.empty?
     (wf["jobs"] || {}).each do |name, job|
-      runs_on = job["runs-on"].to_s
-      if runs_on =~ /MAC_RUNNER|self-hosted|macos/i
-        abort "job #{name} runs on #{runs_on} and the workflow triggers on #{events.inspect}"
-      end
+      runs_on = job["runs-on"]
+      next if runs_on.is_a?(String) && runs_on.start_with?("ubuntu-")
+      abort "job #{name} runs on #{runs_on.inspect} and the workflow triggers on #{untrusted.inspect}"
     end
   '
 done
@@ -153,23 +156,40 @@ require_grep '^useDefault = true$' .gitleaks.toml ".gitleaks.toml keeps gitleaks
 forbid_grep 'secrets\.' "$XCODE" "xcode.yml references no secrets"
 require_grep '^  contents: read$' "$XCODE" "xcode.yml permissions are contents: read"
 forbid_grep ':[[:space:]]*write' "$XCODE" "xcode.yml grants no write permission"
-ruby_check "xcode.yml triggers only on qbank-v* tags and manual runs" "$XCODE" '
+ruby_check "xcode.yml triggers only on pushes to main, qbank-v* tags, and manual runs" "$XCODE" '
   wf = YAML.load_file(ARGV[0])
   on = wf[true] || wf["on"]
   abort "on: must be a mapping" unless on.is_a?(Hash)
   keys = on.keys.map(&:to_s)
   abort "on: keys are #{keys.inspect}, expected [\"push\", \"workflow_dispatch\"]" unless keys == %w[push workflow_dispatch]
   push = on["push"]
-  unless push.is_a?(Hash) && push.keys.map(&:to_s) == %w[tags] && push["tags"] == ["qbank-v*"]
-    abort "push must be exactly tags: [qbank-v*] (got #{push.inspect})"
+  unless push.is_a?(Hash) && push.keys.map(&:to_s) == %w[branches tags] && push["branches"] == ["main"] && push["tags"] == ["qbank-v*"]
+    abort "push must be exactly branches: [main] and tags: [qbank-v*] (got #{push.inspect})"
   end
 '
-ruby_check "every xcode.yml job runs on $MAC_RUNS_ON" "$XCODE" '
+# With no MAC_RUNNER a push to main must not fall back to a hosted Mac on every
+# merge: the Mac job skips and a Linux job says why. Every Mac job shares one
+# concurrency group that queues rather than cancels, so the self-hosted Mac,
+# which other CI shares, runs one QBank job at a time.
+ruby_check "xcode.yml's Mac jobs run on $MAC_RUNS_ON one at a time and skip a push to main without MAC_RUNNER" "$XCODE" '
   jobs = YAML.load_file(ARGV[0])["jobs"] || {}
-  abort "no jobs" if jobs.empty?
-  expected = "${{ vars.MAC_RUNNER || '"'"'macos-26'"'"' }}"
-  jobs.each do |name, job|
-    abort "job #{name} runs on #{job["runs-on"].inspect}" unless job["runs-on"] == expected
+  q = "'"'"'"
+  mac = "${{ vars.MAC_RUNNER || #{q}macos-26#{q} }}"
+  build_if = "github.event_name != #{q}push#{q} || github.ref != #{q}refs/heads/main#{q} || vars.MAC_RUNNER != #{q}#{q}"
+  skip_if = "github.event_name == #{q}push#{q} && github.ref == #{q}refs/heads/main#{q} && vars.MAC_RUNNER == #{q}#{q}"
+  mac_jobs, other_jobs = jobs.partition { |_, job| job["runs-on"] == mac }
+  abort "no job runs on #{mac}" if mac_jobs.empty?
+  mac_jobs.each do |name, job|
+    abort "job #{name} if: is #{job["if"].inspect}, expected #{build_if.inspect}" unless job["if"] == build_if
+    abort "job #{name} sets no timeout-minutes" unless job["timeout-minutes"].is_a?(Integer)
+    concurrency = job["concurrency"]
+    unless concurrency.is_a?(Hash) && concurrency["group"] == "xcode-mac" && concurrency["cancel-in-progress"] == false
+      abort "job #{name} concurrency must be group: xcode-mac, cancel-in-progress: false (got #{concurrency.inspect})"
+    end
+  end
+  other_jobs.each do |name, job|
+    abort "job #{name} runs on #{job["runs-on"].inspect}" unless job["runs-on"].to_s.start_with?("ubuntu-")
+    abort "job #{name} if: is #{job["if"].inspect}, expected #{skip_if.inspect}" unless job["if"] == skip_if
   end
 '
 require_grep 'package-tests\.sh --macos' "$XCODE" "xcode.yml tests the Swift packages on macOS"
