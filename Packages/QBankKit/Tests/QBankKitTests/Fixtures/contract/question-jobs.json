@@ -1,9 +1,11 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/question-jobs",
     "query": {},
-    "authorization": "Bearer synthetic-session-token"
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
   },
   "response": {
     "status": 200,
@@ -83,9 +85,9 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-10-15 20:08:23.27+00",
-          "updatedAt": "2026-10-15 20:08:23.275+00",
-          "finishedAt": "2026-10-15 20:08:23.275+00",
+          "createdAt": "2026-11-03 16:24:28.282-05",
+          "updatedAt": "2026-11-03 16:24:28.287-05",
+          "finishedAt": "2026-11-03 16:24:28.287-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -159,9 +161,9 @@
               "kind": "exam"
             }
           ],
-          "createdAt": "2026-10-15 20:08:23.233+00",
-          "updatedAt": "2026-10-15 20:08:23.264+00",
-          "finishedAt": "2026-10-15 20:08:23.264+00",
+          "createdAt": "2026-11-03 16:24:28.247-05",
+          "updatedAt": "2026-11-03 16:24:28.275-05",
+          "finishedAt": "2026-11-03 16:24:28.275-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -238,8 +240,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-10-15 20:08:23.223+00",
-          "updatedAt": "2026-10-15 20:08:23.229+00",
+          "createdAt": "2026-11-03 16:24:28.237-05",
+          "updatedAt": "2026-11-03 16:24:28.242-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [
@@ -344,9 +346,9 @@
               "kind": "exam"
             }
           ],
-          "createdAt": "2026-10-15 20:08:23.129+00",
-          "updatedAt": "2026-10-15 20:08:23.208+00",
-          "finishedAt": "2026-10-15 20:08:23.208+00",
+          "createdAt": "2026-11-03 16:24:28.166-05",
+          "updatedAt": "2026-11-03 16:24:28.228-05",
+          "finishedAt": "2026-11-03 16:24:28.228-05",
           "failure": null,
           "warnings": [],
           "usage": {

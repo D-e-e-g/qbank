@@ -1,9 +1,11 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/question-jobs",
     "query": {},
-    "authorization": "Bearer synthetic-session-token"
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
   },
   "response": {
     "status": 403,

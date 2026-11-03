@@ -1,7 +1,8 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
-    "path": "/api/courses/7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000201",
     "query": {},
     "authorization": "Bearer synthetic-session-token",
     "body": null
@@ -10,12 +11,13 @@
     "status": 200,
     "headers": {},
     "body": {
-      "id": "7a7665d2-2bbe-4093-ae10-a2cf1c968283",
+      "id": "c0000000-0000-4000-8000-000000000201",
+      "kind": "course",
       "code": "NURS 101",
       "title": "Invented Nursing Basics",
       "archivedAt": null,
       "semester": {
-        "id": "1a7ec991-ef27-4dfb-b26b-1c2f3e163e8b",
+        "id": "5e000000-0000-4000-8000-000000000201",
         "number": 1,
         "name": "Semester 1"
       },
@@ -35,26 +37,26 @@
           "label": "Week 1",
           "sets": [
             {
-              "id": "f2c2a4ec-52f9-4332-a1ee-48f9e467dc4c",
+              "id": "5e700000-0000-4000-8000-000000000201",
               "title": "Week 1 - Set 1: Invented basics",
               "description": "Invented practice questions, one per format.",
               "questionCount": 8,
-              "importedAt": "2026-10-15T02:12:18.632Z",
-              "activeSince": "2026-10-15T02:12:18.632Z",
+              "importedAt": "2026-11-03T21:24:21.261Z",
+              "activeSince": "2026-11-03T21:24:21.261Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "ac544ab7-34aa-4521-bc6a-6f36a1b6468a",
-                "9f34ee17-2d1d-41c5-af75-f7656a0810cc",
-                "386c7a73-e49f-42bf-b6e1-5a5637b8cd58",
-                "9c6443ba-3c55-4885-8262-d90898974789",
-                "2a601fef-df72-401a-9c7f-3ddcb39951d6",
-                "840dbb5e-49c5-4682-b80a-b194defad93b",
-                "34793561-87b1-4dcd-a26b-b039f2b35a53",
-                "3500ac88-16e1-48ca-b46e-ceeae9edee38"
+                "00000000-0000-4000-8010-000000000002",
+                "00000000-0000-4000-8010-000000000003",
+                "00000000-0000-4000-8010-000000000004",
+                "00000000-0000-4000-8010-000000000005",
+                "00000000-0000-4000-8010-000000000006",
+                "00000000-0000-4000-8010-000000000007",
+                "00000000-0000-4000-8010-000000000008",
+                "00000000-0000-4000-8010-000000000009"
               ],
               "importedByAgent": null
             }
@@ -65,20 +67,20 @@
           "label": "Week 2",
           "sets": [
             {
-              "id": "13d180f7-bd37-4a0a-b10e-3bc579b15860",
+              "id": "5e700000-0000-4000-8000-000000000202",
               "title": "Week 2 - Set 1: Invented follow-up",
               "description": "Two more invented questions.",
               "questionCount": 2,
-              "importedAt": "2026-10-15T02:12:18.644Z",
-              "activeSince": "2026-10-15T02:12:18.644Z",
+              "importedAt": "2026-11-03T21:24:21.275Z",
+              "activeSince": "2026-11-03T21:24:21.275Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
-                "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de"
+                "00000000-0000-4000-8010-000000000010",
+                "00000000-0000-4000-8010-000000000011"
               ],
               "importedByAgent": null
             }
@@ -88,60 +90,67 @@
       ],
       "folders": [
         {
-          "id": "de55efe2-6662-4fea-bf71-2c26199059b2",
+          "id": "f0000000-0000-4000-8000-000000000201",
           "name": "Week 1",
           "examPageId": null,
           "sortOrder": 1,
           "sets": [
             {
-              "id": "f2c2a4ec-52f9-4332-a1ee-48f9e467dc4c",
+              "id": "5e700000-0000-4000-8000-000000000201",
               "title": "Week 1 - Set 1: Invented basics",
               "description": "Invented practice questions, one per format.",
               "questionCount": 8,
-              "importedAt": "2026-10-15T02:12:18.632Z",
-              "activeSince": "2026-10-15T02:12:18.632Z",
+              "importedAt": "2026-11-03T21:24:21.261Z",
+              "activeSince": "2026-11-03T21:24:21.261Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "ac544ab7-34aa-4521-bc6a-6f36a1b6468a",
-                "9f34ee17-2d1d-41c5-af75-f7656a0810cc",
-                "386c7a73-e49f-42bf-b6e1-5a5637b8cd58",
-                "9c6443ba-3c55-4885-8262-d90898974789",
-                "2a601fef-df72-401a-9c7f-3ddcb39951d6",
-                "840dbb5e-49c5-4682-b80a-b194defad93b",
-                "34793561-87b1-4dcd-a26b-b039f2b35a53",
-                "3500ac88-16e1-48ca-b46e-ceeae9edee38"
+                "00000000-0000-4000-8010-000000000002",
+                "00000000-0000-4000-8010-000000000003",
+                "00000000-0000-4000-8010-000000000004",
+                "00000000-0000-4000-8010-000000000005",
+                "00000000-0000-4000-8010-000000000006",
+                "00000000-0000-4000-8010-000000000007",
+                "00000000-0000-4000-8010-000000000008",
+                "00000000-0000-4000-8010-000000000009"
               ],
               "importedByAgent": null
             }
           ],
           "examBankCount": 2,
-          "examSets": []
+          "examSets": [
+            {
+              "id": "00000000-0000-4000-8010-000000000001",
+              "title": "Week 1 exam bank",
+              "questionCount": 2,
+              "importedByAgent": null
+            }
+          ]
         },
         {
-          "id": "31e05eea-ece9-409f-9696-b035a99c94c4",
+          "id": "f0000000-0000-4000-8000-000000000202",
           "name": "Week 2",
           "examPageId": null,
           "sortOrder": 2,
           "sets": [
             {
-              "id": "13d180f7-bd37-4a0a-b10e-3bc579b15860",
+              "id": "5e700000-0000-4000-8000-000000000202",
               "title": "Week 2 - Set 1: Invented follow-up",
               "description": "Two more invented questions.",
               "questionCount": 2,
-              "importedAt": "2026-10-15T02:12:18.644Z",
-              "activeSince": "2026-10-15T02:12:18.644Z",
+              "importedAt": "2026-11-03T21:24:21.275Z",
+              "activeSince": "2026-11-03T21:24:21.275Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
               "questionIds": [
-                "b8d0578b-68eb-4e23-a3dc-257af888dbc0",
-                "c0ead1ca-7414-4a2a-b3ec-9f510ba5b2de"
+                "00000000-0000-4000-8010-000000000010",
+                "00000000-0000-4000-8010-000000000011"
               ],
               "importedByAgent": null
             }
@@ -150,8 +159,7 @@
           "examSets": []
         }
       ],
-      "exams": [],
-      "kind": "course"
+      "exams": []
     }
   }
 }

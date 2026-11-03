@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "PATCH",
     "path": "/api/semesters/5e000000-0000-4000-8000-000000000001",
@@ -19,8 +20,8 @@
       "name": "Fall 2026",
       "startsOn": "2026-09-01",
       "endsOn": null,
-      "courses": [],
-      "archivedAt": null
+      "archivedAt": null,
+      "courses": []
     }
   }
 }

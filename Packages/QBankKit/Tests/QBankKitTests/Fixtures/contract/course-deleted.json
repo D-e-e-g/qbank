@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000701/deleted",
@@ -11,6 +12,7 @@
     "headers": {},
     "body": {
       "undoDays": 30,
+      "examPages": [],
       "folders": [
         {
           "id": "f0000000-0000-4000-8000-000000000701",
@@ -42,8 +44,8 @@
               "questionCount": 3
             }
           ],
-          "deletedAt": "2026-10-18T20:22:06.420Z",
-          "undoUntil": "2026-11-17T20:22:06.420Z",
+          "deletedAt": "2026-11-03T21:24:25.199Z",
+          "undoUntil": "2026-12-03T21:24:25.199Z",
           "undoRefusal": null,
           "deletedByAgent": null
         }
@@ -56,8 +58,8 @@
           "questionCount": 3,
           "folderId": "f0000000-0000-4000-8000-000000000702",
           "folderName": "Week 2",
-          "deletedAt": "2026-10-18T20:22:06.438Z",
-          "undoUntil": "2026-11-17T20:22:06.438Z",
+          "deletedAt": "2026-11-03T21:24:25.220Z",
+          "undoUntil": "2026-12-03T21:24:25.220Z",
           "undoRefusal": null,
           "deletedByAgent": null
         }
@@ -79,20 +81,19 @@
           ],
           "questionCount": 3,
           "timeLimitSeconds": 270,
-          "startedAt": "2026-10-18T20:22:06.339Z",
-          "endsAt": "2026-10-18T20:26:36.339Z",
-          "finishedAt": "2026-10-18T20:22:06.358Z",
+          "startedAt": "2026-11-03T21:24:25.133Z",
+          "endsAt": "2026-11-03T21:28:55.133Z",
+          "finishedAt": "2026-11-03T21:24:25.152Z",
           "endReason": "finished",
           "answeredCount": 2,
           "fullyRight": 2,
           "points": 2,
           "maxPoints": 3,
           "minutesUsed": 1,
-          "deletedAt": "2026-10-18T20:22:06.429Z",
-          "undoUntil": "2026-11-17T20:22:06.429Z"
+          "deletedAt": "2026-11-03T21:24:25.212Z",
+          "undoUntil": "2026-12-03T21:24:25.212Z"
         }
-      ],
-      "examPages": []
+      ]
     }
   }
 }

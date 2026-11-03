@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/attempts",
@@ -6,7 +7,7 @@
     "authorization": "Bearer synthetic-session-token",
     "body": {
       "clientAttemptId": "11111111-1111-4111-8111-111111111111",
-      "questionId": "ac544ab7-34aa-4521-bc6a-6f36a1b6468a",
+      "questionId": "00000000-0000-4000-8010-000000000002",
       "response": {
         "type": "single",
         "choice": 0

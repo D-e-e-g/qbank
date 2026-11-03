@@ -248,7 +248,8 @@ struct ContentContractTests {
         #expect(set.questionIDs.count == 8)
         #expect(set.status == .imported)
         #expect(set.lastAnsweredAt == nil)
-        #expect(QBankJSON.formatDate(set.importedAt) == "2026-10-15T02:12:18.632Z")
+        let importedAt = try #require(fixture.response.body["weeks"]?.arrayValue?.first?["sets"]?.arrayValue?.first?["importedAt"]?.stringValue)
+        #expect(QBankJSON.formatDate(set.importedAt) == importedAt)
         #expect(course.exams.isEmpty, "a course has no exams until one is made")
         #expect(course.folders.map(\.name) == ["Week 1", "Week 2"], "day one: a folder for each week, in week order")
         #expect(course.folders.allSatisfy { $0.examPageID == nil })
@@ -821,7 +822,7 @@ struct FolderContractTests {
         #expect(folder.name == "First Pass")
         #expect(folder.examPageID == nil)
         #expect(folder.sets.isEmpty)
-        #expect(folder.sortOrder == 4, "at the end of the Folders list")
+        #expect(folder.sortOrder == 1, "the order counts within the Folders list, where it is the only folder on no exam page")
     }
 
     @Test func renameChangesOnlyTheName() async throws {
@@ -882,9 +883,9 @@ struct FolderContractTests {
         let course = try Fixture.load("course-with-exams").decodeBody(CourseDetail.self)
         #expect(course.exams.map(\.name) == ["Midterm", "Exam 2"])
         #expect(course.exams.map(\.folderIDs) == [[Self.week1, Self.week2], [Self.week3]])
-        #expect(course.folders.map(\.name) == ["Week 1", "Week 2", "Week 3", "Second Pass", "Mixed review"])
+        #expect(course.folders.map(\.name) == ["Week 1", "Week 2", "Week 3", "Mixed review", "Second Pass"])
         #expect(course.folders.map(\.examPageID) == [Self.examOne, Self.examOne, Self.examTwo, nil, nil])
-        #expect(course.folders.map(\.sets.count) == [1, 1, 1, 1, 0], "an empty folder is listed too")
+        #expect(course.folders.map(\.sets.count) == [1, 1, 1, 0, 1], "an empty folder is listed too")
         #expect(course.folderCount == 5)
         #expect(course.weekCount == 4)
     }
@@ -900,11 +901,11 @@ struct FolderContractTests {
 
     @Test(arguments: [
         ("course-exam-create-folder-taken", 409, "Week 2 is in Exam 1."),
-        ("course-exam-create-name-taken", 409, "This course already has an exam named exam 1."),
+        ("course-exam-create-name-taken", 409, "This course already has a page named exam 1."),
         ("course-exam-create-unknown-folder", 400, "That folder is not in this course."),
-        ("course-exam-create-blank", 400, "Exam name is required."),
+        ("course-exam-create-blank", 400, "Page name is required."),
         ("course-exam-update-folder-taken", 409, "Week 1 is in Midterm."),
-        ("course-exam-not-found", 404, "That exam is not in the app."),
+        ("course-exam-not-found", 404, "That page is not in the app."),
     ])
     func examPageRefusalsSayWhyInHerWords(name: String, status: Int, message: String) async throws {
         let fixture = try Fixture.load(name)

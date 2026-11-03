@@ -6,11 +6,11 @@
 # Reads SERVER_CHECKOUT and does not fetch or modify it. pin.json names that
 # checkout's HEAD. Set QBANK_CONTRACT_SCRATCH to reuse a scratch tree; the
 # default is a directory under ${TMPDIR:-/tmp}. Set QBANK_API_IMAGE when that
-# commit has no image digest recorded in test/record-contract.ts.
+# commit has no image digest recorded in test/record-contract/main.ts.
 set -euo pipefail
 
 usage() {
-  sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//' >&2
+  sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//' >&2
   exit 64
 }
 
@@ -28,10 +28,10 @@ rsync -a --delete --exclude node_modules --exclude .git --exclude dist "$server/
 if [ ! -d "$scratch/node_modules" ]; then
   ( cd "$scratch" && pnpm install --frozen-lockfile )
 fi
-cp "$root/test/record-contract.ts" "$scratch/apps/api/scripts/record-contract.ts"
+rm -rf "$scratch/apps/api/scripts/record-contract"
+cp -R "$root/test/record-contract" "$scratch/apps/api/scripts/record-contract"
 (
   cd "$scratch/apps/api" || exit 1
-  pnpm exec tsx scripts/record-contract.ts "$commit" "$fixtures" "$scratch/apps/api/openapi.json"
+  pnpm exec tsx scripts/record-contract/main.ts "$commit" "$fixtures" "$scratch/apps/api/openapi.json"
 )
-rm -rf "$fixtures/topics"
 echo "contract fixtures pinned to $commit"

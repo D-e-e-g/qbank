@@ -1,7 +1,8 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "GET",
-    "path": "/api/courses/7a7665d2-2bbe-4093-ae10-a2cf1c968283/terms",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000201/terms",
     "query": {},
     "authorization": "Bearer synthetic-session-token",
     "body": null
@@ -16,7 +17,7 @@
           "term": "Tachycardia",
           "meaning": "An invented definition of a fast heart rate.",
           "weekLabel": "Week 1",
-          "folderId": "de55efe2-6662-4fea-bf71-2c26199059b2",
+          "folderId": "f0000000-0000-4000-8000-000000000201",
           "folderName": "Week 1",
           "setTitle": "Week 1 - Set 1: Invented basics"
         }

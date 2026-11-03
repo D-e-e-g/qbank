@@ -1,4 +1,5 @@
 {
+  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
   "request": {
     "method": "POST",
     "path": "/api/sign-up",
@@ -15,14 +16,14 @@
     "body": {
       "token": "synthetic-session-token",
       "user": {
-        "id": "k69F65WbgOh9mi6FxZLgo9o6mEPayqtD",
+        "id": "synthetic-user-2",
         "email": "new.user@example.com",
         "name": "new.user",
         "role": "student",
         "mustChangePassword": false,
         "palette": "dusk"
       },
-      "expiresAt": "2027-11-26T15:38:21.814Z"
+      "expiresAt": "2027-12-08T21:24:16.223Z"
     }
   }
 }

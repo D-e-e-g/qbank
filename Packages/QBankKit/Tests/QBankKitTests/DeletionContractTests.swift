@@ -32,6 +32,11 @@ struct DeletionContractTests {
     static let pageWeek4 = "f0000000-0000-4000-8000-000000000903"
     static let pageWeek5 = "f0000000-0000-4000-8000-000000000904"
 
+    /// The `confirm` a recorded preview showed. The server hashes it from the real ids, so each recording has its own.
+    static func confirm(shownIn name: String) throws -> String {
+        try #require(Fixture.load(name).response.body["confirm"]?.stringValue)
+    }
+
     // MARK: A set
 
     @Test func aSetsPreviewNamesWhatGoesAndHowHerStandingChanges() async throws {
@@ -51,7 +56,7 @@ struct DeletionContractTests {
         #expect(preview.progress.reviewCount == CountChange(before: 3, after: 2))
         #expect(preview.message == "Delete Heart B? Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days.")
         #expect(preview.refusal == nil)
-        #expect(preview.confirm == "e1ce33d296348989")
+        #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
     }
 
@@ -68,7 +73,7 @@ struct DeletionContractTests {
     @Test func aSetIsDeletedWithThePreviewsConfirmAndUndoBringsItBackInItsFolder() async throws {
         let transport = try FixtureTransport("practice-set-delete", "practice-set-undo-delete")
         let (client, _) = TestClient.make(transport)
-        try await client.deletePracticeSet(id: Self.heartB, confirm: "e1ce33d296348989")
+        try await client.deletePracticeSet(id: Self.heartB, confirm: Self.confirm(shownIn: "practice-set-delete-preview"))
         let folder = try await client.undoDeletePracticeSet(id: Self.heartB)
         try expectRequest(transport.requests.first, matches: Fixture.load("practice-set-delete"))
         try expectRequest(transport.requests.last, matches: Fixture.load("practice-set-undo-delete"))
@@ -95,20 +100,21 @@ struct DeletionContractTests {
         #expect([preview.setCount, preview.questionCount, preview.answeredCount, preview.reviewCount, preview.pastExamCount] == [3, 10, 4, 2, 0] as [Int])
         #expect(preview.message == "Delete Week 1? Its 3 sets go with it: Heart A, Heart B and Heart A exam, 10 questions in all. You have answered 4 of them: those answers stop counting toward your progress, and 2 questions leave your Review list. It comes off Exam 1. You can undo this for 30 days.")
         #expect(preview.refusal == nil)
-        #expect(preview.confirm == "36a24767c0033cfc")
+        #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
     }
 
     /// A set landed in the folder after she was warned: nothing is deleted, and a new preview names it.
     @Test func aFolderThatChangedSinceTheWarningIsRefusedAndPreviewedAgain() async throws {
         let transport = try FixtureTransport("folder-delete-changed", "folder-delete-preview-changed", "folder-delete")
         let (client, _) = TestClient.make(transport)
+        let warned = try Self.confirm(shownIn: "folder-delete-preview")
         let error = await #expect(throws: QBankError.self) {
-            try await client.deleteFolder(id: Self.week1, confirm: "36a24767c0033cfc")
+            try await client.deleteFolder(id: Self.week1, confirm: warned)
         }
         try MakeQuestionsContractTests.expect(error, is: Fixture.load("folder-delete-changed"), code: .deletionChanged)
         let again = try await client.folderDeletion(id: Self.week1)
         #expect(again.sets.map(\.title) == ["Heart A", "Heart B", "Heart C", "Heart A exam"])
-        #expect(again.confirm != "36a24767c0033cfc")
+        #expect(again.confirm != warned)
         try await client.deleteFolder(id: Self.week1, confirm: again.confirm)
         let fixtures = try ["folder-delete-changed", "folder-delete-preview-changed", "folder-delete"].map(Fixture.load)
         for (request, fixture) in zip(transport.requests, fixtures) {
@@ -154,7 +160,7 @@ struct DeletionContractTests {
     @Test func aPastExamIsDeletedAndUndoListsItAgain() async throws {
         let transport = try FixtureTransport("exam-delete", "exam-undo-delete")
         let (client, _) = TestClient.make(transport)
-        try await client.deleteExam(id: Self.pastExam, confirm: "3b71b71bc2530c3b")
+        try await client.deleteExam(id: Self.pastExam, confirm: Self.confirm(shownIn: "exam-delete-preview"))
         let exam = try await client.undoDeleteExam(id: Self.pastExam)
         try expectRequest(transport.requests.first, matches: Fixture.load("exam-delete"))
         try expectRequest(transport.requests.last, matches: Fixture.load("exam-undo-delete"))
@@ -227,7 +233,7 @@ struct DeletionContractTests {
         #expect(preview.progress.answeredCount == CountChange(before: 1, after: 1))
         #expect(preview.message == "Delete Exam 2? Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days.")
         #expect(preview.refusal == nil)
-        #expect(preview.confirm == "0a8ebda3b1da4351")
+        #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
     }
 
@@ -236,13 +242,14 @@ struct DeletionContractTests {
         let names = ["course-exam-delete-changed", "course-exam-delete-preview-changed", "course-exam-delete"]
         let transport = try FixtureTransport(names[0], names[1], names[2])
         let (client, _) = TestClient.make(transport)
+        let warned = try Self.confirm(shownIn: "course-exam-delete-preview")
         let error = await #expect(throws: QBankError.self) {
-            try await client.deleteCourseExam(id: Self.pageExam2, confirm: "0a8ebda3b1da4351")
+            try await client.deleteCourseExam(id: Self.pageExam2, confirm: warned)
         }
         try MakeQuestionsContractTests.expect(error, is: Fixture.load("course-exam-delete-changed"), code: .deletionChanged)
         let again = try await client.courseExamDeletion(id: Self.pageExam2)
         #expect(again.folders.map(\.name) == ["Week 3", "Week 4", "Week 5"])
-        #expect(again.confirm != "0a8ebda3b1da4351")
+        #expect(again.confirm != warned)
         try await client.deleteCourseExam(id: Self.pageExam2, confirm: again.confirm)
         for (request, fixture) in try zip(transport.requests, names.map(Fixture.load)) {
             try expectRequest(request, matches: fixture)
@@ -304,7 +311,7 @@ struct DeletionContractTests {
         #expect(page.undoRefusal == nil)
         #expect(abs(page.undoUntil.timeIntervalSince(page.deletedAt) - 30 * 86_400) < 0.001)
         let taken = try Fixture.load("course-deleted-exam-page-name-taken").decodeBody(RecentlyDeleted.self)
-        #expect(taken.examPages.first?.undoRefusal == "This course already has an exam named Exam 2. Rename one of them, then bring this one back.")
+        #expect(taken.examPages.first?.undoRefusal == "This course already has a page named Exam 2. Rename one of them, then bring this one back.")
     }
 
     /// An empty `examPages` list, including a recording from before pages could be deleted, lists none.
@@ -345,7 +352,7 @@ struct DeletionContractTests {
         let (client, _) = TestClient.make(transport)
         let error = await #expect(throws: QBankError.self) { _ = try await client.courseExamDeletion(id: Self.pageExam2) }
         try expectRequest(transport.requests.first, matches: fixture)
-        #expect(error == .server(ServerError(status: 404, code: .requestRefused, message: "That exam page was deleted.")))
+        #expect(error == .server(ServerError(status: 404, code: .requestRefused, message: "That page was deleted.")))
     }
 
     // MARK: Recently deleted
@@ -394,7 +401,7 @@ struct DeletionContractTests {
         #expect([preview.answeredCount, preview.reviewCount, preview.pastExamCount] == [1, 1, 1] as [Int])
         #expect(preview.message == "Delete NURS 220 and its 5 questions? You can bring it back for 30 days.")
         #expect(preview.refusal == nil)
-        #expect(preview.confirm == "bed4d3e1a5eaf8b4")
+        #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
     }
 
@@ -414,7 +421,7 @@ struct DeletionContractTests {
         let fixture = try Fixture.load("course-delete")
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
-        try await client.deleteCourse(id: Self.nurs220, confirm: "bed4d3e1a5eaf8b4")
+        try await client.deleteCourse(id: Self.nurs220, confirm: Self.confirm(shownIn: "course-delete-preview"))
         try expectRequest(transport.requests.first, matches: fixture)
     }
 
