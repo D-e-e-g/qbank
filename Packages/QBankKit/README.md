@@ -46,4 +46,4 @@ test/record-contract.sh /path/to/qbank-server
 
 Then run the package tests.
 
-The study-topic fixtures (`topic`, `topic-create`, `topic-order`, `semesters-with-topics`, `place-topic`) are live recordings: a topic is a course row of kind `topic` with no semester and an empty code. `semesters.json` stays the catalog from before this account had topics, with `topics` present and empty, which is how the server sends that list.
+A topic is a course row of kind `topic` with no semester and an empty code. `semesters.json` stays the catalog from before this account had topics, with `topics` present and empty, which is how the server sends that list.
