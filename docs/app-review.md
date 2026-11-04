@@ -24,7 +24,7 @@ The reviewer needs to understand this, so the review notes below say it in short
 2. The app sends the email and password over HTTPS to the QBank server, `https://qbank.dimitrygallego.com`, which answers with a session token. The app keeps the token in the iOS Keychain and sends it with every request. The password is never stored on the phone.
 3. After 5 wrong passwords the server locks that email for a short time and says how long; the app shows that message.
 4. **Forgot password?** explains that the app sends no email: the owner sets a temporary password from his admin account, and the user chooses a new one at the next sign-in (the **Choose a new password** screen).
-5. Signed in, the app opens on Home (courses by semester) and stays signed in for months unless the user signs out in Settings.
+5. Signed in, the app opens on Home (courses by semester) and stays signed in for months unless the user signs out, or uses **Sign out everywhere** to end every device's sign-in, in Settings.
 6. **Settings > Delete account** deletes the signed-in user account and everything in it for good, after its current password: its courses and study topics, sets, answers, progress and past exams, on every device, with no Undo. The app then signs out and forgets what it kept on the phone. The admin account has no Delete account.
 
 Login rules this meets:
