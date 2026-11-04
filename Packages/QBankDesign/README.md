@@ -72,4 +72,4 @@ TEST_RUNNER_QBANK_DESIGN_RENDER_DIR=/tmp/qbank-gallery ../../test/sim.sh -- \
   xcodebuild test -scheme QBankDesign -destination 'platform=iOS Simulator,id={{UDID}}'
 ```
 
-The tokens build without SwiftUI, so CI also runs the token tests on Linux for pull requests; the components and their tests build only on Apple platforms.
+The tokens build without SwiftUI; the components and their tests build only on Apple platforms.

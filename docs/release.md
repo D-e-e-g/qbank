@@ -102,7 +102,7 @@ Steps 4 to 9 come before the first upload. Each is done once unless it says othe
 - The key has the **App Manager** role, not Admin: it can upload builds and run TestFlight, but cannot manage users or keys. If it leaks, revoke it in App Store Connect (Users and Access > Integrations) and save a new one under the same vault names.
 - Signing uses the owner's Xcode sign-in on his Mac. No signing certificate, profile, or key is in this repository or in CI.
 - The Apple team ID stays out of Git. It comes from `--team-id` or `APPLE_TEAM_ID`, and only a temporary copy of `ExportOptions.plist` holds it.
-- No CI job holds Apple credentials: pull requests run only Linux checks with no secrets, and `xcode.yml` (pushes to `main`, `qbank-v*` tags, and manual runs) builds Release without signing. See [ci.md](ci.md).
+- No CI job holds Apple credentials: no workflow references a secret, and `xcode.yml` (pull requests from this repository's branches, pushes to `main`, `qbank-v*` tags, and manual runs) builds Release without signing. See [ci.md](ci.md).
 - An upload builds only a commit that is on origin, from a fresh clone, so local edits never reach TestFlight.
 - Nothing here submits for App Review or publishes to the App Store. It ends at TestFlight.
 - The repository holds no backend code, server credentials, deployment files, or infrastructure configuration; those stay in the private server repository.

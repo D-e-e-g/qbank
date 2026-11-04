@@ -1,9 +1,9 @@
 name: CI
 
-# Pull requests and pushes to main run only Linux checks: this workflow
-# references no secrets, reads the repository with a read-only token, and
-# never runs on a Mac. The Xcode build and tests run in xcode.yml, which never
-# runs on pull requests.
+# Pull requests and pushes to main run these checks on GitHub's hosted Linux:
+# this workflow references no secrets, reads the repository with a read-only
+# token, and never runs on a Mac. The Swift packages and the app build and test
+# on a Mac in xcode.yml (see docs/ci.md).
 on:
   pull_request:
   push:
@@ -19,7 +19,6 @@ concurrency:
 jobs:
   checks:
     name: Linux checks
-    # A fixed Ubuntu release, because the Swift toolchain below is built for it.
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
@@ -34,26 +33,6 @@ jobs:
 
       - name: Repository and pipeline rules
         run: ./test/release-checks.sh
-
-      # One pinned Swift release from swift.org, not the runner image's own:
-      # some ubuntu-26.04 image builds ship no Swift at all. 6.4 is the Swift
-      # in the Mac job's Xcode; the packages need tools version 6.0 or newer.
-      - name: Install Swift
-        run: |
-          version=6.4.2
-          sha256=ff69258a20ad7a70e31ec6bd983b4bcb241481001ebdbf5245150f7125f11e27
-          curl --fail --silent --show-error --location --retry 3 -o "$RUNNER_TEMP/swift.tar.gz" \
-            "https://download.swift.org/swift-$version-release/ubuntu2604/swift-$version-RELEASE/swift-$version-RELEASE-ubuntu26.04.tar.gz"
-          echo "$sha256  $RUNNER_TEMP/swift.tar.gz" | sha256sum --check --strict
-          mkdir "$RUNNER_TEMP/swift"
-          tar -xzf "$RUNNER_TEMP/swift.tar.gz" -C "$RUNNER_TEMP/swift" --strip-components=1
-          rm "$RUNNER_TEMP/swift.tar.gz"
-          echo "$RUNNER_TEMP/swift/usr/bin" >> "$GITHUB_PATH"
-
-      - name: Swift packages that build on Linux
-        run: |
-          swift --version
-          ./test/package-tests.sh --linux
 
   # A change must not add a secret; see test/leak-check.sh.
   secrets:

@@ -18,7 +18,7 @@ The app's connection to the QBank server, with no UI: the API client, the sessio
 swift test --package-path Packages/QBankKit
 ```
 
-`test/package-tests.sh` runs this on Linux for pull requests and on macOS in `xcode.yml`. On the iOS Simulator:
+`test/package-tests.sh` runs this on macOS in `xcode.yml`. On the iOS Simulator:
 
 ```sh
 cd Packages/QBankKit
