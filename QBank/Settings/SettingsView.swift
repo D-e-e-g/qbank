@@ -11,9 +11,9 @@ enum SettingsRoute: Hashable {
     case savedForOffline
 }
 
-/// The Settings tab, as the web's Settings for a user account: her account, which she can delete
-/// here, with her agent keys, her semesters by name and dates, and Look and Color,
-/// then what is saved on this phone.
+/// The Settings tab, as the web's Settings for a user account: her account, which she can sign out
+/// of here or on every device, or delete, with her agent keys, her semesters by name and dates, and
+/// Look and Color, then what is saved on this phone.
 /// Home's + adds a semester, a course or a topic, and holding one on Home renames, moves or
 /// archives it. Export stays on the web.
 struct SettingsView: View {
@@ -22,6 +22,10 @@ struct SettingsView: View {
     @State private var path = NavigationPath()
     @State private var isSigningOut = false
     @State private var asksToSignOut = false
+    @State private var isSigningOutEverywhere = false
+    @State private var asksToSignOutEverywhere = false
+    /// Said under Account when signing out everywhere did not work, so no device was signed out.
+    @State private var signOutEverywhereProblem: String?
     @State private var savedCourses: [SavedCourse]?
 
     init(app: AppModel) {
@@ -81,6 +85,16 @@ struct SettingsView: View {
     }
 
     private var account: some View {
+        VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+            accountRows
+            if let problem = signOutEverywhereProblem {
+                ProblemText(text: problem)
+                    .padding(.horizontal, QBankSpacing.space5)
+            }
+        }
+    }
+
+    private var accountRows: some View {
         QBankListGroup(header: "Account") {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Signed in as")
@@ -119,7 +133,7 @@ struct SettingsView: View {
                 }
             }
             .buttonStyle(.qbankRow)
-            .disabled(isSigningOut)
+            .disabled(isLeaving)
             .accessibilityIdentifier("settings.signOut")
             .confirmationDialog(
                 "Sign out with answers still on this \(Device.noun)?",
@@ -129,23 +143,76 @@ struct SettingsView: View {
                 Button("Sign out and delete", role: .destructive, action: signOut)
                 Button("Cancel", role: .cancel) {}
             } message: {
-                let waiting = app.offline?.waiting.count ?? 0
-                Text("\(Wording.count(waiting, "answer")) \(waiting == 1 ? "has" : "have") not reached QBank yet. Signing out deletes \(waiting == 1 ? "it" : "them") from this \(Device.noun).")
+                Text(waitingWarning)
+            }
+            // Always asked, as on the web: it signs her out of every device, this one included.
+            Button {
+                asksToSignOutEverywhere = true
+            } label: {
+                QBankListRow("Sign out everywhere", isDestructive: true) {
+                    if isSigningOutEverywhere {
+                        ProgressView()
+                    }
+                }
+            }
+            .buttonStyle(.qbankRow)
+            .disabled(isLeaving)
+            .accessibilityIdentifier("settings.signOutEverywhere")
+            .confirmationDialog(
+                "Sign out of QBank on every device, including this one?",
+                isPresented: $asksToSignOutEverywhere,
+                titleVisibility: .visible
+            ) {
+                let isWaiting = app.offline?.waiting.isEmpty == false
+                Button(isWaiting ? "Sign out everywhere and delete" : "Sign out everywhere", role: .destructive, action: signOutEverywhere)
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if app.offline?.waiting.isEmpty == false {
+                    Text(waitingWarning)
+                }
             }
             if DeleteAccountModel.isOffered(to: app.account) {
                 NavigationLink(value: SettingsRoute.deleteAccount) {
                     QBankListRow("Delete account", showsChevron: true, isDestructive: true)
                 }
                 .buttonStyle(.qbankRow)
-                .disabled(isSigningOut)
+                .disabled(isLeaving)
                 .accessibilityIdentifier("settings.deleteAccount")
             }
         }
     }
 
+    /// While she signs out here or everywhere, nothing else on her account can start.
+    private var isLeaving: Bool {
+        isSigningOut || isSigningOutEverywhere
+    }
+
+    /// What a sign-out, here or everywhere, deletes from this phone: her answers not yet sent.
+    private var waitingWarning: String {
+        let waiting = app.offline?.waiting.count ?? 0
+        return "\(Wording.count(waiting, "answer")) \(waiting == 1 ? "has" : "have") not reached QBank yet. Signing out deletes \(waiting == 1 ? "it" : "them") from this \(Device.noun)."
+    }
+
     private func signOut() {
         isSigningOut = true
         Task { await app.signOut() }
+    }
+
+    /// Signs her out on every device, then goes to sign-in as a sign-out does. When QBank does not
+    /// answer, she stays signed in here and the problem says why.
+    private func signOutEverywhere() {
+        isSigningOutEverywhere = true
+        signOutEverywhereProblem = nil
+        Task { await endEverySession() }
+    }
+
+    private func endEverySession() async {
+        do {
+            try await app.signOutEverywhere()
+        } catch {
+            signOutEverywhereProblem = Wording.problem(error)
+        }
+        isSigningOutEverywhere = false
     }
 
     /// The Face ID lock: on asks for Face ID first, so she sees it work; off needs nothing. A

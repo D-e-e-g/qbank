@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "POST",
     "path": "/api/sign-up",
@@ -23,7 +23,7 @@
         "mustChangePassword": false,
         "palette": "dusk"
       },
-      "expiresAt": "2027-12-08T21:24:16.223Z"
+      "expiresAt": "2027-12-09T00:21:00.683Z"
     }
   }
 }

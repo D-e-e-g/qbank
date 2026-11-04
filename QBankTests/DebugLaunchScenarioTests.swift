@@ -284,6 +284,26 @@ struct DebugLaunchScenarioTests {
         #expect(detail.course?.semester?.number == 2)
     }
 
+    /// Signed in on two devices, she signs out everywhere on one: the fake ends both sessions, as the
+    /// server does, and she signs in again with the same password.
+    @Test func fakeServerSignsOutEverywhere() async throws {
+        let server = FakeQBankServer(signedIn: false)
+        func device() -> QBankClient {
+            QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://fake-qbank.invalid")!), transport: server, sessionStore: InMemorySessionStore(nil))
+        }
+        let phone = device(), laptop = device()
+        let student = FakeQBankServer.student
+        try await phone.signIn(email: student.email, password: student.password)
+        try await laptop.signIn(email: student.email, password: student.password)
+
+        try await phone.signOutEverywhere()
+        #expect(try phone.storedSession() == nil)
+        let ended = await #expect(throws: QBankError.self) { try await laptop.session() }
+        #expect(ended?.needsSignIn == true)
+        try await phone.signIn(email: student.email, password: student.password)
+        #expect(try await phone.session().user.email == student.email)
+    }
+
     @Test func fakeServerRefusesPasswordsAsTheServerDoes() async throws {
         let app = try #require(Self.launch("signed-in"))
         let wrong = await #expect(throws: QBankError.self) {

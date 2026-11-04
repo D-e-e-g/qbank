@@ -26,6 +26,7 @@ import type { Json, World } from "./world";
 const IMAGES: Record<string, string> = {
   d0db2444f2c236c3591aab3d9a0532631385ff85: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:1b96e033f30450ce38b951cd77704a7b9afe0f216b8e50a554720b56ba4513bf",
   "6b807f891e952f9dc3483c0f8b10ca032cd22983": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:dce87fedb83d25371c9aad8d2f3ae2dd72159cb230ea2c2b0e5b13f17a872060",
+  c033890813f6a2c76a23688d2cf457fdd0ae7d62: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:5604fbb1ea804c87de595cd556a01ec224ad34a0557d99c34c64c741e7c44961",
 };
 
 const SCENARIOS: (() => Promise<World[]>)[] = [recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];

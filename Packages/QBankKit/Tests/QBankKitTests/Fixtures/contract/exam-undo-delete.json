@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "POST",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000701/undo-delete",
@@ -26,9 +26,9 @@
       ],
       "questionCount": 3,
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-03T21:24:25.133Z",
-      "endsAt": "2026-11-03T21:28:55.133Z",
-      "finishedAt": "2026-11-03T21:24:25.152Z",
+      "startedAt": "2026-11-04T00:21:10.486Z",
+      "endsAt": "2026-11-04T00:25:40.486Z",
+      "finishedAt": "2026-11-04T00:21:10.516Z",
       "endReason": "finished",
       "answeredCount": 2,
       "fullyRight": 2,

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "POST",
     "path": "/api/agent-pairings/lookup",
@@ -29,8 +29,8 @@
         }
       ],
       "status": "pending",
-      "createdAt": "2026-11-03T21:24:20.413Z",
-      "expiresAt": "2026-11-03T21:34:20.413Z"
+      "createdAt": "2026-11-04T00:21:05.219Z",
+      "expiresAt": "2026-11-04T00:31:05.219Z"
     }
   }
 }

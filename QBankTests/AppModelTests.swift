@@ -130,6 +130,58 @@ struct AppModelTests {
         #expect(!FileManager.default.fileExists(atPath: account.path()))
     }
 
+    /// Once every session has ended, the phone forgets her as a sign-out does, waiting answers too.
+    @Test func signOutEverywhereForgetsHerAndWhatThePhoneKept() async throws {
+        let storage = PhoneStorage.memory()
+        let server = StubServer(["POST /api/sign-out/everywhere": .ok(#"{"status":"signed_out_everywhere"}"#)])
+        let (app, store) = TestApp.make(server, account: .student(), storage: storage, connection: Connection(isOnline: false))
+        try await Self.waitingAnswer(app)
+        app.hasLanded = true
+        try await app.signOutEverywhere()
+        #expect(app.route == .signedOut)
+        #expect(app.signedOutReason == nil)
+        #expect(app.hasLanded == false)
+        #expect(app.offline == nil)
+        #expect(try store.load() == nil)
+        #expect(server.calls == ["POST /api/sign-out/everywhere"])
+
+        let (again, _) = TestApp.make(server, account: .student(), storage: storage)
+        #expect(again.offline?.waiting.isEmpty == true)
+    }
+
+    /// Unlike a sign-out, no answer from QBank keeps her signed in with everything the phone kept:
+    /// her other devices may still be signed in.
+    @Test(arguments: [
+        StubServer.Reply.offline,
+        StubServer.Reply.error(502, "auth_failed", "Signing out everywhere did not work. Try again."),
+    ])
+    func signOutEverywhereThatDidNotEndThemKeepsHerSignedIn(reply: StubServer.Reply) async throws {
+        let server = StubServer(["POST /api/sign-out/everywhere": reply])
+        let (app, store) = TestApp.make(server, account: .student(), storage: .memory(), connection: Connection(isOnline: false))
+        try await Self.waitingAnswer(app)
+        let error = await #expect(throws: QBankError.self) { try await app.signOutEverywhere() }
+        #expect(error?.needsSignIn == false)
+        #expect(app.route == .signedIn(.student()))
+        #expect(try store.load() != nil)
+        #expect(app.offline?.waiting.map(\.id) == ["w1"])
+    }
+
+    /// A session that had already ended goes to sign-in as any ended session does, keeping the
+    /// answers for her next sign-in.
+    @Test func signOutEverywhereFromAnEndedSessionGoesToSignIn() async throws {
+        let storage = PhoneStorage.memory()
+        let server = StubServer(["POST /api/sign-out/everywhere": .error(401, "unauthenticated", "Sign in to continue.")])
+        let (app, store) = TestApp.make(server, account: .student(), storage: storage, connection: Connection(isOnline: false))
+        try await Self.waitingAnswer(app)
+        try await app.signOutEverywhere()
+        #expect(app.route == .signedOut)
+        #expect(app.signedOutReason == "Your session ended. Sign in again.")
+        #expect(try store.load() == nil)
+
+        let (again, _) = TestApp.make(StubServer(), account: .student(), storage: storage)
+        #expect(again.offline?.waiting.map(\.id) == ["w1"])
+    }
+
     @Test func anEndedSessionKeepsTheAnswersForHerNextSignIn() async throws {
         let storage = PhoneStorage.memory()
         let (app, _) = TestApp.make(StubServer(), account: .student(), storage: storage, connection: Connection(isOnline: false))

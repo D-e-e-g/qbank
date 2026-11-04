@@ -1,0 +1,18 @@
+{
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
+  "request": {
+    "method": "GET",
+    "path": "/api/session",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token-2",
+    "body": null
+  },
+  "response": {
+    "status": 401,
+    "headers": {},
+    "body": {
+      "error": "unauthenticated",
+      "message": "Sign in to continue."
+    }
+  }
+}

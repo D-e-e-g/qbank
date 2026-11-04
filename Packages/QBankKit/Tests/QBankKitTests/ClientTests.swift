@@ -133,6 +133,24 @@ struct ClientTests {
         #expect(try store.load() == nil)
     }
 
+    /// Without an answer the other devices may still be signed in, so this one stays signed in too.
+    @Test func signOutEverywhereWithoutSignalKeepsTheSession() async throws {
+        let transport = FixtureTransport(failing: URLError(.notConnectedToInternet))
+        let (client, store) = TestClient.make(transport)
+        let error = await #expect(throws: QBankError.self) { try await client.signOutEverywhere() }
+        #expect(error == .transport(.notConnectedToInternet))
+        #expect(try store.load()?.token == "synthetic-session-token")
+    }
+
+    @Test func signOutEverywhereTheServerCouldNotEndKeepsTheSession() async throws {
+        let transport = FixtureTransport(status: 502, body: #"{"error": "auth_failed", "message": "Signing out everywhere did not work. Try again."}"#)
+        let (client, store) = TestClient.make(transport)
+        let error = await #expect(throws: QBankError.self) { try await client.signOutEverywhere() }
+        #expect(error?.serverCode == .authFailed)
+        #expect(error?.needsSignIn == false)
+        #expect(try store.load()?.token == "synthetic-session-token")
+    }
+
     @Test func signOutWithoutASessionSendsNothing() async throws {
         let transport = try FixtureTransport("sign-out")
         let (client, _) = TestClient.make(transport, token: nil)

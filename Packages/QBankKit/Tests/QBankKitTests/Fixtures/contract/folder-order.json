@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "PUT",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folder-order",
@@ -29,8 +29,8 @@
               "title": "Week 1 - Set 1: Invented week 1",
               "description": "Invented practice questions for week 1.",
               "questionCount": 3,
-              "importedAt": "2026-11-03T21:24:23.523Z",
-              "activeSince": "2026-11-03T21:24:23.523Z",
+              "importedAt": "2026-11-04T00:21:08.742Z",
+              "activeSince": "2026-11-04T00:21:08.742Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
@@ -58,8 +58,8 @@
               "title": "Week 2 - Set 1: Invented week 2",
               "description": "Invented practice questions for week 2.",
               "questionCount": 2,
-              "importedAt": "2026-11-03T21:24:23.530Z",
-              "activeSince": "2026-11-03T21:24:23.530Z",
+              "importedAt": "2026-11-04T00:21:08.751Z",
+              "activeSince": "2026-11-04T00:21:08.751Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
