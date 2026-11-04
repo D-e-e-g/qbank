@@ -134,6 +134,19 @@ ruby_check "ci.yml triggers only on pull_request and pushes to main, and runs on
 '
 require_grep 'release-checks\.sh' "$CI" "ci.yml runs test/release-checks.sh"
 require_grep 'package-tests\.sh --linux' "$CI" "ci.yml tests the Swift packages on Linux"
+# The Linux job tests with the one Swift release whose checksum it pins, built
+# for the Ubuntu release the job runs on, never with the runner image's Swift.
+ruby_check "ci.yml installs a pinned Swift for the Ubuntu release its Linux job runs on" "$CI" '
+  jobs = YAML.load_file(ARGV[0])["jobs"] || {}
+  job = jobs.values.find { |j| j["name"] == "Linux checks" } or abort "no job is named Linux checks"
+  release = job["runs-on"].to_s[/\Aubuntu-(\d\d)\.(\d\d)\z/] && "#{$1}.#{$2}" or
+    abort "the Linux checks job runs on #{job["runs-on"].inspect}, not a fixed ubuntu-NN.NN release"
+  install = (job["steps"] || []).map { |s| s["run"].to_s }.find { |r| r.include?("download.swift.org") && r.include?("sha256sum --check") }
+  abort "the Linux checks job does not install Swift with a checksum check" unless install
+  abort "the Linux checks job does not pin a Swift version" unless install =~ /^version=\d+\.\d+\.\d+$/
+  abort "the Linux checks job does not pin a sha256" unless install =~ /^sha256=[0-9a-f]{64}$/
+  abort "the Swift toolchain is not the one for ubuntu-#{release}" unless install.include?("ubuntu#{release}.tar.gz")
+'
 # The "Secrets" job is a required check on main, so its name is part of the
 # repository settings. It reads every commit and installs the one gitleaks
 # release whose checksum it pins.
