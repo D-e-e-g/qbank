@@ -26,7 +26,7 @@ cd Packages/QBankKit
   -destination 'platform=iOS Simulator,id={{UDID}}'
 ```
 
-Nothing in a test run reaches the network: the client talks through `HTTPTransport`, and tests answer with recorded responses. The Keychain tests write real items under a throwaway service on macOS; a package test bundle on the iOS Simulator has no Keychain entitlement, so they skip there.
+Nothing in a test run reaches the network: the client talks through `HTTPTransport`, and tests answer with recorded responses. The Keychain tests write real items under a throwaway service on macOS; a package test bundle on the iOS Simulator has no Keychain entitlement, so they skip there, and they skip wherever the login keychain is locked (a CI runner service with its own security session).
 
 ### Contract fixtures
 

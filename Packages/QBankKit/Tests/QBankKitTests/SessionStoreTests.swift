@@ -22,7 +22,9 @@ struct SessionStoreTests {
     #if canImport(Security)
     /// Whether this test host may use the Keychain at all. A package's test bundle run on the iOS
     /// Simulator has no host app and so no entitlements (errSecMissingEntitlement, -34018); there the
-    /// app's own tests cover the Keychain. On macOS these tests write real items.
+    /// app's own tests cover the Keychain. A process outside the login session, such as a CI runner
+    /// service with its own security session, finds the login keychain locked and may not ask to
+    /// unlock it (errSecInteractionNotAllowed, -25308). Otherwise these tests write real items on macOS.
     static let keychainUsable: Bool = {
         let probe = KeychainSessionStore(service: "QBankKitTests.probe.\(UUID().uuidString).session")
         defer { try? probe.clear() }
@@ -30,7 +32,7 @@ struct SessionStoreTests {
             try probe.save(StoredSession(token: "probe"))
             return true
         } catch let error as StorageError {
-            return error.status != -34018
+            return error.status != -34018 && error.status != -25308
         } catch {
             return true
         }
@@ -42,7 +44,7 @@ struct SessionStoreTests {
     }
 
     /// Writes a real Keychain item under a service used only by this test, and removes it.
-    @Test(.enabled(if: keychainUsable, "This test host has no Keychain access (a package test bundle on the iOS Simulator has no app entitlements)"))
+    @Test(.enabled(if: keychainUsable, "This test host has no Keychain access (no app entitlements on the iOS Simulator, or a login keychain locked in this session, as on a CI runner)"))
     func keychainRoundTrip() throws {
         let store = KeychainSessionStore(service: "QBankKitTests.\(UUID().uuidString).session")
         defer { try? store.clear() }
@@ -57,7 +59,7 @@ struct SessionStoreTests {
         try store.clear()
     }
 
-    @Test(.enabled(if: keychainUsable, "This test host has no Keychain access"))
+    @Test(.enabled(if: keychainUsable, "This test host has no Keychain access (no app entitlements on the iOS Simulator, or a login keychain locked in this session, as on a CI runner)"))
     func keychainItemsAreSeparatePerService() throws {
         let first = KeychainSessionStore(service: "QBankKitTests.\(UUID().uuidString).session")
         let second = KeychainSessionStore(service: "QBankKitTests.\(UUID().uuidString).session")
