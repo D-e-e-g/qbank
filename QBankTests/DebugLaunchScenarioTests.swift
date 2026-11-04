@@ -519,6 +519,7 @@ struct DebugLaunchScenarioTests {
         #expect(Wording.problem(held) == preview.refusal)
         let made = try await app.client.courseExamDeletion(id: created.id)
         #expect(made.message == "Delete Exam 3? Its folder Weeks 1-3 stays, with its sets and your progress, under Folders. You can undo this for 30 days.")
+        #expect(made.warning == DeleteWarning(title: "Delete Exam 3?", body: "Its folder Weeks 1-3 stays, with its sets and your progress, under Folders. You can undo this for 30 days."))
         let unconfirmed = try await #require(throws: QBankError.self) { try await app.client.deleteCourseExam(id: created.id, confirm: "stale") }
         #expect(unconfirmed.serverCode == .deletionChanged)
         #expect(Wording.problem(unconfirmed) == "Exam 3 changed since you were warned. Look again before deleting it.")

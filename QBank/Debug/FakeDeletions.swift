@@ -114,15 +114,16 @@ nonisolated final class FakeDeletions: Sendable {
         setPlan(id, library).map { plan in
             let review = plan.isExam ? 0 : study.inReview(Set(plan.questionIDs), courseID: plan.folder.courseID)
             let lastBank = plan.isExam && FakeStudy.examSets(plan.folder).count == 1
+            let warning = Self.setWarning(
+                title: plan.title, folder: plan.folder.name, isExam: plan.isExam, questionCount: plan.questionIDs.count,
+                versionCount: plan.versionCount, answeredCount: plan.answeredCount, reviewCount: review, lastBank: lastBank
+            )
             return [
                 "setId": plan.id, "title": plan.title, "kind": plan.isExam ? "exam" : "practice", "folderId": plan.folder.id,
                 "folderName": plan.folder.name, "examPageId": Self.json(plan.folder.examPageID), "questionCount": plan.questionIDs.count,
                 "versionCount": plan.versionCount, "answeredCount": plan.answeredCount, "reviewCount": review,
                 "progress": standing(courseID: plan.folder.courseID, answered: plan.answeredCount, review: review),
-                "message": Self.setMessage(
-                    title: plan.title, folder: plan.folder.name, isExam: plan.isExam, questionCount: plan.questionIDs.count,
-                    versionCount: plan.versionCount, answeredCount: plan.answeredCount, reviewCount: review, lastBank: lastBank
-                ),
+                "message": warning.message, "warning": warning.json,
                 "refusal": Self.json(inUse(plan.questionIDs, courseID: plan.folder.courseID, name: plan.title)),
                 "confirm": plan.confirm, "undoDays": Self.undoDays,
             ]
@@ -252,6 +253,10 @@ nonisolated final class FakeDeletions: Sendable {
             let review = study.inReview(Set(plan.questionIDs), courseID: plan.folder.courseID)
             let pastExams = study.pastExams(over: plan.folder.id, courseID: plan.folder.courseID)
             let questions = plan.sets.reduce(0) { $0 + $1.questionCount }
+            let warning = Self.folderWarning(
+                name: plan.folder.name, page: plan.pageName, titles: plan.sets.map(\.title), questionCount: questions,
+                answeredCount: answered, reviewCount: review, pastExamCount: pastExams
+            )
             return [
                 "folderId": plan.folder.id, "name": plan.folder.name, "examPageId": Self.json(plan.folder.examPageID),
                 "examPageName": Self.json(plan.pageName),
@@ -259,10 +264,7 @@ nonisolated final class FakeDeletions: Sendable {
                 "setCount": plan.sets.count, "questionCount": questions, "answeredCount": answered, "reviewCount": review,
                 "pastExamCount": pastExams,
                 "progress": standing(courseID: plan.folder.courseID, answered: answered, review: review),
-                "message": Self.folderMessage(
-                    name: plan.folder.name, page: plan.pageName, titles: plan.sets.map(\.title), questionCount: questions,
-                    answeredCount: answered, reviewCount: review, pastExamCount: pastExams
-                ),
+                "message": warning.message, "warning": warning.json,
                 "refusal": Self.json(inUse(plan.questionIDs, courseID: plan.folder.courseID, name: plan.folder.name)),
                 "confirm": plan.confirm, "undoDays": Self.undoDays,
             ]
@@ -361,6 +363,7 @@ nonisolated final class FakeDeletions: Sendable {
             // Nothing she answered is in the page itself, so her standing is the same before and after.
             let review = study.reviewCount(plan.page.courseID)
             let same = { (count: Int) in ["before": count, "after": count] }
+            let warning = Self.pageWarning(name: plan.page.name, folders: plan.folders.map(\.name), pastExamCount: pastExams)
             return [
                 "examPageId": plan.page.id, "courseId": plan.page.courseID, "name": plan.page.name, "folders": folders,
                 "folderCount": plan.folders.count, "setCount": folders.reduce(0) { $0 + ($1["setCount"] as? Int ?? 0) },
@@ -370,7 +373,7 @@ nonisolated final class FakeDeletions: Sendable {
                     "answeredCount": same(0), "fullyRightCount": same(0), "reviewCount": same(review),
                     "points": same(0), "maxPoints": same(0), "wrongCount": same(0),
                 ],
-                "message": Self.pageMessage(name: plan.page.name, folders: plan.folders.map(\.name), pastExamCount: pastExams),
+                "message": warning.message, "warning": warning.json,
                 "refusal": Self.json(plan.refusal), "confirm": plan.confirm, "undoDays": Self.undoDays,
             ]
         }
@@ -451,12 +454,13 @@ nonisolated final class FakeDeletions: Sendable {
             let answered = exam.answers.count
             // Questions she had answered before this run go back to that answer; the rest to none.
             let changed = exam.answers.keys.count { FakeStudy.wrongAtStart.contains($0) }
+            let warning = Self.examWarning(answered: answered, changed: changed, unanswered: answered - changed)
             return [
                 "examId": exam.id, "courseId": exam.courseID, "startedAt": QBankJSON.formatDate(exam.startedAt),
                 "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)), "questionCount": exam.questions.count,
                 "answeredCount": answered, "changedCount": changed, "unansweredCount": answered - changed,
                 "progress": standing(courseID: exam.courseID, answered: 0, review: 0),
-                "message": Self.examMessage(answered: answered, changed: changed, unanswered: answered - changed),
+                "message": warning.message, "warning": warning.json,
                 "refusal": exam.finishedAt == nil ? Self.inProgress : NSNull(),
                 "confirm": Self.examToken(exam), "undoDays": Self.undoDays,
             ]
@@ -611,9 +615,23 @@ nonisolated final class FakeDeletions: Sendable {
 
     // MARK: Words, as the server's `setMessage`, `folderMessage`, `pageMessage` and `examMessage`
 
-    static func setMessage(
+    /// A preview's warning: its question and the rest, sent as `warning` and joined as `message`.
+    struct Warning {
+        let title: String
+        let body: String
+
+        init(_ sentences: [String]) {
+            title = sentences.first ?? ""
+            body = sentences.dropFirst().joined(separator: " ")
+        }
+
+        var message: String { "\(title) \(body)" }
+        var json: [String: String] { ["title": title, "body": body] }
+    }
+
+    static func setWarning(
         title: String, folder: String, isExam: Bool, questionCount: Int, versionCount: Int, answeredCount: Int, reviewCount: Int, lastBank: Bool
-    ) -> String {
+    ) -> Warning {
         let go = questionCount == 1 ? "goes" : "go"
         var sentences: [String] = []
         if isExam {
@@ -635,12 +653,12 @@ nonisolated final class FakeDeletions: Sendable {
             }
         }
         sentences.append("You can undo this for \(undoDays) days.")
-        return sentences.joined(separator: " ")
+        return Warning(sentences)
     }
 
-    static func folderMessage(
+    static func folderWarning(
         name: String, page: String?, titles: [String], questionCount: Int, answeredCount: Int, reviewCount: Int, pastExamCount: Int
-    ) -> String {
+    ) -> Warning {
         var sentences = ["Delete \(name)?"]
         if titles.isEmpty {
             sentences.append("It has no sets.")
@@ -657,10 +675,10 @@ nonisolated final class FakeDeletions: Sendable {
             sentences.append("Your \(Wording.count(pastExamCount, "past exam")) over it \(pastExamCount == 1 ? "stays" : "stay").")
         }
         sentences.append("You can undo this for \(undoDays) days.")
-        return sentences.joined(separator: " ")
+        return Warning(sentences)
     }
 
-    static func pageMessage(name: String, folders: [String], pastExamCount: Int) -> String {
+    static func pageWarning(name: String, folders: [String], pastExamCount: Int) -> Warning {
         var sentences = ["Delete \(name)?"]
         switch folders.count {
         case 0: sentences.append("It has no folders.")
@@ -671,10 +689,10 @@ nonisolated final class FakeDeletions: Sendable {
             sentences.append("Your \(Wording.count(pastExamCount, "past exam")) over it \(pastExamCount == 1 ? "stays" : "stay").")
         }
         sentences.append("You can undo this for \(undoDays) days.")
-        return sentences.joined(separator: " ")
+        return Warning(sentences)
     }
 
-    static func examMessage(answered: Int, changed: Int, unanswered: Int) -> String {
+    static func examWarning(answered: Int, changed: Int, unanswered: Int) -> Warning {
         var sentences = ["Delete this exam?"]
         if answered == 0 {
             sentences.append("You answered none of its questions, so your progress stays as it is.")
@@ -686,7 +704,7 @@ nonisolated final class FakeDeletions: Sendable {
             if !back.isEmpty { sentences.append("\(back.joined(separator: ", and ")).") }
         }
         sentences.append("You can undo this for \(undoDays) days.")
-        return sentences.joined(separator: " ")
+        return Warning(sentences)
     }
 
     private static func json(_ value: String?) -> Any {

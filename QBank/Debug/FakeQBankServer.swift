@@ -1137,6 +1137,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         let name = Self.name(course)
         let folders = study.knows(course.id) ? study.folders(course.id) : []
         let semester = state.withLock { state in state.semesters.first { $0.id == course.semesterID } }
+        let warning = FakeDeletions.Warning([
+            "Delete \(questions == 0 ? name : "\(name) and its \(Wording.count(questions, "question"))")?",
+            "You can bring it back for \(FakeDeletions.undoDays) days.",
+        ])
         return [
             "courseId": course.id, "kind": course.kind, "code": course.code, "title": course.title,
             "semester": semester.map { ["id": $0.id, "number": $0.number, "name": $0.name] as Any } ?? NSNull(),
@@ -1144,7 +1148,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             "setCount": folders.reduce(0) { $0 + $1.sets.count }, "questionCount": questions, "examQuestionCount": 0,
             "answeredCount": card["answeredCount"] as? Int ?? 0, "reviewCount": card["reviewCount"] as? Int ?? 0,
             "pastExamCount": folders.reduce(0) { $0 + study.pastExams(over: $1.id, courseID: course.id) },
-            "message": "Delete \(questions == 0 ? name : "\(name) and its \(Wording.count(questions, "question"))")? You can bring it back for \(FakeDeletions.undoDays) days.",
+            "message": warning.message, "warning": warning.json,
             "refusal": json(courseInUse(course, email: email)), "confirm": Self.courseToken(course, questions: questions), "undoDays": FakeDeletions.undoDays,
         ]
     }

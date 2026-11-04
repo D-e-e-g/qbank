@@ -55,6 +55,7 @@ struct DeletionContractTests {
         #expect(preview.progress.answeredCount == CountChange(before: 7, after: 6))
         #expect(preview.progress.reviewCount == CountChange(before: 3, after: 2))
         #expect(preview.message == "Delete Heart B? Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days.")
+        #expect(preview.warning == DeleteWarning(title: "Delete Heart B?", body: "Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days."))
         #expect(preview.refusal == nil)
         #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
@@ -68,6 +69,7 @@ struct DeletionContractTests {
         try expectRequest(transport.requests.first, matches: fixture)
         #expect(preview.kind == .exam)
         #expect(preview.message.hasPrefix("Delete Heart A exam from Week 1's exam bank?"))
+        #expect(preview.warning?.title == "Delete Heart A exam from Week 1's exam bank?")
     }
 
     @Test func aSetIsDeletedWithThePreviewsConfirmAndUndoBringsItBackInItsFolder() async throws {
@@ -99,6 +101,7 @@ struct DeletionContractTests {
         #expect(preview.sets.map(\.kind) == [.practice, .practice, .exam])
         #expect([preview.setCount, preview.questionCount, preview.answeredCount, preview.reviewCount, preview.pastExamCount] == [3, 10, 4, 2, 0] as [Int])
         #expect(preview.message == "Delete Week 1? Its 3 sets go with it: Heart A, Heart B and Heart A exam, 10 questions in all. You have answered 4 of them: those answers stop counting toward your progress, and 2 questions leave your Review list. It comes off Exam 1. You can undo this for 30 days.")
+        #expect(preview.warning?.title == "Delete Week 1?")
         #expect(preview.refusal == nil)
         #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
     }
@@ -154,6 +157,7 @@ struct DeletionContractTests {
         #expect(preview.finishedAt != nil)
         #expect([preview.questionCount, preview.answeredCount, preview.changedCount, preview.unansweredCount] == [3, 2, 1, 1] as [Int])
         #expect(preview.message == "Delete this exam? Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days.")
+        #expect(preview.warning?.title == "Delete this exam?")
         #expect(preview.refusal == nil)
     }
 
@@ -232,6 +236,7 @@ struct DeletionContractTests {
         #expect([preview.answeredCount, preview.pastExamCount] == [1, 1] as [Int])
         #expect(preview.progress.answeredCount == CountChange(before: 1, after: 1))
         #expect(preview.message == "Delete Exam 2? Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days.")
+        #expect(preview.warning?.title == "Delete Exam 2?")
         #expect(preview.refusal == nil)
         #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
@@ -400,6 +405,7 @@ struct DeletionContractTests {
         #expect([preview.folderCount, preview.examPageCount, preview.setCount, preview.questionCount, preview.examQuestionCount] == [1, 0, 2, 5, 0] as [Int])
         #expect([preview.answeredCount, preview.reviewCount, preview.pastExamCount] == [1, 1, 1] as [Int])
         #expect(preview.message == "Delete NURS 220 and its 5 questions? You can bring it back for 30 days.")
+        #expect(preview.warning == DeleteWarning(title: "Delete NURS 220 and its 5 questions?", body: "You can bring it back for 30 days."))
         #expect(preview.refusal == nil)
         #expect(preview.confirm == fixture.response.body["confirm"]?.stringValue)
         #expect(preview.undoDays == 30)
@@ -415,6 +421,41 @@ struct DeletionContractTests {
         #expect(preview.code == "")
         #expect(preview.semester == nil)
         #expect(preview.message == "Delete Pharmacology and its 3 questions? You can bring it back for 30 days.")
+        #expect(preview.warning == DeleteWarning(title: "Delete Pharmacology and its 3 questions?", body: "You can bring it back for 30 days."))
+    }
+
+    // MARK: Every preview
+
+    /// Every recorded preview's `warning` is its `message` split into the question and the rest,
+    /// so the confirmation shows the server's words without parsing them.
+    @Test func everyPreviewSendsItsWarningAsTheQuestionAndTheRest() throws {
+        let fixtures = try Fixture.all().filter { $0.request.method == "GET" && $0.request.path.hasSuffix("/delete-preview") && $0.response.status == 200 }
+        #expect(fixtures.count == 13)
+        for fixture in fixtures {
+            let preview: any DeletionPreview = switch fixture.request.path.split(separator: "/")[1] {
+            case "practice-sets": try fixture.decodeBody(SetDeletion.self)
+            case "folders": try fixture.decodeBody(FolderDeletion.self)
+            case "course-exams": try fixture.decodeBody(ExamPageDeletion.self)
+            case "exams": try fixture.decodeBody(ExamDeletion.self)
+            default: try fixture.decodeBody(CourseDeletion.self)
+            }
+            let warning = try #require(preview.warning, "\(fixture.name) sent no warning")
+            #expect(warning.title.hasPrefix("Delete ") && warning.title.hasSuffix("?"), "\(fixture.name)")
+            #expect(!warning.body.isEmpty, "\(fixture.name)")
+            #expect("\(warning.title) \(warning.body)" == preview.message, "\(fixture.name)")
+        }
+    }
+
+    /// A server from before `warning` sent only `message`; its previews still decode, with no warning.
+    @Test func aPreviewWithoutAWarningStillDecodes() throws {
+        guard case .object(var body) = try Fixture.load("practice-set-delete-preview").response.body else {
+            Issue.record("the recorded preview is not an object")
+            return
+        }
+        #expect(body.removeValue(forKey: "warning") != nil)
+        let preview = try QBankJSON.decoder.decode(SetDeletion.self, from: JSONEncoder().encode(JSONValue.object(body)))
+        #expect(preview.warning == nil)
+        #expect(preview.message.hasPrefix("Delete Heart B? "))
     }
 
     @Test func aCourseIsDeletedWithThePreviewsConfirm() async throws {

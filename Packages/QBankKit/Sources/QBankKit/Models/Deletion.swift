@@ -18,11 +18,26 @@ public struct SetKind: RawRepresentable, Hashable, Sendable, Codable, Expressibl
     public static let exam: SetKind = "exam"
 }
 
+/// A delete's warning as the server splits it for a confirmation: its question as the title
+/// ("Delete Week 1?", "Delete NURS 220 and its 146 questions?"), and the rest, what goes with it,
+/// her answers and Undo, as the body. Together they are `message`, word for word.
+public struct DeleteWarning: Decodable, Sendable, Equatable {
+    public let title: String
+    public let body: String
+
+    public init(title: String, body: String) {
+        self.title = title
+        self.body = body
+    }
+}
+
 /// What every delete's preview carries: the warning to show her, the refusal the delete would get
 /// right now, and the `confirm` that deletes exactly what the warning named.
 public protocol DeletionPreview: Sendable {
     /// The warning, in the server's words: what goes, her answers, and Undo.
     var message: String { get }
+    /// `message` split into its question and the rest, or nil from a server before it sent one.
+    var warning: DeleteWarning? { get }
     /// The sentence the delete would be refused with right now, such as an exam in progress still
     /// asking its questions, or nil.
     var refusal: String? { get }
@@ -71,13 +86,14 @@ public struct SetDeletion: Decodable, Sendable, Equatable, DeletionPreview {
     public let reviewCount: Int
     public let progress: StandingChange
     public let message: String
+    public let warning: DeleteWarning?
     public let refusal: String?
     public let confirm: String
     public let undoDays: Int
 
     private enum CodingKeys: String, CodingKey {
         case title, kind, folderName, questionCount, versionCount, answeredCount, reviewCount
-        case progress, message, refusal, confirm, undoDays
+        case progress, message, warning, refusal, confirm, undoDays
         case setID = "setId"
         case folderID = "folderId"
         case examPageID = "examPageId"
@@ -111,13 +127,14 @@ public struct FolderDeletion: Decodable, Sendable, Equatable, DeletionPreview {
     public let pastExamCount: Int
     public let progress: StandingChange
     public let message: String
+    public let warning: DeleteWarning?
     public let refusal: String?
     public let confirm: String
     public let undoDays: Int
 
     private enum CodingKeys: String, CodingKey {
         case name, examPageName, sets, setCount, questionCount, answeredCount, reviewCount, pastExamCount
-        case progress, message, refusal, confirm, undoDays
+        case progress, message, warning, refusal, confirm, undoDays
         case folderID = "folderId"
         case examPageID = "examPageId"
     }
@@ -151,6 +168,7 @@ public struct ExamPageDeletion: Decodable, Sendable, Equatable, DeletionPreview 
     /// Her standing now and once it is deleted, which are the same.
     public let progress: StandingChange
     public let message: String
+    public let warning: DeleteWarning?
     /// Set while one of its folders has the name of a folder already in the Folders list.
     public let refusal: String?
     public let confirm: String
@@ -158,7 +176,7 @@ public struct ExamPageDeletion: Decodable, Sendable, Equatable, DeletionPreview 
 
     private enum CodingKeys: String, CodingKey {
         case name, folders, folderCount, setCount, questionCount, examQuestionCount, answeredCount, pastExamCount
-        case progress, message, refusal, confirm, undoDays
+        case progress, message, warning, refusal, confirm, undoDays
         case examPageID = "examPageId"
         case courseID = "courseId"
     }
@@ -179,6 +197,7 @@ public struct ExamDeletion: Decodable, Sendable, Equatable, DeletionPreview {
     public let unansweredCount: Int
     public let progress: StandingChange
     public let message: String
+    public let warning: DeleteWarning?
     /// Set while the exam is still going.
     public let refusal: String?
     public let confirm: String
@@ -186,7 +205,7 @@ public struct ExamDeletion: Decodable, Sendable, Equatable, DeletionPreview {
 
     private enum CodingKeys: String, CodingKey {
         case startedAt, finishedAt, questionCount, answeredCount, changedCount, unansweredCount
-        case progress, message, refusal, confirm, undoDays
+        case progress, message, warning, refusal, confirm, undoDays
         case examID = "examId"
         case courseID = "courseId"
     }
@@ -217,6 +236,7 @@ public struct CourseDeletion: Decodable, Sendable, Equatable, DeletionPreview {
     /// Her past exams in it, which go with it and come back with it.
     public let pastExamCount: Int
     public let message: String
+    public let warning: DeleteWarning?
     /// Set while a job or an exam in progress still works in it.
     public let refusal: String?
     public let confirm: String
@@ -224,7 +244,7 @@ public struct CourseDeletion: Decodable, Sendable, Equatable, DeletionPreview {
 
     private enum CodingKeys: String, CodingKey {
         case kind, code, title, semester, folderCount, examPageCount, setCount, questionCount, examQuestionCount
-        case answeredCount, reviewCount, pastExamCount, message, refusal, confirm, undoDays
+        case answeredCount, reviewCount, pastExamCount, message, warning, refusal, confirm, undoDays
         case courseID = "courseId"
     }
 }
