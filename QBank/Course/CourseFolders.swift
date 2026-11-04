@@ -89,13 +89,13 @@ nonisolated enum FolderWording {
     }
 
     /// Under Start exam, beside the draw line, when a folder on the page has exam twins:
-    /// "Exam twins: 14 in Week 5 · exams draw from these first", or for several folders
-    /// "Exam twins: 41 in Week 4, Week 5 and Week 6 · exams draw from these first". Nil when none do.
+    /// "Exam twins: 14 in Week 5. Exams draw from these first.", or for several folders
+    /// "Exam twins: 41 in Week 4, Week 5 and Week 6. Exams draw from these first." Nil when none do.
     static func examTwins(_ page: ExamPage) -> String? {
         let banks = page.folders.filter { $0.examBankCount > 0 }
         guard !banks.isEmpty else { return nil }
         let count = banks.reduce(0) { $0 + $1.examBankCount }
-        return "Exam twins: \(count) in \(listed(banks.map(\.name))) · exams draw from these first"
+        return "Exam twins: \(count) in \(listed(banks.map(\.name))). Exams draw from these first."
     }
 
     /// "Week 5", "Week 4 and Week 5", "Week 4, Week 5 and Week 6", in the order given.
@@ -105,7 +105,7 @@ nonisolated enum FolderWording {
     }
 
     /// Under an exam page's Start exam, from the server's plan over its folders: "40 questions from
-    /// the 217 in these 5 folders, or Wrong questions only.", or "All 26 questions in this folder,
+    /// the 217 in these 5 folders, or wrong questions only.", or "All 26 questions in this folder,
     /// ...". Nil when its folders hold none.
     static func examDraw(_ plan: ExamPreview) -> String? {
         let folders = plan.folders
@@ -115,7 +115,7 @@ nonisolated enum FolderWording {
         let draw = plan.questionCount < total
             ? "\(Wording.count(plan.questionCount, "question")) from the \(total) in \(place)"
             : "All \(Wording.count(total, "question")) in \(place)"
-        return "\(draw), or Wrong questions only."
+        return "\(draw), or wrong questions only."
     }
 }
 

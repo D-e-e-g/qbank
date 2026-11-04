@@ -102,22 +102,22 @@ struct CourseFoldersTests {
 
     @Test func examDrawSaysHowManyComeFromTheFolders() throws {
         let two = try plan([("f2", "Week 2", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")])
-        #expect(FolderWording.examDraw(two) == "All 30 questions in these 2 folders, or Wrong questions only.")
+        #expect(FolderWording.examDraw(two) == "All 30 questions in these 2 folders, or wrong questions only.")
         let one = try plan([("f3", "Week 3", 20, 20, "exam")])
-        #expect(FolderWording.examDraw(one) == "All 20 questions in this folder, or Wrong questions only.")
+        #expect(FolderWording.examDraw(one) == "All 20 questions in this folder, or wrong questions only.")
         let large = try plan([("a", "A", 30, 20, "practice"), ("b", "B", 30, 20, "practice")])
-        #expect(FolderWording.examDraw(large) == "40 questions from the 60 in these 2 folders, or Wrong questions only.")
+        #expect(FolderWording.examDraw(large) == "40 questions from the 60 in these 2 folders, or wrong questions only.")
     }
 
     /// The count is the server's plan, so a change to its rules reaches the page without an update.
     @Test func examDrawFollowsTheServersCount() throws {
         let page = try plan([("f1", "Week 1", 17, 10, "exam"), ("f2", "Week 2", 26, 15, "practice")], questions: 25)
-        #expect(FolderWording.examDraw(page) == "25 questions from the 43 in these 2 folders, or Wrong questions only.")
+        #expect(FolderWording.examDraw(page) == "25 questions from the 43 in these 2 folders, or wrong questions only.")
     }
 
     @Test func examTwinsSitBesideStartExamWhenAFolderHasThem() throws {
         let one = try #require(CourseLayout(course: try course(pages: [("x1", "Exam 1", ["f3"])]), sittings: []).page("x1"))
-        #expect(FolderWording.examTwins(one) == "Exam twins: 20 in Week 3 · exams draw from these first")
+        #expect(FolderWording.examTwins(one) == "Exam twins: 20 in Week 3. Exams draw from these first.")
         let week4 = try folder("Week 4", [(1, 0, 0)], bank: 14)
         let plain = try folder("Week 7", [(1, 0, 0)])
         let week5 = try folder("Week 5", [(1, 0, 0)], bank: 14)
@@ -128,12 +128,12 @@ struct CourseFoldersTests {
             sittings: [],
             progress: FolderProgress(sets: [week4, plain, week5, week6].flatMap(\.sets))
         )
-        #expect(FolderWording.examTwins(several) == "Exam twins: 41 in Week 4, Week 5 and Week 6 · exams draw from these first")
+        #expect(FolderWording.examTwins(several) == "Exam twins: 41 in Week 4, Week 5 and Week 6. Exams draw from these first.")
         let pair = ExamPage(
             exam: several.exam, folders: [week4, week5], sittings: [],
             progress: FolderProgress(sets: [week4, week5].flatMap(\.sets))
         )
-        #expect(FolderWording.examTwins(pair) == "Exam twins: 28 in Week 4 and Week 5 · exams draw from these first")
+        #expect(FolderWording.examTwins(pair) == "Exam twins: 28 in Week 4 and Week 5. Exams draw from these first.")
     }
 
     @Test func aFolderSaysWhichPageItIsOn() throws {

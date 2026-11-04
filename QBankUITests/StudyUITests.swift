@@ -256,10 +256,10 @@ final class StudyUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["page.note"].label, "2 folders · 3 practice sets · 43 questions")
         let draw = app.staticTexts["page.draw"]
         XCTAssertTrue(draw.appears(timeout: 5), "the server's plan for the page")
-        XCTAssertEqual(draw.label, "40 questions from the 43 in these 2 folders, or Wrong questions only.")
+        XCTAssertEqual(draw.label, "40 questions from the 43 in these 2 folders, or wrong questions only.")
         XCTAssertTrue(app.staticTexts["Study material"].exists)
         XCTAssertTrue(
-            app.descendants(matching: .any)["page.twins"].label.contains("Exam twins: 17 in Week 1 · exams draw from these first")
+            app.descendants(matching: .any)["page.twins"].label.contains("Exam twins: 17 in Week 1. Exams draw from these first.")
         )
         XCTAssertTrue(app.buttons["folder.Week 1"].label.contains("1 set · 13 of 17 fully right"))
         XCTAssertTrue(app.buttons["folder.Week 2"].label.contains("2 sets · 9 of 26 answered"))

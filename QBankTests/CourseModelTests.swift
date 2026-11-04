@@ -46,7 +46,7 @@ struct CourseModelTests {
         await model.load()
         let page = try #require(model.layout?.page("x1"))
         let draw = try #require(model.plan(for: page).flatMap(FolderWording.examDraw))
-        #expect(draw == "15 questions from the 20 in these 2 folders, or Wrong questions only.")
+        #expect(draw == "15 questions from the 20 in these 2 folders, or wrong questions only.")
 
         server["GET /api/courses/c1/exams"] = .error(500, "internal_error", "Something went wrong.")
         await model.load()
