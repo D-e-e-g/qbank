@@ -57,9 +57,8 @@ final class DeletionUITests: XCTestCase {
         let row = app.buttons["course.set.Mixed Clinical Judgment"]
         XCTAssertTrue(row.appears(timeout: 5))
         row.press(forDuration: 1.2)
-        let delete = app.buttons["delete.Mixed Clinical Judgment"]
+        let delete = menuItem(app, "delete.Mixed Clinical Judgment", "Delete")
         XCTAssertTrue(delete.appears(timeout: 5))
-        XCTAssertEqual(delete.label, "Delete")
         attach(app, "set touch and hold")
         chooseFromMenu(delete)
 
@@ -107,7 +106,7 @@ final class DeletionUITests: XCTestCase {
         reveal(first, in: app)
         XCTAssertTrue(app.staticTexts["Touch and hold an exam to delete it."].exists)
         first.press(forDuration: 1.2)
-        chooseFromMenu(app.buttons["delete.exam"])
+        chooseFromMenu(menuItem(app, "delete.exam", "Delete"))
 
         XCTAssertTrue(app.staticTexts["deleteSheet.title"].appears(timeout: 5))
         XCTAssertEqual(app.staticTexts["deleteSheet.title"].label, "Delete this exam?")

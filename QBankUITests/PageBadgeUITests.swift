@@ -50,8 +50,7 @@ final class PageBadgeUITests: XCTestCase {
 
         // New page asks nothing about a badge, makes Page 3, and lists it with no tag.
         app.buttons["course.add"].tap()
-        XCTAssertEqual(app.buttons["course.add.page"].label, "New page")
-        chooseFromMenu(app.buttons["course.add.page"])
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
         XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
         XCTAssertEqual(app.textFields["editPage.name"].value as? String, "Page 3")
         XCTAssertFalse(app.otherElements["editPage.badge"].exists, "a new page has no badge")
@@ -72,7 +71,7 @@ final class PageBadgeUITests: XCTestCase {
         // A topic, with two pages from its +.
         let topic = "Invented Systems Design"
         app.buttons["home.add"].tap()
-        chooseFromMenu(app.buttons["home.add.topic"])
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
         let field = app.textFields["newTopic.name"]
         XCTAssertTrue(field.appears(timeout: 5))
         field.typeText(topic)
@@ -80,7 +79,7 @@ final class PageBadgeUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars[topic].appears(timeout: 10))
         for page in ["Page 1", "Page 2"] {
             app.buttons["course.add"].tap()
-            chooseFromMenu(app.buttons["course.add.page"])
+            chooseFromMenu(menuItem(app, "course.add.page", "New page"))
             XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
             XCTAssertEqual(app.textFields["editPage.name"].value as? String, page)
             app.buttons["editPage.save"].tap()

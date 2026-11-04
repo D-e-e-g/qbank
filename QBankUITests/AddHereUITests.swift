@@ -24,23 +24,22 @@ final class AddHereUITests: XCTestCase {
         // The menu: a course in each semester she studies, a topic, and the missing semester.
         let plus = app.buttons["home.add"]
         plus.tap()
-        XCTAssertTrue(app.buttons["home.add.course.1"].appears(timeout: 5))
-        XCTAssertEqual(app.buttons["home.add.course.1"].label, "New course in Semester 1")
-        XCTAssertEqual(app.buttons["home.add.course.2"].label, "New course in Semester 2")
-        XCTAssertEqual(app.buttons["home.add.topic"].label, "New study topic")
-        XCTAssertEqual(app.buttons["home.add.semester"].label, "Add Semester 3")
+        XCTAssertTrue(menuItem(app, "home.add.course.1", "New course in Semester 1").appears(timeout: 5))
+        XCTAssertTrue(menuItem(app, "home.add.course.2", "New course in Semester 2").exists)
+        XCTAssertTrue(menuItem(app, "home.add.topic", "New study topic").exists)
+        XCTAssertTrue(menuItem(app, "home.add.semester", "Add Semester 3").exists)
         attachLooks(app, "M-1 home, the + menu")
 
         // Add Semester 3: it shows on Home, and the + offers no more.
-        chooseFromMenu(app.buttons["home.add.semester"])
+        chooseFromMenu(menuItem(app, "home.add.semester", "Add Semester 3"))
         XCTAssertTrue(app.staticTexts["SEMESTER 3"].appears(timeout: 5) || app.staticTexts["Semester 3"].appears(timeout: 1))
         plus.tap()
-        XCTAssertTrue(app.buttons["home.add.course.3"].appears(timeout: 5))
-        XCTAssertFalse(app.buttons["home.add.semester"].exists, "there are only three")
+        XCTAssertTrue(menuItem(app, "home.add.course.3", "New course in Semester 3").appears(timeout: 5))
+        XCTAssertFalse(menuItem(app, "home.add.semester", "Add Semester 3").exists, "there are only three")
 
         // New course in Semester 2: a code the semester has is refused in the server's words, and
         // Done opens the course, empty, with its +.
-        chooseFromMenu(app.buttons["home.add.course.2"])
+        chooseFromMenu(menuItem(app, "home.add.course.2", "New course in Semester 2"))
         XCTAssertTrue(app.navigationBars["New course in Semester 2"].appears(timeout: 5))
         let code = app.textFields["newCourse.code"]
         XCTAssertTrue(code.appears(timeout: 5))
@@ -56,7 +55,7 @@ final class AddHereUITests: XCTestCase {
         XCTAssertTrue(app.buttons["home.course.NURS 406"].appears(timeout: 5))
 
         plus.tap()
-        chooseFromMenu(app.buttons["home.add.course.2"])
+        chooseFromMenu(menuItem(app, "home.add.course.2", "New course in Semester 2"))
         XCTAssertTrue(code.appears(timeout: 5))
         code.typeText("nurs 406")
         app.textFields["newCourse.title"].tap()
@@ -68,7 +67,7 @@ final class AddHereUITests: XCTestCase {
 
         // New study topic is the topic sheet; Done opens the topic.
         plus.tap()
-        chooseFromMenu(app.buttons["home.add.topic"])
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
         let name = app.textFields["newTopic.name"]
         XCTAssertTrue(name.appears(timeout: 5))
         name.typeText("Invented Pharmacology")
@@ -102,21 +101,21 @@ final class AddHereUITests: XCTestCase {
 
         // Open, Rename, Move to the other semester, Archive, and Delete last.
         fundamentals.press(forDuration: 1.2)
-        XCTAssertTrue(app.buttons["home.hold.open"].appears(timeout: 5))
-        XCTAssertTrue(app.buttons["home.hold.rename"].exists)
-        XCTAssertEqual(app.buttons["home.hold.move.2"].label, "Move to Semester 2")
-        XCTAssertFalse(app.buttons["home.hold.move.1"].exists, "not its own semester")
-        XCTAssertTrue(app.buttons["home.hold.archive"].label.hasPrefix("Archive"), app.buttons["home.hold.archive"].label)
-        XCTAssertEqual(app.buttons["home.hold.delete"].label, "Delete")
-        XCTAssertGreaterThan(app.buttons["home.hold.delete"].frame.minY, app.buttons["home.hold.archive"].frame.minY, "after Archive")
+        XCTAssertTrue(menuItem(app, "home.hold.open", "Open").appears(timeout: 5))
+        XCTAssertTrue(menuItem(app, "home.hold.rename", "Rename").exists)
+        XCTAssertTrue(menuItem(app, "home.hold.move.2", "Move to Semester 2").exists)
+        XCTAssertFalse(menuItem(app, "home.hold.move.1", "Move to Semester 1").exists, "not its own semester")
+        XCTAssertTrue(menuItem(app, "home.hold.archive", "Archive").exists)
+        XCTAssertTrue(menuItem(app, "home.hold.delete", "Delete").exists)
+        XCTAssertGreaterThan(menuItem(app, "home.hold.delete", "Delete").frame.minY, menuItem(app, "home.hold.archive", "Archive").frame.minY, "after Archive")
         attachLooks(app, "M-3 home, holding a card")
-        chooseFromMenu(app.buttons["home.hold.open"])
+        chooseFromMenu(menuItem(app, "home.hold.open", "Open"))
         XCTAssertTrue(app.navigationBars["NURS 220"].appears(timeout: 5))
         goBack(app, from: "NURS 220")
 
         // Rename: only its name changes.
         fundamentals.press(forDuration: 1.2)
-        chooseFromMenu(app.buttons["home.hold.rename"])
+        chooseFromMenu(menuItem(app, "home.hold.rename", "Rename"))
         XCTAssertTrue(app.navigationBars["Rename course"].appears(timeout: 5))
         let code = app.textFields["renameCourse.code"]
         XCTAssertEqual(code.value as? String, "NURS 220")
@@ -131,13 +130,13 @@ final class AddHereUITests: XCTestCase {
         let mentalHealth = app.buttons["home.course.NURS 310"]
         XCTAssertLessThan(renamed.frame.minY - mentalHealth.frame.minY, 400)
         renamed.press(forDuration: 1.2)
-        chooseFromMenu(app.buttons["home.hold.move.2"])
+        chooseFromMenu(menuItem(app, "home.hold.move.2", "Move to Semester 2"))
         XCTAssertTrue(app.staticTexts["No courses yet. Tap + to add one, or import its first question file."].disappears(timeout: 10), "Semester 2 has it")
         XCTAssertTrue(renamed.exists)
 
         // Archive asks nothing: it goes to Archived, closed, and Unarchive brings it back.
         renamed.press(forDuration: 1.2)
-        chooseFromMenu(app.buttons["home.hold.archive"])
+        chooseFromMenu(menuItem(app, "home.hold.archive", "Archive"))
         XCTAssertTrue(renamed.disappears(timeout: 10))
         XCTAssertFalse(app.staticTexts["deleteSheet.title"].exists, "no question first")
         let archived = app.buttons["home.archived"]
@@ -145,10 +144,10 @@ final class AddHereUITests: XCTestCase {
         XCTAssertEqual(archived.value as? String, "Open")
         reveal(renamed, in: app)
         renamed.press(forDuration: 1.2)
-        XCTAssertTrue(app.buttons["home.hold.unarchive"].appears(timeout: 5))
-        XCTAssertFalse(app.buttons["home.hold.archive"].exists)
+        XCTAssertTrue(menuItem(app, "home.hold.unarchive", "Unarchive").appears(timeout: 5))
+        XCTAssertFalse(menuItem(app, "home.hold.archive", "Archive").exists)
         attachLooks(app, "home, holding an archived card")
-        chooseFromMenu(app.buttons["home.hold.unarchive"])
+        chooseFromMenu(menuItem(app, "home.hold.unarchive", "Unarchive"))
         XCTAssertTrue(archived.disappears(timeout: 10), "nothing is archived anymore")
         XCTAssertTrue(renamed.appears(timeout: 5))
     }
@@ -168,14 +167,14 @@ final class AddHereUITests: XCTestCase {
         let plus = app.buttons["course.add"]
         plus.tap()
         XCTAssertTrue(app.staticTexts["Add to NURS 220"].appears(timeout: 5))
-        XCTAssertTrue(app.buttons["course.add.import"].label.hasPrefix("Import a question file"), app.buttons["course.add.import"].label)
-        XCTAssertFalse(app.buttons["course.add.make"].exists, "the server does not let this account make questions")
-        XCTAssertEqual(app.buttons["course.add.folder"].label, "New folder")
-        XCTAssertEqual(app.buttons["course.add.page"].label, "New page")
+        XCTAssertTrue(menuItem(app, "course.add.import", "Import a question file").exists)
+        XCTAssertFalse(menuItem(app, "course.add.make", "Make questions").exists, "the server does not let this account make questions")
+        XCTAssertTrue(menuItem(app, "course.add.folder", "New folder").exists)
+        XCTAssertTrue(menuItem(app, "course.add.page", "New page").exists)
         attachLooks(app, "M-2 course, the + menu")
 
         // New folder: it is listed under Folders.
-        chooseFromMenu(app.buttons["course.add.folder"])
+        chooseFromMenu(menuItem(app, "course.add.folder", "New folder"))
         let name = app.textFields["newFolder.name"]
         XCTAssertTrue(name.appears(timeout: 5))
         name.typeText("Week 4")
@@ -186,7 +185,7 @@ final class AddHereUITests: XCTestCase {
         // Import a question file: the course is picked, with Unsorted and its folders as chips;
         // Open goes to the folder, back inside the course.
         plus.tap()
-        chooseFromMenu(app.buttons["course.add.import"])
+        chooseFromMenu(menuItem(app, "course.add.import", "Import a question file"))
         XCTAssertTrue(app.buttons["import.check"].appears(timeout: 5))
         waitForLabel(app.buttons["import.course"], containing: "NURS 220 · Fundamentals")
         XCTAssertTrue(app.buttons["import.folder.Unsorted"].isSelected)
@@ -207,7 +206,7 @@ final class AddHereUITests: XCTestCase {
         // New page is the page editor; the page opens.
         XCTAssertTrue(app.navigationBars["NURS 220"].appears(timeout: 5))
         plus.tap()
-        chooseFromMenu(app.buttons["course.add.page"])
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
         XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
         app.buttons["editPage.chip.free.Week 4"].tap()
         app.buttons["editPage.save"].tap()
@@ -221,9 +220,8 @@ final class AddHereUITests: XCTestCase {
         openHome(app)
         open(app.buttons["home.course.NURS 220"], titled: "NURS 220", in: app)
         app.buttons["course.add"].tap()
-        let make = app.buttons["course.add.make"]
+        let make = menuItem(app, "course.add.make", "Make questions")
         XCTAssertTrue(make.appears(timeout: 5))
-        XCTAssertTrue(make.label.hasPrefix("Make questions"), make.label)
         chooseFromMenu(make)
         XCTAssertTrue(app.navigationBars["Your material"].appears(timeout: 5))
         waitForLabel(app.buttons["import.course"], containing: "NURS 220 · Fundamentals")
@@ -246,13 +244,13 @@ final class AddHereUITests: XCTestCase {
         let plus = app.buttons["page.add"]
         plus.tap()
         XCTAssertTrue(app.staticTexts["Add to Exam 1"].appears(timeout: 5))
-        XCTAssertEqual(app.buttons["page.add.import"].label, "Import a question file here")
-        XCTAssertEqual(app.buttons["page.add.folder"].label, "New folder on this page")
-        XCTAssertEqual(app.buttons["page.add.existing"].label, "Add existing folders")
+        XCTAssertTrue(menuItem(app, "page.add.import", "Import a question file here").exists)
+        XCTAssertTrue(menuItem(app, "page.add.folder", "New folder on this page").exists)
+        XCTAssertTrue(menuItem(app, "page.add.existing", "Add existing folders").exists)
         attachLooks(app, "exam page, the + menu")
 
         // Add existing folders is the page's editor, with her folders as chips.
-        chooseFromMenu(app.buttons["page.add.existing"])
+        chooseFromMenu(menuItem(app, "page.add.existing", "Add existing folders"))
         XCTAssertTrue(app.navigationBars["Edit Exam 1"].appears(timeout: 5))
         XCTAssertTrue(app.buttons["editPage.chip.free.Weeks 1-3"].exists)
         tapWhenStill(app.buttons["editPage.cancel"])
@@ -260,7 +258,7 @@ final class AddHereUITests: XCTestCase {
 
         // New folder on this page makes it and puts it on the page in one step.
         plus.tap()
-        chooseFromMenu(app.buttons["page.add.folder"])
+        chooseFromMenu(menuItem(app, "page.add.folder", "New folder on this page"))
         XCTAssertTrue(app.navigationBars["New folder on Exam 1"].appears(timeout: 5))
         let name = app.textFields["newFolder.name"]
         XCTAssertTrue(name.appears(timeout: 5))
@@ -271,7 +269,7 @@ final class AddHereUITests: XCTestCase {
 
         // Import here: the course is picked, this page's folders come first, its first one picked.
         plus.tap()
-        chooseFromMenu(app.buttons["page.add.import"])
+        chooseFromMenu(menuItem(app, "page.add.import", "Import a question file here"))
         XCTAssertTrue(app.buttons["import.check"].appears(timeout: 5))
         waitForLabel(app.buttons["import.course"], containing: "NURS 310 · Mental Health")
         let first = app.buttons["import.folder.Exam 1.Week 1"]
@@ -297,14 +295,14 @@ final class AddHereUITests: XCTestCase {
         openHome(app)
         open(app.buttons["home.course.NURS 220"], titled: "NURS 220", in: app)
         app.buttons["course.add"].tap()
-        chooseFromMenu(app.buttons["course.add.page"])
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
         XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
         app.buttons["editPage.save"].tap()
         XCTAssertTrue(app.navigationBars["Page 1"].appears(timeout: 10))
         XCTAssertTrue(app.staticTexts["No folders on this page yet. Add the folders this page covers."].exists)
 
         app.buttons["page.add"].tap()
-        chooseFromMenu(app.buttons["page.add.import"])
+        chooseFromMenu(menuItem(app, "page.add.import", "Import a question file here"))
         XCTAssertTrue(app.buttons["import.check"].appears(timeout: 5))
         let newName = app.textFields["import.folder.newName"]
         XCTAssertTrue(newName.appears(timeout: 5), "a new folder, for the page")

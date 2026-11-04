@@ -18,8 +18,7 @@ final class CourseDeletionUITests: XCTestCase {
         XCTAssertFalse(app.buttons["home.recentlyDeleted"].exists, "nothing deleted yet")
         let card = app.buttons["home.course.NURS 220"]
         hold(card, in: app)
-        let delete = app.buttons["home.hold.delete"]
-        XCTAssertEqual(delete.label, "Delete")
+        let delete = menuItem(app, "home.hold.delete", "Delete")
         attachLooks(app, "home, holding a course")
         chooseFromMenu(delete)
 
@@ -65,7 +64,7 @@ final class CourseDeletionUITests: XCTestCase {
         let app = home("signed-in")
         let name = "Invented Pharmacology"
         app.buttons["home.add"].tap()
-        chooseFromMenu(app.buttons["home.add.topic"])
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
         let field = app.textFields["newTopic.name"]
         XCTAssertTrue(field.appears(timeout: 5))
         field.typeText(name)
@@ -75,7 +74,7 @@ final class CourseDeletionUITests: XCTestCase {
 
         let card = app.buttons["home.topic.\(name)"]
         hold(card, in: app)
-        chooseFromMenu(app.buttons["home.hold.delete"])
+        chooseFromMenu(menuItem(app, "home.hold.delete", "Delete"))
         let title = app.staticTexts["deleteSheet.title"]
         XCTAssertTrue(title.appears(timeout: 5))
         waitForLabel(title, containing: "Delete \(name)?")
@@ -99,7 +98,7 @@ final class CourseDeletionUITests: XCTestCase {
         let app = home("exam-in-progress")
         let card = app.buttons["home.course.NURS 310"]
         hold(card, in: app)
-        chooseFromMenu(app.buttons["home.hold.delete"])
+        chooseFromMenu(menuItem(app, "home.hold.delete", "Delete"))
         let problem = app.staticTexts["An exam in NURS 310 is still going. Finish or leave that exam first."]
         XCTAssertTrue(problem.appears(timeout: 5))
         XCTAssertFalse(app.buttons["deleteSheet.confirm"].isEnabled, "Delete waits")
@@ -116,13 +115,13 @@ final class CourseDeletionUITests: XCTestCase {
     func testACodeTakenSinceKeepsBringBackOff() throws {
         let app = home("signed-in")
         hold(app.buttons["home.course.NURS 220"], in: app)
-        chooseFromMenu(app.buttons["home.hold.delete"])
+        chooseFromMenu(menuItem(app, "home.hold.delete", "Delete"))
         XCTAssertTrue(app.staticTexts["deleteSheet.message"].appears(timeout: 5))
         tapWhenStill(app.buttons["deleteSheet.confirm"])
         XCTAssertTrue(app.buttons["home.course.NURS 220"].disappears(timeout: 5))
 
         app.buttons["home.add"].tap()
-        chooseFromMenu(app.buttons["home.add.course.1"])
+        chooseFromMenu(menuItem(app, "home.add.course.1", "New course in Semester 1"))
         let code = app.textFields["newCourse.code"]
         XCTAssertTrue(code.appears(timeout: 5))
         code.typeText("NURS 220")
@@ -156,6 +155,6 @@ final class CourseDeletionUITests: XCTestCase {
     private func hold(_ card: XCUIElement, in app: XCUIApplication) {
         reveal(card, in: app)
         card.press(forDuration: 1.2)
-        XCTAssertTrue(app.buttons["home.hold.delete"].appears(timeout: 5))
+        XCTAssertTrue(menuItem(app, "home.hold.delete", "Delete").appears(timeout: 5))
     }
 }

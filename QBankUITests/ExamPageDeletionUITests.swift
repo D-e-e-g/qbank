@@ -76,7 +76,7 @@ final class ExamPageDeletionUITests: XCTestCase {
         let app = launch("signed-in")
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
         app.buttons["course.add"].tap()
-        chooseFromMenu(app.buttons["course.add.folder"])
+        chooseFromMenu(menuItem(app, "course.add.folder", "New folder"))
         let name = app.textFields["newFolder.name"]
         XCTAssertTrue(name.appears(timeout: 5))
         name.typeText("Week 2")
@@ -107,7 +107,7 @@ final class ExamPageDeletionUITests: XCTestCase {
         XCTAssertTrue(app.otherElements["undo.bar"].disappears(timeout: 8))
 
         app.buttons["course.add"].tap()
-        chooseFromMenu(app.buttons["course.add.page"])
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
         XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
         let name = app.textFields["editPage.name"]
         XCTAssertEqual(name.value as? String, "Page 2")
