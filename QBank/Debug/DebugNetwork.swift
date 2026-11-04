@@ -6,7 +6,9 @@ import Foundation
 /// without signal, and the app's `Connection` says so, as the phone's network path would.
 ///
 /// The test posts the Darwin notifications named in `DebugLaunchScenario`; they cross from the
-/// test runner to the app on the same simulator. Compiled only into Debug builds.
+/// test runner to the app on the same simulator, and reach the app a moment later. The app posts
+/// one back once the network has changed, which the test waits for. Compiled only into Debug
+/// builds.
 final class DebugNetwork {
     let server: FakeQBankServer
     let connection: Connection
@@ -30,7 +32,11 @@ final class DebugNetwork {
             guard let observer, let name else { return }
             let network = Unmanaged<DebugNetwork>.fromOpaque(observer).takeUnretainedValue()
             let isOnline = name.rawValue as String == DebugLaunchScenario.networkOnlineNotification
-            Task { @MainActor in network.set(isOnline: isOnline) }
+            Task { @MainActor in
+                network.set(isOnline: isOnline)
+                let applied = DebugLaunchScenario.networkAppliedNotification(isOnline: isOnline)
+                CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(applied as CFString), nil, nil, true)
+            }
         }
         for name in [DebugLaunchScenario.networkOfflineNotification, DebugLaunchScenario.networkOnlineNotification] {
             CFNotificationCenterAddObserver(center, observer, callback, name as CFString, nil, .deliverImmediately)

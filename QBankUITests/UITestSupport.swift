@@ -39,10 +39,14 @@ extension XCTestCase {
     }
 
     /// Turns the fake server's network off or on while the app runs, through the Darwin
-    /// notifications `DebugLaunchScenario` names.
+    /// notifications `DebugLaunchScenario` names, and waits until the app says it has. The
+    /// notification reaches the app a moment later, and on a busy Mac an answer checked at once
+    /// could still reach QBank.
     func setNetwork(online: Bool) {
         let name = online ? "com.dimitrygallego.qbank.uitest.network.online" : "com.dimitrygallego.qbank.uitest.network.offline"
+        let applied = XCTDarwinNotificationExpectation(notificationName: name + ".applied")
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString), nil, nil, true)
+        XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 10), .completed, "the app never went \(online ? "online" : "offline")")
     }
 
     /// Makes the fake device confirm her at the next Face ID check, or refuse as though she

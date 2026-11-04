@@ -27,10 +27,11 @@ import QBankKit
 ///
 /// While the app runs, a test turns the network off and on by posting the
 /// Darwin notifications `networkOfflineNotification` and
-/// `networkOnlineNotification` (see `DebugNetwork`), sets the app's Look by
-/// posting `lookNotification(_:)` (see `DebugLook`), and makes the device
-/// confirm or refuse her with `ownerConfirmsNotification` and
-/// `ownerRefusesNotification` (see `DebugDeviceOwner`). On iPad, it opens
+/// `networkOnlineNotification` (see `DebugNetwork`), which the app answers
+/// with `networkAppliedNotification(isOnline:)` once its network has changed,
+/// sets the app's Look by posting `lookNotification(_:)` (see `DebugLook`),
+/// and makes the device confirm or refuse her with `ownerConfirmsNotification`
+/// and `ownerRefusesNotification` (see `DebugDeviceOwner`). On iPad, it opens
 /// another window with `newWindowNotification` (see `DebugWindows`).
 nonisolated enum DebugLaunchScenario {
     static let scenarioKey = "QB_UITEST_SCENARIO"
@@ -44,6 +45,12 @@ nonisolated enum DebugLaunchScenario {
     static let ownerConfirmsNotification = "com.dimitrygallego.qbank.uitest.owner.confirms"
     static let ownerRefusesNotification = "com.dimitrygallego.qbank.uitest.owner.refuses"
     static let newWindowNotification = "com.dimitrygallego.qbank.uitest.window.new"
+
+    /// What the app posts once the fake server and the app's connection are offline or online, so
+    /// a test that turned the network off acts only after it is off.
+    static func networkAppliedNotification(isOnline: Bool) -> String {
+        (isOnline ? networkOnlineNotification : networkOfflineNotification) + ".applied"
+    }
 
     /// The notification that sets the app's Look: `com.dimitrygallego.qbank.uitest.look.dark`,
     /// `.light`, or `.auto` for Match device.
