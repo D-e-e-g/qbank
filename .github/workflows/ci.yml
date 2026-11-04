@@ -35,9 +35,7 @@ jobs:
         run: ./test/release-checks.sh
 
       - name: Swift packages that build on Linux
-        # The ubuntu-latest image no longer ships a Swift toolchain, so the
-        # tests run in the official Swift image.
-        run: docker run --rm -v "$PWD":/work -w /work swift:6.1 ./test/package-tests.sh --linux
+        run: ./test/package-tests.sh --linux
 
   # A change must not add a secret; see test/leak-check.sh.
   secrets:
