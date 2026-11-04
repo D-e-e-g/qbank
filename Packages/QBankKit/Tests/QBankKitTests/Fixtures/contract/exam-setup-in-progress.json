@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -62,8 +62,8 @@
         ],
         "questionCount": 4,
         "timeLimitSeconds": 360,
-        "startedAt": "2026-11-03T21:24:21.405Z",
-        "endsAt": "2026-11-03T21:30:21.405Z",
+        "startedAt": "2026-11-04T00:21:06.333Z",
+        "endsAt": "2026-11-04T00:27:06.333Z",
         "finishedAt": null,
         "endReason": null,
         "answeredCount": 0,

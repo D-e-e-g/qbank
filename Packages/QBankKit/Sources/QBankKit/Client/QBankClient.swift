@@ -85,6 +85,17 @@ public struct QBankClient: Sendable {
         if let failure, !failure.needsSignIn { throw failure }
     }
 
+    /// Ends every session of her account at once, on every device, this one included, and forgets
+    /// it here. Agent keys are not sessions and keep working. Unlike `signOut`, nothing is forgotten
+    /// until the server answers: a failure means the other devices may still be signed in, and it is
+    /// thrown with this session kept. A 401 means this session had already ended; it is left for the
+    /// app to clear, as `session()` leaves it. Any 2xx means they have all ended: the body is not
+    /// read, and a stored session that cannot be cleared is left to end with its next 401.
+    public func signOutEverywhere() async throws(QBankError) {
+        _ = try await exchange(Request(.post, "/api/sign-out/everywhere"))
+        try? sessionStore.clear()
+    }
+
     /// Replaces her password, including a temporary one. Her other sessions end and this one
     /// gets a fresh token, which is stored.
     @discardableResult

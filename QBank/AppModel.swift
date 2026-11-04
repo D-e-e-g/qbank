@@ -146,6 +146,21 @@ final class AppModel {
         await eraseAccount()
     }
 
+    /// Ends every session of her account on the server, on every device, this one included, then
+    /// forgets it here as a sign-out does, with the courses it saved and any answers still waiting.
+    /// Unlike a sign-out it needs QBank's answer: without one the other devices may still be signed
+    /// in, so she stays signed in here, keeps everything, and the failure is thrown for Settings to
+    /// say. A session that had already ended goes back to sign-in, as any ended session does.
+    func signOutEverywhere() async throws(QBankError) {
+        do {
+            try await client.signOutEverywhere()
+        } catch {
+            guard !handle(error) else { return }
+            throw error
+        }
+        await eraseAccount()
+    }
+
     /// Deletes her user account on the server, for good, checked with her password. Once it is
     /// gone the phone forgets it as a sign-out does, with the courses it saved and any answers still
     /// waiting. A refusal deletes nothing, keeps her signed in, and is thrown for the screen to say.

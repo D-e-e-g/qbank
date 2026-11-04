@@ -1,0 +1,17 @@
+{
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
+  "request": {
+    "method": "POST",
+    "path": "/api/sign-out/everywhere",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "status": "signed_out_everywhere"
+    }
+  }
+}

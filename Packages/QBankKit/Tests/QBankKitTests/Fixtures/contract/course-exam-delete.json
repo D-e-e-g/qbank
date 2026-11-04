@@ -1,10 +1,10 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "DELETE",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
     "query": {
-      "confirm": "5a2c137a485c22d4"
+      "confirm": "e4c0cc36a4c3d5fb"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

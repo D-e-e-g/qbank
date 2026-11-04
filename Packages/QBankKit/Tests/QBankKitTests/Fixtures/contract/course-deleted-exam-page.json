@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
@@ -32,8 +32,8 @@
             }
           ],
           "pastExamCount": 1,
-          "deletedAt": "2026-11-03T21:24:26.729Z",
-          "undoUntil": "2026-12-03T21:24:26.729Z",
+          "deletedAt": "2026-11-04T00:21:12.549Z",
+          "undoUntil": "2026-12-04T00:21:12.549Z",
           "undoRefusal": null,
           "deletedByAgent": null
         }

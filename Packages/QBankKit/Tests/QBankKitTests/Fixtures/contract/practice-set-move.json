@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "POST",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000004/move",
@@ -23,8 +23,8 @@
           "title": "Week 3 - Set 2: Invented mixed review",
           "description": "Invented practice questions for week 3.",
           "questionCount": 2,
-          "importedAt": "2026-11-03T21:24:23.541Z",
-          "activeSince": "2026-11-03T21:24:23.541Z",
+          "importedAt": "2026-11-04T00:21:08.763Z",
+          "activeSince": "2026-11-04T00:21:08.763Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 0,

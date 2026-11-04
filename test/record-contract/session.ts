@@ -1,10 +1,11 @@
-// Sign-in, the session, changing the password, signing out, the color scheme, and sign-up.
+// Sign-in, the session, changing the password, signing out here and everywhere, the color scheme,
+// and sign-up.
 
 import { SIGN_IN_FAILURE_LIMIT } from "../../src/auth/policy";
 import { ADMIN, STUDENT, World, expect } from "./world";
 
 export async function recordSessions(): Promise<World[]> {
-  return [await session(), await palette(), await signUp()];
+  return [await session(), await signOutEverywhere(), await palette(), await signUp()];
 }
 
 async function session(): Promise<World> {
@@ -38,6 +39,18 @@ async function session(): Promise<World> {
   const second = world.session(changed, "synthetic-session-token-2");
   await world.record("sign-out", "/api/sign-out", 200, { method: "POST", token: second });
   await world.record("session-after-sign-out", "/api/session", 401, { token: second });
+  await world.close();
+  return world;
+}
+
+/** Signed in on two devices, she signs out everywhere from one: the other's session ends too. */
+async function signOutEverywhere(): Promise<World> {
+  const world = await World.boot(22);
+  const phone = await world.account(STUDENT, "synthetic-session-token");
+  const laptop = await world.signIn(STUDENT.email, STUDENT.password, "synthetic-session-token-2");
+  await world.record("sign-out-everywhere", "/api/sign-out/everywhere", 200, { method: "POST", token: phone });
+  await world.record("session-after-sign-out-everywhere", "/api/session", 401, { token: laptop });
+  await world.record("sign-out-everywhere-signed-out", "/api/sign-out/everywhere", 401, { method: "POST", token: phone });
   await world.close();
   return world;
 }

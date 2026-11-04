@@ -188,6 +188,33 @@ struct SessionContractTests {
         #expect(try store.load() == nil)
     }
 
+    /// Signed in on two devices, she signs out everywhere from one: it forgets its session, and the
+    /// other device's next call needs sign-in.
+    @Test func signOutEverywhereEndsEverySession() async throws {
+        let transport = try FixtureTransport("sign-out-everywhere")
+        let (client, store) = TestClient.make(transport)
+        try await client.signOutEverywhere()
+        try expectRequest(transport.requests.first, matches: Fixture.load("sign-out-everywhere"))
+        #expect(try store.load() == nil)
+
+        let other = try FixtureTransport("session-after-sign-out-everywhere")
+        let (laptop, _) = TestClient.make(other, token: "synthetic-session-token-2")
+        let error = await #expect(throws: QBankError.self) { try await laptop.session() }
+        #expect(error?.needsSignIn == true)
+        try expectRequest(other.requests.first, matches: Fixture.load("session-after-sign-out-everywhere"))
+    }
+
+    /// From a session that had already ended, the server ends nothing; the session is left for the
+    /// app to clear, as any ended one.
+    @Test func signOutEverywhereFromAnEndedSessionNeedsSignIn() async throws {
+        let transport = try FixtureTransport("sign-out-everywhere-signed-out")
+        let (client, store) = TestClient.make(transport)
+        let error = await #expect(throws: QBankError.self) { try await client.signOutEverywhere() }
+        #expect(error?.needsSignIn == true)
+        #expect(try store.load()?.token == "synthetic-session-token")
+        try expectRequest(transport.requests.first, matches: Fixture.load("sign-out-everywhere-signed-out"))
+    }
+
     @Test func pickingAPaletteKeepsTheAccountItReturns() async throws {
         let transport = try FixtureTransport("palette")
         let (client, store) = TestClient.make(transport)

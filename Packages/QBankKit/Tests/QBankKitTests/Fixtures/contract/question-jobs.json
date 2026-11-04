@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "GET",
     "path": "/api/question-jobs",
@@ -85,9 +85,9 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-03 16:24:28.282-05",
-          "updatedAt": "2026-11-03 16:24:28.287-05",
-          "finishedAt": "2026-11-03 16:24:28.287-05",
+          "createdAt": "2026-11-03 19:21:14.274-05",
+          "updatedAt": "2026-11-03 19:21:14.279-05",
+          "finishedAt": "2026-11-03 19:21:14.279-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -161,9 +161,9 @@
               "kind": "exam"
             }
           ],
-          "createdAt": "2026-11-03 16:24:28.247-05",
-          "updatedAt": "2026-11-03 16:24:28.275-05",
-          "finishedAt": "2026-11-03 16:24:28.275-05",
+          "createdAt": "2026-11-03 19:21:14.239-05",
+          "updatedAt": "2026-11-03 19:21:14.268-05",
+          "finishedAt": "2026-11-03 19:21:14.268-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -240,8 +240,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-03 16:24:28.237-05",
-          "updatedAt": "2026-11-03 16:24:28.242-05",
+          "createdAt": "2026-11-03 19:21:14.23-05",
+          "updatedAt": "2026-11-03 19:21:14.235-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [
@@ -346,9 +346,9 @@
               "kind": "exam"
             }
           ],
-          "createdAt": "2026-11-03 16:24:28.166-05",
-          "updatedAt": "2026-11-03 16:24:28.228-05",
-          "finishedAt": "2026-11-03 16:24:28.228-05",
+          "createdAt": "2026-11-03 19:21:14.156-05",
+          "updatedAt": "2026-11-03 19:21:14.221-05",
+          "finishedAt": "2026-11-03 19:21:14.221-05",
           "failure": null,
           "warnings": [],
           "usage": {

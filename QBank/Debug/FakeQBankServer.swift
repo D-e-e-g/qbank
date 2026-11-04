@@ -222,6 +222,12 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         case ("POST", "/api/sign-out"):
             state.withLock { _ = $0.sessions.removeValue(forKey: token) }
             return (200, ["status": "ok"])
+        case ("POST", "/api/sign-out/everywhere"):
+            // Every session of the account ends, this one included, as the real route ends them.
+            state.withLock { state in
+                state.sessions = state.sessions.filter { $0.value != account.email }
+            }
+            return (200, ["status": "signed_out_everywhere"])
         case ("POST", "/api/account/password"):
             return changePassword(account, token: token, current: body["currentPassword"] as? String ?? "", new: body["newPassword"] as? String ?? "")
         case ("DELETE", "/api/me"):

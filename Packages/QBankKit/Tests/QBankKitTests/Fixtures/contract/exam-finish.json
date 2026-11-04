@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6b807f891e952f9dc3483c0f8b10ca032cd22983",
+  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
   "request": {
     "method": "POST",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000201/finish",
@@ -30,80 +30,16 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-03T21:24:21.405Z",
-      "endsAt": "2026-11-03T21:30:21.405Z",
-      "finishedAt": "2026-11-03T21:24:21.434Z",
+      "startedAt": "2026-11-04T00:21:06.333Z",
+      "endsAt": "2026-11-04T00:27:06.333Z",
+      "finishedAt": "2026-11-04T00:21:06.364Z",
       "endReason": "finished",
-      "serverNow": "2026-11-03T21:24:21.434Z",
+      "serverNow": "2026-11-04T00:21:06.364Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",
-          "publicId": "E1",
-          "position": 1,
-          "type": "single",
-          "topic": "Invented exam topic 1",
-          "cj": "Analyze cues",
-          "stem": "An invented exam stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented exam rationale.",
-          "takeaway": "Invented exam takeaway.",
-          "body": {
-            "twinOf": "Q1",
-            "options": [
-              {
-                "t": "Right",
-                "ok": true,
-                "why": "Yes."
-              },
-              {
-                "t": "Wrong",
-                "why": "No."
-              },
-              {
-                "t": "Also wrong",
-                "why": "No."
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 1"
-        },
-        {
-          "id": "00000000-0000-4000-8010-000000000011",
-          "publicId": "R2",
-          "position": 2,
-          "type": "single",
-          "topic": "Invented week 2 topic 2",
-          "cj": "Analyze cues",
-          "stem": "An invented stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented rationale.",
-          "takeaway": "Invented takeaway.",
-          "body": {
-            "options": [
-              {
-                "t": "Right",
-                "ok": true
-              },
-              {
-                "t": "Wrong"
-              },
-              {
-                "t": "Also wrong"
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 2"
-        },
-        {
-          "id": "00000000-0000-4000-8010-000000000013",
           "publicId": "E2",
-          "position": 3,
+          "position": 1,
           "type": "single",
           "topic": "Invented exam topic 2",
           "cj": "Analyze cues",
@@ -137,7 +73,7 @@
         {
           "id": "00000000-0000-4000-8010-000000000010",
           "publicId": "R1",
-          "position": 4,
+          "position": 2,
           "type": "single",
           "topic": "Invented week 2 topic 1",
           "cj": "Analyze cues",
@@ -163,6 +99,70 @@
           "images": [],
           "terms": [],
           "weekLabel": "Week 2"
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000011",
+          "publicId": "R2",
+          "position": 3,
+          "type": "single",
+          "topic": "Invented week 2 topic 2",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 2"
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000013",
+          "publicId": "E1",
+          "position": 4,
+          "type": "single",
+          "topic": "Invented exam topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented exam stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented exam rationale.",
+          "takeaway": "Invented exam takeaway.",
+          "body": {
+            "twinOf": "Q1",
+            "options": [
+              {
+                "t": "Right",
+                "ok": true,
+                "why": "Yes."
+              },
+              {
+                "t": "Wrong",
+                "why": "No."
+              },
+              {
+                "t": "Also wrong",
+                "why": "No."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 1"
         }
       ],
       "answeredQuestionIds": [
@@ -226,26 +226,6 @@
             "shuffle": null
           },
           {
-            "questionId": "00000000-0000-4000-8010-000000000011",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
-          },
-          {
-            "questionId": "00000000-0000-4000-8010-000000000013",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
-          },
-          {
             "questionId": "00000000-0000-4000-8010-000000000010",
             "status": "correct",
             "label": "Correct",
@@ -264,6 +244,26 @@
                 1
               ]
             }
+          },
+          {
+            "questionId": "00000000-0000-4000-8010-000000000011",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
+          },
+          {
+            "questionId": "00000000-0000-4000-8010-000000000013",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
           }
         ]
       }
