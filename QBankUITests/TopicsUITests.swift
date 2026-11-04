@@ -82,7 +82,7 @@ final class TopicsUITests: XCTestCase {
 
         // The page opens with its primer above Start exam.
         XCTAssertTrue(app.navigationBars["Page 1"].appears(timeout: 10))
-        let primer = app.buttons["page.primer"]
+        let primer = app.descendants(matching: .any)["page.primer"]
         XCTAssertTrue(primer.appears(timeout: 5))
         XCTAssertTrue(primer.label.contains("Open the primer"), primer.label)
         XCTAssertTrue(primer.label.contains("notes.example.com"), primer.label)

@@ -153,7 +153,7 @@ final class MakeQuestionsUITests: XCTestCase {
         writing.tap()
         XCTAssertTrue(app.navigationBars["Writing your set"].appears(timeout: 10))
         app.buttons["make.more"].tap()
-        menuItem(app, "make.stop", "Stop making this set").tap()
+        chooseFromMenu(menuItem(app, "make.stop", "Stop making this set"))
         // The dialog's action carries its identifier on both its outer and its inner button.
         let confirm = app.buttons["make.stop.confirm"].firstMatch
         XCTAssertTrue(confirm.appears(timeout: 5))
