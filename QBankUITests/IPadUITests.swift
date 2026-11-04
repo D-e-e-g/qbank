@@ -67,7 +67,7 @@ final class IPadUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["NURS 220"].appears(timeout: 5))
 
         fundamentals.press(forDuration: 1.2)
-        chooseFromMenu(app.buttons["home.hold.delete"])
+        chooseFromMenu(menuItem(app, "home.hold.delete", "Delete"))
         let title = app.staticTexts["deleteSheet.title"]
         XCTAssertTrue(title.appears(timeout: 5))
         waitForLabel(title, containing: "Delete NURS 220 and its 146 questions?")
@@ -177,7 +177,7 @@ final class IPadUITests: XCTestCase {
                 attach(app, "ipad course, \(tag)")
 
                 app.buttons["course.add"].tap()
-                chooseFromMenu(app.buttons["course.add.page"])
+                chooseFromMenu(menuItem(app, "course.add.page", "New page"))
                 let cancel = app.buttons["editPage.cancel"]
                 XCTAssertTrue(cancel.appears(timeout: 5))
                 attach(app, "ipad new exam page sheet, \(tag)")

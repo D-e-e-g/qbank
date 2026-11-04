@@ -126,6 +126,20 @@ extension XCTestCase {
         }
     }
 
+    /// An item of the menu that is open, such as a + menu or the one holding a card opens, with
+    /// this identifier and this title. iOS 27.2 drops the identifiers of the items in a + menu's
+    /// section and labels each with its title, a comma and its subtitle; iOS 26.5 keeps the
+    /// identifier and labels it with the title alone. So the item must have the title, and the
+    /// identifier wherever iOS keeps one.
+    @MainActor
+    func menuItem(_ app: XCUIApplication, _ identifier: String, _ title: String) -> XCUIElement {
+        let item = NSPredicate(
+            format: "(identifier == %@ OR identifier == '') AND (label == %@ OR label BEGINSWITH %@)",
+            identifier, title, title + ", "
+        )
+        return app.collectionViews.cells.buttons.matching(item).firstMatch
+    }
+
     /// Chooses an item of the context menu that touch and hold opened, such as Delete, and waits
     /// until the menu has closed. On a busy Mac the menu now and then drops a tap that reached the
     /// item: the item lights up, its action does not run, and the menu stays open. The menu

@@ -34,9 +34,8 @@ final class RenameVisibilityUITests: XCTestCase {
         XCTAssertTrue(buried.disappears(timeout: 5))
 
         tapWhenStill(more)
-        let editPage = app.buttons["page.more.editPage"]
+        let editPage = menuItem(app, "page.more.editPage", "Edit page")
         XCTAssertTrue(editPage.appears(timeout: 5))
-        XCTAssertEqual(editPage.label, "Edit page")
         attachLooks(app, "after page, More")
         chooseFromMenu(editPage)
         XCTAssertTrue(app.navigationBars["Edit Exam 1"].appears(timeout: 5))
@@ -76,7 +75,7 @@ final class RenameVisibilityUITests: XCTestCase {
 
         let topic = "Invented Pharmacology"
         app.buttons["home.add"].tap()
-        chooseFromMenu(app.buttons["home.add.topic"])
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
         let created = app.textFields["newTopic.name"]
         XCTAssertTrue(created.appears(timeout: 5))
         created.typeText(topic)
@@ -91,9 +90,8 @@ final class RenameVisibilityUITests: XCTestCase {
         attachLooks(app, "after topic")
 
         more.tap()
-        let rename = app.buttons["course.rename"]
+        let rename = menuItem(app, "course.rename", "Rename")
         XCTAssertTrue(rename.appears(timeout: 5))
-        XCTAssertEqual(rename.label, "Rename")
         chooseFromMenu(rename)
         XCTAssertTrue(app.navigationBars["Rename topic"].appears(timeout: 5))
         let name = app.textFields["renameCourse.title"]
@@ -128,9 +126,8 @@ final class RenameVisibilityUITests: XCTestCase {
         attachLooks(app, "after course")
 
         more.tap()
-        let rename = app.buttons["course.rename"]
+        let rename = menuItem(app, "course.rename", "Rename")
         XCTAssertTrue(rename.appears(timeout: 5))
-        XCTAssertEqual(rename.label, "Rename")
         attachLooks(app, "after course, More")
         chooseFromMenu(rename)
         XCTAssertTrue(app.navigationBars["Rename course"].appears(timeout: 5))

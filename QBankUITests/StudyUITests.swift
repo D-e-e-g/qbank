@@ -333,9 +333,8 @@ final class StudyUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Rename"].isHittable, "Rename is not a button on the screen")
         attachLooks(app, "C folder")
         more.tap()
-        let rename = app.buttons["folder.more.rename"]
+        let rename = menuItem(app, "folder.more.rename", "Rename")
         XCTAssertTrue(rename.appears(timeout: 5))
-        XCTAssertEqual(rename.label, "Rename")
         attachLooks(app, "C folder, More")
         chooseFromMenu(rename)
         let name = app.textFields["renameFolder.name"]
@@ -390,7 +389,7 @@ final class StudyUITests: XCTestCase {
         openFolder(app, "Week 2", on: "Exam 1")
         XCTAssertTrue(app.buttons["course.set.Mixed Clinical Judgment"].exists, "the moved set is here")
         app.buttons["folder.more"].tap()
-        chooseFromMenu(app.buttons["folder.more.rename"])
+        chooseFromMenu(menuItem(app, "folder.more.rename", "Rename"))
         let renamed = app.textFields["renameFolder.name"]
         XCTAssertTrue(renamed.appears(timeout: 5))
         renamed.clearAndType("week 1")
@@ -466,7 +465,7 @@ final class StudyUITests: XCTestCase {
 
         // The +'s New page: a page with two of her folders.
         app.buttons["course.add"].tap()
-        chooseFromMenu(app.buttons["course.add.page"])
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
         XCTAssertTrue(app.navigationBars["New page"].appears(timeout: 5))
         XCTAssertEqual(app.textFields["editPage.name"].value as? String, "Page 1")
         XCTAssertEqual(app.staticTexts["editPage.line"].label, "No folders yet")
