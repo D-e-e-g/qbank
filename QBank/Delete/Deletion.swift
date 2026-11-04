@@ -34,8 +34,15 @@ struct DeleteRequest: Identifiable {
 
 /// The lines a delete shows, around the server's own warning.
 nonisolated enum DeleteWording {
-    /// The warning split for the confirmation: its question as the title ("Delete Week 1?"), and
-    /// the rest, what goes with it and Undo, as the message, both in the server's words.
+    /// The confirmation's title and message: the server's `warning`, its question ("Delete Week 1?")
+    /// and the rest, what goes with it and Undo. A server before `warning` sent only `message`,
+    /// which is split here instead.
+    static func shown(_ preview: some DeletionPreview) -> (title: String, message: String)? {
+        if let warning = preview.warning { return (warning.title, warning.body) }
+        return split(preview.message)
+    }
+
+    /// The warning split at its first question, for a server that sends no `warning`.
     static func split(_ message: String) -> (title: String, message: String)? {
         guard let end = message.range(of: "? ") else { return nil }
         let title = String(message[..<end.lowerBound]) + "?"
@@ -175,10 +182,10 @@ final class DeleteModel {
         case .course(let id, _):
             preview = try await app.client.courseDeletion(id: id)
         }
-        let split = DeleteWording.split(preview.message)
+        let shown = DeleteWording.shown(preview)
         return Warning(
-            title: split?.title ?? DeleteWording.question(target),
-            message: split?.message ?? preview.message,
+            title: shown?.title ?? DeleteWording.question(target),
+            message: shown?.message ?? preview.message,
             refusal: preview.refusal,
             confirm: preview.confirm,
             deleted: DeleteWording.deleted(target, setCount: setCount),
