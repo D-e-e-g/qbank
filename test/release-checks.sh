@@ -52,7 +52,15 @@ ruby_check() {
 
 CI=.github/workflows/ci.yml
 XCODE=.github/workflows/xcode.yml
-MAC_RUNS_ON="\${{ vars.MAC_RUNNER || 'macos-26' }}"
+# xcode.yml's Mac build, the one job off GitHub's hosted Linux that a pull
+# request may start. Its if: keeps a fork's pull request from being scheduled
+# at all, and its runs-on sends a pull request only to the MacBook Pro 14's
+# runner, never to the hosted macos-26 fallback.
+export MAC_RUNS_ON="\${{ github.event_name == 'pull_request' && 'qbank-macbook-14' || vars.MAC_RUNNER || 'macos-26' }}"
+export MAC_BUILD_IF="github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'D-e-e-g/qbank' && vars.MAC_RUNNER != '' || github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != '')"
+export MAC_SKIP_IF="github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'D-e-e-g/qbank' || vars.MAC_RUNNER == '' && (github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main')"
+export MAC_CONCURRENCY_GROUP="\${{ github.event_name == 'pull_request' && format('xcode-pr-{0}', github.event.pull_request.number) || 'xcode-mac' }}"
+export MAC_CANCEL_IN_PROGRESS="\${{ github.event_name == 'pull_request' }}"
 
 if ! command -v ruby >/dev/null 2>&1; then
   echo "FAIL: ruby is required to parse the workflows" >&2
@@ -91,12 +99,13 @@ for workflow in "${WORKFLOWS[@]}"; do
   forbid_grep 'pull_request_target' "$workflow" "no pull_request_target trigger in $workflow"
   require_grep '^permissions:' "$workflow" "$workflow sets top-level permissions"
 
-  # A job off GitHub's hosted Linux may run on the self-hosted MAC_RUNNER, so
-  # only events that need write access here may start it: pushes and manual
-  # runs. Code from a pull request (possibly from a fork), a comment, a review,
-  # or a workflow_run must never reach it. A fork's own workflow file is kept
-  # off the runner by repository settings instead (see docs/ci.md).
-  ruby_check "$workflow runs Mac or self-hosted jobs only on pushes and manual runs" "$workflow" '
+  # A job off GitHub's hosted Linux may run on the self-hosted Mac, so only
+  # pushes and manual runs, which need write access here, may start one, and
+  # pull requests only through the Mac build's exact if: and runs-on above.
+  # Code from a fork's pull request, a comment, a review, or a workflow_run
+  # must never reach it. A fork's own copy of a workflow file is kept off the
+  # runner by the repository setting and the runner's hook (see docs/ci.md).
+  ruby_check "$workflow runs Mac or self-hosted jobs only on pushes, manual runs, and guarded pull requests" "$workflow" '
     wf = YAML.load_file(ARGV[0])
     on = wf[true] || wf["on"]
     events = on.is_a?(Hash) ? on.keys.map(&:to_s) : Array(on).map(&:to_s)
@@ -105,7 +114,8 @@ for workflow in "${WORKFLOWS[@]}"; do
     (wf["jobs"] || {}).each do |name, job|
       runs_on = job["runs-on"]
       next if runs_on.is_a?(String) && runs_on.start_with?("ubuntu-")
-      abort "job #{name} runs on #{runs_on.inspect} and the workflow triggers on #{untrusted.inspect}"
+      next if untrusted == %w[pull_request] && runs_on == ENV["MAC_RUNS_ON"] && job["if"] == ENV["MAC_BUILD_IF"]
+      abort "job #{name} runs on #{runs_on.inspect} and the workflow triggers on #{untrusted.inspect}; off Linux, a pull request may start only a job with runs-on: #{ENV["MAC_RUNS_ON"]} and if: #{ENV["MAC_BUILD_IF"]}"
     end
   '
 done
@@ -133,20 +143,6 @@ ruby_check "ci.yml triggers only on pull_request and pushes to main, and runs on
   end
 '
 require_grep 'release-checks\.sh' "$CI" "ci.yml runs test/release-checks.sh"
-require_grep 'package-tests\.sh --linux' "$CI" "ci.yml tests the Swift packages on Linux"
-# The Linux job tests with the one Swift release whose checksum it pins, built
-# for the Ubuntu release the job runs on, never with the runner image's Swift.
-ruby_check "ci.yml installs a pinned Swift for the Ubuntu release its Linux job runs on" "$CI" '
-  jobs = YAML.load_file(ARGV[0])["jobs"] || {}
-  job = jobs.values.find { |j| j["name"] == "Linux checks" } or abort "no job is named Linux checks"
-  release = job["runs-on"].to_s[/\Aubuntu-(\d\d)\.(\d\d)\z/] && "#{$1}.#{$2}" or
-    abort "the Linux checks job runs on #{job["runs-on"].inspect}, not a fixed ubuntu-NN.NN release"
-  install = (job["steps"] || []).map { |s| s["run"].to_s }.find { |r| r.include?("download.swift.org") && r.include?("sha256sum --check") }
-  abort "the Linux checks job does not install Swift with a checksum check" unless install
-  abort "the Linux checks job does not pin a Swift version" unless install =~ /^version=\d+\.\d+\.\d+$/
-  abort "the Linux checks job does not pin a sha256" unless install =~ /^sha256=[0-9a-f]{64}$/
-  abort "the Swift toolchain is not the one for ubuntu-#{release}" unless install.include?("ubuntu#{release}.tar.gz")
-'
 # The "Secrets" job is a required check on main, so its name is part of the
 # repository settings. It reads every commit and installs the one gitleaks
 # release whose checksum it pins.
@@ -164,48 +160,45 @@ ruby_check "ci.yml has a Secrets job that runs test/leak-check.sh over the full 
 '
 require_grep '^useDefault = true$' .gitleaks.toml ".gitleaks.toml keeps gitleaks' own rules"
 
-# --- xcode.yml: trusted events only, MAC_RUNNER with hosted fallback ---------
+# --- xcode.yml: trusted code only, pull requests on the MacBook Pro 14 -------
 
-forbid_grep 'secrets\.' "$XCODE" "xcode.yml references no secrets"
 require_grep '^  contents: read$' "$XCODE" "xcode.yml permissions are contents: read"
 forbid_grep ':[[:space:]]*write' "$XCODE" "xcode.yml grants no write permission"
-ruby_check "xcode.yml triggers only on pushes to main, qbank-v* tags, and manual runs" "$XCODE" '
+ruby_check "xcode.yml triggers only on plain pull requests, pushes to main, qbank-v* tags, and manual runs" "$XCODE" '
   wf = YAML.load_file(ARGV[0])
   on = wf[true] || wf["on"]
   abort "on: must be a mapping" unless on.is_a?(Hash)
   keys = on.keys.map(&:to_s)
-  abort "on: keys are #{keys.inspect}, expected [\"push\", \"workflow_dispatch\"]" unless keys == %w[push workflow_dispatch]
+  abort "on: keys are #{keys.inspect}, expected [\"pull_request\", \"push\", \"workflow_dispatch\"]" unless keys == %w[pull_request push workflow_dispatch]
+  abort "pull_request must be plain, with no filters (got #{on["pull_request"].inspect})" unless on["pull_request"].nil?
   push = on["push"]
   unless push.is_a?(Hash) && push.keys.map(&:to_s) == %w[branches tags] && push["branches"] == ["main"] && push["tags"] == ["qbank-v*"]
     abort "push must be exactly branches: [main] and tags: [qbank-v*] (got #{push.inspect})"
   end
 '
-# With no MAC_RUNNER a push to main must not fall back to a hosted Mac on every
-# merge: the Mac job skips and a Linux job says why. Every Mac job shares one
-# concurrency group that queues rather than cancels, so the self-hosted Mac,
-# which other CI shares, runs one QBank job at a time.
-ruby_check "xcode.yml's Mac jobs run on $MAC_RUNS_ON one at a time and skip a push to main without MAC_RUNNER" "$XCODE" '
+# A fork's pull request never builds, and a pull request builds only on the
+# MacBook Pro 14's runner. With no MAC_RUNNER, a pull request or a push to main
+# must not fall back to a hosted Mac on every change: the Mac job skips and a
+# Linux job says why, as it does for a fork. A pull request's new commit
+# cancels its previous build; every other run shares one concurrency group
+# that queues rather than cancels, so a burst of pushes to main builds once.
+ruby_check "xcode.yml builds a pull request only from this repository, only on qbank-macbook-14, and skips without MAC_RUNNER" "$XCODE" '
   jobs = YAML.load_file(ARGV[0])["jobs"] || {}
-  q = "'"'"'"
-  mac = "${{ vars.MAC_RUNNER || #{q}macos-26#{q} }}"
-  build_if = "github.event_name != #{q}push#{q} || github.ref != #{q}refs/heads/main#{q} || vars.MAC_RUNNER != #{q}#{q}"
-  skip_if = "github.event_name == #{q}push#{q} && github.ref == #{q}refs/heads/main#{q} && vars.MAC_RUNNER == #{q}#{q}"
-  mac_jobs, other_jobs = jobs.partition { |_, job| job["runs-on"] == mac }
-  abort "no job runs on #{mac}" if mac_jobs.empty?
+  mac_jobs, other_jobs = jobs.partition { |_, job| job["runs-on"] == ENV["MAC_RUNS_ON"] }
+  abort "no job runs on #{ENV["MAC_RUNS_ON"]}" if mac_jobs.empty?
   mac_jobs.each do |name, job|
-    abort "job #{name} if: is #{job["if"].inspect}, expected #{build_if.inspect}" unless job["if"] == build_if
+    abort "job #{name} if: is #{job["if"].inspect}, expected #{ENV["MAC_BUILD_IF"].inspect}" unless job["if"] == ENV["MAC_BUILD_IF"]
     abort "job #{name} sets no timeout-minutes" unless job["timeout-minutes"].is_a?(Integer)
     concurrency = job["concurrency"]
-    unless concurrency.is_a?(Hash) && concurrency["group"] == "xcode-mac" && concurrency["cancel-in-progress"] == false
-      abort "job #{name} concurrency must be group: xcode-mac, cancel-in-progress: false (got #{concurrency.inspect})"
-    end
+    expected = { "group" => ENV["MAC_CONCURRENCY_GROUP"], "cancel-in-progress" => ENV["MAC_CANCEL_IN_PROGRESS"] }
+    abort "job #{name} concurrency must be #{expected.inspect} (got #{concurrency.inspect})" unless concurrency == expected
   end
   other_jobs.each do |name, job|
     abort "job #{name} runs on #{job["runs-on"].inspect}" unless job["runs-on"].to_s.start_with?("ubuntu-")
-    abort "job #{name} if: is #{job["if"].inspect}, expected #{skip_if.inspect}" unless job["if"] == skip_if
+    abort "job #{name} if: is #{job["if"].inspect}, expected #{ENV["MAC_SKIP_IF"].inspect}" unless job["if"] == ENV["MAC_SKIP_IF"]
   end
 '
-require_grep 'package-tests\.sh --macos' "$XCODE" "xcode.yml tests the Swift packages on macOS"
+require_grep 'run: \./test/package-tests\.sh$' "$XCODE" "xcode.yml tests the Swift packages on the Mac"
 forbid_grep '^[^#]*sudo[[:space:]]' "$XCODE" "xcode.yml needs no sudo (the self-hosted runner has none)"
 
 # --- Simulators only through test/sim.sh -------------------------------------

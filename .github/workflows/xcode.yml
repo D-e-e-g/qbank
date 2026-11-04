@@ -1,9 +1,10 @@
 name: Xcode
 
-# Builds and tests the app on a Mac. Runs only for trusted code: pushes to
-# main, qbank-v* tags, and manual runs. It must never run on pull requests,
-# because MAC_RUNNER may point at a self-hosted Mac (see docs/ci.md).
+# Builds and tests the app on a Mac. Runs only for trusted code: pull requests
+# from this repository's own branches, pushes to main, qbank-v* tags, and
+# manual runs. A fork's pull request never reaches the Mac (see docs/ci.md).
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -15,35 +16,50 @@ permissions:
   contents: read
 
 jobs:
-  # A push to main builds only on the self-hosted MAC_RUNNER. With no
-  # MAC_RUNNER the build would fall back to a GitHub-hosted Mac on every merge,
-  # so it is skipped and this job says why.
-  mac-runner-unset:
+  # A pull request or a push to main builds only on the self-hosted MAC_RUNNER.
+  # With no MAC_RUNNER the build would fall back to a GitHub-hosted Mac on every
+  # merge, so it is skipped and this job says why. It also says why a fork's
+  # pull request skips the build.
+  mac-build-skipped:
     name: Mac build skipped
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MAC_RUNNER == ''
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'D-e-e-g/qbank'
+      || vars.MAC_RUNNER == '' && (github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
       - name: Explain the skip
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          message="MAC_RUNNER is not set, so this push to main skips the Mac build. Set it to the self-hosted runner's label (see docs/ci.md)."
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            message="This pull request comes from a fork, so it skips the Mac build: the self-hosted Mac builds only this repository's own branches (see docs/ci.md)."
+          else
+            message="MAC_RUNNER is not set, so this run skips the Mac build. Set it to the self-hosted runner's label (see docs/ci.md)."
+          fi
           echo "::notice title=Mac build skipped::$message"
           echo "$message" >> "$GITHUB_STEP_SUMMARY"
 
+  # A pull request builds only when it comes from a branch of this repository,
+  # never a fork, and only on the MacBook Pro 14's runner, whose job-started
+  # hook checks the same thing again; never on a GitHub-hosted Mac.
   build-and-test:
     name: Build and test
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != ''
-    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'D-e-e-g/qbank' && vars.MAC_RUNNER != ''
+      || github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != '')
+    runs-on: ${{ github.event_name == 'pull_request' && 'qbank-macbook-14' || vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 90
 
-    # One Mac job at a time across every run of this workflow, because a
-    # self-hosted MAC_RUNNER shares its Mac with other CI. A new run waits for
-    # the running one; GitHub keeps one waiting run and replaces it with a newer
-    # one, so a burst of pushes to main builds the latest.
+    # A pull request's new commit cancels its previous build. Every other run
+    # shares one group, because a self-hosted MAC_RUNNER shares its Mac with
+    # other CI: a new run waits for the running one, and GitHub keeps one
+    # waiting run and replaces it with a newer one, so a burst of pushes to
+    # main builds the latest. The one runner on the Mac runs one job at a time.
     concurrency:
-      group: xcode-mac
-      cancel-in-progress: false
+      group: ${{ github.event_name == 'pull_request' && format('xcode-pr-{0}', github.event.pull_request.number) || 'xcode-mac' }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     env:
       PROJECT_PATH: QBank.xcodeproj
@@ -68,7 +84,7 @@ jobs:
           echo "iPhoneSimulator SDK: $(xcrun --sdk iphonesimulator --show-sdk-version)"
 
       - name: Swift packages
-        run: ./test/package-tests.sh --macos
+        run: ./test/package-tests.sh
 
       # test/sim.sh owns the simulator: it creates one run-scoped device, boots
       # it, and deletes it on every exit path. Never target a simulator here

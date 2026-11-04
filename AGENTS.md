@@ -8,9 +8,9 @@ The app's service implementation and operations are maintained separately. Keep 
 
 Unit tests use Swift Testing in `QBankTests`. UI tests use XCTest in `QBankUITests` and launch the real app in a scenario chosen through the Debug-only seam `QBank/DebugLaunchScenario.swift`, which owns its `QB_UITEST_*` environment variables and must stay wrapped in `#if DEBUG`. Scenarios use synthetic data and in-process fakes; tests never use real accounts or the production server. Every command-line or automated run that boots an iOS simulator goes through `test/sim.sh`, which creates one run-scoped device and deletes it on every exit path; device-less builds for `generic/platform=iOS` are exempt.
 
-Local Swift packages live under `Packages/` and are tested by `test/package-tests.sh`: on Linux in pull requests unless the package holds a `.apple-only` marker file, and on macOS in `xcode.yml`, so every package declares a `.macOS` platform next to `.iOS(.v18)`.
+Local Swift packages live under `Packages/` and are tested by `test/package-tests.sh` on macOS in `xcode.yml`, so every package declares a `.macOS` platform next to `.iOS(.v18)`.
 
-`docs/ci.md` is authoritative for CI, runner selection, and the trust boundary: pull requests run only Linux checks with no secrets; the Mac build and tests run only for pushes to `main`, `qbank-v*` tags, and manual runs, on `vars.MAC_RUNNER` with GitHub's `macos-26` as the fallback. Never give a Mac job a pull request trigger. `test/release-checks.sh` guards these rules and the project settings; run it after touching `.github/`, `scripts/`, `test/`, or the Xcode project.
+`docs/ci.md` is authoritative for CI, runner selection, and the trust boundary: pull requests get the Linux checks, and the Mac build and tests run for pull requests from this repository's own branches only on the MacBook Pro 14's runner (`qbank-macbook-14`), and for pushes to `main`, `qbank-v*` tags, and manual runs on `vars.MAC_RUNNER` with GitHub's `macos-26` as the fallback. Never let a fork's pull request reach a Mac, never run a pull request on a GitHub-hosted Mac, and never add a `pull_request_target` trigger. `test/release-checks.sh` guards these rules and the project settings; run it after touching `.github/`, `scripts/`, `test/`, or the Xcode project.
 
 ## Maintaining this file
 
