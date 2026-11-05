@@ -724,11 +724,12 @@ public struct QBankClient: Sendable {
     }
 }
 
-/// The body of `PUT /api/courses/{id}/folder-order`'s answer: one list's folders in the new order.
+/// The body of `POST /api/practice-sets/{id}/start-over`'s answer: whether a sitting was open to end.
 private struct StartOverResult: Decodable {
     let ended: Bool
 }
 
+/// The body of `PUT /api/courses/{id}/folder-order`'s answer: one list's folders in the new order.
 private struct FolderList: Decodable {
     let folders: [Folder]
 }
