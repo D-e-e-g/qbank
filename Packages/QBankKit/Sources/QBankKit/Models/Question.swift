@@ -31,6 +31,8 @@ public struct PracticeSet: Codable, Sendable, Equatable, Identifiable {
     public let kind: Kind
     /// In the order she practices them.
     public let questions: [Question]
+    /// How far she has got through the set this time.
+    public var sitting: Sitting?
 
     /// Questions to practice that are not a set on the server, such as the samples of a set being
     /// made. Nothing about them is in any folder.
@@ -45,7 +47,7 @@ public struct PracticeSet: Codable, Sendable, Equatable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, weekLabel, kind, questions
+        case id, title, weekLabel, kind, questions, sitting
         case courseID = "courseId"
         case folderID = "folderId"
     }

@@ -390,6 +390,17 @@
               "null"
             ]
           },
+          "sitting": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SetSittingSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The sitting she would continue, so the row says Continue. Null when opening the set starts it at question 1: a new set, a finished one, one she answered only on exams, or one she chose Start over on, whose answeredCount above still counts every answer she has given."
+          },
           "questionIds": {
             "type": "array",
             "items": {
@@ -421,8 +432,21 @@
           "answeredCount",
           "fullyRightCount",
           "lastAnsweredAt",
+          "sitting",
           "questionIds",
           "importedByAgent"
+        ]
+      },
+      "SetSittingSummary": {
+        "type": "object",
+        "properties": {
+          "answeredCount": {
+            "type": "integer",
+            "description": "Questions of the set answered in this sitting: the row's \"7 of 12 answered · Continue\"."
+          }
+        },
+        "required": [
+          "answeredCount"
         ]
       },
       "ImportingAgent": {
@@ -792,6 +816,17 @@
             "items": {
               "$ref": "#/components/schemas/PracticeQuestion"
             }
+          },
+          "sitting": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SetSitting"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where she left this set: open it at the first question not in `answeredQuestionIds`, with the answers counted in the result. Null opens it at question 1; so it is for a Review list, an exam set, and an agent key."
           }
         },
         "required": [
@@ -801,7 +836,8 @@
           "weekLabel",
           "folderId",
           "kind",
-          "questions"
+          "questions",
+          "sitting"
         ]
       },
       "PracticeQuestion": {
@@ -1250,6 +1286,325 @@
           "alt",
           "caption",
           "at"
+        ]
+      },
+      "SetSitting": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Null until her next answer saves it: a set she was midway through before sittings, which continues from the answers she practiced."
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null as `id` is."
+          },
+          "answeredQuestionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The questions in `questions` answered in this sitting, in the set's order."
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SittingAnswer"
+            },
+            "description": "Her latest answer to each of them, to count in the result at the end."
+          }
+        },
+        "required": [
+          "id",
+          "startedAt",
+          "answeredQuestionIds",
+          "answers"
+        ]
+      },
+      "SittingAnswer": {
+        "type": "object",
+        "properties": {
+          "clientAttemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The question in `questions` it answers, even when she answered an earlier version of the set."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "partial",
+              "incorrect"
+            ]
+          },
+          "points": {
+            "type": "integer"
+          },
+          "maxPoints": {
+            "type": "integer"
+          },
+          "guessed": {
+            "type": "boolean"
+          },
+          "answeredAt": {
+            "type": "string"
+          },
+          "inReview": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string",
+            "description": "The mark's word: Correct, Partly correct, or Not correct."
+          },
+          "pointsText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "\"N of M points\" for a multi-part format. Null for single answer and priority."
+          },
+          "ruleText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "How the format is scored, for select all that apply, highlight, and ordering. Null for the others."
+          },
+          "response": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Answer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Her answer as she sent it."
+          },
+          "shuffle": {
+            "description": "The order she saw, as her device sent it with the answer."
+          }
+        },
+        "required": [
+          "clientAttemptId",
+          "questionId",
+          "status",
+          "points",
+          "maxPoints",
+          "guessed",
+          "answeredAt",
+          "inReview",
+          "label",
+          "pointsText",
+          "ruleText",
+          "response"
+        ]
+      },
+      "Answer": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "single"
+                ]
+              },
+              "choice": {
+                "type": "integer",
+                "description": "The option she picked."
+              }
+            },
+            "required": [
+              "type",
+              "choice"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "priority"
+                ]
+              },
+              "choice": {
+                "type": "integer",
+                "description": "The option she picked."
+              }
+            },
+            "required": [
+              "type",
+              "choice"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "sata"
+                ]
+              },
+              "picks": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "The options she ticked."
+              }
+            },
+            "required": [
+              "type",
+              "picks"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "highlight"
+                ]
+              },
+              "picks": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "The segments she tapped."
+              }
+            },
+            "required": [
+              "type",
+              "picks"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "order"
+                ]
+              },
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "positions[i] is the item she put in place i, top first. Place i is right when it holds item i."
+              }
+            },
+            "required": [
+              "type",
+              "positions"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "match"
+                ]
+              },
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": "choices[i] is the right-hand text she paired with pair i."
+              }
+            },
+            "required": [
+              "type",
+              "choices"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "matrix"
+                ]
+              },
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": "choices[i] is the column she picked for row i."
+              }
+            },
+            "required": [
+              "type",
+              "choices"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cloze"
+                ]
+              },
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "description": "choices[i] is the entry she picked for blank i."
+              }
+            },
+            "required": [
+              "type",
+              "choices"
+            ]
+          }
+        ],
+        "description": "An answer, in the format of its question. Every index refers to the stored body, never to the order she saw."
+      },
+      "StartOverResult": {
+        "type": "object",
+        "properties": {
+          "ended": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ended"
         ]
       },
       "ImportReport": {
@@ -2088,6 +2443,10 @@
           "studySessionId": {
             "type": "string",
             "format": "uuid"
+          },
+          "fromReview": {
+            "type": "boolean",
+            "description": "True from a Review runner: the answer counts in a sitting of its set that is open, and never opens one, so reviewing a question does not read as beginning its set again. Practice runners leave it out."
           }
         },
         "required": [
@@ -2636,6 +2995,16 @@
             },
             "description": "For an exam: the folders (weeks, before folders) that had no exam bank, so it drew their practice questions. Null when the course had no exam bank."
           },
+          "seededQuestionIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "For a practice set's sitting: the question lineages (questionProgress.questionLineageId) it began with, answered before it opened; empty when it began at question 1. Null on anything else."
+          },
           "timeLimitSeconds": {
             "type": [
               "integer",
@@ -2671,7 +3040,7 @@
               "timeout",
               null
             ],
-            "description": "How an exam ended: she finished it, left it, or ran out of time."
+            "description": "How an exam ended: she finished it, left it, or ran out of time. A practice set's sitting is `finished` once every question has an answer in it, or `left` by Start over."
           },
           "deletedAt": {
             "type": [
@@ -2691,6 +3060,7 @@
           "examFolderIds",
           "examPool",
           "examPracticeWeeks",
+          "seededQuestionIds",
           "timeLimitSeconds",
           "startedAt",
           "finishedAt",
@@ -3864,190 +4234,6 @@
           "byStep",
           "items"
         ]
-      },
-      "Answer": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "single"
-                ]
-              },
-              "choice": {
-                "type": "integer",
-                "description": "The option she picked."
-              }
-            },
-            "required": [
-              "type",
-              "choice"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "priority"
-                ]
-              },
-              "choice": {
-                "type": "integer",
-                "description": "The option she picked."
-              }
-            },
-            "required": [
-              "type",
-              "choice"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "sata"
-                ]
-              },
-              "picks": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "The options she ticked."
-              }
-            },
-            "required": [
-              "type",
-              "picks"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "highlight"
-                ]
-              },
-              "picks": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "The segments she tapped."
-              }
-            },
-            "required": [
-              "type",
-              "picks"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "order"
-                ]
-              },
-              "positions": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "positions[i] is the item she put in place i, top first. Place i is right when it holds item i."
-              }
-            },
-            "required": [
-              "type",
-              "positions"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "match"
-                ]
-              },
-              "choices": {
-                "type": "array",
-                "items": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "description": "choices[i] is the right-hand text she paired with pair i."
-              }
-            },
-            "required": [
-              "type",
-              "choices"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "matrix"
-                ]
-              },
-              "choices": {
-                "type": "array",
-                "items": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "description": "choices[i] is the column she picked for row i."
-              }
-            },
-            "required": [
-              "type",
-              "choices"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "cloze"
-                ]
-              },
-              "choices": {
-                "type": "array",
-                "items": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ]
-                },
-                "description": "choices[i] is the entry she picked for blank i."
-              }
-            },
-            "required": [
-              "type",
-              "choices"
-            ]
-          }
-        ],
-        "description": "An answer, in the format of its question. Every index refers to the stored body, never to the order she saw."
       },
       "StartExam": {
         "type": "object",
@@ -9553,6 +9739,98 @@
         }
       }
     },
+    "/api/practice-sets/{id}/start-over": {
+      "post": {
+        "summary": "Start a practice set again at question 1",
+        "description": "Ends the sitting she would continue, so the set opens at question 1 and its row stops saying Continue. Every answer stays saved and still counts: no answer, score, or Review row changes. Her next answer to the set's first question opens a new sitting. An answer still on its way joins that sitting if it is open by then; otherwise it counts as every answer does and opens none. Asking with no sitting to end changes nothing. Only the user account can do this.",
+        "tags": [
+          "Courses"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether there was a sitting to end.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartOverResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The admin cannot start a set over, or a new password is required first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The request was refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request was refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/imports/check": {
       "post": {
         "summary": "Check a question file without importing it",
@@ -11543,7 +11821,7 @@
           "Attempts"
         ],
         "summary": "Record an answer",
-        "description": "Only the user account can record an answer. The server scores it and saves her progress in the same transaction. Repeating the same clientAttemptId returns the saved attempt and does not count it again. The admin is refused even when the question exists. An exam answer names its exam as studySessionId: it is taken only while that exam is running, for a question it drew, once per question. An exam-bank question is answered only on an exam (400 exam_only without one) and never enters Review.",
+        "description": "Only the user account can record an answer. The server scores it and saves her progress in the same transaction. Repeating the same clientAttemptId returns the saved attempt and does not count it again. The admin is refused even when the question exists. An exam answer names its exam as studySessionId: it is taken only while that exam is running, for a question it drew, once per question. An exam-bank question is answered only on an exam (400 exam_only without one) and never enters Review. Any other answer sent with no studySessionId joins its set's sitting (GET /api/practice-sets/{id}) by itself: the one open when it arrives, whenever she gave it, or a new one. It is saved and counted whether or not it joins one.",
         "requestBody": {
           "required": true,
           "content": {
@@ -12069,7 +12347,7 @@
           "Agents"
         ],
         "summary": "Export her progress",
-        "description": "Her whole history as one JSON file: every answer she gave, her latest answer to each question, her Review lists, course completion and scores, and every study session, exams included (`studySessions` whose `mode` is `exam`, for GET /api/exams/{id}). It grows with every answer; GET /api/me/standing says where she stands in far less. A course or topic she deleted is left out of `courses` and `questions` until she brings it back; her sessions and answers in it stay. Only a user account can export, and only its own data: the admin cannot. An agent key with `read` exports its own account's.",
+        "description": "Her whole history as one JSON file: every answer she gave, her latest answer to each question, her Review lists, course completion and scores, and every study session, exams included (`studySessions` whose `mode` is `exam`, for GET /api/exams/{id}; `practice` is a set's sitting, and its answers name it as their studySessionId). It grows with every answer; GET /api/me/standing says where she stands in far less. A course or topic she deleted is left out of `courses` and `questions` until she brings it back; her sessions and answers in it stay. Only a user account can export, and only its own data: the admin cannot. An agent key with `read` exports its own account's.",
         "security": [
           {
             "sessionCookie": []

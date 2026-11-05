@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
+  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
@@ -28,50 +28,16 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-04T00:21:06.333Z",
-      "endsAt": "2026-11-04T00:27:06.333Z",
+      "startedAt": "2026-11-05T05:30:36.795Z",
+      "endsAt": "2026-11-05T05:36:36.795Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-04T00:21:06.359Z",
+      "serverNow": "2026-11-05T05:30:36.811Z",
       "questions": [
-        {
-          "id": "00000000-0000-4000-8010-000000000012",
-          "publicId": "E2",
-          "position": 1,
-          "type": "single",
-          "topic": "Invented exam topic 2",
-          "cj": "Analyze cues",
-          "stem": "An invented exam stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented exam rationale.",
-          "takeaway": "Invented exam takeaway.",
-          "body": {
-            "twinOf": "Q2",
-            "options": [
-              {
-                "t": "Right",
-                "ok": true,
-                "why": "Yes."
-              },
-              {
-                "t": "Wrong",
-                "why": "No."
-              },
-              {
-                "t": "Also wrong",
-                "why": "No."
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 1"
-        },
         {
           "id": "00000000-0000-4000-8010-000000000010",
           "publicId": "R1",
-          "position": 2,
+          "position": 1,
           "type": "single",
           "topic": "Invented week 2 topic 1",
           "cj": "Analyze cues",
@@ -97,6 +63,40 @@
           "images": [],
           "terms": [],
           "weekLabel": "Week 2"
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000012",
+          "publicId": "E1",
+          "position": 2,
+          "type": "single",
+          "topic": "Invented exam topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented exam stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented exam rationale.",
+          "takeaway": "Invented exam takeaway.",
+          "body": {
+            "twinOf": "Q1",
+            "options": [
+              {
+                "t": "Right",
+                "ok": true,
+                "why": "Yes."
+              },
+              {
+                "t": "Wrong",
+                "why": "No."
+              },
+              {
+                "t": "Also wrong",
+                "why": "No."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 1"
         },
         {
           "id": "00000000-0000-4000-8010-000000000011",
@@ -130,17 +130,17 @@
         },
         {
           "id": "00000000-0000-4000-8010-000000000013",
-          "publicId": "E1",
+          "publicId": "E2",
           "position": 4,
           "type": "single",
-          "topic": "Invented exam topic 1",
+          "topic": "Invented exam topic 2",
           "cj": "Analyze cues",
           "stem": "An invented exam stem.",
           "ask": "Which is right?",
           "rationale": "Invented exam rationale.",
           "takeaway": "Invented exam takeaway.",
           "body": {
-            "twinOf": "Q1",
+            "twinOf": "Q2",
             "options": [
               {
                 "t": "Right",

@@ -1,0 +1,171 @@
+{
+  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "request": {
+    "method": "GET",
+    "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "id": "5e700000-0000-4000-8000-000000000301",
+      "courseId": "c0000000-0000-4000-8000-000000000301",
+      "title": "Week 1 - Set 1: Invented basics",
+      "weekLabel": "Week 1",
+      "folderId": "00000000-0000-4000-8018-000000000001",
+      "kind": "practice",
+      "questions": [
+        {
+          "id": "00000000-0000-4000-8018-000000000002",
+          "publicId": "Q1",
+          "position": 1,
+          "type": "single",
+          "topic": "Invented topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        },
+        {
+          "id": "00000000-0000-4000-8018-000000000003",
+          "publicId": "Q2",
+          "position": 2,
+          "type": "single",
+          "topic": "Invented topic 2",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        },
+        {
+          "id": "00000000-0000-4000-8018-000000000004",
+          "publicId": "Q3",
+          "position": 3,
+          "type": "single",
+          "topic": "Invented topic 3",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        }
+      ],
+      "sitting": {
+        "id": "00000000-0000-4000-8018-000000000005",
+        "startedAt": "2026-11-05T05:30:38.130Z",
+        "answeredQuestionIds": [
+          "00000000-0000-4000-8018-000000000002",
+          "00000000-0000-4000-8018-000000000003"
+        ],
+        "answers": [
+          {
+            "clientAttemptId": "aaaaaaaa-1111-4111-8111-111111111111",
+            "questionId": "00000000-0000-4000-8018-000000000002",
+            "status": "correct",
+            "points": 1,
+            "maxPoints": 1,
+            "guessed": false,
+            "answeredAt": "2026-11-05T05:30:38.114Z",
+            "inReview": false,
+            "label": "Correct",
+            "pointsText": null,
+            "ruleText": null,
+            "response": {
+              "type": "single",
+              "choice": 0
+            },
+            "shuffle": {
+              "kind": "options",
+              "order": [
+                1,
+                0,
+                2
+              ]
+            }
+          },
+          {
+            "clientAttemptId": "bbbbbbbb-2222-4222-8222-222222222222",
+            "questionId": "00000000-0000-4000-8018-000000000003",
+            "status": "correct",
+            "points": 1,
+            "maxPoints": 1,
+            "guessed": false,
+            "answeredAt": "2026-11-05T05:30:38.130Z",
+            "inReview": false,
+            "label": "Correct",
+            "pointsText": null,
+            "ruleText": null,
+            "response": {
+              "type": "single",
+              "choice": 0
+            },
+            "shuffle": {
+              "kind": "options",
+              "order": [
+                1,
+                0,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

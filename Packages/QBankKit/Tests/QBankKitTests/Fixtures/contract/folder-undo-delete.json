@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
+  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
   "request": {
     "method": "POST",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000701/undo-delete",
@@ -21,13 +21,16 @@
           "title": "Heart A",
           "description": "Invented set.",
           "questionCount": 4,
-          "importedAt": "2026-11-04T00:21:10.391Z",
-          "activeSince": "2026-11-04T00:21:10.391Z",
+          "importedAt": "2026-11-05T05:30:40.802Z",
+          "activeSince": "2026-11-05T05:30:40.802Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 3,
           "fullyRightCount": 2,
-          "lastAnsweredAt": "2026-11-04T00:21:10.444Z",
+          "lastAnsweredAt": "2026-11-05T05:30:40.845Z",
+          "sitting": {
+            "answeredCount": 3
+          },
           "questionIds": [
             "00000000-0000-4000-8015-000000000001",
             "00000000-0000-4000-8015-000000000002",
@@ -41,17 +44,20 @@
           "title": "Heart B",
           "description": "Invented set.",
           "questionCount": 3,
-          "importedAt": "2026-11-04T00:21:10.397Z",
-          "activeSince": "2026-11-04T00:21:10.397Z",
+          "importedAt": "2026-11-05T05:30:40.806Z",
+          "activeSince": "2026-11-05T05:30:40.806Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 1,
           "fullyRightCount": 0,
-          "lastAnsweredAt": "2026-11-04T00:21:10.451Z",
+          "lastAnsweredAt": "2026-11-05T05:30:40.853Z",
+          "sitting": {
+            "answeredCount": 1
+          },
           "questionIds": [
-            "00000000-0000-4000-8015-000000000005",
             "00000000-0000-4000-8015-000000000006",
-            "00000000-0000-4000-8015-000000000007"
+            "00000000-0000-4000-8015-000000000007",
+            "00000000-0000-4000-8015-000000000008"
           ],
           "importedByAgent": null
         },
@@ -60,16 +66,17 @@
           "title": "Heart C",
           "description": "Invented set.",
           "questionCount": 2,
-          "importedAt": "2026-11-04T00:21:10.562Z",
-          "activeSince": "2026-11-04T00:21:10.562Z",
+          "importedAt": "2026-11-05T05:30:40.932Z",
+          "activeSince": "2026-11-05T05:30:40.932Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 0,
           "fullyRightCount": 0,
           "lastAnsweredAt": null,
+          "sitting": null,
           "questionIds": [
-            "00000000-0000-4000-8015-000000000011",
-            "00000000-0000-4000-8015-000000000012"
+            "00000000-0000-4000-8015-000000000013",
+            "00000000-0000-4000-8015-000000000014"
           ],
           "importedByAgent": null
         }

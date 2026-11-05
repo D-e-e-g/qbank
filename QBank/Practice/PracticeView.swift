@@ -149,6 +149,9 @@ private struct QuestionPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            if let pickedUp = model.pickedUp {
+                PickedUpLine(model: model, pickedUp: pickedUp)
+            }
             if let problem = model.problem {
                 ProblemText(text: problem)
             }
@@ -210,6 +213,40 @@ private struct QuestionPage: View {
                 scroll.scroll(to: RunnerScroll.feedback)
             }
             AccessibilityNotification.Announcement(attempt.feedback?.label ?? "").post()
+        }
+    }
+}
+
+/// Where a set she left midway opened, with Start over one tap away. Start over asks once.
+private struct PickedUpLine: View {
+    let model: PracticeModel
+    let pickedUp: PracticeModel.PickedUp
+    @State private var asksToStartOver = false
+
+    var body: some View {
+        HStack(spacing: QBankSpacing.space2) {
+            Text(Wording.pickedUp(at: pickedUp.number, answeredEarlier: model.answeredEarlier.count, lastAnsweredAt: pickedUp.lastAnsweredAt))
+                .qbankFont(.subheadline, weight: .medium)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("practice.pickedUp")
+            Button("Start over") { asksToStartOver = true }
+                .qbankFont(.subheadline, weight: .bold)
+                .frame(minHeight: QBankSpacing.rowMin)
+                .contentShape(.rect)
+                .disabled(model.isChecking || model.isStartingOver)
+                .accessibilityIdentifier("practice.startOver")
+        }
+        .foregroundStyle(.qbank(.tint))
+        .padding(.horizontal, QBankSpacing.space4)
+        .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+        .confirmSheet(
+            isPresented: $asksToStartOver,
+            title: "Start over \(model.title)?",
+            message: Wording.startOverMessage(answers: model.answeredCount),
+            confirm: "Start over",
+            identifier: "practice.startOverSheet"
+        ) {
+            Task { await model.startOver() }
         }
     }
 }

@@ -164,10 +164,18 @@ final class OfflineStore {
         try? await cache.value(for: key)
     }
 
+    /// Keeps a set's copy on the phone with her place in it, as the runner counts it.
+    func keep(_ set: PracticeSet) async {
+        guard !isClosed else { return }
+        try? await cache.store(set, for: .practiceSet(set.id), savedAt: now())
+    }
+
     /// Saves every course and topic she studies on Home with its sets and questions, so any set can
     /// be practiced without signal, not only the ones she opened. Runs in the background, at most
     /// every few minutes unless `force`. Sets already saved are not loaded again: a set's questions
-    /// never change, a new version of a set is a new set.
+    /// never change, a new version of a set is a new set. One is only when its row says she has got
+    /// further, or begun again, elsewhere, so without signal it opens at the place the row promises.
+    /// While answers wait, the copy stays: it counts them, and the server does not have them yet.
     func saveCourses(in catalog: Catalog, force: Bool = false) {
         guard !isClosed, saving == nil, connection.isOnline else { return }
         if !force, let coursesSavedAt, now().timeIntervalSince(coursesSavedAt) < Self.saveInterval { return }
@@ -208,7 +216,8 @@ final class OfflineStore {
             for set in detail.folders.flatMap(\.sets) {
                 guard !Task.isCancelled else { return false }
                 listedSets.insert(set.id)
-                if let saved = try? await cache.value(for: .practiceSet(set.id)), saved.savedAt >= set.importedAt { continue }
+                if let saved = try? await cache.value(for: .practiceSet(set.id)), saved.savedAt >= set.importedAt,
+                   !waiting.isEmpty || saved.value.sitting?.answeredQuestionIDs.count == set.sitting?.answeredCount { continue }
                 do {
                     let practice = try await client.practiceSet(id: set.id)
                     guard !Task.isCancelled else { return false }

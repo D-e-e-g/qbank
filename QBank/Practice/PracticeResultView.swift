@@ -82,7 +82,7 @@ struct PracticeResultView: View {
                 .foregroundStyle(.qbank(.text1))
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("result.title")
-            Text("\(result.points) of \(result.maxPoints) points · \(Wording.duration(result.elapsed))")
+            Text(Wording.resultPoints(result))
                 .qbankFont(.callout)
                 .monospacedDigit()
                 .foregroundStyle(.qbank(.text2))

@@ -27,6 +27,8 @@ const IMAGES: Record<string, string> = {
   d0db2444f2c236c3591aab3d9a0532631385ff85: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:1b96e033f30450ce38b951cd77704a7b9afe0f216b8e50a554720b56ba4513bf",
   "6b807f891e952f9dc3483c0f8b10ca032cd22983": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:dce87fedb83d25371c9aad8d2f3ae2dd72159cb230ea2c2b0e5b13f17a872060",
   c033890813f6a2c76a23688d2cf457fdd0ae7d62: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:5604fbb1ea804c87de595cd556a01ec224ad34a0557d99c34c64c741e7c44961",
+  f4b1bb4033ad15b09619ad1c885e9eeb071a1c4f: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:69f9859a78e7473d5b082e70005024bd9c9cb1dd049e4082979163cb34eeb5ee",
+  "9d2e5a265972afbc9495ebc682250b3418e8e9e7": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8f67dec72ed330427d62e7c8b236cad88791b65a0173ca9e77212c229b0927bb",
 };
 
 const SCENARIOS: (() => Promise<World[]>)[] = [recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];

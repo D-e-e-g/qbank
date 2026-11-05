@@ -11,6 +11,10 @@ import Foundation
 /// - any other set counts at least its waiting questions and keeps the server's fully right count,
 ///   which her waiting answers may change once they are sent.
 ///
+/// A set's sitting counts its waiting answers on top of the ones the server reported: the runner
+/// asks only questions she has not answered in it. Once they cover the set, the sitting is over, as
+/// the server closes it. A waiting Review answer is left out: it counts once the server has it.
+///
 /// Points stay as the server reported them.
 public struct WaitingProgress: Sendable, Equatable {
     /// The latest waiting answer to one question.
@@ -18,10 +22,13 @@ public struct WaitingProgress: Sendable, Equatable {
         /// How the phone scored it, or nil when its question is not saved on the phone.
         public let status: ScoreStatus?
         public let answeredAt: Date
+        /// Whether it counts in the set's sitting.
+        public let joinsASitting: Bool
 
-        public init(status: ScoreStatus?, answeredAt: Date) {
+        public init(status: ScoreStatus?, answeredAt: Date, joinsASitting: Bool = true) {
             self.status = status
             self.answeredAt = answeredAt
+            self.joinsASitting = joinsASitting
         }
     }
 
@@ -38,7 +45,11 @@ public struct WaitingProgress: Sendable, Equatable {
     public init(pending: [PendingAttempt], status: (PendingAttempt) -> ScoreStatus?) {
         var answers: [String: Answer] = [:]
         for attempt in pending {
-            answers[attempt.submission.questionID] = Answer(status: status(attempt), answeredAt: attempt.queuedAt)
+            let earlier = answers[attempt.submission.questionID]
+            answers[attempt.submission.questionID] = Answer(
+                status: status(attempt), answeredAt: attempt.queuedAt,
+                joinsASitting: attempt.submission.joinsASitting || earlier?.joinsASitting == true
+            )
         }
         self.init(answers: answers)
     }
@@ -63,11 +74,14 @@ public struct WaitingProgress: Sendable, Equatable {
             answered = min(set.questionCount, max(set.answeredCount, waiting.count))
             fullyRight = set.fullyRightCount
         }
+        let inSitting = waiting.count { $0.joinsASitting }
+        let sittingCount = (set.sitting?.answeredCount ?? 0) + inSitting
+        let sitting = inSitting == 0 ? set.sitting : sittingCount < set.questionCount ? PracticeSetSummary.Sitting(answeredCount: sittingCount) : nil
         return PracticeSetSummary(
             id: set.id, title: set.title, description: set.description, questionCount: set.questionCount,
             importedAt: set.importedAt, activeSince: set.activeSince, status: set.status, canRestore: set.canRestore,
-            answeredCount: answered, fullyRightCount: fullyRight, lastAnsweredAt: lastAnsweredAt,
-            questionIDs: set.questionIDs, importedByAgent: set.importedByAgent
+            answeredCount: max(answered, min(set.questionCount, sittingCount)), fullyRightCount: fullyRight, lastAnsweredAt: lastAnsweredAt,
+            questionIDs: set.questionIDs, importedByAgent: set.importedByAgent, sitting: sitting
         )
     }
 

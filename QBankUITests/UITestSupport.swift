@@ -3,7 +3,8 @@ import XCTest
 extension XCTestCase {
     /// Launches the real app in a scenario of the Debug launch seam (`QB_UITEST_SCENARIO`).
     /// `keepPhoneSettings` keeps the settings an earlier launch saved on the phone, and
-    /// `keepPhoneData` the courses it saved and the answers it left waiting. `online: false`
+    /// `keepPhoneData` the courses it saved and the answers it left waiting. `keepServerAnswers`
+    /// keeps what the fake server saved of her answers and sittings. `online: false`
     /// starts without a network. `deviceOwner` is how the device answers the Face ID lock, such as
     /// `face-id` (`QB_UITEST_DEVICE_OWNER`); every launch gets a fake, so the simulator's own
     /// Face ID never plays a part.
@@ -12,6 +13,7 @@ extension XCTestCase {
         _ scenario: String,
         keepPhoneSettings: Bool = false,
         keepPhoneData: Bool = false,
+        keepServerAnswers: Bool = false,
         online: Bool = true,
         deviceOwner: String = "face-id"
     ) -> XCUIApplication {
@@ -23,6 +25,9 @@ extension XCTestCase {
         }
         if keepPhoneData {
             app.launchEnvironment["QB_UITEST_KEEP_PHONE_DATA"] = "1"
+        }
+        if keepServerAnswers {
+            app.launchEnvironment["QB_UITEST_KEEP_SERVER_ANSWERS"] = "1"
         }
         if !online {
             app.launchEnvironment["QB_UITEST_NETWORK"] = "offline"

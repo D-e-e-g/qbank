@@ -98,6 +98,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         var attempts: [String: Data] = [:]
         /// Her latest answer to each question: (status, answered at).
         var latest: [String: (status: String, at: Date)] = [:]
+        /// Her latest saved answer to each question, as the reply gave it.
+        var savedAnswers: [String: Data] = [:]
+        /// Each set's latest sitting, by set id.
+        var sittings: [String: FakeSitting] = [:]
         /// Sets imported while the app ran, by id.
         var imported: [String: ImportedEntry] = [:]
         var importCount = 0
@@ -109,6 +113,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
 
     private let state: Mutex<State>
     private let now: Date
+    /// Where her answers and sittings outlast the app, for a test that kills it and comes back.
+    private let answersFile: URL?
     private let offline = Mutex(false)
     /// Review, Terms, exams and the course's exams.
     private let study: FakeStudy
@@ -135,9 +141,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
-        place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, now: Date = .now
+        place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
+        self.answersFile = answersFile
         study = FakeStudy(now: now, examInProgress: examInProgress)
         questionMaker = FakeQuestionMaker(allowed: [Self.maker.email], isSetUp: makerIsSetUp, seededFor: Self.maker.email, now: now)
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
@@ -162,6 +169,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             sessions: signedIn ? [Self.sessionToken: account.email] : [:],
             place: place
         ))
+        readKeptAnswers()
     }
 
     /// The session the app keeps for `student` when a scenario starts signed in.
@@ -300,6 +308,9 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             return recordAttempt(rawBody)
         default:
             break
+        }
+        if method == "POST", path.hasPrefix("/api/practice-sets/"), path.hasSuffix("/start-over") {
+            return startOver(String(path.dropFirst("/api/practice-sets/".count).dropLast("/start-over".count)))
         }
         if method == "POST", path.hasPrefix("/api/practice-sets/"), path.hasSuffix("/restore") {
             return restoreImported(String(path.dropFirst("/api/practice-sets/".count).dropLast("/restore".count)))
@@ -536,9 +547,22 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         }
         return bySet.reduce(into: (0, 0)) { total, entry in
             let earlier = earlierProgress[entry.key]
-            total.0 += entry.value.count - (earlier?.answered ?? 0)
-            total.1 += entry.value.count { $0 == "correct" } - (earlier?.right ?? 0)
+            let overlapping = (0..<(earlier?.answered ?? 0)).compactMap { latest["\(entry.key)-q\($0)"]?.status }
+            let counts = counts(setID: entry.key, answered: entry.value, overlappingEarlier: overlapping)
+            total.0 += counts.answered - (earlier?.answered ?? 0)
+            total.1 += counts.right - (earlier?.right ?? 0)
         }
+    }
+
+    /// A set's answered and fully right questions: her invented earlier answers, which a new answer
+    /// to the same question replaces, and her answers here. Whether a replaced earlier answer was
+    /// right is not kept, so it counts as her first ones are invented, right before wrong.
+    private static func counts(setID: String, answered: [String], overlappingEarlier: [String]) -> (answered: Int, right: Int) {
+        let earlier = earlierProgress[setID]
+        let answeredCount = (earlier?.answered ?? 0) + answered.count - overlappingEarlier.count
+        let rightHere = answered.count { $0 == "correct" }
+        let rightEarlier = max(0, (earlier?.right ?? 0) - overlappingEarlier.count)
+        return (answeredCount, rightHere + rightEarlier)
     }
 
     // MARK: Editing semesters and courses, with the content service's rules and words
@@ -831,20 +855,28 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         let earlier = Self.earlierProgress[id]
         let questionIDs = (0..<entry.questions).map { "\(id)-q\($0)" }
         // Once she answers here, the set's line counts her answers, as the server's does.
-        let latest = state.withLock { state in questionIDs.compactMap { state.latest[$0] } }
+        let (latest, overlapping, sitting) = state.withLock { state in
+            (
+                questionIDs.compactMap { state.latest[$0] },
+                questionIDs.prefix(earlier?.answered ?? 0).compactMap { state.latest[$0]?.status },
+                Self.continuing(setID: id, questionIDs: questionIDs, state: state)
+            )
+        }
         var json: [String: Any] = [
             "id": id, "title": entry.title, "description": "", "questionCount": entry.questions,
             "importedAt": QBankJSON.formatDate(entry.importedAt), "activeSince": QBankJSON.formatDate(entry.importedAt),
             "status": entry.status, "canRestore": entry.canRestore, "questionIds": questionIDs,
             "importedByAgent": FakeAgents.importer(ofSet: id) ?? NSNull(),
+            "sitting": sitting.map { ["answeredCount": $0.count] as Any } ?? NSNull(),
         ]
         if latest.isEmpty {
             json["answeredCount"] = earlier?.answered ?? 0
             json["fullyRightCount"] = earlier?.right ?? 0
             json["lastAnsweredAt"] = self.json(earlier.map { date(days: -$0.lastAnsweredDaysAgo) })
         } else {
-            json["answeredCount"] = latest.count
-            json["fullyRightCount"] = latest.count { $0.status == "correct" }
+            let counts = Self.counts(setID: id, answered: latest.map(\.status), overlappingEarlier: overlapping)
+            json["answeredCount"] = counts.answered
+            json["fullyRightCount"] = counts.right
             json["lastAnsweredAt"] = QBankJSON.formatDate(latest.map(\.at).max() ?? now)
         }
         return json
@@ -1025,7 +1057,126 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             "id": id, "courseId": courseID, "title": entry.title, "weekLabel": folder.name, "folderId": folder.id,
             "kind": "practice",
             "questions": (0..<entry.questions).map { FakePracticeQuestions.question(setID: id, index: $0) },
+            "sitting": sittingJSON(id, questionCount: entry.questions),
         ])
+    }
+
+    // MARK: Sittings, with the rules of the server's `progress/sittings.ts`
+
+    /// The set's questions she has an answer to: the invented earlier ones, and those answered here.
+    private static func answered(setID: String, questionIDs: [String], latest: [String: (status: String, at: Date)]) -> Set<String> {
+        Set(questionIDs.prefix(earlierProgress[setID]?.answered ?? 0)).union(questionIDs.filter { latest[$0] != nil })
+    }
+
+    /// The questions answered in the sitting she would continue, in the set's order, or nil when
+    /// there is nothing to continue.
+    private static func continuing(setID: String, questionIDs: [String], state: State) -> [String]? {
+        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
+        let sitting = state.sittings[setID]
+        let inSitting: Set<String>
+        if let sitting, sitting.isOpen {
+            inSitting = sitting.own.union(sitting.seeded.intersection(answered))
+        } else if answered.count == questionIDs.count || sitting?.endedByStartOver == true {
+            inSitting = []
+        } else {
+            inSitting = answered
+        }
+        let shown = questionIDs.filter(inSitting.contains)
+        return shown.isEmpty || shown.count == questionIDs.count ? nil : shown
+    }
+
+    /// The sitting an answer joins, opening one if it should. Runs before the answer is counted, so
+    /// the seed is what she had before it.
+    private static func join(_ questionID: String, setID: String, questionIDs: [String], fromReview: Bool, at date: Date, state: inout State) {
+        if var sitting = state.sittings[setID], sitting.isOpen {
+            sitting.own.insert(questionID)
+            sitting.closeIfFinished(answered: Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest), questionIDs: questionIDs)
+            state.sittings[setID] = sitting
+            return
+        }
+        guard !fromReview else { return }
+        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
+        let beginsAgain = answered.count == questionIDs.count || state.sittings[setID]?.endedByStartOver == true
+        if beginsAgain, questionIDs.first != questionID { return }
+        var sitting = FakeSitting(seeded: beginsAgain ? [] : answered, own: [questionID], startedAt: date)
+        sitting.closeIfFinished(answered: answered, questionIDs: questionIDs)
+        state.sittings[setID] = sitting
+    }
+
+    private func sittingJSON(_ setID: String, questionCount: Int) -> Any {
+        let questionIDs = (0..<questionCount).map { "\(setID)-q\($0)" }
+        return state.withLock { state -> Any in
+            guard let shown = Self.continuing(setID: setID, questionIDs: questionIDs, state: state) else { return NSNull() }
+            let sitting = state.sittings[setID].flatMap { $0.isOpen ? $0 : nil }
+            return [
+                "id": sitting.map { _ in "fake-sitting-\(setID)" } ?? NSNull(),
+                "startedAt": sitting.map { QBankJSON.formatDate($0.startedAt) } ?? NSNull(),
+                "answeredQuestionIds": shown,
+                "answers": shown.map { answerJSON($0, setID: setID, questionIDs: questionIDs, saved: state.savedAnswers[$0]) },
+            ] as [String: Any]
+        }
+    }
+
+    /// Her saved answer to a question, or the invented earlier one, as a sitting lists it.
+    private func answerJSON(_ questionID: String, setID: String, questionIDs: [String], saved: Data?) -> [String: Any] {
+        if let saved, let json = try? JSONSerialization.jsonObject(with: saved) as? [String: Any] {
+            return json.merging(["response": NSNull(), "shuffle": NSNull()]) { _, new in new }
+        }
+        let earlier = Self.earlierProgress[setID]
+        let isRight = (questionIDs.firstIndex(of: questionID) ?? 0) < (earlier?.right ?? 0)
+        return [
+            "clientAttemptId": "earlier-\(questionID)", "questionId": questionID, "status": isRight ? "correct" : "incorrect",
+            "points": isRight ? 1 : 0, "maxPoints": 1, "guessed": false,
+            "answeredAt": date(days: -(earlier?.lastAnsweredDaysAgo ?? 0)), "inReview": !isRight,
+            "label": isRight ? "Correct" : "Not correct", "pointsText": NSNull(), "ruleText": NSNull(),
+            "response": NSNull(), "shuffle": NSNull(),
+        ]
+    }
+
+    /// Ends the sitting she would continue. Every answer stays.
+    private func startOver(_ id: String) -> Reply {
+        guard find(set: id) != nil, let entry = summary(of: id) else {
+            return failure(404, "request_refused", "That set is not in the app.")
+        }
+        let questionIDs = (0..<entry.questions).map { "\(id)-q\($0)" }
+        let ended = state.withLock { state -> Bool in
+            let hadOne = Self.continuing(setID: id, questionIDs: questionIDs, state: state) != nil || state.sittings[id]?.isOpen == true
+            if hadOne {
+                var sitting = state.sittings[id] ?? FakeSitting(seeded: [], own: [], startedAt: now)
+                sitting.isOpen = false
+                sitting.endedByStartOver = true
+                state.sittings[id] = sitting
+            }
+            return hadOne
+        }
+        keepAnswers()
+        return (200, ["ended": ended])
+    }
+
+    /// Writes what her answers left, for a test that comes back after killing the app.
+    private func keepAnswers() {
+        guard let answersFile else { return }
+        let kept = state.withLock { state in
+            KeptAnswers(
+                attempts: state.attempts, latest: state.latest.mapValues { KeptAnswers.Latest(status: $0.status, at: $0.at) },
+                savedAnswers: state.savedAnswers, sittings: state.sittings
+            )
+        }
+        guard let data = try? JSONEncoder().encode(kept) else { return }
+        try? FileManager.default.createDirectory(at: answersFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: answersFile, options: .atomic)
+    }
+
+    /// Reads what an earlier launch wrote.
+    private func readKeptAnswers() {
+        guard let answersFile, let data = try? Data(contentsOf: answersFile),
+              let kept = try? JSONDecoder().decode(KeptAnswers.self, from: data) else { return }
+        state.withLock { state in
+            state.attempts = kept.attempts
+            state.latest = kept.latest.mapValues { (status: $0.status, at: $0.at) }
+            state.savedAnswers = kept.savedAnswers
+            state.sittings = kept.sittings
+        }
     }
 
     /// The course and folder a current set is in.
@@ -1074,6 +1225,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         let answeredAt = Date.now
         // Question ids are "<set id>-q<index>".
         let setID = submission.questionId.split(separator: "-").dropLast().joined(separator: "-")
+        let questionIDs = (0..<(summary(of: setID)?.questions ?? 0)).map { "\(setID)-q\($0)" }
         let saved: [String: Any] = [
             "clientAttemptId": submission.clientAttemptId, "questionId": submission.questionId,
             "courseId": find(set: setID)?.courseID ?? Self.mentalHealthID,
@@ -1087,8 +1239,11 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         let status = score.status.rawValue
         state.withLock { state in
             state.attempts[submission.clientAttemptId] = record
+            state.savedAnswers[submission.questionId] = record
+            Self.join(submission.questionId, setID: setID, questionIDs: questionIDs, fromReview: submission.fromReview ?? false, at: answeredAt, state: &state)
             state.latest[submission.questionId] = (status, answeredAt)
         }
+        keepAnswers()
         if let (weekLabel, setTitle) = placeOf(questionID: submission.questionId) {
             study.practiced(
                 questionID: submission.questionId, courseID: Self.mentalHealthID, score: score,
@@ -1348,5 +1503,37 @@ private nonisolated struct FakeSubmission: Decodable {
     let guessed: Bool
     let shuffle: Layout?
     let studySessionId: String?
+    let fromReview: Bool?
+}
+
+/// A set's latest sitting: open, or closed when she finished it or chose Start over.
+private nonisolated struct FakeSitting: Codable {
+    var isOpen = true
+    var endedByStartOver = false
+    /// The answers it opened with.
+    let seeded: Set<String>
+    /// The questions answered in it.
+    var own: Set<String>
+    let startedAt: Date
+
+    /// Closes it once it has an answer to every question.
+    mutating func closeIfFinished(answered: Set<String>, questionIDs: [String]) {
+        if own.union(seeded.intersection(answered)).isSuperset(of: questionIDs) {
+            isOpen = false
+        }
+    }
+}
+
+/// What `FakeQBankServer` keeps of her answers between launches.
+private nonisolated struct KeptAnswers: Codable {
+    struct Latest: Codable {
+        let status: String
+        let at: Date
+    }
+
+    let attempts: [String: Data]
+    let latest: [String: Latest]
+    let savedAnswers: [String: Data]
+    let sittings: [String: FakeSitting]
 }
 #endif
