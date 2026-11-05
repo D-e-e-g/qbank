@@ -153,6 +153,16 @@ public struct QBankClient: Sendable {
         try await send(Request(.post, "/api/practice-sets/\(id)/restore"))
     }
 
+    /// Ends the sitting she would continue, so the set opens at question 1. Every answer stays saved
+    /// and still counts. Asking with nothing to end changes nothing.
+    ///
+    /// - Returns: Whether there was a sitting to end.
+    @discardableResult
+    public func startPracticeSetOver(id: String) async throws(QBankError) -> Bool {
+        let result: StartOverResult = try await send(Request(.post, "/api/practice-sets/\(id)/start-over"))
+        return result.ended
+    }
+
     // MARK: Import
 
     /// Checks a question file without importing it: its counts and formats, or the errors that
@@ -712,6 +722,11 @@ public struct QBankClient: Sendable {
         let retryAfter = body.retryAfterSeconds ?? response.value(forHTTPHeaderField: "Retry-After").flatMap { Int($0) }
         return .server(ServerError(status: status, code: .init(rawValue: body.error), message: body.message, retryAfterSeconds: retryAfter))
     }
+}
+
+/// The body of `POST /api/practice-sets/{id}/start-over`'s answer: whether a sitting was open to end.
+private struct StartOverResult: Decodable {
+    let ended: Bool
 }
 
 /// The body of `PUT /api/courses/{id}/folder-order`'s answer: one list's folders in the new order.

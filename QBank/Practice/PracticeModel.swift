@@ -8,9 +8,15 @@ import QBankKit
 /// and after the last question the result. Without a connection a set comes from the phone, and
 /// Check answer keeps the answer on the phone to send later and shows the score the phone gives
 /// it, with the server's rules. The Review list is chosen by the server, so it needs a connection.
+///
+/// A set she left midway opens at the first question she has not answered, from its sitting on the
+/// server and the answers still waiting on the phone, and the answers she already checked count in
+/// the result. The server closes the sitting once every question has an answer, so a finished set
+/// opens at question 1. Review and samples have no sitting.
 @Observable
 final class PracticeModel {
-    /// Her work on one question during this run.
+    /// Her work on one question during this run. A question she answered earlier in the sitting
+    /// comes with her answer's id and verdict.
     struct Attempt: Equatable {
         /// The order she sees the choices in, made once per opening and saved with the answer.
         let layout: Layout
@@ -25,6 +31,14 @@ final class PracticeModel {
         var feedback: Feedback?
 
         var score: Score? { feedback?.score }
+    }
+
+    /// Where a set she left midway picked up, for the line under the title.
+    struct PickedUp: Equatable {
+        /// 1-based, the question it opened at.
+        let number: Int
+        /// When she last answered in the set, or nil when the sitting says nothing of it.
+        let lastAnsweredAt: Date?
     }
 
     enum Phase: Equatable {
@@ -48,8 +62,14 @@ final class PracticeModel {
     private(set) var questions: [Question] = []
     private(set) var attempts: [Attempt] = []
     private(set) var index = 0
+    /// The questions she answered before this opening, which the run does not ask again.
+    private(set) var answeredEarlier: Set<String> = []
+    /// Set while she is still on the question a set picked up at.
+    private(set) var pickedUp: PickedUp?
     /// True while Check answer is sending.
     private(set) var isChecking = false
+    /// True while Start over is asking QBank.
+    private(set) var isStartingOver = false
     /// Why the last Check answer did not go through.
     private(set) var problem: String?
     private(set) var startedAt: Date?
@@ -100,7 +120,12 @@ final class PracticeModel {
     }
 
     var isRevealed: Bool { attempt?.score != nil }
-    var isLast: Bool { index == questions.count - 1 }
+    var isLast: Bool { nextIndex == nil }
+
+    /// The next question she has not answered, after the current one.
+    private var nextIndex: Int? {
+        questions.indices.first { $0 > index && !answeredEarlier.contains(questions[$0].id) }
+    }
 
     /// Whether the current answer is checked and waits on the phone to be sent.
     var isWaitingToSend: Bool {
@@ -114,10 +139,17 @@ final class PracticeModel {
     /// "3 of 17".
     var countText: String { "\(index + 1) of \(questions.count)" }
 
-    /// Questions done, counting this one once it is checked.
+    /// Questions done, counting this one once it is checked and the ones she answered earlier.
     var progress: Double {
         guard !questions.isEmpty else { return 0 }
-        return Double(index + (isRevealed ? 1 : 0)) / Double(questions.count)
+        return Double(answeredCount) / Double(questions.count)
+    }
+
+    /// The questions with an answer in this sitting, this run's and the earlier ones.
+    var answeredCount: Int {
+        zip(questions, attempts).count { question, attempt in
+            attempt.score != nil || answeredEarlier.contains(question.id)
+        }
     }
 
     /// Whether Check answer can be pressed: every required part is filled in and nothing is sending.
@@ -133,7 +165,8 @@ final class PracticeModel {
             isReview: isReview,
             questions: questions,
             attempts: attempts,
-            elapsed: (finishedAt ?? startedAt).timeIntervalSince(startedAt)
+            // This opening's time would say little of a set she answered over several nights.
+            elapsed: answeredEarlier.isEmpty ? (finishedAt ?? startedAt).timeIntervalSince(startedAt) : nil
         )
     }
 
@@ -144,6 +177,8 @@ final class PracticeModel {
             phase = .readOnly
             return
         }
+        // Read before asking QBank: an answer may reach it after its reply was written.
+        let waitingBefore = app.offline?.waiting ?? []
         do {
             let loaded = switch source {
             case .set(let id):
@@ -161,7 +196,7 @@ final class PracticeModel {
                 phase = .failed("That set is not in this course.")
                 return
             }
-            begin(loaded)
+            begin(await countingWaiting(waitingBefore, in: loaded))
         } catch {
             if app.handle(error) { return }
             if case .transport = error, !isReview, !isSample {
@@ -181,14 +216,47 @@ final class PracticeModel {
         return PracticeSet(id: jobID, courseID: courseID, title: "Sample \(index + 1)", questions: [samples.questions[index]])
     }
 
+    /// A set with the answers waiting on the phone counted in its sitting. The copy saved on the phone
+    /// keeps them, so her place holds once they are sent and the signal goes again.
+    private func countingWaiting(_ waitingBefore: [PendingAttempt], in set: PracticeSet) async -> PracticeSet {
+        guard case .set = source, let offline = app.offline else { return set }
+        let later = offline.waiting.filter { attempt in !waitingBefore.contains { $0.id == attempt.id } }
+        let counted = set.counting(waiting: waitingBefore + later)
+        if counted != set {
+            await offline.keep(counted)
+        }
+        return counted
+    }
+
     private func begin(_ loaded: PracticeSet) {
         practiceSet = loaded
         questions = loaded.questions.sorted { $0.position < $1.position }
+        let answered = Set(loaded.sitting?.answeredQuestionIDs ?? [])
+        // Every question answered is a finished set, which opens fresh.
+        let place = answered.isEmpty ? nil : questions.firstIndex { !answered.contains($0.id) }
+        let answers = place == nil ? [:] : Dictionary((loaded.sitting?.answers ?? []).map { ($0.questionID, $0) }) { _, latest in latest }
         attempts = questions.map { question in
             let layout = makeLayout(question.body)
-            return Attempt(layout: layout, draft: AnswerDraft(body: question.body, layout: layout), clientAttemptID: newAttemptID())
+            let answer = answers[question.id]
+            return Attempt(
+                layout: layout,
+                draft: AnswerDraft(body: question.body, layout: layout),
+                guessed: answer?.guessed ?? false,
+                clientAttemptID: answer?.clientAttemptID ?? newAttemptID(),
+                feedback: answer.map(Feedback.init)
+            )
         }
-        index = 0
+        if let place {
+            answeredEarlier = answered
+            index = place
+            pickedUp = PickedUp(number: place + 1, lastAnsweredAt: answers.values.map(\.answeredAt).max())
+        } else {
+            practiceSet?.sitting = nil
+            answeredEarlier = []
+            index = 0
+            pickedUp = nil
+        }
+        problem = nil
         startedAt = now()
         finishedAt = nil
         phase = .answering
@@ -244,7 +312,8 @@ final class PracticeModel {
             questionID: question.id,
             response: response,
             guessed: attempt.guessed,
-            shuffle: attempt.layout
+            shuffle: attempt.layout,
+            fromReview: isReview
         )
         let feedback: Feedback
         do {
@@ -269,14 +338,55 @@ final class PracticeModel {
         }
         guard attempts.indices.contains(checking), attempts[checking].score == nil else { return }
         attempts[checking].feedback = feedback
+        await keepPlace(question: question, attempt: attempts[checking])
     }
 
-    /// The next question, or the set result after the last one.
+    /// Keeps a checked answer in the set's copy on the phone, so the set opens past it even when QBank
+    /// cannot be reached next time.
+    private func keepPlace(question: Question, attempt: Attempt) async {
+        guard case .set = source, let practiceSet, let feedback = attempt.feedback, let offline = app.offline else { return }
+        let counted = practiceSet.counting(SittingAnswer(
+            clientAttemptID: attempt.clientAttemptID, questionID: question.id, feedback: feedback,
+            guessed: attempt.guessed, answeredAt: now()
+        ))
+        self.practiceSet = counted
+        await offline.keep(counted)
+    }
+
+    /// Ends the sitting and opens the set again at question 1. Every answer stays saved and still
+    /// counts. QBank must have what she answered first, or it would count in the new sitting, so this
+    /// needs a connection. A failure leaves her where she was, and says why.
+    func startOver() async {
+        guard case .set(let id) = source, let practiceSet, !isChecking, !isStartingOver else { return }
+        problem = nil
+        isStartingOver = true
+        defer { isStartingOver = false }
+        do throws(QBankError) {
+            if let offline = app.offline, !offline.waiting.isEmpty {
+                let report = await offline.send()
+                guard offline.waiting.isEmpty else {
+                    throw report.stoppedBy ?? QBankError.transport(.notConnectedToInternet)
+                }
+            }
+            try await app.client.startPracticeSetOver(id: id)
+        } catch {
+            if error == .cancelled || app.handle(error) { return }
+            problem = "Could not start over. Check your connection and try again."
+            return
+        }
+        var fresh = practiceSet
+        fresh.sitting = nil
+        await app.offline?.keep(fresh)
+        begin(fresh)
+    }
+
+    /// The next question she has not answered, or the set result after the last one.
     func next() {
-        guard isRevealed else { return }
-        if index < questions.count - 1 {
+        guard isRevealed || attempt?.draft == .unsupported else { return }
+        pickedUp = nil
+        if let nextIndex {
             problem = nil
-            index += 1
+            index = nextIndex
         } else if phase == .answering {
             finishedAt = now()
             phase = .finished

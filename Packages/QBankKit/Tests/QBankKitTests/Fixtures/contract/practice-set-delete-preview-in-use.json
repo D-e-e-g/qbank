@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c033890813f6a2c76a23688d2cf457fdd0ae7d62",
+  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703/delete-preview",
@@ -53,7 +53,7 @@
         "body": "Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days."
       },
       "refusal": "An exam in progress asks questions from Heart A exam. Finish or leave that exam first.",
-      "confirm": "3ca81ca09427999e",
+      "confirm": "ca6e4426b337a196",
       "undoDays": 30
     }
   }

@@ -531,12 +531,25 @@ public struct PracticeSetSummary: Codable, Sendable, Equatable, Identifiable {
     /// The agent key that imported this version of the set, or nil when she imported it in the app,
     /// QBank made it, or it came from a server or a saved copy from before agent keys.
     public let importedByAgent: ImportingAgent?
+    /// What she would continue, the row's "7 of 12 answered · Continue". Nil when there is nothing to
+    /// continue, and from a server or a saved copy from before sittings: the row reads as it always did.
+    public internal(set) var sitting: Sitting?
+
+    /// The sitting a row shows.
+    public struct Sitting: Codable, Sendable, Equatable {
+        /// Questions of the set answered in this sitting.
+        public let answeredCount: Int
+
+        public init(answeredCount: Int) {
+            self.answeredCount = answeredCount
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, questionCount, importedAt, activeSince, status, canRestore
         case answeredCount, fullyRightCount, lastAnsweredAt
         case questionIDs = "questionIds"
-        case importedByAgent
+        case importedByAgent, sitting
     }
 }
 

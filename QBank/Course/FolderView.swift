@@ -262,7 +262,7 @@ private struct SelectRow: View {
                     .font(.title2)
                     .foregroundStyle(.qbank(isSelected ? .tint : .separatorStrong))
                     .accessibilityHidden(true)
-                SetText(set: set, isStudent: isStudent)
+                SetText(set: set, isStudent: isStudent, opens: false)
             }
             .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
             .padding(.vertical, 10)
@@ -321,7 +321,7 @@ private struct SetRow: View {
 
     private func label(showsChevron: Bool) -> some View {
         HStack(spacing: QBankSpacing.space4) {
-            SetText(set: set, isStudent: isStudent)
+            SetText(set: set, isStudent: isStudent, opens: isStudent)
             if showsChevron {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
@@ -342,6 +342,8 @@ private struct SetRow: View {
 private struct SetText: View {
     let set: PracticeSetSummary
     let isStudent: Bool
+    /// Whether tapping the row opens the set, the only row that says Continue.
+    let opens: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -349,9 +351,15 @@ private struct SetText: View {
                 .qbankFont(.callout, weight: .semibold)
                 .foregroundStyle(.qbank(.text1))
                 .multilineTextAlignment(.leading)
-            QBankDetailText(Wording.status(set))
-                .qbankFont(.subheadline)
-                .foregroundStyle(.qbank(.text2))
+            Group {
+                if opens, let answered = Wording.continuing(set) {
+                    ContinueText(answered: answered)
+                } else {
+                    QBankDetailText(Wording.status(set, opens: opens))
+                }
+            }
+            .qbankFont(.subheadline)
+            .foregroundStyle(.qbank(.text2))
             if set.importedByAgent != nil {
                 Text(AgentWording.importedBy(isStudent: isStudent))
                     .qbankFont(.subheadline)
@@ -359,6 +367,27 @@ private struct SetText: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// "7 of 12 answered · Continue", with Continue in the tint: on one line when it fits, otherwise one
+/// part per line, as `QBankDetailText` lays out a line.
+private struct ContinueText: View {
+    let answered: String
+
+    private var word: Text {
+        Text(Wording.continueWord)
+            .fontWeight(.semibold)
+            .foregroundStyle(.qbank(.tint))
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Text("\(answered) · \(word)")
+                .lineLimit(1)
+            Text("\(answered)\n\(word)")
+                .accessibilityLabel("\(answered) · \(Wording.continueWord)")
+        }
     }
 }
 

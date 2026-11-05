@@ -137,8 +137,12 @@ nonisolated enum Wording {
         return minutes.rounded() == minutes ? "\(Int(minutes)) min" : String(format: "%.1f min", minutes)
     }
 
-    /// A set's line on the Course screen: when it arrived, how far she got, or how it went.
-    static func status(_ set: PracticeSetSummary, now: Date = .now) -> String {
+    /// A set's line on the Course screen: when it arrived, how far she got, or how it went. Continue
+    /// shows only on a row that opens the set.
+    static func status(_ set: PracticeSetSummary, opens: Bool = true, now: Date = .now) -> String {
+        if opens, let answered = continuing(set) {
+            return "\(answered) · \(continueWord)"
+        }
         if set.answeredCount == 0 {
             let word = switch set.status {
             case .imported: "Imported"
@@ -152,6 +156,30 @@ nonisolated enum Wording {
             return "Done \(when(finished, now: now)) · \(set.fullyRightCount) of \(set.questionCount) fully right"
         }
         return "\(set.answeredCount) of \(set.questionCount) answered"
+    }
+
+    /// The word that says a set opens where she left it.
+    static let continueWord = "Continue"
+
+    /// How far a set she can continue has got: "7 of 12 answered". Nil when there is nothing to continue.
+    static func continuing(_ set: PracticeSetSummary) -> String? {
+        set.sitting.map { "\($0.answeredCount) of \(set.questionCount) answered" }
+    }
+
+    /// The line under a set's title when it opens where she left it: "Picked up at 8 · 7 answered
+    /// earlier", or "Picked up at 8 · last answered Oct 20" for a set left on another day.
+    static func pickedUp(at number: Int, answeredEarlier: Int, lastAnsweredAt: Date?, now: Date = .now, calendar: Calendar = .current) -> String {
+        if let lastAnsweredAt, !calendar.isDate(lastAnsweredAt, inSameDayAs: now) {
+            return "Picked up at \(number) · last answered \(when(lastAnsweredAt, now: now, calendar: calendar))"
+        }
+        return "Picked up at \(number) · \(answeredEarlier) answered earlier"
+    }
+
+    /// What Start over asks once: "Your 7 answers stay saved and still count. The set begins again
+    /// at question 1."
+    static func startOverMessage(answers: Int) -> String {
+        let saved = answers == 1 ? "stays saved and still counts" : "stay saved and still count"
+        return "Your \(count(answers, "answer")) \(saved). The set begins again at question 1."
     }
 
     /// The folders an exam covers, by name: "First Pass, Second Pass". Folders named plainly
@@ -211,6 +239,13 @@ nonisolated enum Wording {
         case .cloze: "Drop-down"
         case nil: "Question"
         }
+    }
+
+    /// A set result's points and how long it took: "15 of 22 points · 24 min", or only the points for
+    /// a set she picked up where she left it.
+    static func resultPoints(_ result: PracticeResult) -> String {
+        let points = "\(result.points) of \(result.maxPoints) points"
+        return result.elapsed.map { "\(points) · \(duration($0))" } ?? points
     }
 
     /// How long a run took: "45 sec" under a minute, then whole minutes, "1 min", "24 min".

@@ -55,6 +55,39 @@ final class IPadUITests: XCTestCase {
         XCTAssertTrue(mentalHealth.isHittable)
     }
 
+    /// A set she left midway picks up at its first unanswered question, its line in the reading
+    /// column, and Start over asks once.
+    @MainActor
+    func testASetPicksUpWhereSheLeftIt() throws {
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Weeks 1-3")
+        let row = app.buttons["course.set.Mixed Clinical Judgment"]
+        tapVisible(row, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 10))
+        tapVisible(app.buttons["practice.option.0"], in: app)
+        app.buttons["practice.check"].tap()
+        XCTAssertTrue(app.buttons["practice.next"].appears(timeout: 10))
+        app.buttons["practice.close"].tap()
+
+        XCTAssertTrue(row.appears(timeout: 10))
+        waitForLabel(row, containing: "1 of 8 answered · Continue")
+        attachLooks(app, "iPad set progress, the row")
+        tapVisible(row, in: app)
+        let line = app.staticTexts["practice.pickedUp"]
+        XCTAssertTrue(line.appears(timeout: 10))
+        XCTAssertEqual(line.label, "Picked up at 2 · 1 answered earlier")
+        expectReadingColumn(line)
+        attachLooks(app, "iPad set progress, the line")
+
+        app.buttons["practice.startOver"].tap()
+        XCTAssertTrue(app.staticTexts["practice.startOverSheet.title"].appears(timeout: 5))
+        attach(app, "iPad set progress, Start over asks once")
+        app.buttons["practice.startOverSheet.confirm"].tap()
+        XCTAssertTrue(line.disappears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("1 of 8"), app.staticTexts["practice.count"].label)
+    }
+
     /// Deleting the course open beside the list closes it, and Recently deleted opens beside the
     /// list and brings it back.
     @MainActor
@@ -210,7 +243,16 @@ final class IPadUITests: XCTestCase {
 
                 openFolder(app, "Weeks 1-3")
                 tapVisible(app.buttons["course.set.Mixed Clinical Judgment"], in: app)
-                XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 10))
+                XCTAssertTrue(app.staticTexts["practice.stem"].appears(timeout: 10))
+                // The set opens past the answer of the pass before, so each pass begins it again.
+                if app.buttons["practice.startOver"].exists {
+                    attach(app, "ipad practice picked up, \(tag)")
+                    app.buttons["practice.startOver"].tap()
+                    XCTAssertTrue(app.staticTexts["practice.startOverSheet.title"].appears(timeout: 5))
+                    attach(app, "ipad start over, \(tag)")
+                    tapWhenStill(app.buttons["practice.startOverSheet.confirm"])
+                    XCTAssertTrue(app.buttons["practice.startOver"].disappears(timeout: 5))
+                }
                 attach(app, "ipad practice, \(tag)")
                 tapVisible(app.buttons["practice.option.0"], in: app)
                 app.buttons["practice.check"].tap()

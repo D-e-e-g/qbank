@@ -19,6 +19,8 @@ public struct AttemptSubmission: Codable, Sendable, Equatable, Hashable {
     public let shuffle: Layout?
     /// The running exam's id, for an exam answer.
     public let studySessionID: String?
+    /// Given in the Review runner: it never begins a set's sitting.
+    public let fromReview: Bool
 
     public init(
         clientAttemptID: String = AttemptSubmission.newID(),
@@ -26,7 +28,8 @@ public struct AttemptSubmission: Codable, Sendable, Equatable, Hashable {
         response: AnswerResponse,
         guessed: Bool = false,
         shuffle: Layout? = nil,
-        studySessionID: String? = nil
+        studySessionID: String? = nil,
+        fromReview: Bool = false
     ) {
         self.clientAttemptID = clientAttemptID
         self.questionID = questionID
@@ -34,7 +37,11 @@ public struct AttemptSubmission: Codable, Sendable, Equatable, Hashable {
         self.guessed = guessed
         self.shuffle = shuffle
         self.studySessionID = studySessionID
+        self.fromReview = fromReview
     }
+
+    /// Whether a set's sitting takes this answer as she gave it there: not an exam's, not Review's.
+    var joinsASitting: Bool { studySessionID == nil && !fromReview }
 
     /// A new lowercase UUID, the form the server stores.
     public static func newID() -> String {
@@ -42,10 +49,22 @@ public struct AttemptSubmission: Codable, Sendable, Equatable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case response, guessed, shuffle
+        case response, guessed, shuffle, fromReview
         case clientAttemptID = "clientAttemptId"
         case questionID = "questionId"
         case studySessionID = "studySessionId"
+    }
+
+    /// An answer left waiting by a version from before `fromReview` still reads.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        clientAttemptID = try container.decode(String.self, forKey: .clientAttemptID)
+        questionID = try container.decode(String.self, forKey: .questionID)
+        response = try container.decode(AnswerResponse.self, forKey: .response)
+        guessed = try container.decode(Bool.self, forKey: .guessed)
+        shuffle = try container.decodeIfPresent(Layout.self, forKey: .shuffle)
+        studySessionID = try container.decodeIfPresent(String.self, forKey: .studySessionID)
+        fromReview = try container.decodeIfPresent(Bool.self, forKey: .fromReview) ?? false
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -56,6 +75,9 @@ public struct AttemptSubmission: Codable, Sendable, Equatable, Hashable {
         try container.encode(guessed, forKey: .guessed)
         try container.encodeIfPresent(shuffle, forKey: .shuffle)
         try container.encodeIfPresent(studySessionID, forKey: .studySessionID)
+        if fromReview {
+            try container.encode(true, forKey: .fromReview)
+        }
     }
 }
 

@@ -18,7 +18,10 @@ import QBankKit
 ///   launch, to check that a setting survives a relaunch.
 /// - `QB_UITEST_KEEP_PHONE_DATA`: `1` keeps the courses saved and the answers
 ///   left waiting by the previous launch, to check that they survive a relaunch.
-///   The fake server starts afresh either way.
+///   The fake server starts afresh either way, unless:
+/// - `QB_UITEST_KEEP_SERVER_ANSWERS`: `1` keeps the answers and sittings the fake
+///   server saved in the previous launch, to check that a set still opens where
+///   she left it after the app is killed.
 /// - `QB_UITEST_NETWORK`: `offline` starts without a network; absent or
 ///   `online` starts with one.
 /// - `QB_UITEST_DEVICE_OWNER`: how the device answers the Face ID lock, one of
@@ -37,6 +40,7 @@ nonisolated enum DebugLaunchScenario {
     static let scenarioKey = "QB_UITEST_SCENARIO"
     static let keepPhoneSettingsKey = "QB_UITEST_KEEP_PHONE_SETTINGS"
     static let keepPhoneDataKey = "QB_UITEST_KEEP_PHONE_DATA"
+    static let keepServerAnswersKey = "QB_UITEST_KEEP_SERVER_ANSWERS"
     static let networkKey = "QB_UITEST_NETWORK"
     static let deviceOwnerKey = "QB_UITEST_DEVICE_OWNER"
     static let defaultsSuite = "com.dimitrygallego.qbank.uitest"
@@ -128,7 +132,9 @@ nonisolated enum DebugLaunchScenario {
         }
         guard let scenario else { return nil }
         let defaults = phoneSettings(keep: environment[keepPhoneSettingsKey] == "1")
-        let storage = phoneData(in: phoneFolder ?? defaultPhoneFolder, keep: environment[keepPhoneDataKey] == "1")
+        let folder = phoneFolder ?? defaultPhoneFolder
+        let storage = phoneData(in: folder, keep: environment[keepPhoneDataKey] == "1")
+        let answersFile = serverAnswers(beside: folder, keep: environment[keepServerAnswersKey] == "1")
         let isOnline = environment[networkKey] != "offline"
         let owner: DeviceOwner = deviceOwner(deviceOwnerKind(in: environment))
         switch scenario {
@@ -136,7 +142,8 @@ nonisolated enum DebugLaunchScenario {
             return model(server: FakeQBankServer(signedIn: false), session: nil, defaults: defaults, storage: storage, isOnline: isOnline, owner: owner)
         case .signedIn, .examInProgress:
             return model(
-                server: FakeQBankServer(signedIn: true, examInProgress: scenario == .examInProgress), session: FakeQBankServer.storedStudentSession(),
+                server: FakeQBankServer(signedIn: true, examInProgress: scenario == .examInProgress, answersFile: answersFile),
+                session: FakeQBankServer.storedStudentSession(),
                 defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )
         case .maker, .makerNotSetUp:
@@ -157,6 +164,16 @@ nonisolated enum DebugLaunchScenario {
             try? FileManager.default.removeItem(at: folder)
         }
         return .files(root: folder)
+    }
+
+    /// The file the fake server keeps her answers in, beside the phone's folder and so apart from it,
+    /// emptied unless kept.
+    static func serverAnswers(beside folder: URL, keep: Bool) -> URL {
+        let file = folder.deletingLastPathComponent().appendingPathComponent("\(folder.lastPathComponent)-server-answers.json")
+        if !keep {
+            try? FileManager.default.removeItem(at: file)
+        }
+        return file
     }
 
     /// The scenario's own defaults suite, so a test never sees the developer's settings or

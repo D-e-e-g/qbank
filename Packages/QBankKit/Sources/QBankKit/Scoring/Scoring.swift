@@ -68,6 +68,14 @@ public struct Feedback: Sendable, Equatable {
         ruleText = saved.ruleText
     }
 
+    /// The server's score and words for an answer of a set's sitting.
+    public init(_ answer: SittingAnswer) {
+        score = Score(points: answer.points, maxPoints: answer.maxPoints, status: answer.status, answered: true)
+        label = answer.label
+        pointsText = answer.pointsText
+        ruleText = answer.ruleText
+    }
+
     /// The phone's words for a score it gave, worded as the server words them.
     public init(phone score: Score, type: QuestionType?) {
         self.score = score

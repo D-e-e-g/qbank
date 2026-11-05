@@ -404,8 +404,13 @@ struct ContentContractTests {
         let set = try Fixture.load("practice-set").decodeBody(PracticeSet.self)
         let again = try QBankJSON.decoder.decode(PracticeSet.self, from: QBankJSON.encoder.encode(set))
         #expect(again == set)
-        let original = try Fixture.load("practice-set").response.body
-        #expect(try JSONDecoder().decode(JSONValue.self, from: QBankJSON.encoder.encode(set)) == original)
+        // The copy leaves out the server's `sitting: null`, which reads back the same.
+        guard case .object(var original) = try Fixture.load("practice-set").response.body else {
+            Issue.record("Expected an object")
+            return
+        }
+        #expect(original.removeValue(forKey: "sitting") == .null)
+        #expect(try JSONDecoder().decode(JSONValue.self, from: QBankJSON.encoder.encode(set)) == .object(original))
     }
 }
 

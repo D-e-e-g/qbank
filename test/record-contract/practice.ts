@@ -6,7 +6,7 @@ import { everyFormat, plain, question, source } from "./content";
 import { STUDENT, World, expect, type CallInit, type Json } from "./world";
 
 export async function recordPractice(): Promise<World[]> {
-  return [await studying(), await restoring()];
+  return [await studying(), await restoring(), await continuing()];
 }
 
 async function studying(): Promise<World> {
@@ -143,6 +143,55 @@ async function restoring(): Promise<World> {
   const restored = await world.record("practice-set-restore", `/api/practice-sets/${current}/restore`, 200, { method: "POST" });
   expect(restored.str("status") === "restored" && restored.num("questionCount") === 2, "the earlier version did not come back", restored.value);
   await world.record("practice-set-restore-not-current", `/api/practice-sets/${current}/restore`, 404, { method: "POST" });
+  await world.close();
+  return world;
+}
+
+/**
+ * A set she left midway. A Review answer leaves a set with an answer and no sitting row, the shape a
+ * set she was midway through before sittings has, so its sitting has no id yet. Her next answer saves
+ * the sitting, and Start over ends it.
+ */
+async function continuing(): Promise<World> {
+  const world = await World.boot(18);
+  await world.account(STUDENT, "synthetic-session-token");
+  const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
+  const course = await world.ok("/api/courses", 201, { method: "POST", json: { semesterId: semester.str("id"), code: "NURS 101", title: "Invented Nursing Basics" } });
+  const courseId = course.str("id");
+  const imported = await world.ok("/api/imports", 201, {
+    method: "POST",
+    json: { source: source("Week 1 - Set 1: Invented basics", [plain("Q1", "Invented topic 1"), plain("Q2", "Invented topic 2"), plain("Q3", "Invented topic 3")]), courseId, folderName: "Week 1", decision: "import" },
+  });
+  const setId = imported.str("setId");
+  const setPath = `/api/practice-sets/${setId}`;
+  const set = await world.ok(setPath, 200);
+  const id = (publicId: string) => set.find("questions", "publicId", publicId).str("id");
+  const answer = (clientAttemptId: string, publicId: string, extra: Record<string, Json> = {}): CallInit => ({
+    method: "POST",
+    json: { clientAttemptId, questionId: id(publicId), response: { type: "single", choice: 0 }, guessed: false, shuffle: { kind: "options", order: [1, 0, 2] }, ...extra },
+  });
+
+  await world.record("attempt-from-review", "/api/attempts", 201, answer("aaaaaaaa-1111-4111-8111-111111111111", "Q1", { fromReview: true }));
+  const dayOne = await world.record("practice-set-sitting-day-one", setPath, 200);
+  expect(dayOne.get("sitting").get("id").value === null, "a set with answers and no sitting row read as saved", dayOne.value);
+  await world.record("course-sitting-day-one", `/api/courses/${courseId}`, 200);
+
+  await world.record("attempt-opens-sitting", "/api/attempts", 201, answer("bbbbbbbb-2222-4222-8222-222222222222", "Q2"));
+  const midway = await world.record("practice-set-sitting", setPath, 200);
+  expect(midway.get("sitting").get("id").value !== null, "her answer did not save the sitting", midway.value);
+  await world.record("course-sitting", `/api/courses/${courseId}`, 200);
+
+  const ended = await world.record("practice-set-start-over", `${setPath}/start-over`, 200, { method: "POST" });
+  expect(ended.get("ended").value === true, "Start over ended nothing", ended.value);
+  const again = await world.record("practice-set-start-over-nothing", `${setPath}/start-over`, 200, { method: "POST" });
+  expect(again.get("ended").value === false, "a second Start over ended something", again.value);
+  await world.record("practice-set-start-over-not-found", "/api/practice-sets/00000000-0000-4000-8000-000000000000/start-over", 404, { method: "POST" });
+  await world.record("practice-set-after-start-over", setPath, 200);
+  await world.record("course-after-start-over", `/api/courses/${courseId}`, 200);
+
+  world.name(semester.str("id"), "5e000000-0000-4000-8000-000000000301");
+  world.name(courseId, "c0000000-0000-4000-8000-000000000301");
+  world.name(setId, "5e700000-0000-4000-8000-000000000301");
   await world.close();
   return world;
 }

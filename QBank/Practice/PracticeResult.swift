@@ -47,13 +47,13 @@ nonisolated struct PracticeResult: Equatable {
     let guessed: Int
     let points: Int
     let maxPoints: Int
-    /// How long the run took, in seconds.
-    let elapsed: TimeInterval
+    /// How long the run took, in seconds. Nil for a set she picked up where she left it.
+    let elapsed: TimeInterval?
     /// In the order the steps first appear in the set.
     let steps: [Step]
     let rows: [Row]
 
-    init(title: String, isReview: Bool = false, questions: [Question], attempts: [PracticeModel.Attempt], elapsed: TimeInterval) {
+    init(title: String, isReview: Bool = false, questions: [Question], attempts: [PracticeModel.Attempt], elapsed: TimeInterval?) {
         let verdicts = questions.indices.map { attempts.indices.contains($0) ? attempts[$0].feedback : nil }
         let scores = verdicts.map { $0?.score }
         let guesses = questions.indices.map { attempts.indices.contains($0) && attempts[$0].guessed }
