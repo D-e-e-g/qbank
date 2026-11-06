@@ -134,6 +134,19 @@ final class ExamPageDeletionUITests: XCTestCase {
         attachLooks(app, "recently deleted, exam page name taken")
     }
 
+    /// The owner's view is read-only: More is there, with Edit page, and Delete page is not in it.
+    @MainActor
+    func testTheOwnersViewOfAnExamPageOffersNoDeletePage() throws {
+        let app = launch("owner")
+        XCTAssertTrue(app.buttons["home.course.NURS 310"].appears(timeout: 10))
+        open(app.buttons["home.course.NURS 310"], titled: "NURS 310", in: app)
+        open(app.buttons["course.page.Exam 1"], titled: "Exam 1", in: app)
+        app.buttons["page.more"].tap()
+        XCTAssertTrue(menuItem(app, "page.more.editPage", "Edit page").appears(timeout: 5))
+        XCTAssertFalse(menuItem(app, "page.more.delete", "Delete page").exists)
+        attach(app, "owner's view, exam page More")
+    }
+
     /// Opens an exam page from the course page, then Delete page in its More.
     @MainActor
     private func openDelete(_ app: XCUIApplication, _ page: String) {

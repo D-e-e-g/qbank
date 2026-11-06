@@ -85,6 +85,8 @@ nonisolated enum DebugLaunchScenario {
         /// `FakeQBankServer.maker` is signed in, but the server has no Claude key, so making
         /// questions is not set up yet.
         case makerNotSetUp = "maker-not-set-up"
+        /// `FakeQBankServer.owner` is signed in, in the owner's read-only view, on Home.
+        case owner = "owner"
     }
 
     struct UnknownScenario: Error, CustomStringConvertible {
@@ -150,6 +152,11 @@ nonisolated enum DebugLaunchScenario {
             return model(
                 server: FakeQBankServer(signedIn: true, as: FakeQBankServer.maker, makerIsSetUp: scenario == .maker),
                 session: FakeQBankServer.storedMakerSession(), defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .owner:
+            return model(
+                server: FakeQBankServer(signedIn: true, as: FakeQBankServer.owner),
+                session: FakeQBankServer.storedOwnerSession(), defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )
         }
     }

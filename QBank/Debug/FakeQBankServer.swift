@@ -19,6 +19,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     static let resetStudent = Credentials(email: "reset@example.com", password: "synthetic-temp-1")
     /// The one student the server lets make questions, with a set being written and copies to check.
     static let maker = Credentials(email: "maker@example.com", password: "synthetic-pass-2")
+    /// The owner, an admin, whose view of the courses is read-only.
+    static let owner = Credentials(email: "owner@example.com", password: "synthetic-pass-3")
     /// The one email on the owner's sign-up list, with no account yet: it signs up with any password
     /// of 8 to 128 characters. Every other email is refused.
     static let signUpEmail = "new.user@example.com"
@@ -37,9 +39,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         var mustChangePassword: Bool
         /// Her color scheme, "dusk" until she picks "slate" in Settings.
         var palette = "dusk"
+        var role = "student"
 
         var json: [String: Any] {
-            ["id": id, "email": email, "name": name, "role": "student", "mustChangePassword": mustChangePassword, "palette": palette]
+            ["id": id, "email": email, "name": name, "role": role, "mustChangePassword": mustChangePassword, "palette": palette]
         }
     }
 
@@ -135,7 +138,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
 
     /// - Parameters:
     ///   - signedIn: Starts with the session of `account`, as `sessionToken`.
-    ///   - account: Who is signed in: `student`, or `maker` to make questions.
+    ///   - account: Who is signed in: `student`, `maker` to make questions, or `owner`.
     ///   - makerIsSetUp: False: the server has no Claude key, so making questions is not set up yet.
     ///   - place: The course she used last, or nil for none.
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
@@ -155,6 +158,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
                 Account(id: "fake-student", email: Self.student.email, name: "Sam Student", password: Self.student.password, mustChangePassword: false),
                 Account(id: "fake-reset", email: Self.resetStudent.email, name: "Robin Reset", password: Self.resetStudent.password, mustChangePassword: true),
                 Account(id: "fake-maker", email: Self.maker.email, name: "Max Maker", password: Self.maker.password, mustChangePassword: false),
+                Account(id: "fake-owner", email: Self.owner.email, name: "Olive Owner", password: Self.owner.password, mustChangePassword: false, role: "admin"),
             ],
             semesters: [
                 FakeSemester(id: Self.semester1ID, number: 1, name: "Semester 1"),
@@ -187,6 +191,15 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             token: sessionToken,
             expiresAt: expiresAt,
             account: QBankKit.Account(id: "fake-maker", email: maker.email, name: "Max Maker", role: .student, mustChangePassword: false)
+        )
+    }
+
+    /// The session the app keeps for `owner` when a scenario starts signed in as the owner.
+    static func storedOwnerSession(expiresAt: Date = .now.addingTimeInterval(30 * 86_400)) -> StoredSession {
+        StoredSession(
+            token: sessionToken,
+            expiresAt: expiresAt,
+            account: QBankKit.Account(id: "fake-owner", email: owner.email, name: "Olive Owner", role: .admin, mustChangePassword: false)
         )
     }
 
