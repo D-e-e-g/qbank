@@ -36,7 +36,7 @@ gh workflow run xcode.yml -R D-e-e-g/qbank --ref retry/<your branch> \
   -f device=iphone
 ```
 
-`only_testing` takes names separated by spaces. The run's check is named `Named tests`, not `Build and test`, and it runs only those tests on the same runner, under the same guards as any manual run. It skips the packages, the Release build, and the other device. A failed run uploads `TestResults-named.xcresult`. Delete the scratch branch once the tests pass:
+`only_testing` takes names separated by spaces. The run's check is named `Named tests`, not `Build and test`, and it runs only those tests on the same runner, under the same guards as any manual run. It skips the packages, the Release build, and the other device. A failed run uploads `TestResults-named.xcresult` as its `test-results` artifact, within the limit [ci.md](ci.md) describes. Delete the scratch branch once the tests pass:
 
 ```sh
 git push origin --delete retry/<your branch>

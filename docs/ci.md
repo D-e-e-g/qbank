@@ -31,6 +31,10 @@ UI tests stay serial. Parallel testing was measured on the MacBook Pro 14: seria
 
 Build results are not reused between runs: compiling takes about 2 minutes of the job, which is not worth the risk of a stale result hiding a failure.
 
+### Test results of a failed run
+
+A failed run uploads the result bundle of the device that failed, as the `test-results` artifact, and keeps it for 14 days. The upload has a limit of 6 minutes, because it holds the runner: the Mac uploads at about 1 MB/s, so the 110 to 230 MB of a full run's bundle usually takes 2.5 to 5 minutes. When an upload stalls, the pinned `actions/upload-artifact` reports `Upload progress stalled` after 5 minutes, but its process keeps sending until the last byte and never saves the artifact, which once held the runner for 16 minutes with nothing to show. The limit ends that process. Hitting it costs only the artifact: the job has already failed, and `gh run view <run id> -R D-e-e-g/qbank --log-failed` still names the failed tests.
+
 ### Retrying one test
 
 The `only_testing` input of a manual run runs only the tests it names, under a check named `Named tests`, so that a failed test can be retried in minutes. [testing.md](testing.md) has the retry rule, which workers and fix rounds follow, and how to use it. Its names reach the Mac only through `env`, and `test/only-testing.sh` refuses anything but a test name, on Linux before a Mac is asked for and again on the Mac. That job has a concurrency group per branch, so it never replaces a waiting full build, and it runs only on `MAC_RUNNER`.
