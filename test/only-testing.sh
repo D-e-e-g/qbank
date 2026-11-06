@@ -12,9 +12,9 @@
 # separated by whitespace. At most 10 names run at once. --check only validates
 # them and prints them, and needs no Mac.
 #
-# It fails unless at least as many tests passed as names were given, so a name
-# that matches nothing, or a test that skips itself on this device, never looks
-# like a pass. The result bundle is kept only on failure: TestResults-named.xcresult.
+# It fails unless every name matches at least one passed test and none failed,
+# so a name that matches nothing, or a test that skips itself on this device,
+# never looks like a pass. The result bundle is kept only on failure: TestResults-named.xcresult.
 #
 # Compatible with the bash 3.2 that ships with macOS.
 set -euo pipefail
@@ -111,13 +111,30 @@ rm -rf "$RESULT_BUNDLE"
     -resultBundlePath "$RESULT_BUNDLE" \
     "${only_testing[@]}"
 
-xcrun xcresulttool get test-results summary --path "$RESULT_BUNDLE" --format json | python3 -c '
-import json, sys
-wanted = int(sys.argv[1])
-summary = json.load(sys.stdin)
-passed, failed, skipped = (summary[key] for key in ("passedTests", "failedTests", "skippedTests"))
-print("only-testing.sh: %d passed, %d failed, %d skipped, for %d names" % (passed, failed, skipped, wanted))
-if failed or passed < wanted:
-    sys.exit("only-testing.sh: a name matched no test, or its test skipped itself on this device")
-' "$#"
+xcrun xcresulttool get test-results tests --path "$RESULT_BUNDLE" --format json | python3 -c '
+import json, re, sys
+
+def cases(node, path):
+    name = node.get("name", "")
+    kind = node.get("nodeType")
+    if kind == "Test Case":
+        yield path + [name.split("(")[0]], node.get("result")
+        return
+    if kind in ("Unit test bundle", "UI test bundle", "Test Suite"):
+        path = path + [name]
+    for child in node.get("children", []):
+        yield from cases(child, path)
+
+found = [case for root in json.load(sys.stdin).get("testNodes", []) for case in cases(root, [])]
+bad = []
+for name in sys.argv[1:]:
+    want = name.split("(")[0].split("/")
+    hits = [result for path, result in found if path[: len(want)] == want]
+    if "Passed" not in hits or "Failed" in hits:
+        bad.append(name)
+        print("only-testing.sh: %s: %s" % (name, ", ".join(hits) or "matched no test"))
+if bad:
+    sys.exit("only-testing.sh: not every name ran and passed")
+print("only-testing.sh: all %d names passed" % len(sys.argv[1:]))
+' "$@"
 rm -rf "$RESULT_BUNDLE"
