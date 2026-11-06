@@ -134,7 +134,7 @@ final class ExamPageDeletionUITests: XCTestCase {
         attachLooks(app, "recently deleted, exam page name taken")
     }
 
-    /// The owner's view is read-only: More is there, with Edit page, and Delete page is not in it.
+    /// The owner's view is frozen: More has Edit page and Delete page, and Delete page answers with the frozen note.
     @MainActor
     func testTheOwnersDeletePageAnswersWithTheFrozenNote() throws {
         let app = launch("owner")
