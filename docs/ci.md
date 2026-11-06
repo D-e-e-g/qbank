@@ -9,7 +9,7 @@ Every pull request and every push to `main` runs two Linux jobs on GitHub-hosted
 `Linux checks`:
 
 - `shellcheck` over `test/*.sh` and `scripts/*.sh`
-- `test/release-checks.sh`: workflow pins and triggers, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, and the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git)
+- `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, and the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git)
 
 `Secrets`: `test/leak-check.sh` runs [gitleaks](https://github.com/gitleaks/gitleaks), a pinned release whose checksum the job checks, over the commits the change adds and over every tracked file at HEAD, and fails on any finding. It uses gitleaks' own rules with no exceptions (`.gitleaks.toml` only extends the defaults). Findings print redacted. To run it on a Mac with gitleaks installed: `test/leak-check.sh origin/main HEAD`.
 
@@ -30,6 +30,10 @@ A `Change scope` job on GitHub's Linux runs first. It takes a same-repository pu
 UI tests stay serial. Parallel testing was measured on the MacBook Pro 14: serial took 6 runs with 0 failures, two workers 4 runs with 1 failure, three workers 1 run with 1 failure, every failure on `StudyUITests.testDayOneCourseMakesAndRemovesAnExamPage`. The cause is unproven, and a flake costs more than the minutes parallel workers save, so do not add `-parallel-testing-enabled` back without a cause found and fixed.
 
 Build results are not reused between runs: compiling takes about 2 minutes of the job, which is not worth the risk of a stale result hiding a failure.
+
+### Test results of a failed run
+
+A failed run uploads the result bundle of the device that failed, as the `test-results` artifact, and keeps it for 14 days. The upload has a limit of 6 minutes, because it holds the runner: the Mac uploads at about 1 MB/s, so the 110 to 230 MB of a full run's bundle usually takes 2.5 to 5 minutes. When an upload stalls, the pinned `actions/upload-artifact` reports `Upload progress stalled` after 5 minutes, but its process keeps sending until the last byte and never saves the artifact, which once held the runner for 16 minutes with nothing to show. The limit ends that process. Hitting it costs only the artifact: the job has already failed, and `gh run view <run id> -R D-e-e-g/qbank --log-failed` still names the failed tests.
 
 ### Retrying one test
 

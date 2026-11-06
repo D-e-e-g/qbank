@@ -184,6 +184,7 @@ jobs:
       # iPhone layout's skip themselves. One class holds most of them, so a second
       # worker here made this step slower, not faster.
       - name: Build and run unit and UI tests on iPad
+        id: ipad-tests
         run: |
           ./test/sim.sh --device "iPad Pro 13-inch (M5)" --device "iPad Pro 13-inch (M4)" -- \
             xcodebuild test \
@@ -195,14 +196,19 @@ jobs:
               -collect-test-diagnostics never \
               -resultBundlePath TestResults-iPad.xcresult
 
+      # The Mac uploads at about 1 MB/s, and the largest bundle so far (224 MB)
+      # took under 5 minutes. When an upload stalls, the action reports it after 5
+      # minutes but keeps running until every byte is sent, and never saves the
+      # artifact, so only this limit frees the runner (see docs/ci.md). The job has
+      # already failed, so the limit cannot change its result. Only the device
+      # that failed uploads: the iPad runs only after the iPhone passes.
       - name: Upload test results on failure
         if: failure()
+        timeout-minutes: 6
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results
-          path: |
-            TestResults.xcresult
-            TestResults-iPad.xcresult
+          path: ${{ steps.ipad-tests.outcome == 'failure' && 'TestResults-iPad.xcresult' || 'TestResults.xcresult' }}
           retention-days: 14
           if-no-files-found: ignore
 
@@ -247,8 +253,10 @@ jobs:
           DEVICE: ${{ inputs.device }}
         run: ./test/only-testing.sh --device "$DEVICE"
 
+      # The same limit as the full build's upload, for the same reason.
       - name: Upload test results on failure
         if: failure()
+        timeout-minutes: 6
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results

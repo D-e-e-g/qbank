@@ -227,6 +227,20 @@ ruby_check "xcode.yml keeps the only_testing input out of shell lines" "$XCODE" 
     end
   end
 '
+# A stalled upload outlives the action's own stall error, so only a step limit
+# gives the Mac back. The job has already failed, so the step must not hide it.
+ruby_check "xcode.yml bounds every upload step and never lets one hide a failure" "$XCODE" '
+  uploads = YAML.load_file(ARGV[0])["jobs"].flat_map do |name, job|
+    (job["steps"] || []).select { |step| step["uses"].to_s.start_with?("actions/upload-artifact@") }.map { |step| [name, step] }
+  end
+  abort "no upload step found" if uploads.empty?
+  uploads.each do |name, step|
+    abort "job #{name} step #{step["name"]} must run only after a failure" unless step["if"] == "failure()"
+    limit = step["timeout-minutes"]
+    abort "job #{name} step #{step["name"]} sets timeout-minutes to #{limit.inspect}, expected 1 to 10" unless limit.is_a?(Integer) && limit.between?(1, 10)
+    abort "job #{name} step #{step["name"]} must not set continue-on-error" if step.key?("continue-on-error")
+  end
+'
 # The real validator against names that must never reach xcodebuild.
 for name in 'QBankUITests/StudyUITests/testCoursePage' 'QBankUITests/AddUITests' 'QBankTests/Suite/test()' 'QBankTests/Outer/Inner/test(a:b:)'; do
   if ./test/only-testing.sh --check -- "$name" >/dev/null 2>&1; then
