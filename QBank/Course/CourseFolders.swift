@@ -32,6 +32,13 @@ nonisolated struct FolderProgress: Equatable {
 
 /// The lines the course's lists, an exam page and a folder show, worded as on the web.
 nonisolated enum FolderWording {
+    static let importHere = "Import here"
+    static let changePage = "Change page"
+    static let deleteFolder = "Delete folder"
+    static let deletePage = "Delete page"
+    /// An empty folder's card, above its Import here button.
+    static let noSets = "No sets yet. Import a question file here, or move sets here from another folder."
+
     /// A folder's line: "2 sets · 27 questions", "2 sets · 22 of 27 answered",
     /// "2 sets · 22 of 27 fully right", "Exam twins only · 17 questions", or "Empty folder".
     static func meta(_ folder: Folder) -> String {
@@ -65,10 +72,15 @@ nonisolated enum FolderWording {
             : "No exam bank yet · exams use practice questions"
     }
 
+    /// The page a folder sits on: "On Exam 2", or "On no page".
+    static func onPage(_ page: CourseExam?) -> String {
+        page.map { "On \($0.name)" } ?? "On no page"
+    }
+
     /// The line under the folder's name on its own screen: "On Exam 2 · 3 sets · 36 of 45 fully
     /// right", or "On no page · ...".
     static func folderNote(_ folder: Folder, page: CourseExam?) -> String {
-        "\(page.map { "On \($0.name)" } ?? "On no page") · \(meta(folder))"
+        "\(onPage(page)) · \(meta(folder))"
     }
 
     /// An exam page's row on the course page: "5 folders · 217 questions", or "No folders yet".
@@ -106,7 +118,7 @@ nonisolated enum FolderWording {
 
     /// Under an exam page's Start exam, from the server's plan over its folders: "40 questions from
     /// the 217 in these 5 folders, or wrong questions only.", or "All 26 questions in this folder,
-    /// ...". Nil when its folders hold none.
+    /// ...", or "The 1 question in this folder, ...". Nil when its folders hold none.
     static func examDraw(_ plan: ExamPreview) -> String? {
         let folders = plan.folders
         guard !folders.isEmpty else { return nil }
@@ -114,7 +126,7 @@ nonisolated enum FolderWording {
         let place = folders.count == 1 ? "this folder" : "these \(folders.count) folders"
         let draw = plan.questionCount < total
             ? "\(Wording.count(plan.questionCount, "question")) from the \(total) in \(place)"
-            : "All \(Wording.count(total, "question")) in \(place)"
+            : total == 1 ? "The 1 question in \(place)" : "All \(total) questions in \(place)"
         return "\(draw), or wrong questions only."
     }
 }

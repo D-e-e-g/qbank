@@ -346,7 +346,8 @@ final class StudyUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Mixed review"].appears(timeout: 5))
 
         // Exam page: the folder goes on Exam 2, with its sets and progress.
-        app.buttons["folder.page"].tap()
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(menuItem(app, "folder.more.page", "Change page"))
         XCTAssertTrue(app.navigationBars["Page"].appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["Mixed review can be on one page. Its sets and progress stay in the folder."].exists)
         XCTAssertTrue(app.buttons["examPage.none"].isSelected)
@@ -359,6 +360,8 @@ final class StudyUITests: XCTestCase {
 
         // Select, then Move: the set goes to Week 2 with its answers.
         app.buttons["folder.select"].tap()
+        XCTAssertFalse(app.buttons["folder.add"].isEnabled, "+ waits while she selects")
+        XCTAssertFalse(app.buttons["folder.more"].isEnabled, "More waits while she selects")
         app.buttons["folder.pick.Mixed Clinical Judgment"].tap()
         XCTAssertTrue(app.buttons["folder.pick.Mixed Clinical Judgment"].isSelected)
         let move = app.buttons["folder.move"]
@@ -375,7 +378,7 @@ final class StudyUITests: XCTestCase {
         attach(app, "C move to")
         app.buttons["moveSets.save"].tap()
         XCTAssertTrue(app.navigationBars["Move to"].disappears(timeout: 5))
-        XCTAssertTrue(app.staticTexts["No sets yet. Move sets here from another folder."].appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No sets yet. Import a question file here, or move sets here from another folder."].appears(timeout: 5))
         XCTAssertFalse(app.buttons["folder.move"].exists)
         attach(app, "C folder, emptied")
 
@@ -492,7 +495,10 @@ final class StudyUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Edit Page 1"].appears(timeout: 5))
         XCTAssertTrue(app.buttons["editPage.chip.free.Week 3"].exists)
         attach(app, "C edit exam page")
-        tapVisible(app.buttons["editPage.delete"], in: app)
+        tapWhenStill(app.buttons["editPage.cancel"])
+        XCTAssertTrue(app.navigationBars["Edit Page 1"].disappears(timeout: 5))
+        app.buttons["page.more"].tap()
+        chooseFromMenu(menuItem(app, "page.more.delete", "Delete page"))
         XCTAssertTrue(app.staticTexts["deleteSheet.message"].appears(timeout: 5))
         XCTAssertEqual(app.staticTexts["deleteSheet.message"].label, "Its 2 folders stay, with their sets and your progress, under Folders: Week 1 and Week 2. You can undo this for 30 days.")
         tapWhenStill(app.buttons["deleteSheet.confirm"])
@@ -514,7 +520,8 @@ final class StudyUITests: XCTestCase {
 
         // A second one: Edit shows up and puts the list in order.
         openFolder(app, "Week 3", on: "Exam 2")
-        app.buttons["folder.page"].tap()
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(menuItem(app, "folder.more.page", "Change page"))
         app.buttons["examPage.none"].tap()
         app.buttons["examPage.save"].tap()
         waitForLabel(app.staticTexts["folder.note"], containing: "On no page")

@@ -109,6 +109,13 @@ extension XCTestCase {
         XCTAssertEqual(result, .completed, "\"\(element.label)\" never contained \"\(text)\"")
     }
 
+    @MainActor
+    func waitForSelected(_ element: XCUIElement, timeout: TimeInterval = 5) {
+        let predicate = NSPredicate(format: "isSelected == true")
+        let result = XCTWaiter.wait(for: [expectation(for: predicate, evaluatedWith: element)], timeout: timeout)
+        XCTAssertEqual(result, .completed, "\(element) never became selected")
+    }
+
     /// Taps a button once it stops moving, as one in a sheet does when the sheet settles at its
     /// height. A tap made while it moves can land beside it.
     @MainActor
@@ -172,11 +179,25 @@ extension XCTestCase {
         XCTFail("\(title) did not open")
     }
 
-    /// Scrolls until the element is on screen, clear of the bars at the top and bottom, then taps it.
+    /// Opens what she deleted in the course, from the course's More. A tap on a screen she just
+    /// stepped back to can be dropped here too.
+    @MainActor
+    func openRecentlyDeleted(_ app: XCUIApplication) {
+        let item = menuItem(app, "course.recentlyDeleted", "Recently deleted")
+        for _ in 0..<3 where !item.exists {
+            app.buttons["course.more"].tap()
+            if item.appears(timeout: 5) { break }
+        }
+        chooseFromMenu(item)
+        XCTAssertTrue(app.navigationBars["Recently deleted"].appears(timeout: 5))
+    }
+
+    /// Scrolls until the element is on screen, clear of the bars at the top and bottom, then taps it
+    /// once it is still. A tap while the list still glides only stops the list.
     @MainActor
     func tapVisible(_ element: XCUIElement, in app: XCUIApplication) {
         reveal(element, in: app)
-        element.tap()
+        tapWhenStill(element)
     }
 
     /// Scrolls until the element is on screen, clear of the bars at the top and bottom.

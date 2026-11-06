@@ -59,6 +59,46 @@ private struct DeleteSheet: View {
     }
 }
 
+/// The confirmation before deleting the sets she ticked. It reads every set's warning, and a refusal
+/// says why and waits. Closed after a refusal stopped it partway, Undo covers what went.
+struct DeleteSetsSheet: View {
+    @State private var model: DeleteSetsModel
+    let deleted: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    init(app: AppModel, sets: [PracticeSetSummary], deleted: @escaping () -> Void) {
+        _model = State(initialValue: DeleteSetsModel(app: app, sets: sets))
+        self.deleted = deleted
+    }
+
+    var body: some View {
+        ConfirmSheet(
+            title: model.title,
+            message: model.message,
+            messageMaxHeight: 320,
+            confirm: "Delete",
+            identifier: "deleteSheet",
+            isBusy: model.isDeleting,
+            isLoading: model.isLoading,
+            canConfirm: model.canDelete,
+            problem: model.problem
+        ) { confirmed in
+            guard confirmed else {
+                dismiss()
+                return
+            }
+            Task {
+                if await model.delete() {
+                    deleted()
+                    dismiss()
+                }
+            }
+        }
+        .task { await model.load() }
+        .onDisappear { model.offerUndo() }
+    }
+}
+
 /// Her last delete at the bottom of the screen, with Undo, for a few seconds. Recently deleted
 /// keeps it for 30 days.
 private struct UndoBar: View {

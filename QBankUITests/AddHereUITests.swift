@@ -3,8 +3,9 @@ import XCTest
 /// One + per screen, adding into that screen, and holding a course or topic on Home, end to end
 /// against the in-process fake server of the Debug launch seam: Home's + (a course, a topic, a
 /// semester), a held card's Open, Rename, Move and Archive, Unarchive in Archived, a course's +
-/// (Import, New folder, New exam page, Make questions) and an exam page's + (Import here, New folder
-/// on this page, Add existing folders). Invented courses, topics and question files only.
+/// (Import, New folder, New exam page, Make questions), an exam page's + (Import here, New folder
+/// on this page, Add existing folders) and a folder's + and More. Invented courses, topics and
+/// question files only.
 final class AddHereUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -344,6 +345,90 @@ final class AddHereUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10), "the course she used last, on fresh screens")
         XCTAssertTrue(tabButton(app, "Home").isSelected)
         XCTAssertTrue(app.buttons["course.add"].exists)
+    }
+
+    // MARK: A folder's + and More
+
+    /// The + opens Import at once, with this folder picked and no menu of one row. More holds
+    /// Rename, Change page with the page it is on under it, and Delete folder, last.
+    @MainActor
+    func testAFoldersPlusOpensImportAtOnceAndMoreHoldsTheRest() throws {
+        try skipOnIPad()
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 2", on: "Exam 1")
+        let plus = app.buttons["folder.add"]
+        XCTAssertTrue(plus.appears(timeout: 5))
+        XCTAssertEqual(plus.label, "Import here")
+        XCTAssertLessThan(app.buttons["folder.more"].frame.minX, plus.frame.minX, "More sits just left of +")
+        attachLooks(app, "folder, sets")
+
+        plus.tap()
+        let picked = app.buttons["import.folder.Exam 1.Week 2"]
+        XCTAssertTrue(picked.appears(timeout: 5))
+        waitForSelected(picked)
+        waitForLabel(app.buttons["import.course"], containing: "NURS 310 · Mental Health")
+        tapWhenStill(app.buttons["import.cancel"])
+        XCTAssertTrue(picked.disappears(timeout: 5))
+
+        app.buttons["folder.more"].tap()
+        let rename = menuItem(app, "folder.more.rename", "Rename")
+        let page = menuItem(app, "folder.more.page", "Change page")
+        let delete = menuItem(app, "folder.more.delete", "Delete folder")
+        XCTAssertTrue(rename.appears(timeout: 5))
+        XCTAssertTrue(page.exists)
+        XCTAssertGreaterThan(page.frame.height, rename.frame.height, "On Exam 1 is its second line")
+        XCTAssertTrue(delete.exists)
+        XCTAssertLessThan(rename.frame.minY, page.frame.minY)
+        XCTAssertLessThan(page.frame.minY, delete.frame.minY, "Delete folder is last")
+        attachLooks(app, "folder, More")
+
+        chooseFromMenu(page)
+        XCTAssertTrue(app.navigationBars["Page"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["examPage.page.Exam 1"].isSelected, "the page it is on")
+        tapWhenStill(app.buttons["examPage.cancel"])
+        XCTAssertTrue(app.navigationBars["Page"].disappears(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Week 2"].appears(timeout: 5))
+    }
+
+    /// An empty folder's card says what to do and carries Import here, with this folder picked.
+    @MainActor
+    func testAnEmptyFoldersCardOffersImportHere() throws {
+        try skipOnIPad()
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        open(app.buttons["course.page.Exam 1"], titled: "Exam 1", in: app)
+        app.buttons["page.add"].tap()
+        chooseFromMenu(menuItem(app, "page.add.folder", "New folder on this page"))
+        let name = app.textFields["newFolder.name"]
+        XCTAssertTrue(name.appears(timeout: 5))
+        name.typeText("Week 1b")
+        app.buttons["newFolder.save"].tap()
+        XCTAssertTrue(name.disappears(timeout: 10))
+        openFolder(app, "Week 1b")
+
+        XCTAssertTrue(app.staticTexts["No sets yet. Import a question file here, or move sets here from another folder."].appears(timeout: 5))
+        let importHere = app.buttons["folder.import"]
+        XCTAssertTrue(importHere.exists)
+        XCTAssertEqual(importHere.label, "Import here")
+        XCTAssertFalse(app.buttons["folder.select"].exists, "no sets to select")
+        attachLooks(app, "folder, empty")
+
+        importHere.tap()
+        let picked = app.buttons["import.folder.Exam 1.Week 1b"]
+        XCTAssertTrue(picked.appears(timeout: 5))
+        waitForSelected(picked)
+        tapWhenStill(app.buttons["import.cancel"])
+        XCTAssertTrue(picked.disappears(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Week 1b"].appears(timeout: 5))
+
+        // Offline, the card's button and the + wait, and More is not shown.
+        setNetwork(online: false)
+        let disabled = NSPredicate(format: "isEnabled == false")
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: disabled, evaluatedWith: importHere)], timeout: 10), .completed)
+        XCTAssertFalse(app.buttons["folder.add"].isEnabled)
+        XCTAssertFalse(app.buttons["folder.more"].exists)
+        attach(app, "folder, empty, no connection")
     }
 
     // MARK: Helpers

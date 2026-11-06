@@ -2,9 +2,11 @@ import QBankDesign
 import QBankKit
 import SwiftUI
 
-/// A folder: which exam page it is on and how far she is, Exam page, Import here and Delete, its
-/// sets, and its exam bank. More, at the top right, renames it. Select puts a check circle on each
-/// set and a Move bar at the bottom, as Files does. Touching and holding a set offers Delete.
+/// A folder: which exam page it is on and how far she is, its sets, and its exam bank. The + at the
+/// top right opens Import here with this folder picked, and an empty folder's card offers the same.
+/// More, beside +, holds Rename, Change page and Delete folder. Select puts a check circle on each
+/// set and a bar with Delete and Move at the bottom, as Files does. Touching and holding a set
+/// offers Delete too.
 /// Deleting the folder deletes its sets too, after a warning that names them.
 struct FolderView: View {
     let app: AppModel
@@ -26,6 +28,7 @@ struct FolderView: View {
         case rename
         case page
         case move([PracticeSetSummary])
+        case deleteSets([PracticeSetSummary])
         case importHere
 
         var id: String {
@@ -33,6 +36,7 @@ struct FolderView: View {
             case .rename: "rename"
             case .page: "page"
             case .move: "move"
+            case .deleteSets: "deleteSets"
             case .importHere: "import"
             }
         }
@@ -54,7 +58,15 @@ struct FolderView: View {
         .qbankScreenBackground()
         .navigationTitle(model.folder(id)?.name ?? "Folder")
         .screenColumnTitle()
-        .moreMenu(model.canEdit && model.folder(id) != nil) {
+        .plusButton(
+            model.folder(id) != nil,
+            label: FolderWording.importHere,
+            identifier: "folder.add",
+            isEnabled: canChange,
+            more: model.canEdit && model.folder(id) != nil
+        ) {
+            sheet = .importHere
+        } more: {
             if let folder = model.folder(id) {
                 more(folder)
             }
@@ -62,7 +74,9 @@ struct FolderView: View {
         .refreshable { await model.load() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if let selection, !selection.isEmpty, let folder = model.folder(id) {
-                MoveBar(count: selection.count) {
+                SelectBar(count: selection.count) {
+                    sheet = .deleteSets(folder.sets.filter { selection.contains($0.id) })
+                } move: {
                     sheet = .move(folder.sets.filter { selection.contains($0.id) })
                 }
             }
@@ -87,6 +101,10 @@ struct FolderView: View {
                     ExamPageSheet(model: model, folder: folder)
                 case .move(let sets):
                     MoveSetsSheet(model: model, folder: folder, sets: sets) {
+                        selection = nil
+                    }
+                case .deleteSets(let sets):
+                    DeleteSetsSheet(app: app, sets: sets) {
                         selection = nil
                     }
                 case .importHere:
@@ -121,45 +139,37 @@ struct FolderView: View {
             if let problem = model.problem {
                 ProblemText(text: problem)
             }
-            // The buttons keep their words on one line and wrap as a row when they do not fit.
-            FlowLayout(spacing: QBankSpacing.space2, lineSpacing: QBankSpacing.space2) {
-                Button {
-                    sheet = .page
-                } label: {
-                    Label(model.page(of: folder)?.name ?? "Page", systemImage: "square.stack.3d.up")
-                }
-                .accessibilityLabel("Page: \(model.page(of: folder)?.name ?? "none")")
-                .accessibilityIdentifier("folder.page")
-                Button {
-                    sheet = .importHere
-                } label: {
-                    Label("Import here", systemImage: "square.and.arrow.down")
-                }
-                .accessibilityIdentifier("folder.import")
-                Button {
-                    deleting = DeleteRequest(target: .folder(id: folder.id, name: folder.name))
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-                .buttonStyle(.qbank(.destructive, size: .small))
-                .accessibilityLabel("Delete \(folder.name)")
-                .accessibilityIdentifier("folder.delete")
-            }
-            .buttonStyle(.qbank(.secondary, size: .small))
-            .disabled(!model.canEdit || selection != nil)
             sets(folder)
                 .padding(.top, QBankSpacing.space3)
         }
     }
 
-    /// More: Rename opens the rename sheet. Offline, More is not shown, and while she selects sets
-    /// it waits.
+    /// Whether the folder can be changed now: not offline, and not while she selects sets.
+    private var canChange: Bool {
+        model.canEdit && selection == nil
+    }
+
+    /// More: Rename opens the rename sheet, Change page the page sheet, and Delete folder, last, the
+    /// warning that names its sets. Offline, More is not shown, and while she selects sets it waits.
     private func more(_ folder: Folder) -> some View {
         MoreMenu(name: folder.name, identifier: "folder.more") {
             Button("Rename", systemImage: "pencil") {
                 sheet = .rename
             }
             .accessibilityIdentifier("folder.more.rename")
+            Button {
+                sheet = .page
+            } label: {
+                Text(FolderWording.changePage)
+                Text(FolderWording.onPage(model.page(of: folder)))
+                Image(systemName: "square.stack.3d.up")
+            }
+            .accessibilityIdentifier("folder.more.page")
+            Divider()
+            Button(FolderWording.deleteFolder, systemImage: "trash", role: .destructive) {
+                deleting = DeleteRequest(target: .folder(id: folder.id, name: folder.name))
+            }
+            .accessibilityIdentifier("folder.more.delete")
         }
         .disabled(selection != nil)
     }
@@ -176,7 +186,16 @@ struct FolderView: View {
                 selection = selection == nil ? [] : nil
             }
             if folder.sets.isEmpty, folder.examBankCount == 0 {
-                EmptyCard(message: "No sets yet. Move sets here from another folder.", systemImage: "folder")
+                EmptyCard(message: FolderWording.noSets, systemImage: "folder") {
+                    Button {
+                        sheet = .importHere
+                    } label: {
+                        Label(FolderWording.importHere, systemImage: "square.and.arrow.down")
+                    }
+                    .buttonStyle(.qbank(.secondary, size: .small))
+                    .disabled(!canChange)
+                    .accessibilityIdentifier("folder.import")
+                }
             } else {
                 QBankListGroup {
                     ForEach(folder.sets) { set in
@@ -226,16 +245,26 @@ struct FolderView: View {
     }
 }
 
-/// The bar at the bottom while sets are ticked: Move N sets.
-private struct MoveBar: View {
+/// The bar at the bottom while sets are ticked: Delete and Move N sets.
+private struct SelectBar: View {
     let count: Int
+    let delete: () -> Void
     let move: () -> Void
 
     var body: some View {
-        Button(action: move) {
-            Label("Move \(Wording.count(count, "set"))", systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+        HStack(spacing: QBankSpacing.space2) {
+            Button(action: delete) {
+                Label("Delete", systemImage: "trash")
+            }
+            .buttonStyle(.qbank(.destructive, size: .large))
+            .accessibilityLabel("Delete \(Wording.count(count, "set"))")
+            .accessibilityIdentifier("folder.deleteSets")
+            Button(action: move) {
+                Label("Move \(Wording.count(count, "set"))", systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+            }
+            .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+            .accessibilityIdentifier("folder.move")
         }
-        .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
         .screenColumn()
         .padding(.vertical, QBankSpacing.space3)
         .background(.qbank(.bg))
@@ -244,7 +273,6 @@ private struct MoveBar: View {
                 .fill(.qbank(.separator))
                 .frame(height: QBankBorder.hairline)
         }
-        .accessibilityIdentifier("folder.move")
     }
 }
 

@@ -36,6 +36,8 @@ extension View {
 struct ConfirmSheet: View {
     let title: String
     let message: String
+    /// The most the message takes before it scrolls, for one that can run long, or nil for no limit.
+    var messageMaxHeight: CGFloat?
     let confirm: String
     var isDestructive = true
     var cancel = "Cancel"
@@ -50,6 +52,7 @@ struct ConfirmSheet: View {
     var problem: String?
     let answer: (Bool) -> Void
     @State private var height: CGFloat = 280
+    @State private var messageHeight: CGFloat = 0
 
     var body: some View {
         VStack(spacing: QBankSpacing.space3) {
@@ -63,13 +66,17 @@ struct ConfirmSheet: View {
                 ProgressView()
                     .frame(minHeight: 44)
                     .padding(.bottom, QBankSpacing.space3)
+            } else if let messageMaxHeight {
+                ScrollView {
+                    messageText
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { messageHeight = $0 }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .frame(height: min(messageHeight, messageMaxHeight))
+                .padding(.bottom, QBankSpacing.space3)
             } else {
-                Text(message)
-                    .qbankFont(.subheadline)
-                    .foregroundStyle(.qbank(.text2))
-                    .multilineTextAlignment(.center)
+                messageText
                     .padding(.bottom, QBankSpacing.space3)
-                    .accessibilityIdentifier("\(identifier).message")
             }
             if let problem {
                 ProblemText(text: problem)
@@ -105,5 +112,14 @@ struct ConfirmSheet: View {
         .presentationBackground(.qbank(.surface))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(identifier)
+    }
+
+    private var messageText: some View {
+        Text(message)
+            .qbankFont(.subheadline)
+            .foregroundStyle(.qbank(.text2))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("\(identifier).message")
     }
 }

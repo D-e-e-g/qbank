@@ -71,6 +71,10 @@ nonisolated enum DeleteWording {
         }
     }
 
+    /// The Undo bar's lines for several sets: "2 sets deleted." and "2 sets are back."
+    static func deleted(setCount: Int) -> String { "\(Wording.count(setCount, "set")) deleted." }
+    static func back(setCount: Int) -> String { "\(Wording.count(setCount, "set")) are back." }
+
     /// The Undo bar's line once Undo brought it back: "Heart B is back.", "Week 1 and its 3 sets
     /// are back.", "Exam 2 is back.", "NURS 220 is back."
     static func back(_ target: DeleteTarget, setCount: Int = 0) -> String {
@@ -209,6 +213,121 @@ final class DeleteModel {
     }
 }
 
+/// The sets she ticked in a folder, from one warning: each set's preview says what goes, and Delete
+/// sends each preview's `confirm`, so exactly what she read goes. A refusal stops it where it is, and
+/// what is left is read again, so she sees what is true now. Undo covers every set this deleted, also
+/// when a refusal stopped it partway and she then closed the sheet.
+@Observable
+final class DeleteSetsModel {
+    /// What is still to delete: after a refusal partway through, the sets that went are left out.
+    private(set) var left: [PracticeSetSummary]
+    private(set) var previews: [SetDeletion]?
+    private(set) var isDeleting = false
+    private var loadProblem: String?
+    private var deleteProblem: String?
+    /// What this has deleted so far, for the one Undo it offers.
+    private var gone: [PracticeSetSummary] = []
+
+    private let app: AppModel
+
+    init(app: AppModel, sets: [PracticeSetSummary]) {
+        self.app = app
+        left = sets
+    }
+
+    private var only: (title: String, message: String)? {
+        guard left.count == 1, previews?.count == 1, let preview = previews?.first else { return nil }
+        return DeleteWording.shown(preview)
+    }
+
+    /// One set's warning's question, or "Delete 2 sets?".
+    var title: String {
+        if let only { return only.title }
+        if left.count == 1, let set = left.first { return DeleteWording.question(.set(id: set.id, title: set.title)) }
+        return "Delete \(Wording.count(left.count, "set"))?"
+    }
+
+    /// One set's warning, or each set's own, in the server's words.
+    var message: String {
+        only?.message ?? previews?.map(\.message).joined(separator: "\n\n") ?? ""
+    }
+
+    /// What went wrong and why any set cannot be deleted right now, each said once.
+    var problem: String? {
+        let lines = [deleteProblem, loadProblem].compactMap(\.self) + (previews ?? []).compactMap(\.refusal)
+        let said = lines.reduce(into: [String]()) { said, line in
+            if !said.contains(line) { said.append(line) }
+        }
+        return said.isEmpty ? nil : said.joined(separator: "\n")
+    }
+
+    var isLoading: Bool {
+        previews == nil && loadProblem == nil
+    }
+
+    var canDelete: Bool {
+        previews != nil && !isDeleting && (previews ?? []).allSatisfy { $0.refusal == nil }
+    }
+
+    /// Reads what deleting each set takes.
+    func load() async {
+        do {
+            var read: [SetDeletion] = []
+            for set in left {
+                read.append(try await app.client.practiceSetDeletion(id: set.id))
+            }
+            previews = read
+            loadProblem = nil
+        } catch {
+            if !app.handle(error) {
+                loadProblem = Wording.problem(error) ?? "Something went wrong. Try again."
+            }
+        }
+    }
+
+    /// Deletes what the warning named and offers Undo. True once every set is deleted.
+    func delete() async -> Bool {
+        guard let previews, canDelete else { return false }
+        isDeleting = true
+        defer { isDeleting = false }
+        deleteProblem = nil
+        for (set, preview) in zip(left, previews) {
+            do {
+                try await app.client.deletePracticeSet(id: set.id, confirm: preview.confirm)
+                gone.append(set)
+            } catch {
+                await refused(error)
+                return false
+            }
+        }
+        offerUndo()
+        return true
+    }
+
+    /// Undo for what went, once the sheet closes after a refusal. Offered once.
+    func offerUndo() {
+        guard !gone.isEmpty else { return }
+        let targets = gone.map { DeleteTarget.set(id: $0.id, title: $0.title) }
+        if let only = targets.first, targets.count == 1 {
+            app.deletions.deleted(only, line: DeleteWording.deleted(only), back: DeleteWording.back(only))
+        } else {
+            app.deletions.deleted(targets, line: DeleteWording.deleted(setCount: targets.count), back: DeleteWording.back(setCount: targets.count))
+        }
+        gone = []
+    }
+
+    /// The screen underneath shows what went, and what is left is read again.
+    private func refused(_ error: QBankError) async {
+        if !gone.isEmpty { app.deletions.changed() }
+        guard !app.handle(error) else { return }
+        deleteProblem = Wording.problem(error) ?? "Something went wrong. Try again."
+        let went = Set(gone.map(\.id))
+        left.removeAll { went.contains($0.id) }
+        previews = nil
+        await load()
+    }
+}
+
 /// The app's last delete, offered for Undo in a bar at the bottom of Home for a few seconds, and
 /// a count the screens follow so they read again after a delete or an Undo.
 @Observable
@@ -224,7 +343,9 @@ final class Deletions {
         }
 
         let id = UUID()
-        let target: DeleteTarget
+        /// What it deleted, more than one for sets ticked together; Undo brings the last back first,
+        /// so each goes back in its place.
+        let targets: [DeleteTarget]
         let line: String
         let back: String
         var state = State.offered
@@ -236,7 +357,17 @@ final class Deletions {
 
     /// It was deleted: Undo is offered at once.
     func deleted(_ target: DeleteTarget, line: String, back: String) {
-        offer = Offer(target: target, line: line, back: back)
+        deleted([target], line: line, back: back)
+    }
+
+    func deleted(_ targets: [DeleteTarget], line: String, back: String) {
+        offer = Offer(targets: targets, line: line, back: back)
+        revision += 1
+    }
+
+    /// Some of what she asked to delete went before a refusal: the screens read it again, and Undo
+    /// comes once the sheet closes.
+    func changed() {
         revision += 1
     }
 
@@ -245,8 +376,12 @@ final class Deletions {
         guard var offer, offer.state == .offered else { return }
         offer.state = .undoing
         self.offer = offer
+        var isAnyBack = false
         do {
-            try await offer.target.undo(with: app.client)
+            for target in offer.targets.reversed() {
+                try await target.undo(with: app.client)
+                isAnyBack = true
+            }
             offer.state = .undone
             revision += 1
         } catch {
@@ -254,6 +389,7 @@ final class Deletions {
                 self.offer = nil
                 return
             }
+            if isAnyBack { revision += 1 }
             offer.state = .failed(Wording.problem(error) ?? "Something went wrong. Try again.")
         }
         // Only the bar still showing this delete changes.
@@ -262,7 +398,7 @@ final class Deletions {
 
     /// Brought back from Recently deleted: the bar about it, if still showing, goes.
     func broughtBack(_ target: DeleteTarget) {
-        if offer?.target == target { offer = nil }
+        if offer?.targets.contains(target) == true { offer = nil }
         revision += 1
     }
 
