@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Repository and pipeline rule checks.
 #
-# Credential-free by construction: these checks read repository files only.
-# They never touch Apple credentials, App Store Connect, or the network, and
-# they run the same on a Linux CI machine and on a developer Mac. They need
-# bash, git, grep, and ruby (for YAML).
+# Credential-free by construction: these checks read repository files, and one
+# drives functions of the upload script against fake tools in a temporary
+# directory. They never touch Apple credentials, App Store Connect, or the
+# network, and they run the same on a Linux CI machine and on a developer Mac.
+# They need bash, git, grep, and ruby (for YAML).
 # shellcheck disable=SC2016 # the Ruby programs are single-quoted on purpose
 set -u
 
@@ -525,8 +526,8 @@ ruby_check "privacy manifest belongs only to the QBank app target" "$PBXPROJ" '
 # --- TestFlight upload script ---------------------------------------------------
 #
 # scripts/testflight-upload.sh runs on the owner's Mac and is the only thing
-# that reads the App Store Connect key. These checks read its text; they never
-# run it.
+# that reads the App Store Connect key. These checks read its text and never
+# run it whole; the log stream check runs its functions against fake tools.
 
 UPLOAD=scripts/testflight-upload.sh
 EXPORT_OPTIONS=scripts/ExportOptions.plist
@@ -628,6 +629,175 @@ ruby_check "$UPLOAD never prints a vault value" "$UPLOAD" "$SCRIPT_RUBY"'
     end
   end
 '
+ruby_check "$UPLOAD watches for Apple's log stream through the whole run and stops watching before it removes its files" "$UPLOAD" "$SCRIPT_RUBY"'
+  main = body.call("main")
+  trap = line_in.call(main, "trap cleanup EXIT") or abort "main() does not set trap cleanup EXIT"
+  start = line_in.call(main, "start_log_stream_watcher") or abort "main() never starts the log stream watcher"
+  abort "main() starts the watcher before its EXIT trap" unless trap < start
+  first_tool = main.find { |i| lines[i] =~ /\bxcodebuild\b/ && lines[i] !~ /command -v|for tool/ && i > trap } or abort "main() runs no xcodebuild"
+  abort "main() runs xcodebuild before it starts the watcher" unless start < first_tool
+  cleanup = body.call("cleanup")
+  stop = line_in.call(cleanup, "stop_log_stream_watcher || true") or abort "cleanup() does not stop the watcher, or lets it fail the run"
+  removal = cleanup.find { |i| lines[i].include?(%q{rm -rf "$work"}) } or abort "cleanup() removes no temporary directory"
+  abort "cleanup() stops the watcher after removing its files" unless stop < removal
+  abort "cleanup() no longer ends in exit \"$status\"" unless lines[cleanup.end - 1].strip == %q{exit "$status"}
+'
+
+# Runs the upload script's own functions, in a shell set up as its main() is,
+# against a fake xcodebuild, XPC service, altool, launchctl, and /usr/bin/log.
+# exec -a makes each fake read as the real command does in ps. Another client's
+# identical stream and an orphaned one run throughout and have to survive.
+fake_stream_is_running() {
+  [ -n "$1" ] && ps -ww -o command= -p "$1" 2>/dev/null | grep -q '^/usr/bin/log stream --predicate'
+}
+
+fake_wait_until() {
+  local tries=0
+  while ! "$@"; do
+    tries=$((tries + 1))
+    [ "$tries" -le 50 ] || return 1
+    sleep 0.1
+  done
+}
+
+fake_stream_has_ended() {
+  ! fake_stream_is_running "$1"
+}
+
+log_stream_check() {
+  local message="$UPLOAD ends its own log stream on every exit path, keeps the exit code, and leaves others' alone"
+  local failures="" name want stay got run_pid stream
+  local CHECK_TMP
+  CHECK_TMP="$(mktemp -d "${TMPDIR:-/tmp}/qbank-log-stream-check.XXXXXX")" || {
+    fail "$message: no temporary directory"
+    return
+  }
+  export CHECK_TMP
+  mkdir -p "$CHECK_TMP/state" "$CHECK_TMP/bin" "$CHECK_TMP/broken-ps" "$CHECK_TMP/log"
+  sed '/^if \[ "${1:-}" = "--inside-vault" \]; then$/,$d' "$UPLOAD" >"$CHECK_TMP/functions.sh"
+
+  # Bash runs this file, named stream, with the real tool's arguments.
+  cat >"$CHECK_TMP/log/stream" <<'FAKE'
+while :; do sleep 1; done
+FAKE
+  # Starts a fake stream in the background and writes its PID to the file $1.
+  cat >"$CHECK_TMP/start-stream" <<'FAKE'
+( cd "$CHECK_TMP/log" && exec -a /usr/bin/log bash stream --predicate 'process contains "Xcode" and subsystem == "com.apple.network"' --debug --info --style compact ) </dev/null >/dev/null 2>&1 &
+echo "$!" >"$1.new"
+mv "$1.new" "$1"
+FAKE
+  # An XPC service: launchd's, so outside the caller's process tree. It holds a
+  # stream until its client is done, which orphans the stream.
+  cat >"$CHECK_TMP/xpc-service" <<'FAKE'
+echo "$$" >"$CHECK_TMP/state/service.$1"
+source "$CHECK_TMP/start-stream" "$CHECK_TMP/state/stream.$1"
+while [ -d "$CHECK_TMP/state" ] && [ ! -e "$CHECK_TMP/state/done.$1" ]; do sleep 0.1; done
+FAKE
+  # xcodebuild: launchctl names its XPC service for as long as it runs. Takes a
+  # label and how many tenths of a second to run.
+  cat >"$CHECK_TMP/xcodebuild" <<'FAKE'
+( ( bash "$CHECK_TMP/xpc-service" "$1" </dev/null >/dev/null 2>&1 & ) )
+while [ ! -e "$CHECK_TMP/state/stream.$1" ]; do sleep 0.1; done
+printf '\tservices = {\n\t\t   %s      - \tcom.apple.dt.Xcode.ITunesSoftwareService\n\t}\n\tservice stubs = {\n\t\tcom.apple.example\n\t}\n' \
+  "$(cat "$CHECK_TMP/state/service.$1")" >"$CHECK_TMP/state/domain.$$"
+tenths=0
+while [ "$tenths" -lt "$2" ] && [ -d "$CHECK_TMP/state" ] && [ ! -e "$CHECK_TMP/state/done.$1" ]; do
+  sleep 0.1
+  tenths=$((tenths + 1))
+done
+touch "$CHECK_TMP/state/done.$1" 2>/dev/null
+FAKE
+  cat >"$CHECK_TMP/bin/launchctl" <<'FAKE'
+#!/usr/bin/env bash
+cat "$CHECK_TMP/state/domain.${2#pid/}"
+FAKE
+  printf '#!/usr/bin/env bash\nexit 1\n' >"$CHECK_TMP/broken-ps/ps"
+  chmod +x "$CHECK_TMP/bin/launchctl" "$CHECK_TMP/broken-ps/ps"
+
+  # One run. Takes a label, an exit code, and how many seconds to stay up after
+  # its tools finish. A tool under it leaves a stream too, as altool would. Each
+  # parent lives long enough for the watcher to look at least twice.
+  cat >"$CHECK_TMP/run.sh" <<'RUN'
+source "$CHECK_TMP/functions.sh"
+PATH="${CHECK_PATH:-}$CHECK_TMP/bin:$PATH"
+work="$CHECK_TMP/work.$1"
+mkdir "$work"
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+start_log_stream_watcher
+( source "$CHECK_TMP/start-stream" "$CHECK_TMP/state/tool-stream.$1"; sleep 1.5 ) &
+tool=$!
+( exec -a xcodebuild bash "$CHECK_TMP/xcodebuild" "$1" 15 )
+wait "$tool"
+sleep "$3"
+exit "$2"
+RUN
+
+  ( ( exec -a xcodebuild bash "$CHECK_TMP/xcodebuild" other 6000 ) </dev/null >/dev/null 2>&1 & )
+  bash "$CHECK_TMP/start-stream" "$CHECK_TMP/state/stream.orphan"
+  fake_wait_until test -e "$CHECK_TMP/state/stream.other"
+
+  for name in success failure term; do
+    want=0
+    [ "$name" = failure ] && want=31
+    [ "$name" = term ] && want=143
+    stay=0
+    [ "$name" = term ] && stay=1
+    bash "$CHECK_TMP/run.sh" "$name" "$want" "$stay" </dev/null >"$CHECK_TMP/$name.out" 2>&1 &
+    run_pid=$!
+    if [ "$name" = term ]; then
+      fake_wait_until test -e "$CHECK_TMP/state/done.$name"
+      kill -TERM "$run_pid" 2>/dev/null
+    fi
+    wait "$run_pid"
+    got=$?
+    [ "$got" = "$want" ] || failures="$failures; $name exited $got, not $want: $(tail -n 3 "$CHECK_TMP/$name.out")"
+    for stream in stream tool-stream; do
+      stream="$(cat "$CHECK_TMP/state/$stream.$name" 2>/dev/null)"
+      [ -n "$stream" ] || failures="$failures; $name started no fake stream"
+      fake_stream_is_running "$stream" && failures="$failures; $name left stream $stream running"
+    done
+    [ ! -e "$CHECK_TMP/work.$name" ] || failures="$failures; $name left its temporary directory"
+    grep -q 'Terminated' "$CHECK_TMP/$name.out" && failures="$failures; $name printed a shell job message"
+  done
+
+  # A run killed outright runs no trap: the watcher still ends its streams.
+  bash "$CHECK_TMP/run.sh" killed 0 3 </dev/null >"$CHECK_TMP/killed.out" 2>&1 &
+  run_pid=$!
+  fake_wait_until test -e "$CHECK_TMP/state/done.killed"
+  kill -KILL "$run_pid" 2>/dev/null
+  wait "$run_pid" 2>/dev/null
+  for stream in stream tool-stream; do
+    stream="$(cat "$CHECK_TMP/state/$stream.killed" 2>/dev/null)"
+    [ -n "$stream" ] || failures="$failures; killed started no fake stream"
+    fake_wait_until fake_stream_has_ended "$stream" || failures="$failures; a killed run left stream $stream running"
+  done
+
+  # A cleanup that cannot see any process leaves the exit code alone.
+  CHECK_PATH="$CHECK_TMP/broken-ps:" bash "$CHECK_TMP/run.sh" broken 31 0 </dev/null >"$CHECK_TMP/broken.out" 2>&1
+  got=$?
+  [ "$got" = 31 ] || failures="$failures; a cleanup that cannot run ps changed the exit code to $got: $(tail -n 3 "$CHECK_TMP/broken.out")"
+
+  for name in other orphan; do
+    fake_stream_is_running "$(cat "$CHECK_TMP/state/stream.$name" 2>/dev/null)" || failures="$failures; the $name stream did not survive"
+  done
+
+  touch "$CHECK_TMP/state/done.other"
+  for stream in "$CHECK_TMP"/state/stream.* "$CHECK_TMP"/state/tool-stream.*; do
+    kill "$(cat "$stream")" 2>/dev/null
+  done
+  rm -rf "$CHECK_TMP"
+
+  if [ -z "$failures" ]; then
+    pass "$message"
+  else
+    fail "$message$failures"
+  fi
+}
+log_stream_check
+
 forbid_grep '(^|[;&|[:space:]])set[[:space:]]+-[[:alnum:]]*x|xtrace' "$UPLOAD" "$UPLOAD never turns on xtrace"
 require_grep 'CODE_SIGN_STYLE=Automatic' "$UPLOAD" "$UPLOAD archives with automatic signing"
 require_grep '-allowProvisioningUpdates' "$UPLOAD" "$UPLOAD lets the Xcode account provision the archive"
