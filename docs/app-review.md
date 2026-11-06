@@ -6,7 +6,7 @@ What App Review needs to see QBank work, and the notes to paste. Read [release.m
 
 | Route | Review | When |
 |---|---|---|
-| TestFlight, internal testers (the owner, Khine) | **none**: a build is installable minutes after Apple finishes processing it | phase 2 |
+| TestFlight, internal testers (the owner, the tester) | **none**: a build is installable minutes after Apple finishes processing it | phase 2 |
 | TestFlight, external testers | Beta App Review of the first build of each version | not planned |
 | App Store | full App Review of each version | phase 4, optional |
 
@@ -14,7 +14,7 @@ So nothing in this file is needed for phase 2. It is ready for the day the owner
 
 ### Before submitting: who can use the app
 
-Today a QBank account exists only for an email the owner put on his sign-up list: he makes it, or its user signs up with that email in the app or on the web (pick 18 of the plan keeps the server for him and Khine). A reviewer can sign in with the demo account below, but a stranger who downloads the app can do nothing past the sign-in screen. Apple may reject such an app, or ask for it to be distributed as an [unlisted app](https://developer.apple.com/support/unlisted-app-distribution/) instead. The plan's answer is phase 4, "free on this phone": the first screen offers using QBank on the phone without an account, so the public listing makes sense. **Submit only after that mode ships**, or request unlisted distribution if a public listing is not wanted.
+Today a QBank account exists only for an email the owner put on his sign-up list: he makes it, or its user signs up with that email in the app or on the web (pick 18 of the plan keeps the server for him and the tester). A reviewer can sign in with the demo account below, but a stranger who downloads the app can do nothing past the sign-in screen. Apple may reject such an app, or ask for it to be distributed as an [unlisted app](https://developer.apple.com/support/unlisted-app-distribution/) instead. The plan's answer is phase 4, "free on this phone": the first screen offers using QBank on the phone without an account, so the public listing makes sense. **Submit only after that mode ships**, or request unlisted distribution if a public listing is not wanted.
 
 ## How sign-in works
 
@@ -44,13 +44,13 @@ The owner creates one account only for App Review and types its details into App
 
 How to make it (owner, on the web app, about five minutes):
 
-1. Pick an email address you control that is not Khine's or yours, for example a `+review` alias of your own address.
+1. Pick an email address you control that is not the tester's or yours, for example a `+review` alias of your own address.
 2. On the web app's admin screen, add that email to the sign-up list.
 3. Sign out, choose **Sign up** in the app or on the web, and create the account with a strong password that is not used anywhere else.
 4. Sign in to the iPhone app with it once, answer a few questions in one course, and finish one short exam, so the reviewer sees a Review list and progress instead of empty screens.
 5. Keep the account after review: Apple may re-check it with each new version. Change its password after any version is approved if you like, and update App Store Connect at the same time. A reviewer may try **Delete account** on it; if it is gone, make it again the same way before the next submission.
 
-The demo account is an ordinary user account. It has its own sample courses and sets, and it sees only its own questions and answers. Nothing it does touches Khine's questions or progress.
+The demo account is an ordinary user account. It has its own sample courses and sets, and it sees only its own questions and answers. Nothing it does touches the tester's questions or progress.
 
 Before every submission, a worker signs in to the TestFlight build of that version with the demo account (the owner gives the credentials to the session, not to a file) and checks that sign-in, one practice set, Review, and an exam work against the live server.
 

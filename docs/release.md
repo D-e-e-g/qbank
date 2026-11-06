@@ -1,8 +1,8 @@
 # Release: TestFlight (phase 2)
 
-How a QBank build gets from `main` to Khine's iPhone, and the checklist that sets it up. Builds are made, signed, and uploaded on the owner's MacBook by `scripts/testflight-upload.sh`. No CI job signs or uploads anything, and no GitHub machine ever holds an Apple credential.
+How a QBank build gets from `main` to the tester's iPhone, and the checklist that sets it up. Builds are made, signed, and uploaded on the owner's MacBook by `scripts/testflight-upload.sh`. No CI job signs or uploads anything, and no GitHub machine ever holds an Apple credential.
 
-Phase 2 is done when a build uploaded this way reaches Khine's iPhone through TestFlight, the first one at parity with the web app, and Khine uses it for a week the way she uses the web app.
+Phase 2 is done when a build uploaded this way reaches the tester's iPhone through TestFlight, the first one at parity with the web app, and the tester uses it for a week the way she uses the web app.
 
 ## How an upload works
 
@@ -37,9 +37,9 @@ Run it from any checkout of this repository on the Mac; it builds the ref's comm
 
 - **Version** (`CFBundleShortVersionString`): from the tag when the ref is a `qbank-vX.Y.Z` tag, otherwise from the project's `MARKETING_VERSION`. Either way a zero patch is trimmed: `qbank-v0.1.0` and the project's `0.1.0` build as `0.1`, `qbank-v0.1.2` as `0.1.2`. The project's version changes in an ordinary pull request.
 - **Build number** (`CFBundleVersion`): the Unix time in seconds when the run started, for example `1792156600` (`date -r 1792156600` turns it back into a date). Every run gets a new, higher number, so a re-upload of the same ref never collides with an earlier upload. Two runs on the Mac never share a second: the later one waits for the next.
-- Settings shows both (for example "QBank 0.1 (1792156600)"), so anyone can tell which build Khine has; that run's `build.txt` names its commit.
+- Settings shows both (for example "QBank 0.1 (1792156600)"), so anyone can tell which build the tester has; that run's `build.txt` names its commit.
 
-A TestFlight build expires **90 days** after upload. If nothing has been uploaded for about 80 days, a worker asks the owner for an upload so Khine's build keeps opening.
+A TestFlight build expires **90 days** after upload. If nothing has been uploaded for about 80 days, a worker asks the owner for an upload so the tester's build keeps opening.
 
 ### The Associated Domains capability
 
@@ -64,8 +64,8 @@ Steps 4 to 9 come before the first upload. Each is done once unless it says othe
 - [x] **3. Sign in to Xcode** (Settings > Accounts) with that Apple Account, and check that the paid team, not only the Personal Team, shows under it. The upload's signing depends on this sign-in.
 - [x] **4. Accept the agreements** waiting in App Store Connect (Business) and on developer.apple.com. A free app needs no Paid Applications agreement.
 - [x] **5. Create the app record** in [App Store Connect](https://appstoreconnect.apple.com) > Apps > + > New App: platform iOS, name **My QBank** (see [app-store-listing.md](app-store-listing.md)), primary language English (U.S.), bundle ID `com.dimitrygallego.qbank`, SKU `qbank-ios`, user access Full. If the bundle ID is not in the list, register it first under Certificates, Identifiers & Profiles > Identifiers > App IDs, with no extra capabilities.
-- [x] **6. Invite Khine and make the tester group.** Users and Access > + with her Apple Account email, a low role such as Marketing, access to QBank only; she accepts the email. If she is not offered when adding testers, change her role, as Apple's help says. Then QBank > TestFlight > Internal Testing > +, name `Home`, tick **Enable automatic distribution**, and add himself and Khine.
-- [ ] **7. Khine installs the TestFlight app** from the App Store on her iPhone and taps the invitation email, signed in with the same Apple Account.
+- [x] **6. Invite the tester and make the tester group.** Users and Access > + with her Apple Account email, a low role such as Marketing, access to QBank only; she accepts the email. If she is not offered when adding testers, change her role, as Apple's help says. Then QBank > TestFlight > Internal Testing > +, name `Home`, tick **Enable automatic distribution**, and add himself and the tester.
+- [ ] **7. The tester installs the TestFlight app** from the App Store on her iPhone and taps the invitation email, signed in with the same Apple Account.
 - [x] **8. Create the App Store Connect API key**, at his Mac: Users and Access > Integrations > App Store Connect API > Team Keys > +, any name (for example `qbank-testflight`), access **App Manager**, not Admin. Note the **Key ID** and the **Issuer ID** shown above the keys table, and download the `.p8` file. Apple offers the download **once**.
 - [x] **9. Save the key in Automic Vault**, in Terminal on the same Mac. The values never appear on screen or in chat:
 
@@ -78,21 +78,21 @@ Steps 4 to 9 come before the first upload. Each is done once unless it says othe
 
   Then delete the `.p8` from Downloads and empty the Trash. The vault holds the only copy; if it is lost, revoke the key and make a new one under the same names.
 - [ ] **10. Allow each upload** when Automic Vault asks. This repeats for every upload.
-- [ ] **Later, before the App Store (phase 4):** decide to submit, fill in the privacy contact in [privacy-policy.md](privacy-policy.md), answer App Privacy in App Store Connect from [privacy-manifest.md](privacy-manifest.md), make the demo account in [app-review.md](app-review.md), confirm with Khine whether her questions may appear in public screenshots, and press **Submit for Review**.
+- [ ] **Later, before the App Store (phase 4):** decide to submit, fill in the privacy contact in [privacy-policy.md](privacy-policy.md), answer App Privacy in App Store Connect from [privacy-manifest.md](privacy-manifest.md), make the demo account in [app-review.md](app-review.md), confirm with the tester whether her questions may appear in public screenshots, and press **Submit for Review**.
 
 ### Workers
 
 - [x] **Upload path**: `scripts/testflight-upload.sh`, `scripts/ExportOptions.plist`, and their rules in `test/release-checks.sh`, which `ci.yml` runs on every pull request with no credentials or network.
 - [x] **Version in Settings**: the version and build number at the bottom of Settings.
 - [x] **Privacy manifest**: `QBank/PrivacyInfo.xcprivacy` in the app target, from [privacy-manifest.md](privacy-manifest.md). `test/release-checks.sh` checks that it exists, lints, and belongs to the app target. `ITSAppUsesNonExemptEncryption` is already `NO` in the project.
-- [ ] **Privacy policy check**: before Khine's first build, re-read every claim in [privacy-policy.md](privacy-policy.md) against the app and the server, fix what differs, and set "Last reviewed against the code".
+- [ ] **Privacy policy check**: before the tester's first build, re-read every claim in [privacy-policy.md](privacy-policy.md) against the app and the server, fix what differs, and set "Last reviewed against the code".
 - [ ] **Server follow-up in qbank-web** (optional, small): stop recording the IP address and user agent on sessions, which QBank never uses; then drop that line from the policy and the manifest notes.
 - [ ] **Walk the owner through steps 3 to 9**, one step at a time, and confirm each one (for example `av list` on his Mac shows the three names; values are never read back).
 - [x] **App icon**: `QBank/Assets.xcassets/AppIcon.appiconset`, direction A2 of the icon board (a letter-bowl Q with a short square-cut tail, paper-100 on the dusk-500 to dusk-900 gradient), with dark and tinted variants. Each PNG is rendered at 1024 px from its SVG in `docs/app-icon/`; the light one has no alpha channel. `test/release-checks.sh` requires each slot to hold a 1024x1024 PNG.
 - [x] **First upload, attended** (2026-10-16): `--no-upload` passed, then QBank 0.1 (1792194900) uploaded with his Allow, built from commit b217465 on the branch that added the icon, and Apple reported it VALID. An earlier attempt was refused because the app had no icon.
 - [x] **Associated Domains capability**: `QBank/QBank.entitlements` with the web domain's webcredentials, its one entitlement, which `test/release-checks.sh` pins, and the export check that requires it (see [The Associated Domains capability](#the-associated-domains-capability)).
 - [x] **First upload with passkeys** (2026-10-18): `--no-upload` for QBank 0.1 (1792361652) gave the App ID Associated Domains, then QBank 0.1 (1792362111) from commit `554cc73` uploaded and App Store Connect reported it VALID.
-- [ ] **After every upload**: confirm App Store Connect accepted the exact build (the version and build number, processing or ready in TestFlight), not just a script that finished, and tell the owner the build is on Khine's phone.
+- [ ] **After every upload**: confirm App Store Connect accepted the exact build (the version and build number, processing or ready in TestFlight), not just a script that finished, and tell the owner the build is on the tester's phone.
 
 ## Security boundaries
 
