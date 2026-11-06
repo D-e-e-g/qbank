@@ -17,13 +17,23 @@ The workflow references no secrets, reads the repository with a `contents: read`
 
 ## Trusted code: `xcode.yml`
 
-Pull requests from this repository's own branches, pushes to `main`, `qbank-v*` tags, and manual runs (Actions > Xcode > Run workflow, or `gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>`) run one Mac job:
+Pull requests from this repository's own branches, pushes to `main`, `qbank-v*` tags, and manual runs (Actions > Xcode > Run workflow, or `gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>`) run one Mac job, shortest steps first so that a failure stops early:
 
 1. `test/package-tests.sh`: `swift test` in every package under `Packages/` on the Mac host
-2. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves
-3. a Release build for `generic/platform=iOS` without signing, which proves Debug-only code stays out of Release
+2. a Release build for `generic/platform=iOS` without signing, which proves Debug-only code stays out of Release
+3. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves. Both steps run their tests one after another
 
 A pull request from a fork never runs the Mac job; its `Mac build skipped` job says why (see below).
+
+A `Change scope` job on GitHub's Linux runs first. It takes a same-repository pull request off the Mac only when every changed path is on the allowlist in `test/docs-only.sh` (`docs/` and the top-level Markdown files), so anything else, a path it does not know included, builds. `Build and test` then reports skipped, which never blocks a merge, and `Mac build skipped` says why. A push to `main`, a tag, or a manual run is never taken off the Mac this way, so `main` still runs the complete suite ahead of any TestFlight build.
+
+UI tests stay serial. Parallel testing was measured on the MacBook Pro 14: serial took 6 runs with 0 failures, two workers 4 runs with 1 failure, three workers 1 run with 1 failure, every failure on `StudyUITests.testDayOneCourseMakesAndRemovesAnExamPage`. The cause is unproven, and a flake costs more than the minutes parallel workers save, so do not add `-parallel-testing-enabled` back without a cause found and fixed.
+
+Build results are not reused between runs: compiling takes about 2 minutes of the job, which is not worth the risk of a stale result hiding a failure.
+
+### Retrying one test
+
+The `only_testing` input of a manual run runs only the tests it names, under a check named `Named tests`, so that a failed test can be retried in minutes. [testing.md](testing.md) has the retry rule, which workers and fix rounds follow, and how to use it. Its names reach the Mac only through `env`, and `test/only-testing.sh` refuses anything but a test name, on Linux before a Mac is asked for and again on the Mac. That job has a concurrency group per branch, so it never replaces a waiting full build, and it runs only on `MAC_RUNNER`.
 
 A pull request's new commit cancels the build of its previous one. Every other run shares the `xcode-mac` concurrency group, because a self-hosted Mac also serves other CI: a new run waits for the running one, and GitHub keeps only one waiting run, replacing it with a newer one, so a burst of pushes to `main` builds the newest commit. A replaced tag or manual run can be run again from its page. The self-hosted Mac has one QBank runner, so it runs one QBank job at a time. The job stops after 90 minutes.
 
@@ -47,7 +57,7 @@ Delete the variable to go back to the hosted Mac for tags and manual runs; pull 
 
 A pull request from a branch of this repository builds on the self-hosted Mac: only a collaborator with write access, today only the owner, can push such a branch, so its code is as trusted as a manual run. A pull request from a fork must never reach the Mac, and four things keep it off:
 
-- **The job's guard.** `xcode.yml`'s Mac job runs for a pull request only when `github.event.pull_request.head.repo.full_name` is `D-e-e-g/qbank`, so GitHub never even schedules a fork's pull request on the Mac. `test/release-checks.sh` refuses any other Mac or self-hosted job in a workflow that a pull request, comment, review or `workflow_run` can start, and any `pull_request_target` trigger.
+- **The job's guard.** `xcode.yml`'s Mac job runs for a pull request only when `github.event.pull_request.head.repo.full_name` is `D-e-e-g/qbank`, so GitHub never even schedules a fork's pull request on the Mac. `test/release-checks.sh` refuses any other Mac or self-hosted job in a workflow that a pull request, comment, review or `workflow_run` can start, apart from `Named tests`, whose guard needs a manual run, and any `pull_request_target` trigger.
 - **Approval for forks.** A fork's pull request runs its own copy of the workflow files, which can drop the guard and name the runner's label, so the guard alone is not enough. Workflows from fork pull requests wait for approval for all outside collaborators, and the owner is the only collaborator. Approve a fork's run only after reading its diff, and never one that changes `.github/`.
 - **The runner's job-started hook.** It refuses any job that is not `xcode.yml` running for a push to `main`, a `qbank-v*` tag, a manual run, or a pull request whose event payload, written by the runner itself, shows both its head and base repository as `D-e-e-g/qbank`. So even an approved fork run fails before it checks anything out. The hook lives on the Mac, not in this repository.
 - **The runner's scope.** It is registered to this repository only, under its own label and none of the default ones (`self-hosted`, `macOS`, `ARM64`), so no other repository's jobs land on it and it takes no job that asks for a generic Mac.

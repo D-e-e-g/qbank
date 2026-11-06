@@ -55,10 +55,14 @@ XCODE=.github/workflows/xcode.yml
 # xcode.yml's Mac build, the one job off GitHub's hosted Linux that a pull
 # request may start. Its if: keeps a fork's pull request from being scheduled
 # at all, and its runs-on sends a pull request only to the MacBook Pro 14's
-# runner, never to the hosted macos-26 fallback.
+# runner, never to the hosted macos-26 fallback. The scope job can only take a
+# run off the Mac: its output is an extra condition in front of those guards.
 export MAC_RUNS_ON="\${{ github.event_name == 'pull_request' && 'qbank-macbook-14' || vars.MAC_RUNNER || 'macos-26' }}"
-export MAC_BUILD_IF="github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'D-e-e-g/qbank' && vars.MAC_RUNNER != '' || github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != '')"
-export MAC_SKIP_IF="github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'D-e-e-g/qbank' || vars.MAC_RUNNER == '' && (github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main')"
+export MAC_BUILD_IF="needs.scope.outputs.mac == 'true' && inputs.only_testing == '' && ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'D-e-e-g/qbank' && vars.MAC_RUNNER != '' || github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != '') )"
+# The retry job: only a manual run with test names can start it, and never with
+# no self-hosted runner set.
+export MAC_NAMED_TESTS_IF="needs.scope.outputs.mac == 'true' && github.event_name == 'workflow_dispatch' && inputs.only_testing != '' && vars.MAC_RUNNER != ''"
+export MAC_SKIP_IF="github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'D-e-e-g/qbank' || vars.MAC_RUNNER == '' && (github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.scope.outputs.mac == 'false'"
 export MAC_CONCURRENCY_GROUP="\${{ github.event_name == 'pull_request' && format('xcode-pr-{0}', github.event.pull_request.number) || 'xcode-mac' }}"
 export MAC_CANCEL_IN_PROGRESS="\${{ github.event_name == 'pull_request' }}"
 
@@ -114,7 +118,7 @@ for workflow in "${WORKFLOWS[@]}"; do
     (wf["jobs"] || {}).each do |name, job|
       runs_on = job["runs-on"]
       next if runs_on.is_a?(String) && runs_on.start_with?("ubuntu-")
-      next if untrusted == %w[pull_request] && runs_on == ENV["MAC_RUNS_ON"] && job["if"] == ENV["MAC_BUILD_IF"]
+      next if untrusted == %w[pull_request] && runs_on == ENV["MAC_RUNS_ON"] && [ENV["MAC_BUILD_IF"], ENV["MAC_NAMED_TESTS_IF"]].include?(job["if"])
       abort "job #{name} runs on #{runs_on.inspect} and the workflow triggers on #{untrusted.inspect}; off Linux, a pull request may start only a job with runs-on: #{ENV["MAC_RUNS_ON"]} and if: #{ENV["MAC_BUILD_IF"]}"
     end
   '
@@ -182,22 +186,88 @@ ruby_check "xcode.yml triggers only on plain pull requests, pushes to main, qban
 # Linux job says why, as it does for a fork. A pull request's new commit
 # cancels its previous build; every other run shares one concurrency group
 # that queues rather than cancels, so a burst of pushes to main builds once.
+# Only the scope job decides what a run needs, and it can only say no to a pull
+# request. The named-tests job has its own group, so it never replaces a waiting
+# full build.
 ruby_check "xcode.yml builds a pull request only from this repository, only on qbank-macbook-14, and skips without MAC_RUNNER" "$XCODE" '
   jobs = YAML.load_file(ARGV[0])["jobs"] || {}
   mac_jobs, other_jobs = jobs.partition { |_, job| job["runs-on"] == ENV["MAC_RUNS_ON"] }
   abort "no job runs on #{ENV["MAC_RUNS_ON"]}" if mac_jobs.empty?
-  mac_jobs.each do |name, job|
+  named = jobs["named-tests"] or abort "no named-tests job"
+  abort "named-tests must run on #{ENV["MAC_RUNS_ON"]}" unless named["runs-on"] == ENV["MAC_RUNS_ON"]
+  abort "named-tests if: is #{named["if"].inspect}, expected #{ENV["MAC_NAMED_TESTS_IF"].inspect}" unless named["if"] == ENV["MAC_NAMED_TESTS_IF"]
+  abort "named-tests must need the scope job" unless named["needs"] == "scope"
+  abort "named-tests must not share a concurrency group with a full build" if named["concurrency"]["group"] == ENV["MAC_CONCURRENCY_GROUP"]
+  mac_jobs.reject { |name, _| name == "named-tests" }.each do |name, job|
     abort "job #{name} if: is #{job["if"].inspect}, expected #{ENV["MAC_BUILD_IF"].inspect}" unless job["if"] == ENV["MAC_BUILD_IF"]
     abort "job #{name} sets no timeout-minutes" unless job["timeout-minutes"].is_a?(Integer)
     concurrency = job["concurrency"]
     expected = { "group" => ENV["MAC_CONCURRENCY_GROUP"], "cancel-in-progress" => ENV["MAC_CANCEL_IN_PROGRESS"] }
     abort "job #{name} concurrency must be #{expected.inspect} (got #{concurrency.inspect})" unless concurrency == expected
+    abort "job #{name} must need the scope job" unless job["needs"] == "scope"
   end
   other_jobs.each do |name, job|
     abort "job #{name} runs on #{job["runs-on"].inspect}" unless job["runs-on"].to_s.start_with?("ubuntu-")
+    next if name == "scope"
     abort "job #{name} if: is #{job["if"].inspect}, expected #{ENV["MAC_SKIP_IF"].inspect}" unless job["if"] == ENV["MAC_SKIP_IF"]
   end
+  scope = jobs["scope"] or abort "no scope job"
+  abort "the scope job must run for every event" if scope.key?("if")
 '
+# The test names are hostile input on a self-hosted Mac, so they reach a step only
+# through env; a run: line takes no expression at all.
+ruby_check "xcode.yml keeps the only_testing input out of shell lines" "$XCODE" '
+  wf = YAML.load_file(ARGV[0])
+  inputs = (wf[true] || wf["on"])["workflow_dispatch"]["inputs"]
+  abort "only_testing must be a string input defaulting to empty" unless inputs["only_testing"]["type"] == "string" && inputs["only_testing"]["default"] == ""
+  abort "device must be a choice of iphone and ipad" unless inputs["device"]["type"] == "choice" && inputs["device"]["options"] == %w[iphone ipad]
+  wf["jobs"].each do |name, job|
+    (job["steps"] || []).each do |step|
+      abort "job #{name} step #{step["name"]} puts an expression in its run: line" if step["run"].to_s.include?("${{")
+    end
+  end
+'
+# The real validator against names that must never reach xcodebuild.
+for name in 'QBankUITests/StudyUITests/testCoursePage' 'QBankUITests/AddUITests' 'QBankTests/Suite/test()' 'QBankTests/Outer/Inner/test(a:b:)'; do
+  if ./test/only-testing.sh --check -- "$name" >/dev/null 2>&1; then
+    pass "only-testing.sh accepts $name"
+  else
+    fail "only-testing.sh accepts $name"
+  fi
+done
+for name in '' 'QBankUITests' 'OtherTests/A/b' 'QBankUITests/$(id)' 'QBankUITests/`id`' 'QBankUITests/a;id' 'QBankUITests/a b' 'QBankUITests/../a' 'QBankUITests/*' '-resultBundlePath' 'QBankUITests/a/b/c/d' $'QBankUITests/a\nid' 'QBankUITests/é'; do
+  if ONLY_TESTING='' ./test/only-testing.sh --check -- "$name" >/dev/null 2>&1; then
+    fail "only-testing.sh refuses $name"
+  else
+    pass "only-testing.sh refuses $name"
+  fi
+done
+if ONLY_TESTING='QBankUITests/A/b *' ./test/only-testing.sh --check >/dev/null 2>&1; then
+  fail "only-testing.sh refuses a bad name among good ones in ONLY_TESTING"
+else
+  pass "only-testing.sh refuses a bad name among good ones in ONLY_TESTING"
+fi
+if [ "$(ONLY_TESTING='QBankUITests/A/b  QBankTests/C/d()' ./test/only-testing.sh --check | wc -l)" -eq 2 ]; then
+  pass "only-testing.sh reads whitespace-separated names from ONLY_TESTING"
+else
+  fail "only-testing.sh reads whitespace-separated names from ONLY_TESTING"
+fi
+# Only an allowlisted path may take a pull request off the Mac, and anything
+# unknown runs the full build.
+for paths in 'docs/ci.md' 'README.md' $'docs/a/b.png\nSECURITY.md'; do
+  if printf '%s\n' "$paths" | ./test/docs-only.sh; then
+    pass "docs-only.sh skips the Mac for: $paths"
+  else
+    fail "docs-only.sh skips the Mac for: $paths"
+  fi
+done
+for paths in '' 'QBank/App.swift' '.github/workflows/xcode.yml' 'test/sim.sh' 'NEW-FILE' 'docs' 'docs/../QBank/App.swift' 'Docs/ci.md' 'QBank.xcodeproj/project.pbxproj' $'docs/ci.md\nQBank/App.swift'; do
+  if printf '%s\n' "$paths" | ./test/docs-only.sh; then
+    fail "docs-only.sh keeps the Mac for: $paths"
+  else
+    pass "docs-only.sh keeps the Mac for: $paths"
+  fi
+done
 require_grep 'run: \./test/package-tests\.sh$' "$XCODE" "xcode.yml tests the Swift packages on the Mac"
 forbid_grep '^[^#]*sudo[[:space:]]' "$XCODE" "xcode.yml needs no sudo (the self-hosted runner has none)"
 

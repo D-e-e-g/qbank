@@ -3,6 +3,8 @@ name: Xcode
 # Builds and tests the app on a Mac. Runs only for trusted code: pull requests
 # from this repository's own branches, pushes to main, qbank-v* tags, and
 # manual runs. A fork's pull request never reaches the Mac (see docs/ci.md).
+# After a test fails, retry only that test with the only_testing input before
+# spending the full suite again (see docs/testing.md).
 on:
   pull_request:
   push:
@@ -11,20 +13,72 @@ on:
     tags:
       - 'qbank-v*'
   workflow_dispatch:
+    inputs:
+      only_testing:
+        description: 'Run only these tests, then stop: Target/Class/test names separated by spaces (see docs/testing.md). Empty runs everything.'
+        type: string
+        required: false
+        default: ''
+      device:
+        description: 'The simulator for only_testing'
+        type: choice
+        options:
+          - iphone
+          - ipad
+        default: iphone
 
 permissions:
   contents: read
 
 jobs:
+  # Decides on GitHub's Linux, before any Mac is asked for, what a run needs. A
+  # pull request that changes only allowlisted documentation skips the Mac; a
+  # push to main, a tag, or a manual run always builds. A named-tests run's
+  # names are checked here too, so a bad one fails without waiting for the Mac.
+  scope:
+    name: Change scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      mac: ${{ steps.scope.outputs.mac }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check the named tests
+        if: inputs.only_testing != ''
+        env:
+          ONLY_TESTING: ${{ inputs.only_testing }}
+        run: ./test/only-testing.sh --check
+
+      # A pull request's checkout is its merge commit, so the first parent is
+      # the base. If the diff cannot be read, the full build runs.
+      - name: Decide whether the Mac is needed
+        id: scope
+        run: |
+          mac=true
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] &&
+            files="$(git diff --name-only --no-renames HEAD^1 HEAD)" &&
+            printf '%s\n' "$files" | ./test/docs-only.sh; then
+            mac=false
+          fi
+          echo "mac=$mac" >> "$GITHUB_OUTPUT"
+
   # A pull request or a push to main builds only on the self-hosted MAC_RUNNER.
   # With no MAC_RUNNER the build would fall back to a GitHub-hosted Mac on every
   # merge, so it is skipped and this job says why. It also says why a fork's
-  # pull request skips the build.
+  # pull request or a documentation-only pull request skips the build.
   mac-build-skipped:
     name: Mac build skipped
+    needs: scope
     if: >-
       github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'D-e-e-g/qbank'
       || vars.MAC_RUNNER == '' && (github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main')
+      || needs.scope.outputs.mac == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -32,9 +86,12 @@ jobs:
       - name: Explain the skip
         env:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          NEEDS_MAC: ${{ needs.scope.outputs.mac }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
             message="This pull request comes from a fork, so it skips the Mac build: the self-hosted Mac builds only this repository's own branches (see docs/ci.md)."
+          elif [ "$NEEDS_MAC" = false ]; then
+            message="This pull request changes only documentation, so it skips the Mac build: test/docs-only.sh names the paths that cannot affect it. Merging it still runs the full build on main."
           else
             message="MAC_RUNNER is not set, so this run skips the Mac build. Set it to the self-hosted runner's label (see docs/ci.md)."
           fi
@@ -46,9 +103,12 @@ jobs:
   # hook checks the same thing again; never on a GitHub-hosted Mac.
   build-and-test:
     name: Build and test
+    needs: scope
     if: >-
+      needs.scope.outputs.mac == 'true' && inputs.only_testing == '' && (
       github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'D-e-e-g/qbank' && vars.MAC_RUNNER != ''
       || github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != 'refs/heads/main' || vars.MAC_RUNNER != '')
+      )
     runs-on: ${{ github.event_name == 'pull_request' && 'qbank-macbook-14' || vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 90
 
@@ -86,12 +146,28 @@ jobs:
       - name: Swift packages
         run: ./test/package-tests.sh
 
+      # The Debug-only launch seam can compile in Debug yet break a Release
+      # build. This compiles Release for a device with no signing, which is the
+      # same compiler boundary a TestFlight archive crosses. It takes under a
+      # minute, so it goes before the UI tests' hour.
+      - name: Build Release configuration (compile only)
+        run: |
+          xcodebuild build \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
       # test/sim.sh owns the simulator: it creates one run-scoped device, boots
       # it, and deletes it on every exit path. Never target a simulator here
       # directly. After a failure xcodebuild would gather simulator diagnostics,
       # which can wait without end; the result bundle is uploaded instead.
-      # The iPhone runs every UI test one after another. sim.sh's 60-minute
-      # default leaves headroom for the full suite while still stopping hangs.
+      # The iPhone runs every UI test one after another (see docs/ci.md).
+      # sim.sh's 60-minute default leaves headroom for the full suite while
+      # still stopping hangs.
       - name: Build and run unit and UI tests
         run: |
           ./test/sim.sh --device "iPhone 17 Pro" --device "iPhone 17" -- \
@@ -105,7 +181,8 @@ jobs:
               -resultBundlePath TestResults.xcresult
 
       # The same tests on an iPad: the iPad layout's UI tests run there, and the
-      # iPhone layout's skip themselves.
+      # iPhone layout's skip themselves. One class holds most of them, so a second
+      # worker here made this step slower, not faster.
       - name: Build and run unit and UI tests on iPad
         run: |
           ./test/sim.sh --device "iPad Pro 13-inch (M5)" --device "iPad Pro 13-inch (M4)" -- \
@@ -129,16 +206,52 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-      # The Debug-only launch seam can compile in Debug yet break a Release
-      # build. This compiles Release for a device with no signing, which is the
-      # same compiler boundary a TestFlight archive crosses.
-      - name: Build Release configuration (compile only)
+  # A manual run with only_testing runs those tests and nothing else: the retry
+  # for one failed test (see docs/testing.md). A pull request can never start it.
+  # It has its own check name, so its pass is never taken for a full build's, and
+  # its own concurrency group, so its wait never replaces a full build of main.
+  # It runs only on MAC_RUNNER, never on a GitHub-hosted Mac.
+  named-tests:
+    name: Named tests
+    needs: scope
+    if: >-
+      needs.scope.outputs.mac == 'true' && github.event_name == 'workflow_dispatch' && inputs.only_testing != '' && vars.MAC_RUNNER != ''
+    runs-on: ${{ github.event_name == 'pull_request' && 'qbank-macbook-14' || vars.MAC_RUNNER || 'macos-26' }}
+    timeout-minutes: 45
+
+    concurrency:
+      group: ${{ format('xcode-named-{0}', github.ref_name) }}
+      cancel-in-progress: true
+
+    env:
+      DERIVED_DATA_PATH: .build/DerivedData
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode
         run: |
-          xcodebuild build \
-            -project "$PROJECT_PATH" \
-            -scheme "$SCHEME" \
-            -configuration Release \
-            -destination "generic/platform=iOS" \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> "$GITHUB_ENV"
+          export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          echo "iPhoneSimulator SDK: $(xcrun --sdk iphonesimulator --show-sdk-version)"
+
+      # The names are hostile input on a self-hosted Mac: only through env, never
+      # into a shell line, and the script refuses anything but a test name.
+      - name: Run only the named tests
+        env:
+          ONLY_TESTING: ${{ inputs.only_testing }}
+          DEVICE: ${{ inputs.device }}
+        run: ./test/only-testing.sh --device "$DEVICE"
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results
+          path: TestResults-named.xcresult
+          retention-days: 14
+          if-no-files-found: ignore

@@ -1,0 +1,11 @@
+# no-mistakes reads these two from main, not from the pushed branch.
+ci:
+  instructions: |
+    A full run of xcode.yml takes the MacBook Pro 14 about an hour. When a check fails on one
+    test or a few, follow the retry rule in docs/testing.md: fix it, confirm by running only the
+    failing tests with test/only-testing.sh (or on the MacBook Pro 14 through a scratch branch and
+    the only_testing input), and let the push start the full suite only once they pass.
+test:
+  instructions: |
+    Run named tests with test/only-testing.sh rather than the full suite, and never rerun the full
+    suite to check one fix. docs/testing.md has the rule. Every simulator goes through test/sim.sh.
