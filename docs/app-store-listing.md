@@ -120,7 +120,7 @@ Expected result: **16+**, set by "frequent medical or treatment information". Th
 
 App Store Connect needs one iPhone set at **6.9 inch, 1320 x 2868 pixels portrait** (Apple scales it down for smaller iPhones); 3 to 10 images. The app runs on iPad too, so App Store Connect also needs one iPad set at **13 inch, 2064 x 2752 pixels portrait**; 3 to 10 images, taken the same way on a 13-inch iPad simulator or device.
 
-Take them from a TestFlight build signed in to a **demo account**, never Khine's account, so no real progress shows. The question text shown comes from the demo account's own sample courses and sets.
+Take them from a TestFlight build signed in to a **demo account**, never a real user's account, so no real progress shows. The question text shown comes from the demo account's own sample courses and sets.
 
 The list follows the approved phase-W wireframes (`qbank-ios-wireframes`, approved 2026-10-12), in this order:
 
