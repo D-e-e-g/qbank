@@ -231,7 +231,7 @@ struct WordingTests {
             title: "Import question sets",
             detail: "Into the courses and topics of your account, reading them to file each set. It never replaces, moves, renames, or deletes a set."
         ))
-        #expect(AgentWording.scopeWords(.import, admin: true).detail == AgentWording.adminKeyReach)
+        #expect(AgentWording.scopeWords(.import, admin: true).detail == "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none.")
     }
 
     @Test func readIsReadOnly() {
@@ -248,7 +248,7 @@ struct WordingTests {
         ))
         #expect(AgentWording.scopeWords(.manage, admin: true) == .init(
             title: "Add, change, and delete content",
-            detail: AgentWording.adminKeyReach
+            detail: "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none."
         ))
         #expect(AgentWording.isStrongest(.manage))
         #expect(!AgentWording.isStrongest(.import))

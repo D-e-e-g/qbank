@@ -261,6 +261,6 @@ struct ConnectAgentModelTests {
         let (admin, _) = make(StubServer(), account: .admin)
         #expect(AgentWording.pairingScopes(pairing, admin: student.isAdmin).map(\.title) == ["Add, change, and delete your content"])
         #expect(AgentWording.pairingScopes(pairing, admin: admin.isAdmin).map(\.title) == ["Add, change, and delete content"])
-        #expect(AgentWording.pairingScopes(pairing, admin: admin.isAdmin).map(\.detail) == [AgentWording.adminKeyReach])
+        #expect(AgentWording.pairingScopes(pairing, admin: admin.isAdmin).map(\.detail) == ["It reaches nothing. An agent key reaches only its own account's content, and the admin account has none."])
     }
 }
