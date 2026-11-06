@@ -20,7 +20,8 @@
 #
 # docs/release.md has the version and build number rules. Logs go to the
 # ignored build/testflight/<build number>/ directory. Everything else, the key
-# included, lives in a temporary directory removed on every exit path.
+# included, lives in a temporary directory removed on every exit path, and the
+# log stream process Apple's tools leave behind is ended on every exit path too.
 #
 # Compatible with the bash 3.2 that ships with macOS.
 set -euo pipefail
@@ -103,6 +104,111 @@ upload_inside_vault() {
     --apiKey "$key_id" --apiIssuer "$issuer_id" 2>&1 | tee "$log_file"
 }
 
+# --- Apple's leftover log stream ---------------------------------------------------
+#
+# Apple's delivery code (CDUploader in ContentDelivery.framework) runs
+#   /usr/bin/log stream --predicate process contains "<process>" and subsystem == "com.apple.network" ...
+# and leaves it running after its parent ends. xcodebuild -exportArchive starts
+# one from its ITunesSoftwareService XPC service, which launchd runs outside this
+# script's process tree. altool holds the same code.
+#
+# Other work on this Mac starts identical processes, so neither the command nor
+# when it started says whose one is. A background process records each stream
+# while its parent is alive to name it: the parent is under this script, or is
+# an XPC service that launchctl lists for this run's own xcodebuild. It ends
+# only those. If that link is ever missed the stream is left running and named
+# in a warning. This never changes the run's outcome.
+
+log_stream_watcher=""
+
+# Prints the rows of table $2 for the processes in $1 and everything under them.
+rows_under() {
+  printf '%s\n' "$2" | awk -v roots="$1" '
+    { row[$1] = $0; parent[$1] = $2 }
+    END {
+      n = split(roots, list, " ")
+      for (i = 1; i <= n; i++) own[list[i]] = 1
+      do {
+        changed = 0
+        for (p in parent) if (!(p in own) && (parent[p] in own)) { own[p] = 1; changed = 1 }
+      } while (changed)
+      for (p in own) if (p in row) print row[p]
+    }'
+}
+
+# Adds to $services and $streams, which belong to watch_log_streams(). Rows are
+# PID, parent, five words of start time, then the command.
+scan_log_streams() {
+  local table client found
+  table="$(LC_ALL=C ps -A -ww -o pid= -o ppid= -o lstart= -o command=)" || return 0
+  for client in $(rows_under "$main_pid $services" "$table" | awk '$8 ~ /(^|\/)xcodebuild$/ { print $1 }'); do
+    found="$(launchctl print "pid/$client" 2>/dev/null |
+      awk '/^[[:space:]]*services = \{/ { on = 1; next } on && /\}/ { on = 0 } on && $1 ~ /^[1-9][0-9]*$/ { print $1 }')"
+    # shellcheck disable=SC2086 # the lists are PIDs, split on purpose
+    [ -z "$found" ] || services="$(printf '%s\n' $services $found | sort -un | tr '\n' ' ')"
+  done
+  found="$(rows_under "$main_pid $services" "$table" |
+    awk '$8 == "/usr/bin/log" && $9 == "stream" && $10 == "--predicate" { print $1, $3, $4, $5, $6, $7 }')"
+  [ -z "$found" ] || streams="$(printf '%s\n' "$streams" "$found" | sort -u)"
+}
+
+end_log_streams() {
+  local pid started ended=" " others
+  while read -r pid started; do
+    [ -n "$pid" ] || continue
+    # The start time tells the stream from a later process that reused its PID.
+    [ "$(LC_ALL=C ps -o lstart= -p "$pid" 2>/dev/null | awk '{ print $1, $2, $3, $4, $5 }')" = "$started" ] || continue
+    ended="$ended$pid "
+    if kill "$pid" 2>/dev/null; then
+      log "ended the log stream Apple's tools left running (process $pid)"
+    else
+      log "warning: could not end the log stream Apple's tools left running (process $pid)"
+    fi
+  done <<EOF
+$streams
+EOF
+  others="$(LC_ALL=C ps -A -ww -o pid= -o ppid= -o lstart= -o command= | awk -v ended="$ended" '
+    $2 == 1 && $8 == "/usr/bin/log" && $9 == "stream" && $10 == "--predicate" && index(ended, " " $1 " ") == 0 { printf " %s", $1 }')"
+  if [ -n "$others" ]; then
+    log "warning: orphaned log stream processes this run cannot tie to itself, left running:$others"
+  fi
+}
+
+# shellcheck disable=SC2034 # main_pid is read by scan_log_streams()
+watch_log_streams() {
+  local main_pid="$1" services="" streams="" stopping=no
+  set +e
+  trap 'stopping=yes' USR1
+  trap '' HUP INT TERM
+  # A run killed outright runs no trap; this notices and still ends its streams.
+  while [ "$stopping" = no ] && kill -0 "$main_pid" 2>/dev/null; do
+    scan_log_streams
+    sleep 0.5
+  done
+  scan_log_streams
+  end_log_streams
+}
+
+start_log_stream_watcher() {
+  watch_log_streams "$$" </dev/null >/dev/null 3<&- 4<&- 5<&- &
+  log_stream_watcher=$!
+}
+
+# Waits a bounded time, so a stuck watcher can never hold up the run's exit.
+stop_log_stream_watcher() {
+  local tries=0
+  [ -n "$log_stream_watcher" ] || return 0
+  kill -USR1 "$log_stream_watcher" 2>/dev/null || return 0
+  while kill -0 "$log_stream_watcher" 2>/dev/null; do
+    tries=$((tries + 1))
+    if [ "$tries" -gt 100 ]; then
+      log "warning: the log stream watcher (process $log_stream_watcher) has not finished; check for a stray log stream"
+      return 0
+    fi
+    sleep 0.1
+  done
+}
+
 # --- Build, export, check, then upload --------------------------------------------
 
 work=""
@@ -111,6 +217,7 @@ out=""
 cleanup() {
   local status=$?
   cd /
+  stop_log_stream_watcher || true
   if [ -n "$work" ]; then
     rm -rf "$work/asc-key" || log "warning: could not remove $work/asc-key; delete it now"
     chmod -R u+w "$work" 2>/dev/null || true
@@ -276,6 +383,7 @@ main() {
   local tmp_root="${TMPDIR:-/tmp}"
   work="$(mktemp -d "${tmp_root%/}/qbank-testflight.XXXXXX")"
   cd "$work"
+  start_log_stream_watcher
 
   log "fetching origin"
   git -C "$repo_root" fetch --quiet origin || die "could not fetch origin"
