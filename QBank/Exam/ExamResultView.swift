@@ -9,7 +9,6 @@ import SwiftUI
 struct ExamResultView: View {
     let exam: Exam
     let result: ExamResult
-    let isStudent: Bool
     var kind: CourseKind = .course
     let close: (ExamExit) -> Void
     @State private var expanded: Set<String> = []
@@ -126,22 +125,16 @@ struct ExamResultView: View {
         if result.reviewCount > 0 || bankWrong > 0 {
             VStack(alignment: .leading, spacing: QBankSpacing.space3) {
                 if result.reviewCount > 0 {
-                    if isStudent {
-                        Button {
-                            close(.openReview)
-                        } label: {
-                            Label("Open Review · \(result.reviewCount) from this exam", systemImage: "tray")
-                        }
-                        .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
-                        .accessibilityIdentifier("examResult.openReview")
-                    } else {
-                        Text("\(Wording.count(result.reviewCount, "question")) from this exam went to her Review.")
-                            .qbankFont(.subheadline)
-                            .foregroundStyle(.qbank(.text2))
+                    Button {
+                        close(.openReview)
+                    } label: {
+                        Label("Open Review · \(result.reviewCount) from this exam", systemImage: "tray")
                     }
+                    .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                    .accessibilityIdentifier("examResult.openReview")
                 }
                 if bankWrong > 0 {
-                    Text(Self.bankWrongText(bankWrong, isStudent: isStudent))
+                    Text(Self.bankWrongText(bankWrong))
                         .qbankFont(.subheadline)
                         .foregroundStyle(.qbank(.text2))
                         .accessibilityIdentifier("examResult.bankWrong")
@@ -151,10 +144,9 @@ struct ExamResultView: View {
     }
 
     /// Exam-bank questions stay out of Review, so the result says where the wrong ones went.
-    nonisolated static func bankWrongText(_ count: Int, isStudent: Bool) -> String {
+    nonisolated static func bankWrongText(_ count: Int) -> String {
         let one = count == 1
-        let lead = "\(count) exam-bank \(one ? "question" : "questions") \(isStudent ? "you" : "she") got wrong \(one ? "stays" : "stay") out of Review."
-        if !isStudent { return "\(lead) \(one ? "It comes" : "They come") back when she takes Wrong questions only." }
+        let lead = "\(count) exam-bank \(one ? "question" : "questions") you got wrong \(one ? "stays" : "stay") out of Review."
         return "\(lead) Turn on Wrong questions only to take \(one ? "it" : "them") again."
     }
 

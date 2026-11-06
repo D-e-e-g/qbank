@@ -62,6 +62,7 @@ struct ContractSchemaTests {
     /// Computed, so no shared state holds the non-Sendable metatypes.
     private static var decodedResponses: [(String, any Decodable.Type)] {
         [
+            ("admin-students", StudentList.self),
             ("agent-keys", AgentKeysResponse.self),
             ("attempt-saved", SavedAttempt.self),
             ("course", CourseDetail.self),

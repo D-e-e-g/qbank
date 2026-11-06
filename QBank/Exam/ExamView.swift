@@ -11,13 +11,13 @@ struct ExamView: View {
     @State private var asksToEnd = false
     @Environment(\.scenePhase) private var scenePhase
     let close: (ExamExit) -> Void
-    private let isStudent: Bool
+    private let frozen: FrozenView
     /// Whether the exam is over a course or a topic, which its result's way back names.
     private let kind: CourseKind
 
     init(app: AppModel, examID: String, kind: CourseKind = .course, close: @escaping (ExamExit) -> Void) {
         _model = State(initialValue: ExamModel(app: app, examID: examID))
-        isStudent = app.account?.role == .student
+        frozen = app.frozen
         self.kind = kind
         self.close = close
     }
@@ -25,7 +25,7 @@ struct ExamView: View {
     var body: some View {
         Group {
             if model.phase == .ended, let exam = model.exam, let result = exam.result {
-                ExamResultView(exam: exam, result: result, isStudent: isStudent, kind: kind, close: close)
+                ExamResultView(exam: exam, result: result, kind: kind, close: close)
                     .transition(.opacity)
             } else {
                 runner
@@ -34,6 +34,7 @@ struct ExamView: View {
         .animation(QBankMotion.reveal, value: model.phase)
         .qbankScreenBackground()
         .interactiveDismissDisabled()
+        .frozenRunnerNote(frozen, clearing: isRunning ? RunnerNote.footerClearance : 0)
         .task { await model.load() }
         .task { await model.runClock() }
         .onChange(of: scenePhase) { _, phase in
@@ -61,7 +62,15 @@ struct ExamView: View {
     private var runner: some View {
         RunnerShell(count: isRunning ? model.countText : "", title: model.title, progress: model.progress) {
             if isRunning {
-                Button("End exam") { asksToEnd = true }
+                Button("End exam") {
+                    // Only End exam leaves a running exam, so the frozen view's way out is here:
+                    // back to the screen under it with the note, and the exam goes on as it was.
+                    if frozen.refuses() {
+                        close(.done)
+                    } else {
+                        asksToEnd = true
+                    }
+                }
                     .buttonStyle(.qbank(.plain, size: .small))
                     .disabled(model.isEnding)
                     .accessibilityIdentifier("exam.end")
@@ -93,6 +102,7 @@ struct ExamView: View {
                     }
                     .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
                     .disabled(!model.canSubmit)
+                    .answersWhenFrozen(frozen)
                     .accessibilityIdentifier("exam.submit")
                 }
             }
@@ -106,8 +116,6 @@ struct ExamView: View {
             RunnerNote(text: "Loading the exam.")
         case .failed(let problem):
             RunnerNote(text: problem)
-        case .watching:
-            RunnerNote(text: "Her exam is still running. Its result shows here once it ends. Only she can answer questions.")
         case .running, .ended:
             if let question = model.question, let item = model.item {
                 ExamQuestionPage(model: model, question: question, item: item)

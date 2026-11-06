@@ -253,12 +253,14 @@ struct ConnectAgentModelTests {
         #expect(model.loadProblem == nil)
     }
 
-    /// The admin's approvals give keys to the user account he looks after, and the words say so.
-    @Test func theAdminSeesTheWordsForTheAccountHeLooksAfter() throws {
+    /// An agent key reaches only its own account's content and the admin account has none, so the
+    /// words promise nothing, whatever the server describes for a user account's key.
+    @Test func theAdminIsToldItsKeyReachesNothing() throws {
         let pairing = try QBankJSON.decoder.decode(AgentPairing.self, from: Data(Bodies.agentPairing(scopes: ["manage"]).utf8))
         let (student, _) = make(StubServer())
         let (admin, _) = make(StubServer(), account: .admin)
         #expect(AgentWording.pairingScopes(pairing, admin: student.isAdmin).map(\.title) == ["Add, change, and delete your content"])
         #expect(AgentWording.pairingScopes(pairing, admin: admin.isAdmin).map(\.title) == ["Add, change, and delete content"])
+        #expect(AgentWording.pairingScopes(pairing, admin: admin.isAdmin).map(\.detail) == [AgentWording.adminKeyReach])
     }
 }

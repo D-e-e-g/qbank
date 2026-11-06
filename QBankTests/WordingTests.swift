@@ -217,8 +217,7 @@ struct WordingTests {
         #expect(AgentWording.denied("My MacBook agent") == "Denied My MacBook agent. No key was made.")
         #expect(AgentWording.revokeTitle("My MacBook agent") == "Revoke My MacBook agent?")
         #expect(AgentWording.revoked("My MacBook agent") == "Revoked My MacBook agent. It stopped working just now.")
-        #expect(AgentWording.importedBy(isStudent: true) == "Imported by your agent")
-        #expect(AgentWording.importedBy(isStudent: false) == "Imported by an agent")
+        #expect(AgentWording.importedBy == "Imported by your agent")
     }
 
     @Test func theCodeIsTrimmedAndInCapitalsWithItsDashOrWithout() {
@@ -232,7 +231,7 @@ struct WordingTests {
             title: "Import question sets",
             detail: "Into the courses and topics of your account, reading them to file each set. It never replaces, moves, renames, or deletes a set."
         ))
-        #expect(AgentWording.scopeWords(.import, admin: true).detail == "Into the courses and topics of the user account you look after, reading them to file each set. It never replaces, moves, renames, or deletes a set.")
+        #expect(AgentWording.scopeWords(.import, admin: true).detail == AgentWording.adminKeyReach)
     }
 
     @Test func readIsReadOnly() {
@@ -249,7 +248,7 @@ struct WordingTests {
         ))
         #expect(AgentWording.scopeWords(.manage, admin: true) == .init(
             title: "Add, change, and delete content",
-            detail: "The sets, questions, folders, courses, and topics of the user account you look after, as you can in QBank. Anything it deletes goes to Recently deleted, where Undo brings it back for 30 days."
+            detail: AgentWording.adminKeyReach
         ))
         #expect(AgentWording.isStrongest(.manage))
         #expect(!AgentWording.isStrongest(.import))
@@ -314,7 +313,7 @@ struct WordingTests {
         var lines = [
             AgentWording.settingsDetail, AgentWording.intro, AgentWording.codeHint, AgentWording.noCode, AgentWording.loadingKeys,
             AgentWording.noKeys, AgentWording.keysFooter, AgentWording.revokedKey, AgentWording.mostAccess,
-            AgentWording.importedBy(isStudent: true), AgentWording.importedBy(isStudent: false),
+            AgentWording.importedBy,
         ]
         for scopes in [[AgentScope.import], [.import, .read], [.import, .manage], [AgentScope(rawValue: "export")]] {
             lines += [AgentWording.approvalNote(scopes), AgentWording.scopesLine(scopes), AgentWording.revokeMessage(scopes)]

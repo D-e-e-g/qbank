@@ -53,7 +53,7 @@ nonisolated final class FakeDeletions: Sendable {
     }
 
     /// Answers the delete, Undo and Recently deleted routes; nil for any other route.
-    func answer(method: String, path: String, query: [String: String], isStudent: Bool, library: some FakeDeletionLibrary) -> Reply? {
+    func answer(method: String, path: String, query: [String: String], library: some FakeDeletionLibrary) -> Reply? {
         let parts = path.split(separator: "/").map(String.init)
         guard parts.count >= 3, parts[0] == "api" else { return nil }
         let id = parts[2]
@@ -69,14 +69,12 @@ nonisolated final class FakeDeletions: Sendable {
         case ("DELETE", "course-exams", nil): return deletePage(id, confirm: query["confirm"])
         case ("POST", "course-exams", "undo-delete"): return undoPage(id)
         case ("GET", "exams", "delete-preview"): return Self.reply(examPreview(id))
-        case ("DELETE", "exams", nil): return isStudent ? deleteExam(id, confirm: query["confirm"]) : Self.adminRefused
-        case ("POST", "exams", "undo-delete"): return isStudent ? undoExam(id) : Self.adminRefused
+        case ("DELETE", "exams", nil): return deleteExam(id, confirm: query["confirm"])
+        case ("POST", "exams", "undo-delete"): return undoExam(id)
         case ("GET", "courses", "deleted") where study.knows(id): return recentlyDeleted(id)
         default: return nil
         }
     }
-
-    private static var adminRefused: Reply { failure(403, "admin_cannot_delete_exam", "Only the student can delete her exams or bring them back.") }
 
     // MARK: Sets
 

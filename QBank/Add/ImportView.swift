@@ -122,7 +122,7 @@ struct ImportView: View {
 
     private var filePick: some View {
         Button {
-            picksFile = true
+            app.frozen.perform { picksFile = true }
         } label: {
             HStack(spacing: QBankSpacing.space3) {
                 Image(systemName: "doc.text")
@@ -253,6 +253,7 @@ struct ImportView: View {
             }
             .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
             .disabled(!model.canCheck)
+            .answersWhenFrozen(app.frozen)
             .accessibilityIdentifier("import.check")
         }
     }

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "GET",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000701/delete-preview",
@@ -75,7 +75,7 @@
         "body": "Its 3 sets go with it: Heart A, Heart B and Heart A exam, 10 questions in all. You have answered 4 of them: those answers stop counting toward your progress, and 2 questions leave your Review list. It comes off Exam 1. You can undo this for 30 days."
       },
       "refusal": null,
-      "confirm": "f81da3e388eff61f",
+      "confirm": "466b41f9c4c24130",
       "undoDays": 30
     }
   }

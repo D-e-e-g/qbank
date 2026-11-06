@@ -47,7 +47,7 @@ struct ExamPageView: View {
         .qbankScreenBackground()
         .navigationTitle(model.layout?.page(id)?.exam.name ?? "Page")
         .screenColumnTitle()
-        .plusMenu(model.isStudent && model.layout?.page(id) != nil, more: model.canEdit && model.layout?.page(id) != nil) {
+        .plusMenu(model.layout?.page(id) != nil, more: model.offersEditing && model.layout?.page(id) != nil) {
             if let page = model.layout?.page(id) {
                 addMenu(page)
             }
@@ -114,7 +114,7 @@ struct ExamPageView: View {
         Menu {
             Section("Add to \(page.exam.name)") {
                 Button {
-                    adding = .importFile
+                    app.frozen.perform { adding = .importFile }
                 } label: {
                     Text("Import a question file here")
                     Text("A JSON file from your agent")
@@ -122,12 +122,12 @@ struct ExamPageView: View {
                 }
                 .accessibilityIdentifier("page.add.import")
                 Button("New folder on this page", systemImage: "folder.badge.plus") {
-                    adding = .newFolder
+                    app.frozen.perform { adding = .newFolder }
                 }
                 .accessibilityIdentifier("page.add.folder")
                 if model.layout?.looseFolders.isEmpty == false {
                     Button("Add existing folders", systemImage: "folder") {
-                        editsPage = true
+                        app.frozen.perform { editsPage = true }
                     }
                     .accessibilityIdentifier("page.add.existing")
                 }
@@ -135,7 +135,7 @@ struct ExamPageView: View {
         } label: {
             Image(systemName: "plus")
         }
-        .disabled(!model.canEdit || order != nil)
+        .disabled(!model.offersEditing || order != nil)
         .accessibilityLabel("Add to \(page.exam.name)")
         .accessibilityIdentifier("page.add")
     }
@@ -153,7 +153,7 @@ struct ExamPageView: View {
             if let problem = problem ?? model.problem {
                 ProblemText(text: problem)
             }
-            if model.isStudent, page.examQuestionCount > 0, let setup = model.examSetup(for: page) {
+            if page.examQuestionCount > 0, let setup = model.examSetup(for: page) {
                 VStack(alignment: .leading, spacing: QBankSpacing.space2) {
                     NavigationLink(value: StudyRoute.exam(setup)) {
                         Label("Start exam", systemImage: "timer")
@@ -198,9 +198,9 @@ struct ExamPageView: View {
                 action: order == nil ? "Edit" : "Done",
                 label: order == nil ? "Edit study material" : "Done, save folder order",
                 identifier: "page.edit",
-                isEnabled: !isSavingOrder && (order != nil || model.canEdit)
+                isEnabled: !isSavingOrder && (order != nil || model.offersEditing)
             ) {
-                edit(page)
+                app.frozen.perform { edit(page) }
             }
             if order != nil {
                 Button {
@@ -214,7 +214,7 @@ struct ExamPageView: View {
                 .accessibilityIdentifier("page.editPage")
             }
             if page.folders.isEmpty {
-                EmptyCard(message: model.isStudent ? "No folders on this page yet. Add the folders this page covers." : "No folders on this page yet.", systemImage: "folder")
+                EmptyCard(message: "No folders on this page yet. Add the folders this page covers.", systemImage: "folder")
             } else {
                 FolderList(folders: page.folders, order: $order)
                 if order != nil, page.folders.count > 1 {
@@ -230,16 +230,14 @@ struct ExamPageView: View {
     @ViewBuilder
     private func sittings(_ page: ExamPage) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            SectionHead(title: model.isStudent ? "Past exams" : "Her past exams")
+            SectionHead(title: "Past exams")
             if page.sittings.isEmpty {
                 EmptyCard(
-                    message: model.isStudent
-                        ? "Exams you finish over \(page.exam.name) show up here with their scores."
-                        : "Her finished exams over \(page.exam.name) show up here with their scores.",
+                    message: "Exams you finish over \(page.exam.name) show up here with their scores.",
                     systemImage: "timer"
                 )
             } else {
-                QBankListGroup(footer: model.isStudent && model.canEdit ? "Touch and hold an exam to delete it." : nil) {
+                QBankListGroup(footer: model.offersEditing ? "Touch and hold an exam to delete it." : nil) {
                     ForEach(page.sittings) { sitting in
                         Button {
                             exam = ExamRoute(id: sitting.id)
@@ -247,8 +245,8 @@ struct ExamPageView: View {
                             PastExamRow(exam: sitting)
                         }
                         .buttonStyle(.qbankRow)
-                        .deletable("exam", isEnabled: model.isStudent && model.canEdit && sitting.finishedAt != nil) {
-                            deleting = DeleteRequest(target: .exam(id: sitting.id))
+                        .deletable("exam", isEnabled: model.offersEditing && sitting.finishedAt != nil) {
+                            app.frozen.perform { deleting = DeleteRequest(target: .exam(id: sitting.id)) }
                         }
                         .accessibilityIdentifier("page.sitting.\(sitting.id)")
                     }
@@ -258,24 +256,21 @@ struct ExamPageView: View {
     }
 
     /// More, beside +: Edit page opens the page's name, badge and folders. An order she has not
-    /// saved yet is saved first, the same as Name and folders. Delete page, last and only for her,
-    /// opens the warning in the server's words; the owner's view has no Delete. Offline, More is not
-    /// shown.
+    /// saved yet is saved first, the same as Name and folders. Delete page, last, opens the warning
+    /// in the server's words. Offline, More is not shown.
     private func more(_ page: ExamPage) -> some View {
         MoreMenu(name: page.exam.name, identifier: "page.more") {
             Button("Edit page", systemImage: "pencil") {
-                openEditor(page)
+                app.frozen.perform { openEditor(page) }
             }
             .disabled(isSavingOrder)
             .accessibilityIdentifier("page.more.editPage")
-            if model.isStudent {
-                Divider()
-                Button(FolderWording.deletePage, systemImage: "trash", role: .destructive) {
-                    deleting = DeleteRequest(target: .examPage(id: page.id, name: page.exam.name))
-                }
-                .disabled(isSavingOrder)
-                .accessibilityIdentifier("page.more.delete")
+            Divider()
+            Button(FolderWording.deletePage, systemImage: "trash", role: .destructive) {
+                app.frozen.perform { deleting = DeleteRequest(target: .examPage(id: page.id, name: page.exam.name)) }
             }
+            .disabled(isSavingOrder)
+            .accessibilityIdentifier("page.more.delete")
         }
     }
 

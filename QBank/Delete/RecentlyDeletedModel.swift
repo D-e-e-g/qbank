@@ -23,11 +23,6 @@ final class RecentlyDeletedModel {
         self.courseID = courseID
     }
 
-    /// Only she brings back her exams; the owner reads them.
-    var isStudent: Bool {
-        app.account?.role == .student
-    }
-
     var needsConnection: Bool {
         !app.connection.isOnline
     }
@@ -47,7 +42,7 @@ final class RecentlyDeletedModel {
 
     /// Brings one back as it was, then reads the list again.
     func bringBack(_ target: DeleteTarget, saying line: String) async {
-        guard bringingBack == nil else { return }
+        guard !app.frozen.refuses(), bringingBack == nil else { return }
         bringingBack = target
         problem = nil
         back = nil

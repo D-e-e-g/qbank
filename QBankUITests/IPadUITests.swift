@@ -144,6 +144,29 @@ final class IPadUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: changed, evaluatedWith: mentalHealth)], timeout: 10), .completed, "still \(answered)")
     }
 
+    /// The frozen view beside its sidebar: the line stays in the status bar, and the sidebar's + and
+    /// the course's both answer with the note.
+    @MainActor
+    func testTheFrozenViewAnswersBesideTheSidebar() throws {
+        let app = launch("owner")
+        let course = app.buttons["home.course.NURS 310"]
+        XCTAssertTrue(course.appears(timeout: 10))
+        XCTAssertEqual(app.staticTexts["frozen.line"].label, "Frozen view of sam@example.com")
+        course.tap()
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 5))
+        app.buttons["course.add"].tap()
+        chooseFromMenu(menuItem(app, "course.add.page", "New page"))
+        let note = app.staticTexts["frozen.note"]
+        XCTAssertTrue(note.appears(timeout: 5))
+        XCTAssertEqual(note.label, "This is a frozen view of sam@example.com. Nothing here can be changed.")
+        attach(app, "frozen view on iPad")
+        note.tap()
+        XCTAssertTrue(note.disappears(timeout: 5))
+        app.buttons["home.add"].tap()
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
+        XCTAssertTrue(note.appears(timeout: 5))
+    }
+
     @MainActor
     func testSignInIsAColumnInTheMiddle() throws {
         let app = launch("signed-out")

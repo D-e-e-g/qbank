@@ -104,9 +104,7 @@ struct ExamSetupView: View {
             } else {
                 wrongOnlySwitch
                 folderPicker
-                if model.isStudent {
-                    summary
-                }
+                summary
             }
             if let jobs = model.twinJobs, !jobs.isEmpty {
                 twinJobs(jobs)
@@ -125,16 +123,14 @@ struct ExamSetupView: View {
                 running = ExamRoute(id: exam.id)
             } label: {
                 QBankListRow(
-                    model.isStudent ? "Exam in progress" : "Her exam in progress",
+                    "Exam in progress",
                     detail: model.runningLine(exam),
                     systemImage: "timer",
                     showsChevron: true
                 ) {
-                    if model.isStudent {
-                        Text("Resume")
-                            .qbankFont(.subheadline, weight: .semibold)
-                            .foregroundStyle(.qbank(.tint))
-                    }
+                    Text("Resume")
+                        .qbankFont(.subheadline, weight: .semibold)
+                        .foregroundStyle(.qbank(.tint))
                 }
             }
             .buttonStyle(.qbankRow)
@@ -144,7 +140,7 @@ struct ExamSetupView: View {
 
     private var wrongOnlySwitch: some View {
         QBankListGroup {
-            Toggle(isOn: $model.wrongOnly) {
+            Toggle(isOn: Binding(get: { model.wrongOnly }, set: { on in app.frozen.perform { model.wrongOnly = on } })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Wrong questions only")
                         .qbankFont(.body)
@@ -155,7 +151,6 @@ struct ExamSetupView: View {
                 }
             }
             .tint(QBankColor(.tint))
-            .disabled(!model.isStudent)
             .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
             .padding(.vertical, 11)
             .frame(minHeight: QBankSpacing.rowMin)
@@ -192,8 +187,7 @@ struct ExamSetupView: View {
                             isTicked: model.isTicked(folder),
                             canTick: model.canTick(folder),
                             drawn: model.drawn(folder),
-                            isUpdating: isPlanSlow,
-                            isStudent: model.isStudent
+                            isUpdating: isPlanSlow
                         ) {
                             model.toggle(folder)
                         }
@@ -242,14 +236,17 @@ struct ExamSetupView: View {
                     .qbankFont(.footnote)
                     .foregroundStyle(.qbank(.text3))
                 Button("Start exam") {
-                    if model.setup?.inProgress != nil {
-                        asksToReplace = true
-                    } else {
-                        start()
+                    app.frozen.perform {
+                        if model.setup?.inProgress != nil {
+                            asksToReplace = true
+                        } else {
+                            start()
+                        }
                     }
                 }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
                 .disabled(model.picked.isEmpty || model.isStarting || model.isTwinning || model.needsConnection)
+                .answersWhenFrozen(app.frozen)
                 .padding(.top, QBankSpacing.space1)
                 .accessibilityIdentifier("exam.start")
                 if model.canTwin {
@@ -307,11 +304,11 @@ struct ExamSetupView: View {
                 .padding(.horizontal, QBankSpacing.space5)
             if exams.isEmpty {
                 EmptyCard(
-                    message: model.isStudent ? "Exams you finish show up here with their scores." : "Her finished exams show up here with their scores.",
+                    message: "Exams you finish show up here with their scores.",
                     systemImage: "timer"
                 )
             } else {
-                QBankListGroup(footer: model.isStudent && !model.needsConnection ? "Touch and hold an exam to delete it." : nil) {
+                QBankListGroup(footer: !model.needsConnection ? "Touch and hold an exam to delete it." : nil) {
                     ForEach(exams) { exam in
                         Button {
                             running = ExamRoute(id: exam.id)
@@ -319,8 +316,8 @@ struct ExamSetupView: View {
                             PastExamRow(exam: exam)
                         }
                         .buttonStyle(.qbankRow)
-                        .deletable("exam", isEnabled: model.isStudent && !model.needsConnection) {
-                            deleting = DeleteRequest(target: .exam(id: exam.id))
+                        .deletable("exam", isEnabled: !model.needsConnection) {
+                            app.frozen.perform { deleting = DeleteRequest(target: .exam(id: exam.id)) }
                         }
                         .accessibilityIdentifier("exam.past.\(exam.id)")
                     }
@@ -367,18 +364,15 @@ private struct FolderPickRow: View {
     let drawn: Int?
     /// The drawn count is the last plan's while the next one is on its way.
     let isUpdating: Bool
-    let isStudent: Bool
     let toggle: () -> Void
 
     var body: some View {
         Button(action: toggle) {
             HStack(spacing: QBankSpacing.space4) {
-                if isStudent {
-                    Image(systemName: isTicked ? "checkmark.circle.fill" : "circle")
-                        .font(.title2)
-                        .foregroundStyle(.qbank(isTicked ? .tint : .separatorStrong))
-                        .accessibilityHidden(true)
-                }
+                Image(systemName: isTicked ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(.qbank(isTicked ? .tint : .separatorStrong))
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(name)
                         .qbankFont(.body)
@@ -399,10 +393,10 @@ private struct FolderPickRow: View {
             .padding(.vertical, 11)
             .frame(minHeight: QBankSpacing.rowMin)
             .contentShape(.rect)
-            .opacity(canTick || !isStudent ? 1 : 0.45)
+            .opacity(canTick ? 1 : 0.45)
         }
         .buttonStyle(.qbankRow)
-        .disabled(!isStudent || !canTick)
+        .disabled(!canTick)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isTicked ? .isSelected : [])
     }

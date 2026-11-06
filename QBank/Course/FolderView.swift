@@ -63,9 +63,9 @@ struct FolderView: View {
             label: FolderWording.importHere,
             identifier: "folder.add",
             isEnabled: canChange,
-            more: model.canEdit && model.folder(id) != nil
+            more: model.offersEditing && model.folder(id) != nil
         ) {
-            sheet = .importHere
+            app.frozen.perform { sheet = .importHere }
         } more: {
             if let folder = model.folder(id) {
                 more(folder)
@@ -146,7 +146,7 @@ struct FolderView: View {
 
     /// Whether the folder can be changed now: not offline, and not while she selects sets.
     private var canChange: Bool {
-        model.canEdit && selection == nil
+        model.offersEditing && selection == nil
     }
 
     /// More: Rename opens the rename sheet, Change page the page sheet, and Delete folder, last, the
@@ -154,11 +154,11 @@ struct FolderView: View {
     private func more(_ folder: Folder) -> some View {
         MoreMenu(name: folder.name, identifier: "folder.more") {
             Button("Rename", systemImage: "pencil") {
-                sheet = .rename
+                app.frozen.perform { sheet = .rename }
             }
             .accessibilityIdentifier("folder.more.rename")
             Button {
-                sheet = .page
+                app.frozen.perform { sheet = .page }
             } label: {
                 Text(FolderWording.changePage)
                 Text(FolderWording.onPage(model.page(of: folder)))
@@ -167,7 +167,7 @@ struct FolderView: View {
             .accessibilityIdentifier("folder.more.page")
             Divider()
             Button(FolderWording.deleteFolder, systemImage: "trash", role: .destructive) {
-                deleting = DeleteRequest(target: .folder(id: folder.id, name: folder.name))
+                app.frozen.perform { deleting = DeleteRequest(target: .folder(id: folder.id, name: folder.name)) }
             }
             .accessibilityIdentifier("folder.more.delete")
         }
@@ -181,14 +181,14 @@ struct FolderView: View {
                 action: selection != nil ? "Cancel" : folder.sets.isEmpty ? nil : "Select",
                 label: selection != nil ? "Cancel selecting" : "Select sets",
                 identifier: "folder.select",
-                isEnabled: selection != nil || model.canEdit
+                isEnabled: selection != nil || model.offersEditing
             ) {
-                selection = selection == nil ? [] : nil
+                app.frozen.perform { selection = selection == nil ? [] : nil }
             }
             if folder.sets.isEmpty, folder.examBankCount == 0 {
                 EmptyCard(message: FolderWording.noSets, systemImage: "folder") {
                     Button {
-                        sheet = .importHere
+                        app.frozen.perform { sheet = .importHere }
                     } label: {
                         Label(FolderWording.importHere, systemImage: "square.and.arrow.down")
                     }
@@ -200,17 +200,17 @@ struct FolderView: View {
                 QBankListGroup {
                     ForEach(folder.sets) { set in
                         if let selection {
-                            SelectRow(set: set, isSelected: selection.contains(set.id), isStudent: model.isStudent) {
+                            SelectRow(set: set, isSelected: selection.contains(set.id)) {
                                 toggle(set)
                             }
                         } else {
-                            SetRow(set: set, isRestoring: model.isRestoring, isStudent: model.isStudent) {
+                            SetRow(set: set, isRestoring: model.isRestoring, frozen: app.frozen) {
                                 practicing = PracticeRoute(source: .set(id: set.id), courseID: model.id, title: set.title, kind: model.course?.kind ?? .course)
                             } restore: {
                                 Task { await model.restore(set) }
                             }
-                            .deletable(set.title, isEnabled: model.canEdit) {
-                                deleting = DeleteRequest(target: .set(id: set.id, title: set.title))
+                            .deletable(set.title, isEnabled: model.offersEditing) {
+                                app.frozen.perform { deleting = DeleteRequest(target: .set(id: set.id, title: set.title)) }
                             }
                         }
                     }
@@ -218,13 +218,13 @@ struct FolderView: View {
                     if selection == nil {
                         ForEach(folder.examSets) { set in
                             ExamSetRow(set: set)
-                                .deletable(set.title, isEnabled: model.canEdit) {
-                                    deleting = DeleteRequest(target: .set(id: set.id, title: set.title))
+                                .deletable(set.title, isEnabled: model.offersEditing) {
+                                    app.frozen.perform { deleting = DeleteRequest(target: .set(id: set.id, title: set.title)) }
                                 }
                         }
                     }
                 }
-                if selection == nil, model.canEdit {
+                if selection == nil, model.offersEditing {
                     Text("Touch and hold a set to delete it.")
                         .qbankFont(.footnote)
                         .foregroundStyle(.qbank(.text3))
@@ -280,7 +280,6 @@ private struct SelectBar: View {
 private struct SelectRow: View {
     let set: PracticeSetSummary
     let isSelected: Bool
-    let isStudent: Bool
     let toggle: () -> Void
 
     var body: some View {
@@ -290,7 +289,7 @@ private struct SelectRow: View {
                     .font(.title2)
                     .foregroundStyle(.qbank(isSelected ? .tint : .separatorStrong))
                     .accessibilityHidden(true)
-                SetText(set: set, isStudent: isStudent, opens: false)
+                SetText(set: set, opens: false)
             }
             .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
             .padding(.vertical, 10)
@@ -310,24 +309,20 @@ private struct SelectRow: View {
 private struct SetRow: View {
     let set: PracticeSetSummary
     let isRestoring: Bool
-    let isStudent: Bool
+    let frozen: FrozenView
     let open: () -> Void
     let restore: () -> Void
     @State private var asksToRestore = false
 
     var body: some View {
         HStack(spacing: 0) {
-            if isStudent {
-                Button(action: open) {
-                    label(showsChevron: !set.canRestore)
-                }
-                .buttonStyle(.qbankRow)
-                .accessibilityIdentifier("course.set.\(set.title)")
-            } else {
-                label(showsChevron: false)
+            Button(action: open) {
+                label(showsChevron: !set.canRestore)
             }
+            .buttonStyle(.qbankRow)
+            .accessibilityIdentifier("course.set.\(set.title)")
             if set.canRestore {
-                Button("Restore") { asksToRestore = true }
+                Button("Restore") { frozen.perform { asksToRestore = true } }
                     .buttonStyle(.qbank(.secondary, size: .small))
                     .disabled(isRestoring)
                     .padding(.trailing, QBankSpacing.rowPaddingHorizontal)
@@ -349,7 +344,7 @@ private struct SetRow: View {
 
     private func label(showsChevron: Bool) -> some View {
         HStack(spacing: QBankSpacing.space4) {
-            SetText(set: set, isStudent: isStudent, opens: isStudent)
+            SetText(set: set, opens: true)
             if showsChevron {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
@@ -369,7 +364,6 @@ private struct SetRow: View {
 /// under them who imported it when her agent did.
 private struct SetText: View {
     let set: PracticeSetSummary
-    let isStudent: Bool
     /// Whether tapping the row opens the set, the only row that says Continue.
     let opens: Bool
 
@@ -389,7 +383,7 @@ private struct SetText: View {
             .qbankFont(.subheadline)
             .foregroundStyle(.qbank(.text2))
             if set.importedByAgent != nil {
-                Text(AgentWording.importedBy(isStudent: isStudent))
+                Text(AgentWording.importedBy)
                     .qbankFont(.subheadline)
                     .foregroundStyle(.qbank(.text2))
             }

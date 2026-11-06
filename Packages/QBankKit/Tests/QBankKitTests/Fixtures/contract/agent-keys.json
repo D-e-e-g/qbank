@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "GET",
     "path": "/api/agent-keys",
@@ -18,9 +18,9 @@
           "scopes": [
             "import"
           ],
-          "createdAt": "2026-11-05T05:30:35.928Z",
+          "createdAt": "2026-11-06T22:19:52.656Z",
           "lastUsedAt": null,
-          "revokedAt": "2026-11-05T05:30:35.961Z"
+          "revokedAt": "2026-11-06T22:19:52.690Z"
         },
         {
           "id": "00000000-0000-4000-8009-000000000002",
@@ -29,7 +29,7 @@
             "import",
             "manage"
           ],
-          "createdAt": "2026-11-05T05:30:35.924Z",
+          "createdAt": "2026-11-06T22:19:52.652Z",
           "lastUsedAt": null,
           "revokedAt": null
         },
@@ -40,8 +40,8 @@
             "import",
             "read"
           ],
-          "createdAt": "2026-11-05T05:30:35.912Z",
-          "lastUsedAt": "2026-11-05T05:30:35.942Z",
+          "createdAt": "2026-11-06T22:19:52.639Z",
+          "lastUsedAt": "2026-11-06T22:19:52.670Z",
           "revokedAt": null
         }
       ]

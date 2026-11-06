@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "POST",
     "path": "/api/twin-jobs",
@@ -63,8 +63,8 @@
       "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
       "sets": [],
       "exam": null,
-      "createdAt": "2026-11-05 00:30:45.802-05",
-      "updatedAt": "2026-11-05 00:30:45.803-05",
+      "createdAt": "2026-11-06 17:20:02.757-05",
+      "updatedAt": "2026-11-06 17:20:02.758-05",
       "finishedAt": null,
       "failure": null,
       "warnings": [],

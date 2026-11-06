@@ -23,8 +23,6 @@ final class ExamModel {
     enum Phase: Equatable {
         case loading
         case failed(String)
-        /// Someone other than the student looking at her running exam.
-        case watching
         case running
         case ended
     }
@@ -163,10 +161,6 @@ final class ExamModel {
             phase = .ended
             return
         }
-        guard app.account?.role == .student else {
-            phase = .watching
-            return
-        }
         guard items.isEmpty else {
             phase = .running
             startClock(loaded)
@@ -185,6 +179,7 @@ final class ExamModel {
         index = nextStop(from: -1)?.index ?? 0
         phase = .running
         startClock(loaded)
+        if app.frozen.isOn { app.frozen.showNote() }
     }
 
     // MARK: The clock
@@ -200,7 +195,8 @@ final class ExamModel {
         guard phase == .running, let deadline else { return }
         let left = clock().duration(to: deadline)
         secondsLeft = max(0, Double(left.components.seconds) + Double(left.components.attoseconds) / 1e18)
-        if secondsLeft <= 0, !isEnding {
+        // In the frozen view the exam is hers: it ends when her app next reads it.
+        if secondsLeft <= 0, !isEnding, !app.frozen.isOn {
             Task { await end(.timeout) }
         }
     }
@@ -221,7 +217,7 @@ final class ExamModel {
 
     /// Replaces her open answer. A struck choice cannot be picked until she restores it.
     func update(_ draft: AnswerDraft) {
-        guard !isBusy, items.indices.contains(index), !items[index].submitted else { return }
+        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index), !items[index].submitted else { return }
         guard items[index].struck.isDisjoint(with: draft.picked) else { return }
         items[index].draft = draft
     }
@@ -229,12 +225,12 @@ final class ExamModel {
     /// Strikes out a choice she has ruled out, or restores a struck one. Strikes stay with the
     /// question while she moves between questions, end with the exam, and are never sent.
     func toggleStrike(_ option: Int) {
-        guard !isBusy, items.indices.contains(index), !items[index].submitted else { return }
+        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index), !items[index].submitted else { return }
         items[index].draft = items[index].draft.striking(option, in: &items[index].struck)
     }
 
     func setGuessed(_ guessed: Bool) {
-        guard !isBusy, items.indices.contains(index) else { return }
+        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index) else { return }
         items[index].guessed = guessed
     }
 
@@ -243,7 +239,7 @@ final class ExamModel {
     /// web's "No connection" line, while the timer keeps running. An answer the server already has
     /// counts as sent; an exam that ended meanwhile shows its result.
     func submit() async {
-        guard canSubmit, let question, let item, let response = item.draft.response, let exam else { return }
+        guard !app.frozen.refuses(), canSubmit, let question, let item, let response = item.draft.response, let exam else { return }
         do {
             // Catches an answer the question cannot take before it leaves the phone.
             _ = try Scoring.score(question.body, response: response)
@@ -314,7 +310,7 @@ final class ExamModel {
 
     /// Leaves the question open for later and moves on.
     func skip() async {
-        guard !isBusy, items.indices.contains(index) else { return }
+        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index) else { return }
         problem = nil
         items[index].skipped = true
         go(from: index)
@@ -364,7 +360,7 @@ final class ExamModel {
     /// Ends the exam and shows the result. Her open answer, if one is still sending, is dropped,
     /// as on the web: the end scores what the server has.
     func end(_ reason: ExamEndReason) async {
-        guard phase == .running, !isEnding else { return }
+        guard !app.frozen.refuses(), phase == .running, !isEnding else { return }
         isEnding = true
         sending?.cancel()
         problem = nil

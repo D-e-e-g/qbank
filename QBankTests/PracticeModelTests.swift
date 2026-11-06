@@ -120,12 +120,22 @@ struct PracticeModelTests {
         #expect(model.phase == .loading)
     }
 
-    @Test func theOwnerCanLookButNotAnswer() async {
-        let server = StubServer()
-        let (model, _) = Self.model(server, account: .admin)
+    @Test func theOwnerCanLookButNotAnswer() async throws {
+        let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.practiceSet())])
+        let (model, app) = Self.model(server, account: .admin)
         await model.load()
-        #expect(model.phase == .readOnly)
-        #expect(server.requests.isEmpty)
+        #expect(model.phase == .answering, "the runner opens as she sees it")
+        #expect(app.frozen.noteID != nil, "and says what it is")
+        app.frozen.hideNote()
+        let before = try #require(model.attempt)
+        model.update(.sata([0]))
+        #expect(app.frozen.noteID != nil, "picking a choice answers with the note")
+        model.setGuessed(true)
+        model.toggleStrike(0)
+        #expect(model.attempt == before, "nothing she does changes")
+        await model.check()
+        await model.startOver()
+        #expect(server.calls == ["GET /api/practice-sets/set1"])
     }
 
     @Test func checkSendsTheAnswerInStoredIndexesAndShowsTheServersScore() async throws {

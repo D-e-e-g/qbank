@@ -108,7 +108,7 @@ final class ImportModel {
     // MARK: Checking and importing
 
     func check() async {
-        guard canCheck else { return }
+        guard !app.frozen.refuses(), canCheck else { return }
         problem = nil
         copied = false
         isBusy = true
@@ -129,7 +129,7 @@ final class ImportModel {
     /// Imports the checked file. A set of the same name is answered with `conflict`; she answers it
     /// with `replace` or `separate`.
     func commit(_ decision: ImportRequest.Decision = .import) async {
-        guard let request = request(decision) else { return }
+        guard !app.frozen.refuses(), let request = request(decision) else { return }
         // A new folder named from an exam page goes on that page once the set made it.
         let page = destination.folder == .new ? destination.examPageID : nil
         conflict = nil

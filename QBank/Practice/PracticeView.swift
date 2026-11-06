@@ -59,6 +59,7 @@ struct PracticeView: View {
         }
         .animation(QBankMotion.reveal, value: model.phase)
         .qbankScreenBackground()
+        .frozenRunnerNote(model.app.frozen, clearing: model.phase == .answering ? RunnerNote.footerClearance : 0)
         .task { await model.load() }
         .sheet(isPresented: $showsWaiting) {
             NavigationStack {
@@ -105,8 +106,6 @@ struct PracticeView: View {
             RunnerNote(text: model.isReview ? "Loading Review." : "Loading the set.")
         case .failed(let problem):
             RunnerNote(text: problem)
-        case .readOnly:
-            RunnerNote(text: "Only she can answer questions. Her progress is read-only here.")
         case .answering, .finished:
             if let question = model.question, let attempt = model.attempt {
                 QuestionPage(model: model, question: question, attempt: attempt)
@@ -131,6 +130,7 @@ struct PracticeView: View {
             }
             .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
             .disabled(!model.canCheck)
+            .answersWhenFrozen(model.app.frozen)
             .accessibilityIdentifier("practice.check")
         }
     }
@@ -229,7 +229,7 @@ private struct PickedUpLine: View {
                 .qbankFont(.subheadline, weight: .medium)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("practice.pickedUp")
-            Button("Start over") { asksToStartOver = true }
+            Button("Start over") { model.app.frozen.perform { asksToStartOver = true } }
                 .qbankFont(.subheadline, weight: .bold)
                 .frame(minHeight: QBankSpacing.rowMin)
                 .contentShape(.rect)

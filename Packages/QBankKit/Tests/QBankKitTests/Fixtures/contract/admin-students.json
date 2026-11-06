@@ -1,0 +1,31 @@
+{
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "request": {
+    "method": "GET",
+    "path": "/api/admin/students",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "students": [
+        {
+          "id": "synthetic-user-2",
+          "email": "student@example.com",
+          "name": "Sam Student",
+          "createdAt": "2026-11-06T22:19:45.294Z"
+        },
+        {
+          "id": "synthetic-user-3",
+          "email": "second.user@example.com",
+          "name": "Second User",
+          "createdAt": "2026-11-06T22:19:45.381Z"
+        }
+      ],
+      "viewingId": "synthetic-user-2"
+    }
+  }
+}

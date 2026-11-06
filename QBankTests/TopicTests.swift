@@ -50,7 +50,7 @@ struct TopicTests {
         let (admin, _) = TestApp.make(StubServer(["GET /api/semesters": .ok(Self.catalog)]), account: .admin)
         let viewing = HomeModel(app: admin)
         await viewing.load()
-        #expect(!viewing.showsEditing && !viewing.canEdit)
+        #expect(viewing.offersEditing && !viewing.canEdit, "the admin sees the user's controls, and they change nothing")
 
         let server = StubServer(["GET /api/semesters": .ok(Self.catalog)])
         let (app, _) = TestApp.make(server, account: .student())
@@ -58,8 +58,7 @@ struct TopicTests {
         await model.load()
         server["GET /api/semesters"] = .offline
         await model.load()
-        #expect(model.showsEditing)
-        #expect(!model.canEdit, "adding, moving and archiving need QBank")
+        #expect(!model.offersEditing && !model.canEdit, "adding, moving and archiving need QBank")
     }
 
     @Test func aTopicSheMadeOpensWithItsName() async throws {

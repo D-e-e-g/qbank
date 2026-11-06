@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "POST",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000701/undo-delete",
@@ -21,13 +21,13 @@
           "title": "Heart A",
           "description": "Invented set.",
           "questionCount": 4,
-          "importedAt": "2026-11-05T05:30:40.802Z",
-          "activeSince": "2026-11-05T05:30:40.802Z",
+          "importedAt": "2026-11-06T22:19:57.712Z",
+          "activeSince": "2026-11-06T22:19:57.712Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 3,
           "fullyRightCount": 2,
-          "lastAnsweredAt": "2026-11-05T05:30:40.845Z",
+          "lastAnsweredAt": "2026-11-06T22:19:57.759Z",
           "sitting": {
             "answeredCount": 3
           },
@@ -44,13 +44,13 @@
           "title": "Heart B",
           "description": "Invented set.",
           "questionCount": 3,
-          "importedAt": "2026-11-05T05:30:40.806Z",
-          "activeSince": "2026-11-05T05:30:40.806Z",
+          "importedAt": "2026-11-06T22:19:57.716Z",
+          "activeSince": "2026-11-06T22:19:57.716Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 1,
           "fullyRightCount": 0,
-          "lastAnsweredAt": "2026-11-05T05:30:40.853Z",
+          "lastAnsweredAt": "2026-11-06T22:19:57.767Z",
           "sitting": {
             "answeredCount": 1
           },
@@ -66,8 +66,8 @@
           "title": "Heart C",
           "description": "Invented set.",
           "questionCount": 2,
-          "importedAt": "2026-11-05T05:30:40.932Z",
-          "activeSince": "2026-11-05T05:30:40.932Z",
+          "importedAt": "2026-11-06T22:19:57.849Z",
+          "activeSince": "2026-11-06T22:19:57.849Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 0,

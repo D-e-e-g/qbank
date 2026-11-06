@@ -69,8 +69,8 @@ final class ExamSetupModel {
         !app.connection.isOnline
     }
 
-    /// Only she starts exams; the owner sees the setup read-only.
-    var isStudent: Bool {
+    /// Only she starts exams and asks for twins; for the admin these answer with the frozen note.
+    private var isStudent: Bool {
         app.account?.role == .student
     }
 
@@ -133,7 +133,7 @@ final class ExamSetupModel {
     }
 
     func toggle(_ folder: ExamSetup.Folder) {
-        guard isStudent, canTick(folder) else { return }
+        guard canTick(folder), !app.frozen.refuses() else { return }
         if ticked.contains(folder.id) {
             ticked.remove(folder.id)
         } else {

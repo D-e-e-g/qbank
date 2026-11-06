@@ -45,8 +45,6 @@ final class PracticeModel {
         case loading
         /// The set could not be opened, said in words for her.
         case failed(String)
-        /// Someone other than the student: the owner can look at her progress but not answer.
-        case readOnly
         case answering
         case finished
     }
@@ -173,10 +171,6 @@ final class PracticeModel {
     // MARK: Loading
 
     func load() async {
-        guard app.account?.role == .student else {
-            phase = .readOnly
-            return
-        }
         // Read before asking QBank: an answer may reach it after its reply was written.
         let waitingBefore = app.offline?.waiting ?? []
         do {
@@ -260,6 +254,7 @@ final class PracticeModel {
         startedAt = now()
         finishedAt = nil
         phase = .answering
+        if app.frozen.isOn { app.frozen.showNote() }
     }
 
     // MARK: Answering
@@ -267,7 +262,7 @@ final class PracticeModel {
     /// Replaces her answer to the current question while it is still open. A struck choice
     /// cannot be picked until she restores it.
     func update(_ draft: AnswerDraft) {
-        guard attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
         guard attempts[index].struck.isDisjoint(with: draft.picked) else { return }
         attempts[index].draft = draft
     }
@@ -275,12 +270,12 @@ final class PracticeModel {
     /// Strikes out a choice of the current question she has ruled out, or restores a struck one,
     /// while it is still open. Strikes stay with the question until the run ends and are never sent.
     func toggleStrike(_ option: Int) {
-        guard attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
         attempts[index].draft = attempts[index].draft.striking(option, in: &attempts[index].struck)
     }
 
     func setGuessed(_ guessed: Bool) {
-        guard attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
         attempts[index].guessed = guessed
     }
 
@@ -289,7 +284,7 @@ final class PracticeModel {
     /// so it is never counted twice; she sees the phone's score and words, which follow the server's
     /// rules. A refusal is said in her words.
     func check() async {
-        guard canCheck, let question, let attempt, let response = attempt.draft.response else { return }
+        guard !app.frozen.refuses(), canCheck, let question, let attempt, let response = attempt.draft.response else { return }
         problem = nil
         let phoneScore: Score
         do {
@@ -357,7 +352,7 @@ final class PracticeModel {
     /// counts. QBank must have what she answered first, or it would count in the new sitting, so this
     /// needs a connection. A failure leaves her where she was, and says why.
     func startOver() async {
-        guard case .set(let id) = source, let practiceSet, !isChecking, !isStartingOver else { return }
+        guard !app.frozen.refuses(), case .set(let id) = source, let practiceSet, !isChecking, !isStartingOver else { return }
         problem = nil
         isStartingOver = true
         defer { isStartingOver = false }

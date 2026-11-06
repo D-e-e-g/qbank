@@ -1,6 +1,6 @@
 {
   "repository": "D-e-e-g/qbank-server",
-  "commit": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "commit": "30c52a4151b457b9134814352dc171c1200c4aef",
   "path": "apps/api/openapi.json",
-  "image": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8f67dec72ed330427d62e7c8b236cad88791b65a0173ca9e77212c229b0927bb"
+  "image": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8bf01f7ba14408bc5d8b22f39b63e8ba46416c437eede0dfe0c3952193dad87b"
 }

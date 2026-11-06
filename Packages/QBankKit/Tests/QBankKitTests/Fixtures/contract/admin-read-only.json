@@ -1,0 +1,20 @@
+{
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "request": {
+    "method": "POST",
+    "path": "/api/semesters",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": {
+      "number": 1
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {},
+    "body": {
+      "error": "admin_read_only",
+      "message": "This is a read-only view of a user account. Nothing here can be changed."
+    }
+  }
+}

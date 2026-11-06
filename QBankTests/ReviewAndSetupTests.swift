@@ -87,9 +87,12 @@ struct ReviewModelTests {
         #expect(try decode(StudyBodies.reviewQuestion("a", status: "incorrect", guessed: true)).mark == (.wrong, "Missed, guessed"))
     }
 
-    @Test func theOwnerSeesTheListButCannotPracticeOrClear() {
-        let (app, _) = TestApp.make(StubServer(), account: .admin)
-        #expect(!ReviewModel(app: app, course: Self.course).isStudent)
+    @Test func theOwnersClearAnswersWithTheNoteAndSendsNothing() async {
+        let server = StubServer()
+        let (app, _) = TestApp.make(server, account: .admin)
+        await ReviewModel(app: app, course: Self.course).clear()
+        #expect(app.frozen.noteID != nil)
+        #expect(server.requests.isEmpty)
     }
 
     @Test func reviewPracticeLoadsTheServersQuestions() async throws {
@@ -401,12 +404,14 @@ struct ExamSetupModelTests {
         #expect(model.setup?.exams.last?.pastTitle.hasPrefix("First Pass, Second Pass · ") == true)
     }
 
-    @Test func theOwnerCannotTickOrStart() async throws {
+    @Test func theOwnerSeesTheNoteForATickAndCannotStart() async throws {
         let server = server()
-        let model = model(server, account: .admin)
+        let (app, _) = TestApp.make(server, account: .admin)
+        let model = ExamSetupModel(app: app, route: ExamSetupRoute(course: Self.course))
         await model.load()
         model.toggle(model.folders[0])
         #expect(model.picked.isEmpty)
+        #expect(app.frozen.noteID != nil)
         #expect(await model.start() == nil)
         #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
     }

@@ -29,7 +29,7 @@ struct ReviewView: View {
                     ProblemText(text: problem)
                 }
                 filters
-                if model.isStudent, model.selectedCount > 0 {
+                if model.selectedCount > 0 {
                     Button {
                         practicing = model.practice()
                     } label: {
@@ -99,22 +99,18 @@ struct ReviewView: View {
         } else if !model.questions.isEmpty {
             QBankListGroup {
                 ForEach(model.questions) { question in
-                    if model.isStudent {
-                        Button {
-                            practicing = model.practice(question)
-                        } label: {
-                            ReviewRow(question: question, showsChevron: true)
-                        }
-                        .buttonStyle(.qbankRow)
-                        .accessibilityIdentifier("review.question.\(question.questionID)")
-                    } else {
-                        ReviewRow(question: question, showsChevron: false)
+                    Button {
+                        practicing = model.practice(question)
+                    } label: {
+                        ReviewRow(question: question)
                     }
+                    .buttonStyle(.qbankRow)
+                    .accessibilityIdentifier("review.question.\(question.questionID)")
                 }
             }
-            if model.isStudent, model.allCount > 0 {
+            if model.allCount > 0 {
                 Button("Clear the review list", role: .destructive) {
-                    asksToClear = true
+                    app.frozen.perform { asksToClear = true }
                 }
                 .buttonStyle(.qbank(.plain))
                 .foregroundStyle(.qbank(.wrong))
@@ -129,7 +125,6 @@ struct ReviewView: View {
 /// A Review question: its topic, week and format, set and when she answered, and its mark.
 private struct ReviewRow: View {
     let question: ReviewQuestion
-    let showsChevron: Bool
 
     var body: some View {
         HStack(spacing: QBankSpacing.space4) {
@@ -149,12 +144,10 @@ private struct ReviewRow: View {
                     .padding(.top, QBankSpacing.space2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if showsChevron {
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.qbank(.text4))
-                    .accessibilityHidden(true)
-            }
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.qbank(.text4))
+                .accessibilityHidden(true)
         }
         .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
         .padding(.vertical, QBankSpacing.rowPaddingVertical)
