@@ -18,7 +18,8 @@ final class DeletionUITests: XCTestCase {
         openFolder(app, "Week 2", on: "Exam 1")
         attach(app, "folder with Delete")
 
-        app.buttons["folder.delete"].tap()
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(menuItem(app, "folder.more.delete", "Delete folder"))
         let title = app.staticTexts["deleteSheet.title"]
         XCTAssertTrue(title.appears(timeout: 5))
         XCTAssertEqual(title.label, "Delete Week 2?")
@@ -71,10 +72,10 @@ final class DeletionUITests: XCTestCase {
         tapWhenStill(app.buttons["deleteSheet.confirm"])
         XCTAssertTrue(row.disappears(timeout: 5))
         XCTAssertEqual(app.staticTexts["undo.line"].label, "Mixed Clinical Judgment deleted.")
-        XCTAssertTrue(app.staticTexts["No sets yet. Move sets here from another folder."].appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No sets yet. Import a question file here, or move sets here from another folder."].appears(timeout: 5))
 
         goBack(app, from: "Weeks 1-3")
-        open(app.buttons["course.recentlyDeleted"], titled: "Recently deleted", in: app)
+        openRecentlyDeleted(app)
         let bringBack = app.buttons["deleted.bringBack.Mixed Clinical Judgment"]
         XCTAssertTrue(bringBack.appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["Weeks 1-3 · 8 questions"].exists)
@@ -126,6 +127,106 @@ final class DeletionUITests: XCTestCase {
         XCTAssertEqual(past.count, 3)
     }
 
+    /// One ticked set: Delete beside Move reads as its own warning, the selection ends, and Undo
+    /// brings it back.
+    @MainActor
+    func testDeletingOneTickedSetFromTheSelectBar() throws {
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 2", on: "Exam 1")
+        let set = "Therapeutic Communication and the Relationship"
+
+        app.buttons["folder.select"].tap()
+        XCTAssertFalse(app.buttons["folder.deleteSets"].exists, "nothing ticked yet")
+        app.buttons["folder.pick.\(set)"].tap()
+        let delete = app.buttons["folder.deleteSets"]
+        XCTAssertTrue(delete.appears(timeout: 5))
+        XCTAssertEqual(delete.label, "Delete 1 set")
+        XCTAssertLessThan(delete.frame.maxX, app.buttons["folder.move"].frame.minX, "beside Move")
+        attachLooks(app, "select bar, one set")
+
+        delete.tap()
+        let title = app.staticTexts["deleteSheet.title"]
+        XCTAssertTrue(title.appears(timeout: 5))
+        waitForLabel(title, containing: "Delete \(set)?")
+        XCTAssertTrue(app.staticTexts["deleteSheet.message"].appears(timeout: 5))
+        tapWhenStill(app.buttons["deleteSheet.confirm"])
+
+        XCTAssertTrue(app.buttons["course.set.\(set)"].disappears(timeout: 5))
+        XCTAssertEqual(app.staticTexts["undo.line"].label, "\(set) deleted.")
+        XCTAssertFalse(app.buttons["folder.move"].exists, "selecting ended")
+        XCTAssertEqual(app.buttons["folder.select"].label, "Select sets")
+        XCTAssertTrue(app.buttons["course.set.Psychosocial Assessment and Safety Screening"].exists)
+        app.buttons["undo.button"].tap()
+        XCTAssertTrue(app.buttons["course.set.\(set)"].appears(timeout: 5))
+    }
+
+    /// Several ticked sets: one warning names each, they go together, and one Undo brings them all back.
+    @MainActor
+    func testDeletingSeveralTickedSetsFromTheSelectBar() throws {
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 2", on: "Exam 1")
+        let sets = ["Therapeutic Communication and the Relationship", "Psychosocial Assessment and Safety Screening"]
+
+        app.buttons["folder.select"].tap()
+        for set in sets {
+            app.buttons["folder.pick.\(set)"].tap()
+        }
+        let delete = app.buttons["folder.deleteSets"]
+        XCTAssertTrue(delete.appears(timeout: 5))
+        XCTAssertEqual(delete.label, "Delete 2 sets")
+        XCTAssertEqual(app.buttons["folder.move"].label, "Move 2 sets")
+        attachLooks(app, "select bar, two sets")
+
+        delete.tap()
+        let title = app.staticTexts["deleteSheet.title"]
+        XCTAssertTrue(title.appears(timeout: 5))
+        XCTAssertEqual(title.label, "Delete 2 sets?")
+        let message = app.staticTexts["deleteSheet.message"]
+        XCTAssertTrue(message.appears(timeout: 5))
+        for set in sets {
+            XCTAssertTrue(message.label.contains(set), message.label)
+        }
+        attachLooks(app, "delete two sets warning")
+        tapWhenStill(app.buttons["deleteSheet.confirm"])
+
+        XCTAssertTrue(app.staticTexts["No sets yet. Import a question file here, or move sets here from another folder."].appears(timeout: 5))
+        XCTAssertEqual(app.staticTexts["undo.line"].label, "2 sets deleted.")
+        XCTAssertFalse(app.buttons["folder.move"].exists, "selecting ended")
+        attachLooks(app, "two sets deleted")
+
+        app.buttons["undo.button"].tap()
+        for set in sets {
+            XCTAssertTrue(app.buttons["course.set.\(set)"].appears(timeout: 5))
+        }
+        waitForLabel(app.staticTexts["undo.line"], containing: "2 sets are back.")
+    }
+
+    /// An exam in progress asks the ticked sets' questions: the warning says why for each, Delete
+    /// waits, and she is still selecting when she cancels.
+    @MainActor
+    func testTickedSetsARefusalSaysWhyAndWaits() throws {
+        let app = launch("exam-in-progress")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 2", on: "Exam 1")
+        let sets = ["Therapeutic Communication and the Relationship", "Psychosocial Assessment and Safety Screening"]
+        app.buttons["folder.select"].tap()
+        for set in sets {
+            app.buttons["folder.pick.\(set)"].tap()
+        }
+        app.buttons["folder.deleteSets"].tap()
+        let problem = app.staticTexts["problem"]
+        XCTAssertTrue(problem.appears(timeout: 5))
+        waitForLabel(problem, containing: "An exam in progress asks questions from \(sets[0]).")
+        XCTAssertTrue(problem.label.contains(sets[1]), problem.label)
+        XCTAssertFalse(app.buttons["deleteSheet.confirm"].isEnabled, "Delete waits")
+        attachLooks(app, "delete two sets refused")
+        tapWhenStill(app.buttons["deleteSheet.cancel"])
+        XCTAssertTrue(app.buttons["folder.move"].appears(timeout: 5), "still selecting, nothing was deleted")
+        XCTAssertFalse(app.otherElements["undo.bar"].exists)
+    }
+
     /// An exam in progress asks the folder's questions: the warning says so in the server's words,
     /// and Delete waits.
     @MainActor
@@ -133,7 +234,8 @@ final class DeletionUITests: XCTestCase {
         let app = launch("exam-in-progress")
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
         openFolder(app, "Week 2", on: "Exam 1")
-        app.buttons["folder.delete"].tap()
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(menuItem(app, "folder.more.delete", "Delete folder"))
         let problem = app.staticTexts["An exam in progress asks questions from Week 2. Finish or leave that exam first."]
         XCTAssertTrue(problem.appears(timeout: 5))
         XCTAssertFalse(app.buttons["deleteSheet.confirm"].isEnabled, "Delete waits")

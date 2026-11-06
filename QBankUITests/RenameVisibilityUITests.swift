@@ -3,7 +3,8 @@ import XCTest
 /// Rename from the screen that is already open, against the fake student of the Debug launch seam.
 /// Edit page is in More, beside + on a page's screen, and opens the page editor. Rename is in More,
 /// beside + on a topic's or a course's screen, and opens the same sheet Home opens from holding
-/// the card. Only the name changes: folders, pages, sets and past exams stay.
+/// the card. Only the name changes: folders, pages, sets and past exams stay. Recently deleted is
+/// in that More too, also where Rename is not offered.
 final class RenameVisibilityUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -128,6 +129,9 @@ final class RenameVisibilityUITests: XCTestCase {
         more.tap()
         let rename = menuItem(app, "course.rename", "Rename")
         XCTAssertTrue(rename.appears(timeout: 5))
+        let recentlyDeleted = menuItem(app, "course.recentlyDeleted", "Recently deleted")
+        XCTAssertTrue(recentlyDeleted.exists, "whether or not anything is deleted")
+        XCTAssertLessThan(rename.frame.minY, recentlyDeleted.frame.minY, "after Rename")
         attachLooks(app, "after course, More")
         chooseFromMenu(rename)
         XCTAssertTrue(app.navigationBars["Rename course"].appears(timeout: 5))
@@ -151,6 +155,56 @@ final class RenameVisibilityUITests: XCTestCase {
         let card = app.buttons["home.course.NURS 310"]
         XCTAssertTrue(card.appears(timeout: 5))
         waitForLabel(card, containing: "Psychiatric Nursing")
+    }
+
+    /// The page itself has no Recently deleted. More opens it, nothing deleted or not, and also
+    /// offline, where Rename is not offered.
+    @MainActor
+    func testRecentlyDeletedIsInMoreWhereRenameIsNotOffered() throws {
+        try skipOnIPad()
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        XCTAssertTrue(app.staticTexts["course.summary"].appears(timeout: 5))
+        XCTAssertFalse(app.buttons["course.recentlyDeleted"].exists, "not a row on the page")
+
+        openRecentlyDeleted(app)
+        attach(app, "recently deleted, from More")
+        goBack(app, from: "Recently deleted")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 5))
+
+        setNetwork(online: false)
+        let more = app.buttons["course.more"]
+        XCTAssertTrue(app.descendants(matching: .any)["course.offline"].appears(timeout: 10))
+        XCTAssertTrue(more.appears(timeout: 5), "More stays for Recently deleted")
+        more.tap()
+        let recentlyDeleted = menuItem(app, "course.recentlyDeleted", "Recently deleted")
+        XCTAssertTrue(recentlyDeleted.appears(timeout: 5))
+        XCTAssertFalse(menuItem(app, "course.rename", "Rename").exists, "nothing is renamed offline")
+        attachLooks(app, "course More, no connection")
+        chooseFromMenu(recentlyDeleted)
+        XCTAssertTrue(app.navigationBars["Recently deleted"].appears(timeout: 5))
+    }
+
+    /// Recently deleted waits while she puts the course's folders in order, as its row did.
+    @MainActor
+    func testRecentlyDeletedWaitsWhileFoldersAreOrdered() throws {
+        try skipOnIPad()
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 3", on: "Exam 2")
+        app.buttons["folder.more"].tap()
+        chooseFromMenu(menuItem(app, "folder.more.page", "Change page"))
+        app.buttons["examPage.none"].tap()
+        app.buttons["examPage.save"].tap()
+        waitForLabel(app.staticTexts["folder.note"], containing: "On no page")
+        goBack(app, from: "Week 3")
+        goBack(app, from: "Exam 2")
+        tapVisible(app.buttons["course.editFolders"], in: app)
+        XCTAssertTrue(app.buttons["reorder.up.Week 3"].appears(timeout: 5))
+        app.buttons["course.more"].tap()
+        let recentlyDeleted = menuItem(app, "course.recentlyDeleted", "Recently deleted")
+        XCTAssertTrue(recentlyDeleted.appears(timeout: 5))
+        XCTAssertFalse(recentlyDeleted.isEnabled)
     }
 }
 

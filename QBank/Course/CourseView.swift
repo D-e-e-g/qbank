@@ -9,7 +9,8 @@ import SwiftUI
 /// beside +, changes the name only. Holding the card on Home still renames it too.
 ///
 /// The + at the top adds into the course: a question file, questions made from her material, a
-/// folder, or an exam page. More, beside it, renames the course or topic.
+/// folder, or an exam page. More, beside it, renames the course or topic and opens what she deleted
+/// in it.
 struct CourseView: View {
     let app: AppModel
     let route: CourseRoute
@@ -43,12 +44,12 @@ struct CourseView: View {
         .qbankScreenBackground()
         .navigationTitle(model.course.map(Wording.name) ?? route.name ?? "Course")
         .screenColumnTitle()
-        .plusMenu(model.isStudent && model.course != nil, more: showsRename) {
+        .plusMenu(model.isStudent && model.course != nil, more: model.course != nil) {
             if let course = model.course {
                 addMenu(course)
             }
         } more: {
-            renameMenu
+            more
         }
         .refreshable { await model.load() }
         .reloadsWithConnection(app) {
@@ -163,20 +164,28 @@ struct CourseView: View {
     }
 
     /// Rename is offered to the student, for a topic and for a course that is in a semester.
-    /// A read-only admin does not get More. Offline, nothing here can be renamed.
+    /// A read-only admin does not get it. Offline, nothing here can be renamed.
     private var showsRename: Bool {
         guard model.isStudent, model.canEdit, let course = model.course else { return false }
         return course.kind == .topic || course.semester != nil
     }
 
-    /// More, beside +: Rename opens the same sheet Home opens from holding the card. Its button
-    /// is named "More for NURS 310", or "More for" a topic's title.
-    private var renameMenu: some View {
+    /// More, beside +: Rename opens the same sheet Home opens from holding the card, and Recently
+    /// deleted, always there, what she deleted in the course, for 30 days. Its button is named
+    /// "More for NURS 310", or "More for" a topic's title.
+    private var more: some View {
         MoreMenu(name: model.course.map(Wording.name) ?? "", identifier: "course.more") {
-            Button("Rename", systemImage: "pencil") {
-                renamesCourse = true
+            if showsRename {
+                Button("Rename", systemImage: "pencil") {
+                    renamesCourse = true
+                }
+                .accessibilityIdentifier("course.rename")
             }
-            .accessibilityIdentifier("course.rename")
+            Button("Recently deleted", systemImage: "trash") {
+                navigator?.open(CoursePage.recentlyDeleted)
+            }
+            .disabled(order != nil)
+            .accessibilityIdentifier("course.recentlyDeleted")
         }
     }
 
@@ -204,8 +213,6 @@ struct CourseView: View {
                             .padding(.top, QBankSpacing.space3)
                     }
                 }
-                recentlyDeleted
-                    .padding(.top, QBankSpacing.space3)
             }
         } else if let problem = model.problem {
             LoadFailed(problem: problem) {
@@ -297,18 +304,6 @@ struct CourseView: View {
                     .padding(.horizontal, QBankSpacing.space5)
                     .accessibilityIdentifier("course.orderNeedsConnection")
             }
-        }
-    }
-
-    /// What she deleted in the course, for 30 days.
-    private var recentlyDeleted: some View {
-        QBankListGroup {
-            NavigationLink(value: CoursePage.recentlyDeleted) {
-                QBankListRow("Recently deleted", detail: "Bring back pages, folders, sets and exams for 30 days", systemImage: "trash", showsChevron: true)
-            }
-            .buttonStyle(.qbankRow)
-            .disabled(order != nil)
-            .accessibilityIdentifier("course.recentlyDeleted")
         }
     }
 

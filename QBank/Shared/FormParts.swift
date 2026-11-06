@@ -107,23 +107,35 @@ struct Loading: View {
     }
 }
 
-/// An empty card with an icon and a sentence, such as a semester without courses.
-struct EmptyCard: View {
+/// An empty card with an icon and a sentence, such as a semester without courses, and under them
+/// the next step when the card has one.
+struct EmptyCard<Action: View>: View {
     let message: String
     var systemImage = "square.stack.3d.up"
+    @ViewBuilder var action: Action
 
     var body: some View {
         QBankCard(padding: QBankSpacing.space4) {
-            HStack(spacing: QBankSpacing.space4) {
-                Image(systemName: systemImage)
-                    .foregroundStyle(.qbank(.text3))
-                    .frame(width: 28, height: 28)
-                    .background(.qbank(.surfaceSunken), in: .circle)
-                    .accessibilityHidden(true)
-                Text(message)
-                    .qbankFont(.subheadline)
-                    .foregroundStyle(.qbank(.text2))
+            VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+                HStack(spacing: QBankSpacing.space4) {
+                    Image(systemName: systemImage)
+                        .foregroundStyle(.qbank(.text3))
+                        .frame(width: 28, height: 28)
+                        .background(.qbank(.surfaceSunken), in: .circle)
+                        .accessibilityHidden(true)
+                    Text(message)
+                        .qbankFont(.subheadline)
+                        .foregroundStyle(.qbank(.text2))
+                }
+                action
+                    .padding(.leading, 28 + QBankSpacing.space4)
             }
         }
+    }
+}
+
+extension EmptyCard where Action == EmptyView {
+    init(message: String, systemImage: String = "square.stack.3d.up") {
+        self.init(message: message, systemImage: systemImage) { EmptyView() }
     }
 }

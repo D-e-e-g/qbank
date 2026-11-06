@@ -38,6 +38,129 @@ struct DeletionTests {
         return course
     }
 
+    // MARK: The sets she ticked
+
+    @Test func oneTickedSetReadsAsItsOwnWarningAndUndoBringsItBack() async throws {
+        let app = Self.app()
+        let course = await Self.course(app)
+        let set = try #require(course.folder(FakeStudy.week2)?.sets.first { $0.id == Self.communication })
+        let model = DeleteSetsModel(app: app, sets: [set])
+        #expect(model.title == "Delete \(Self.communicationTitle)?", "before the warning arrives")
+        #expect(model.isLoading)
+        await model.load()
+        #expect(model.title == "Delete \(Self.communicationTitle)?")
+        #expect(model.message.hasPrefix("Its 14 questions go with it."))
+        #expect(model.canDelete)
+        #expect(await model.delete())
+        let offer = try #require(app.deletions.offer)
+        #expect(offer.line == "\(Self.communicationTitle) deleted.")
+        await app.deletions.undo(with: app)
+        #expect(app.deletions.offer?.back == "\(Self.communicationTitle) is back.")
+        await course.load()
+        #expect(course.folder(FakeStudy.week2)?.sets.contains { $0.id == Self.communication } == true)
+    }
+
+    @Test func severalTickedSetsNameEachSetAndUndoBringsThemAllBack() async throws {
+        let app = Self.app()
+        let course = await Self.course(app)
+        let sets = try #require(course.folder(FakeStudy.week2)?.sets)
+        #expect(sets.count == 2)
+        let model = DeleteSetsModel(app: app, sets: sets)
+        #expect(model.title == "Delete 2 sets?")
+        await model.load()
+        #expect(model.title == "Delete 2 sets?")
+        for set in sets {
+            #expect(model.message.contains(set.title))
+        }
+        #expect(await model.delete())
+        let offer = try #require(app.deletions.offer)
+        #expect(offer.line == "2 sets deleted.")
+        await course.load()
+        #expect(course.folder(FakeStudy.week2)?.sets.isEmpty == true)
+
+        await app.deletions.undo(with: app)
+        #expect(app.deletions.offer?.state == .undone)
+        #expect(app.deletions.offer?.back == "2 sets are back.")
+        await course.load()
+        #expect(course.folder(FakeStudy.week2)?.sets.map(\.id) == sets.map(\.id), "each in its place")
+    }
+
+    /// An exam in progress asks a set's questions: its warning says so, and Delete waits for them all.
+    @Test func aTickedSetTheServerRefusesForNowHoldsTheOthersBack() async throws {
+        let app = Self.app()
+        let course = await Self.course(app)
+        _ = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week2])
+        let sets = try #require(course.folder(FakeStudy.week2)?.sets)
+        let model = DeleteSetsModel(app: app, sets: sets)
+        await model.load()
+        for set in sets {
+            #expect(model.problem?.contains(set.title) == true)
+        }
+        #expect(!model.canDelete)
+        #expect(await model.delete() == false)
+        #expect(app.deletions.offer == nil)
+        await course.load()
+        #expect(course.folder(FakeStudy.week2)?.sets.count == 2, "nothing was deleted")
+    }
+
+    /// A refusal partway: what went stays gone, the screens read it again, what is left is read again
+    /// with the refusal said once, and Undo for what went comes when she closes the sheet.
+    @Test func aRefusalPartwayLeavesTheRestAndUndoCoversWhatWent() async throws {
+        let preview = { (id: String, confirm: String) in
+            StubServer.Reply.ok(#"{"setId":"\#(id)","title":"Set \#(id)","kind":"practice","folderId":"f1","folderName":"Week 1","examPageId":null,"questionCount":2,"versionCount":1,"answeredCount":0,"reviewCount":0,"progress":\#(Self.standing),"message":"Delete Set \#(id)? Its 2 questions go with it. You can undo this for 30 days.","refusal":null,"confirm":"\#(confirm)","undoDays":30}"#)
+        }
+        let refusal = "Set s2 changed since you were warned. Look again before deleting it."
+        let server = StubServer(["GET /api/practice-sets/s1/delete-preview": preview("s1", "aaaa")])
+        server.script("GET /api/practice-sets/s2/delete-preview", [preview("s2", "bbbb"), preview("s2", "cccc")])
+        server.script("DELETE /api/practice-sets/s1", [StubServer.Reply(status: 204, body: "")])
+        server.script("DELETE /api/practice-sets/s2", [.error(409, "deletion_changed", refusal), StubServer.Reply(status: 204, body: "")])
+        let (app, _) = TestApp.make(server, account: .student())
+        let sets = try ["s1", "s2"].map { id in
+            try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(StudyBodies.set(id, questions: 2, answered: 0, right: 0).utf8))
+        }
+        let revision = app.deletions.revision
+
+        let model = DeleteSetsModel(app: app, sets: sets)
+        await model.load()
+        #expect(await model.delete() == false)
+        #expect(model.left.map(\.id) == ["s2"])
+        #expect(model.problem == refusal)
+        #expect(model.title == "Delete Set s2?", "one set is left, and its warning is read again")
+        #expect(model.previews?.first?.confirm == "cccc")
+        #expect(model.canDelete, "she can try again")
+        #expect(app.deletions.offer == nil, "Undo comes when the sheet closes")
+        #expect(app.deletions.revision == revision + 1, "the screen underneath shows what went")
+
+        model.offerUndo()
+        let offer = try #require(app.deletions.offer)
+        #expect(offer.targets == [.set(id: "s1", title: sets[0].title)])
+        #expect(offer.line == "\(sets[0].title) deleted.")
+        model.offerUndo()
+        #expect(app.deletions.offer?.id == offer.id, "offered once")
+    }
+
+    /// Undo refused partway: what came back shows, and the bar says why the rest did not.
+    @Test func anUndoRefusedPartwaySaysWhyAndTheScreensReadAgain() async throws {
+        let server = StubServer([
+            "POST /api/practice-sets/s2/undo-delete": .ok(StudyBodies.folder("f1", "Week 1", page: nil, order: 1, sets: [], bank: 0)),
+            "POST /api/practice-sets/s1/undo-delete": .error(409, "request_refused", "s1 was deleted more than 30 days ago."),
+        ])
+        let (app, _) = TestApp.make(server, account: .student())
+        app.deletions.deleted([.set(id: "s1", title: "A"), .set(id: "s2", title: "B")], line: "2 sets deleted.", back: "2 sets are back.")
+        let revision = app.deletions.revision
+        await app.deletions.undo(with: app)
+        #expect(app.deletions.offer?.state == .failed("s1 was deleted more than 30 days ago."))
+        #expect(app.deletions.revision == revision + 1)
+    }
+
+    /// Brought back from Recently deleted: the bar about the sets it was deleted with goes.
+    @Test func bringingOneTickedSetBackDismissesTheirUndo() {
+        let (app, _) = TestApp.make(StubServer(), account: .student())
+        app.deletions.deleted([.set(id: "s1", title: "A"), .set(id: "s2", title: "B")], line: "2 sets deleted.", back: "2 sets are back.")
+        app.deletions.broughtBack(.set(id: "s2", title: "B"))
+        #expect(app.deletions.offer == nil)
+    }
+
     // MARK: A set
 
     @Test func aSetsWarningSaysWhatGoesInTheServersWords() async throws {

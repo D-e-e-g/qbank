@@ -59,6 +59,15 @@ struct CourseFoldersTests {
         #expect(FolderWording.examBank(done) == "No exam bank yet · exams use practice questions")
     }
 
+    @Test func folderActionsMatchTheWeb() {
+        #expect(FolderWording.importHere == "Import here")
+        #expect(FolderWording.changePage == "Change page")
+        #expect(FolderWording.deleteFolder == "Delete folder")
+        #expect(FolderWording.deletePage == "Delete page")
+        #expect(FolderWording.noSets == "No sets yet. Import a question file here, or move sets here from another folder.")
+        #expect(FolderWording.onPage(nil) == "On no page")
+    }
+
     // MARK: The course page
 
     @Test func dayOneHasNoExamPagesAndEveryFolderInHerOrder() throws {
@@ -105,6 +114,8 @@ struct CourseFoldersTests {
         #expect(FolderWording.examDraw(two) == "All 30 questions in these 2 folders, or wrong questions only.")
         let one = try plan([("f3", "Week 3", 20, 20, "exam")])
         #expect(FolderWording.examDraw(one) == "All 20 questions in this folder, or wrong questions only.")
+        let single = try plan([("f3", "Week 3", 1, 1, "practice")])
+        #expect(FolderWording.examDraw(single) == "The 1 question in this folder, or wrong questions only.")
         let large = try plan([("a", "A", 30, 20, "practice"), ("b", "B", 30, 20, "practice")])
         #expect(FolderWording.examDraw(large) == "40 questions from the 60 in these 2 folders, or wrong questions only.")
     }
@@ -392,15 +403,6 @@ struct CourseFoldersTests {
     private func editor(_ server: StubServer, pages: [StudyBodies.Page], page: String?, badges: [String: String?] = [:]) throws -> EditExamPageModel {
         let (app, _) = TestApp.make(server, account: .student())
         return EditExamPageModel(app: app, course: try course(pages: pages, badges: badges), pageID: page)
-    }
-
-    /// An existing page ends with Delete for her; a new page, and the owner's read-only view, have none.
-    @Test func onlyHerExistingPageOffersDelete() throws {
-        let pages: [StudyBodies.Page] = [("x1", "Exam 1", ["f2"])]
-        #expect(try editor(StubServer(), pages: pages, page: "x1").offersDelete)
-        #expect(try editor(StubServer(), pages: pages, page: nil).offersDelete == false)
-        let (owner, _) = TestApp.make(StubServer(), account: .admin)
-        #expect(EditExamPageModel(app: owner, course: try course(pages: pages), pageID: "x1").offersDelete == false)
     }
 
     @Test func theEditorGreysFoldersOnOtherPages() throws {

@@ -86,8 +86,10 @@ final class AddUITests: XCTestCase {
     func testImportHereFromAFolder() throws {
         let app = launch("signed-in")
         openFolder(app, "Weeks 1-3")
-        let importHere = app.buttons["folder.import"]
+        let importHere = app.buttons["folder.add"]
         XCTAssertTrue(importHere.appears(timeout: 5))
+        XCTAssertEqual(importHere.label, "Import here")
+        XCTAssertFalse(app.buttons["folder.import"].exists, "a folder with sets has no card")
         attachLooks(app, "folder with import here")
         importHere.tap()
         XCTAssertTrue(app.buttons["import.folder.Folders.Weeks 1-3"].appears(timeout: 5))
@@ -142,12 +144,5 @@ final class AddUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Add questions"].appears(timeout: 5))
         app.buttons["add.import"].tap()
         XCTAssertTrue(app.navigationBars["Import"].appears(timeout: 5))
-    }
-
-    @MainActor
-    private func waitForSelected(_ element: XCUIElement, timeout: TimeInterval = 5) {
-        let predicate = NSPredicate(format: "isSelected == true")
-        let result = XCTWaiter.wait(for: [expectation(for: predicate, evaluatedWith: element)], timeout: timeout)
-        XCTAssertEqual(result, .completed, "\(element) never became selected")
     }
 }

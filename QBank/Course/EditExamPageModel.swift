@@ -5,7 +5,7 @@ import QBankKit
 /// The page editor: the page's name and the course's folders as chips. A folder is on one page at
 /// most, so a folder another page holds is greyed and names that page. A topic's page also takes its
 /// primer link, and a page that exists its badge. Done saves through the server, which has the last
-/// word: a refusal is shown in its words. An existing page ends with Delete, which asks first.
+/// word: a refusal is shown in its words.
 @Observable
 final class EditExamPageModel {
     /// How the editor closed.
@@ -13,8 +13,6 @@ final class EditExamPageModel {
         case cancelled
         /// The page was made or changed; its id.
         case saved(String)
-        /// She asked to delete the page: its warning opens once the editor is down.
-        case delete
     }
 
     /// A folder as a chip.
@@ -83,11 +81,6 @@ final class EditExamPageModel {
     /// A new page has no badge: she sets one once the page exists, on a server that takes one.
     var offersBadge: Bool {
         takesBadge
-    }
-
-    /// Only she deletes her pages; the owner's view has no Delete.
-    var offersDelete: Bool {
-        !isNew && app.account?.role == .student
     }
 
     var hasChanges: Bool {

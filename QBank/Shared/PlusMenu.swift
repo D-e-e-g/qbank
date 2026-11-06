@@ -18,6 +18,29 @@ extension View {
     func plusMenu(_ isShown: Bool, more showsMore: Bool, @ViewBuilder menu: () -> some View, @ViewBuilder more: () -> some View) -> some View {
         modifier(TopBarMenus(showsAdd: isShown, showsMore: showsMore, add: menu(), more: more()))
     }
+
+    /// Puts More and a plain + at the top right, the same way, for a screen with one way to add: the
+    /// + does it at once, with no menu of one row. Its button is named for what it does.
+    func plusButton(
+        _ isShown: Bool,
+        label: String,
+        identifier: String,
+        isEnabled: Bool,
+        more showsMore: Bool,
+        action: @escaping () -> Void,
+        @ViewBuilder more: () -> some View
+    ) -> some View {
+        plusMenu(isShown, more: showsMore) {
+            Button(action: action) {
+                Image(systemName: "plus")
+            }
+            .disabled(!isEnabled)
+            .accessibilityLabel(label)
+            .accessibilityIdentifier(identifier)
+        } more: {
+            more()
+        }
+    }
 }
 
 /// More, an ellipsis at the top right: what a screen offers besides adding. The menu has no

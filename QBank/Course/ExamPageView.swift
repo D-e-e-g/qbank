@@ -6,7 +6,7 @@ import SwiftUI
 /// order, and the exams she took over them. Edit page, in More beside +, opens the page's name,
 /// folders and badge. Study material's Edit puts the folders in order and still offers that
 /// editor. The + at the top adds into the page: a question file, a new folder, or folders she has.
-/// A topic's page has its primer link when it has one. Its editor ends with Delete: the page goes
+/// A topic's page has its primer link when it has one. Delete page, last in More: the page goes
 /// to Recently deleted, and its folders stay in the course, with their sets, at the end of its
 /// Folders list.
 struct ExamPageView: View {
@@ -24,8 +24,6 @@ struct ExamPageView: View {
     @State private var opensFolder: String?
     /// True once the page is deleted, so the screen leaves instead of saying it is gone.
     @State private var isDeleted = false
-    /// She asked the editor to delete the page: its warning opens once the editor is down.
-    @State private var deletesPage = false
     @State private var problem: String?
     /// The page or a past exam she asked to delete, while its warning is open.
     @State private var deleting: DeleteRequest?
@@ -76,18 +74,10 @@ struct ExamPageView: View {
         }
         .sheet(isPresented: $editsPage, onDismiss: {
             order = nil
-            // Delete in the editor asks once the editor is down.
-            guard deletesPage, let page = model.layout?.page(id) else { return }
-            deletesPage = false
-            deleting = DeleteRequest(target: .examPage(id: page.id, name: page.exam.name))
         }, content: {
             if let course = model.course {
-                EditExamPageView(app: app, course: course, pageID: id) { outcome in
-                    if outcome == .delete {
-                        deletesPage = true
-                    } else {
-                        Task { await model.load() }
-                    }
+                EditExamPageView(app: app, course: course, pageID: id) { _ in
+                    Task { await model.load() }
                 }
             }
         })
@@ -268,7 +258,9 @@ struct ExamPageView: View {
     }
 
     /// More, beside +: Edit page opens the page's name, badge and folders. An order she has not
-    /// saved yet is saved first, the same as Name and folders. Offline, More is not shown.
+    /// saved yet is saved first, the same as Name and folders. Delete page, last and only for her,
+    /// opens the warning in the server's words; the owner's view has no Delete. Offline, More is not
+    /// shown.
     private func more(_ page: ExamPage) -> some View {
         MoreMenu(name: page.exam.name, identifier: "page.more") {
             Button("Edit page", systemImage: "pencil") {
@@ -276,6 +268,14 @@ struct ExamPageView: View {
             }
             .disabled(isSavingOrder)
             .accessibilityIdentifier("page.more.editPage")
+            if model.isStudent {
+                Divider()
+                Button(FolderWording.deletePage, systemImage: "trash", role: .destructive) {
+                    deleting = DeleteRequest(target: .examPage(id: page.id, name: page.exam.name))
+                }
+                .disabled(isSavingOrder)
+                .accessibilityIdentifier("page.more.delete")
+            }
         }
     }
 

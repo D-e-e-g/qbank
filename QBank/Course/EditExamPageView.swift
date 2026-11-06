@@ -4,8 +4,7 @@ import SwiftUI
 
 /// The page editor, as a sheet: Cancel, New page or Edit Exam 2, Done; the page's name, the course's
 /// folders as chips, and how many questions its folders hold. A topic's page also has its primer
-/// link, and a page that exists its Badge. A page that exists ends with Delete, which closes the editor and asks
-/// in the server's words; the page alone goes, and its folders stay.
+/// link, and a page that exists its Badge.
 struct EditExamPageView: View {
     @State private var model: EditExamPageModel
     @FocusState private var naming: Bool
@@ -51,15 +50,6 @@ struct EditExamPageView: View {
                 }
                 .padding(.top, QBankSpacing.space2)
                 .disabled(model.isSaving)
-            }
-            if model.offersDelete {
-                Button("Delete this page", systemImage: "trash", role: .destructive) {
-                    close(.delete)
-                }
-                .buttonStyle(.qbank(.destructive, size: .large, fullWidth: true))
-                .disabled(model.isSaving)
-                .padding(.top, QBankSpacing.space3)
-                .accessibilityIdentifier("editPage.delete")
             }
         }
     }
