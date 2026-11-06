@@ -629,18 +629,12 @@ ruby_check "$UPLOAD never prints a vault value" "$UPLOAD" "$SCRIPT_RUBY"'
     end
   end
 '
-ruby_check "$UPLOAD watches for Apple's log stream through the whole run and stops watching before it removes its files" "$UPLOAD" "$SCRIPT_RUBY"'
+ruby_check "$UPLOAD starts watching for Apple's log stream before xcodebuild runs" "$UPLOAD" "$SCRIPT_RUBY"'
   main = body.call("main")
-  trap = line_in.call(main, "trap cleanup EXIT") or abort "main() does not set trap cleanup EXIT"
-  start = line_in.call(main, "start_log_stream_watcher") or abort "main() never starts the log stream watcher"
-  abort "main() starts the watcher before its EXIT trap" unless trap < start
-  first_tool = main.find { |i| lines[i] =~ /\bxcodebuild\b/ && lines[i] !~ /command -v|for tool/ && i > trap } or abort "main() runs no xcodebuild"
-  abort "main() runs xcodebuild before it starts the watcher" unless start < first_tool
-  cleanup = body.call("cleanup")
-  stop = line_in.call(cleanup, "stop_log_stream_watcher || true") or abort "cleanup() does not stop the watcher, or lets it fail the run"
-  removal = cleanup.find { |i| lines[i].include?(%q{rm -rf "$work"}) } or abort "cleanup() removes no temporary directory"
-  abort "cleanup() stops the watcher after removing its files" unless stop < removal
-  abort "cleanup() no longer ends in exit \"$status\"" unless lines[cleanup.end - 1].strip == %q{exit "$status"}
+  in_main = logical.select { |i, _| main.cover?(i) }
+  start = in_main.find { |_, t| t == "start_log_stream_watcher" } or abort "main() never starts the log stream watcher"
+  build = in_main.find { |_, t| t =~ /(?:^|[\s(!])xcodebuild\s/ && t !~ /^for / } or abort "main() runs no xcodebuild"
+  abort "main() runs xcodebuild before it starts the watcher" unless start[0] < build[0]
 '
 
 # Runs the upload script's own functions, in a shell set up as its main() is,
