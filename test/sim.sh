@@ -14,8 +14,9 @@
 # that runtime supports (default order: iPhone 17 Pro, iPhone 17,
 # iPhone 16 Pro, iPhone 16; otherwise the runtime's last listed device of the
 # first name's family, iPhone or iPad). It is booted headlessly, and shut down
-# and deleted on every exit path. Devices left behind by an earlier run that
-# was killed are reaped first.
+# and deleted on every exit path, along with any clones of it that parallel
+# testing made. Devices left behind by an earlier run that was killed are reaped
+# first.
 # COMMAND is stopped after --timeout seconds (default 3600).
 #
 # Compatible with the bash 3.2 that ships with macOS.
@@ -68,28 +69,51 @@ run_with_timeout() {
   perl -e 'alarm shift @ARGV; exec @ARGV or die "exec $ARGV[0]: $!\n"' "$seconds" "$@"
 }
 
-# Deletes devices from earlier runs whose owning process no longer exists.
-# Device names are "$PREFIX-<pid>-<random>".
-reap_orphans() {
-  local udid pid
-  while IFS=' ' read -r udid pid; do
-    [ -n "$udid" ] || continue
-    if ! kill -0 "$pid" 2>/dev/null; then
-      log "reaping orphaned simulator $udid (owner pid $pid is gone)"
-      xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
-      xcrun simctl delete "$udid" >/dev/null 2>&1 || true
-    fi
-  done <<EOF_ORPHANS
-$(xcrun simctl list devices --json | PREFIX="$PREFIX" python3 -c '
+# Prints "<udid> <owner pid>" for this script's devices in a simctl device set.
+# Device names are "$PREFIX-<pid>-<random>". xcodebuild's parallel test workers
+# run on clones in the "testing" set, named "Clone <n> of <device name>"; it
+# deletes them itself unless it is killed.
+run_devices() {
+  xcrun simctl --set "$1" list devices --json | PREFIX="$PREFIX" python3 -c '
 import json, os, re, sys
-pattern = re.compile(r"^" + re.escape(os.environ["PREFIX"]) + r"-(\d+)-\d+$")
+pattern = re.compile(r"^(?:Clone \d+ of )?" + re.escape(os.environ["PREFIX"]) + r"-(\d+)-\d+$")
 for devices in json.load(sys.stdin)["devices"].values():
     for device in devices:
         match = pattern.match(device["name"])
         if match:
             print(device["udid"], match.group(1))
-')
+'
+}
+
+# Deletes devices from earlier runs whose owning process no longer exists.
+reap_orphans() {
+  local device_set udid pid
+  for device_set in default testing; do
+    while IFS=' ' read -r udid pid; do
+      [ -n "$udid" ] || continue
+      if ! kill -0 "$pid" 2>/dev/null; then
+        log "reaping orphaned simulator $udid (owner pid $pid is gone)"
+        xcrun simctl --set "$device_set" shutdown "$udid" >/dev/null 2>&1 || true
+        xcrun simctl --set "$device_set" delete "$udid" >/dev/null 2>&1 || true
+      fi
+    done <<EOF_ORPHANS
+$(run_devices "$device_set")
 EOF_ORPHANS
+  done
+}
+
+# Deletes the clones of this run's device that a killed xcodebuild left behind.
+# shellcheck disable=SC2317,SC2329 # invoked by the EXIT trap
+delete_own_clones() {
+  local udid pid
+  while IFS=' ' read -r udid pid; do
+    [ "$pid" = "$$" ] || continue
+    log "deleting simulator clone $udid"
+    xcrun simctl --set testing shutdown "$udid" >/dev/null 2>&1 || true
+    xcrun simctl --set testing delete "$udid" >/dev/null 2>&1 || log "warning: could not delete simulator clone $udid"
+  done <<EOF_CLONES
+$(run_devices testing)
+EOF_CLONES
 }
 
 # Prints "<runtime id>\t<runtime version>\t<device type id>\t<device type name>".
@@ -128,6 +152,7 @@ udid=""
 cleanup() {
   local status=$?
   if [ -n "$udid" ]; then
+    delete_own_clones
     log "deleting simulator $udid"
     xcrun simctl shutdown "$udid" >/dev/null 2>&1 || true
     xcrun simctl delete "$udid" >/dev/null 2>&1 || log "warning: could not delete simulator $udid"

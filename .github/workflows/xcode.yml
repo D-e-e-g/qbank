@@ -165,8 +165,10 @@ jobs:
       # it, and deletes it on every exit path. Never target a simulator here
       # directly. After a failure xcodebuild would gather simulator diagnostics,
       # which can wait without end; the result bundle is uploaded instead.
-      # The iPhone runs every UI test one after another. sim.sh's 60-minute
-      # default leaves headroom for the full suite while still stopping hangs.
+      # The iPhone splits its test classes between two clones of the device, which
+      # takes this step from about 42 minutes to 25. Three workers flaked on a
+      # drag, so two is the limit (see docs/ci.md). sim.sh's 60-minute default
+      # leaves headroom for the full suite while still stopping hangs.
       - name: Build and run unit and UI tests
         run: |
           ./test/sim.sh --device "iPhone 17 Pro" --device "iPhone 17" -- \
@@ -177,10 +179,13 @@ jobs:
               -destination "platform=iOS Simulator,id={{UDID}}" \
               -derivedDataPath "$DERIVED_DATA_PATH" \
               -collect-test-diagnostics never \
+              -parallel-testing-enabled YES \
+              -parallel-testing-worker-count 2 \
               -resultBundlePath TestResults.xcresult
 
       # The same tests on an iPad: the iPad layout's UI tests run there, and the
-      # iPhone layout's skip themselves.
+      # iPhone layout's skip themselves. One class holds most of them, so a second
+      # worker here made this step slower, not faster.
       - name: Build and run unit and UI tests on iPad
         run: |
           ./test/sim.sh --device "iPad Pro 13-inch (M5)" --device "iPad Pro 13-inch (M4)" -- \

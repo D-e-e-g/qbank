@@ -21,11 +21,15 @@ Pull requests from this repository's own branches, pushes to `main`, `qbank-v*` 
 
 1. `test/package-tests.sh`: `swift test` in every package under `Packages/` on the Mac host
 2. a Release build for `generic/platform=iOS` without signing, which proves Debug-only code stays out of Release
-3. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves
+3. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves. The iPhone step splits its test classes between two clones of its simulator; the iPad step runs one after another
 
 A pull request from a fork never runs the Mac job; its `Mac build skipped` job says why (see below).
 
 A `Change scope` job on GitHub's Linux runs first. It takes a same-repository pull request off the Mac only when every changed path is on the allowlist in `test/docs-only.sh` (`docs/` and the top-level Markdown files), so anything else, a path it does not know included, builds. `Build and test` then reports skipped, which never blocks a merge, and `Mac build skipped` says why. A push to `main`, a tag, or a manual run is never taken off the Mac this way, so `main` still runs the complete suite ahead of any TestFlight build.
+
+Two workers on the iPhone step took three full runs on the MacBook Pro 14 with no flake, and the same 85 UI tests ran as on one worker. Three workers flaked on a drag under the load, and a second worker on the iPad step made it slower, because one class holds most of the iPad's tests. If a test starts to flake only with two workers, remove `-parallel-testing-enabled` and `-parallel-testing-worker-count` from the step rather than retrying around it: a flake costs more than the 18 minutes saved. `test/sim.sh` deletes any clones a killed run leaves behind.
+
+Build results are not reused between runs: compiling takes about 2 minutes of the job, which is not worth the risk of a stale result hiding a failure.
 
 ### Retrying one test
 
