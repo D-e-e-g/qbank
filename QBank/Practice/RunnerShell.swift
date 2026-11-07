@@ -181,6 +181,9 @@ extension EnvironmentValues {
 
 /// A short line in place of the question: loading, a problem, or nothing to answer.
 struct RunnerNote: View {
+    /// Keeps a note floating over the runner clear of its pinned footer: a large button and its padding.
+    static let footerClearance: CGFloat = 84
+
     let text: String
 
     var body: some View {

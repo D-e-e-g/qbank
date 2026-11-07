@@ -55,6 +55,7 @@ struct AddView: View {
                 destination(route)
             }
         }
+        .frozenNote(app.frozen)
         .onChange(of: tabs.makeRequest, initial: true) { _, request in
             guard let request else { return }
             tabs.makeRequest = nil

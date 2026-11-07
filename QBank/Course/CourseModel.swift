@@ -55,14 +55,20 @@ final class CourseModel {
     }
 
     /// Folders and exam pages change on the server, so without a connection they cannot be edited.
-    var canEdit: Bool {
+    /// The controls look this way for the admin too, and answer with the frozen note.
+    var offersEditing: Bool {
         app.connection.isOnline && savedAt == nil
+    }
+
+    /// Whether an edit may go to the server: only a user account changes her folders and pages.
+    var canEdit: Bool {
+        isStudent && offersEditing
     }
 
     /// The +'s Make questions shows only when the server says she may start a set now, as the Add
     /// tab's row does.
     var canMake: Bool {
-        isStudent && canEdit && maker?.available == true
+        canEdit && maker?.available == true
     }
 
     /// Reads whether she may make questions. Failing leaves Make questions off the +.
@@ -146,6 +152,7 @@ final class CourseModel {
 
     /// Brings back the previous version of a set she confirmed, then reloads the course.
     func restore(_ set: PracticeSetSummary) async {
+        guard !app.frozen.refuses() else { return }
         isRestoring = true
         defer { isRestoring = false }
         do {
@@ -259,6 +266,7 @@ final class CourseModel {
 
     /// Runs one edit, then reads the course again, whether or not every step was saved.
     private func edit(_ change: () async throws(QBankError) -> Void) async -> String? {
+        guard !app.frozen.refuses() else { return nil }
         var failure: String?
         do {
             try await change()

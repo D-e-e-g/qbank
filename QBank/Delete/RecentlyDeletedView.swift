@@ -103,8 +103,7 @@ struct RecentlyDeletedView: View {
                                 lines: ["\(exam.exam.scoreText) fully right · \(exam.exam.pastLine)", RecentlyDeletedWording.window(deletedAt: exam.deletedAt, undoUntil: exam.undoUntil)],
                                 systemImage: "timer",
                                 refusal: nil,
-                                back: DeleteWording.back(.exam(id: exam.id)),
-                                canBringBack: model.isStudent
+                                back: DeleteWording.back(.exam(id: exam.id))
                             )
                         }
                     }
@@ -124,14 +123,13 @@ struct RecentlyDeletedView: View {
     }
 
     private func row(
-        _ target: DeleteTarget, title: String, lines: [String], systemImage: String, refusal: String?, back: String,
-        canBringBack: Bool = true
+        _ target: DeleteTarget, title: String, lines: [String], systemImage: String, refusal: String?, back: String
     ) -> some View {
         DeletedRow(title: title, lines: lines, systemImage: systemImage, refusal: refusal) {
             if model.bringingBack == target {
                 ProgressView()
                     .frame(minWidth: 44, minHeight: 32)
-            } else if canBringBack {
+            } else {
                 Button("Bring back") {
                     Task { await model.bringBack(target, saying: back) }
                 }

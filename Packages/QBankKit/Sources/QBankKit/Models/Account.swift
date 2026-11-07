@@ -47,6 +47,24 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
+/// `GET /api/admin/students`: the user accounts the admin may look at, oldest first.
+public struct StudentList: Codable, Sendable, Equatable {
+    public struct Student: Codable, Sendable, Equatable, Identifiable {
+        public let id: String
+        public let email: String
+        public let name: String
+    }
+
+    public let students: [Student]
+    /// The one the admin is looking at. Nil when there is no user account yet.
+    public let viewingId: String?
+
+    /// The one the admin is looking at, by its id.
+    public var viewing: Student? {
+        students.first { $0.id == viewingId }
+    }
+}
+
 /// The answer to a password sign-in or a password change: a fresh bearer token.
 public struct SignedIn: Codable, Sendable, Equatable {
     public let token: String

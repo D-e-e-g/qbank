@@ -63,6 +63,9 @@ struct SignedInView: View {
                 SettingsView(app: app)
             }
         }
+        .overlay(alignment: .top) {
+            FrozenLine(frozen: app.frozen)
+        }
         .environment(tabs)
     }
 }

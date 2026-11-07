@@ -83,15 +83,15 @@ final class HomeModel {
         return groups
     }
 
-    /// A user account has the + and the held cards' menus; the admin's view of her account is
-    /// read-only, so it has neither.
-    var showsEditing: Bool {
-        isUserAccount
+    /// Adding, moving, archiving and deleting need QBank, so not from the copy on the phone. The
+    /// controls look this way for the admin too, and answer with the frozen note.
+    var offersEditing: Bool {
+        savedAt == nil && app.connection.isOnline && !isEditing
     }
 
-    /// Adding, moving, archiving and deleting need QBank, so not from the copy on the phone.
+    /// Whether an edit may go to the server: only a user account changes what she has.
     var canEdit: Bool {
-        isUserAccount && savedAt == nil && app.connection.isOnline && !isEditing
+        isUserAccount && offersEditing
     }
 
     /// The semester the + adds, while one of 1, 2 and 3 is missing.
@@ -135,6 +135,13 @@ final class HomeModel {
 
     /// Loads the semesters. A failed reload keeps what is already on screen.
     func load() async {
+        // Whose courses these are, read with them: the account can change on the web at any time.
+        async let account: Void = app.frozen.readAccount(with: app.client)
+        await loadCatalog()
+        await account
+    }
+
+    private func loadCatalog() async {
         isLoading = true
         editProblem = nil
         defer { isLoading = false }
@@ -242,7 +249,7 @@ final class HomeModel {
 
     /// Runs one edit, then reads the list again, whether or not it was saved.
     private func edit(_ change: () async throws(QBankError) -> Void) async {
-        guard canEdit else { return }
+        guard !app.frozen.refuses(), canEdit else { return }
         isEditing = true
         var failure: String?
         do {

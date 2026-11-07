@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
@@ -41,13 +41,13 @@
               "title": "Week 1 - Set 1: Invented basics",
               "description": "Invented practice questions.",
               "questionCount": 3,
-              "importedAt": "2026-11-05T05:30:38.106Z",
-              "activeSince": "2026-11-05T05:30:38.106Z",
+              "importedAt": "2026-11-06T22:19:54.915Z",
+              "activeSince": "2026-11-06T22:19:54.915Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 2,
               "fullyRightCount": 2,
-              "lastAnsweredAt": "2026-11-05T05:30:38.130Z",
+              "lastAnsweredAt": "2026-11-06T22:19:54.950Z",
               "sitting": {
                 "answeredCount": 2
               },
@@ -74,13 +74,13 @@
               "title": "Week 1 - Set 1: Invented basics",
               "description": "Invented practice questions.",
               "questionCount": 3,
-              "importedAt": "2026-11-05T05:30:38.106Z",
-              "activeSince": "2026-11-05T05:30:38.106Z",
+              "importedAt": "2026-11-06T22:19:54.915Z",
+              "activeSince": "2026-11-06T22:19:54.915Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 2,
               "fullyRightCount": 2,
-              "lastAnsweredAt": "2026-11-05T05:30:38.130Z",
+              "lastAnsweredAt": "2026-11-06T22:19:54.950Z",
               "sitting": {
                 "answeredCount": 2
               },

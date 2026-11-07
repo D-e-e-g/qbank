@@ -309,11 +309,35 @@ struct ExamModelTests {
         #expect(model.items.isEmpty)
     }
 
-    @Test func theOwnerWatchesHerRunningExam() async throws {
+    @Test func theOwnerSeesHerRunningExamAndNothingSheDoesIsSent() async throws {
         let server = StubServer(["GET /api/exams/e1": .ok(StudyBodies.exam())])
-        let model = Self.model(server, account: .admin)
+        let (app, _) = TestApp.make(server, account: .admin)
+        let model = ExamModel(app: app, examID: "e1")
         await model.load()
-        #expect(model.phase == .watching)
+        #expect(model.phase == .running)
+        #expect(app.frozen.noteID != nil, "the runner opens with the note")
+        let draft = try #require(model.item?.draft)
+        model.setGuessed(true)
+        #expect(model.item?.guessed == false)
+        await model.submit()
+        await model.skip()
+        await model.end(.left)
+        model.update(draft)
+        #expect(model.phase == .running)
+        #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
+    }
+
+    @Test func aFrozenExamWhoseTimeRanOutIsLeftForHerAppToEnd() async throws {
+        let server = StubServer(["GET /api/exams/e1": .ok(StudyBodies.exam())])
+        var now = ContinuousClock.now
+        let (app, _) = TestApp.make(server, account: .admin)
+        let model = ExamModel(app: app, examID: "e1", clock: { now })
+        await model.load()
+        now = now.advanced(by: .seconds(100_000))
+        model.tick()
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(model.secondsLeft == 0)
+        #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
     }
 
     @Test func aMissingExamIsSaidInTheServersWords() async throws {
@@ -335,8 +359,7 @@ struct ExamModelTests {
     }
 
     @Test func examBankWrongIsWordedAsOnTheWeb() {
-        #expect(ExamResultView.bankWrongText(1, isStudent: true) == "1 exam-bank question you got wrong stays out of Review. Turn on Wrong questions only to take it again.")
-        #expect(ExamResultView.bankWrongText(2, isStudent: true) == "2 exam-bank questions you got wrong stay out of Review. Turn on Wrong questions only to take them again.")
-        #expect(ExamResultView.bankWrongText(1, isStudent: false) == "1 exam-bank question she got wrong stays out of Review. It comes back when she takes Wrong questions only.")
+        #expect(ExamResultView.bankWrongText(1) == "1 exam-bank question you got wrong stays out of Review. Turn on Wrong questions only to take it again.")
+        #expect(ExamResultView.bankWrongText(2) == "2 exam-bank questions you got wrong stay out of Review. Turn on Wrong questions only to take them again.")
     }
 }

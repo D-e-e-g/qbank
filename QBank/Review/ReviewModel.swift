@@ -26,11 +26,6 @@ final class ReviewModel {
         self.course = course
     }
 
-    /// Only she practices and clears; the owner sees her list read-only.
-    var isStudent: Bool {
-        app.account?.role == .student
-    }
-
     /// The questions under the chosen filter.
     var questions: [ReviewQuestion] {
         (list?.questions ?? []).filter { Self.matches($0, filter) }
@@ -76,6 +71,7 @@ final class ReviewModel {
 
     /// Empties the list after she confirmed. Her answers and scores stay.
     func clear() async {
+        guard !app.frozen.refuses() else { return }
         isClearing = true
         defer { isClearing = false }
         do {

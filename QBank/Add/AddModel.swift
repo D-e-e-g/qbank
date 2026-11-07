@@ -27,6 +27,8 @@ final class AddModel {
     /// How many sets are left today, or why she cannot make questions now, in the server's words:
     /// not on this account, not set up yet, or the daily limit.
     var makeNote: String? {
+        // The server tells the admin only that it makes nothing, in words of its own.
+        if app.frozen.isOn { return app.frozen.note }
         guard let status else { return nil }
         if status.available { return MakeWording.allowance(started: status.startedToday, limit: status.dailyLimit) }
         return status.reason

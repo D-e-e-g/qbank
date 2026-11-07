@@ -93,6 +93,7 @@ struct HomeView: View {
                 .studyDestinations(app: app)
         }
         .undoBar(app)
+        .frozenNote(app.frozen)
     }
 
     /// iPad: the courses in a sidebar, and the course she chose beside them.
@@ -108,12 +109,13 @@ struct HomeView: View {
                             // Another course gets a screen of its own.
                             .id(course.id)
                     } else {
-                        NoCourseChosen(hasCourses: model.catalog.map { !$0.everyCourse.isEmpty }, canAdd: model.showsEditing)
+                        NoCourseChosen(hasCourses: model.catalog.map { !$0.everyCourse.isEmpty })
                     }
                 }
                 .studyDestinations(app: app)
             }
             .undoBar(app)
+            .frozenNote(app.frozen)
         }
         .navigationSplitViewStyle(.balanced)
         .onChange(of: navigator.courseRevision) {
@@ -130,7 +132,7 @@ struct HomeView: View {
         }
         .qbankScreenBackground()
         .navigationTitle("Home")
-        .plusMenu(model.showsEditing) {
+        .plusMenu(true) {
             addMenu
         }
         .toolbar {
@@ -169,12 +171,12 @@ struct HomeView: View {
             Section("Add") {
                 ForEach(model.studiedSemesters) { semester in
                     Button("New course in \(semester.name)", systemImage: "book.closed") {
-                        sheet = .newCourse(semester)
+                        app.frozen.perform { sheet = .newCourse(semester) }
                     }
                     .accessibilityIdentifier("home.add.course.\(semester.number)")
                 }
                 Button("New study topic", systemImage: "text.book.closed") {
-                    sheet = .newTopic
+                    app.frozen.perform { sheet = .newTopic }
                 }
                 .accessibilityIdentifier("home.add.topic")
             }
@@ -187,7 +189,7 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
         }
-        .disabled(!model.canEdit || model.catalog == nil)
+        .disabled(!model.offersEditing || model.catalog == nil)
         .accessibilityLabel("Add")
         .accessibilityIdentifier("home.add")
     }
@@ -225,9 +227,7 @@ struct HomeView: View {
                         .padding(.top, QBankSpacing.space3)
                 }
                 if catalog.semesters.isEmpty {
-                    EmptyCard(message: model.showsEditing
-                        ? "No semesters yet. Tap + to add one, or import a question file."
-                        : "A course appears here when its first question file is imported.")
+                    EmptyCard(message: "No semesters yet. Tap + to add one, or import a question file.")
                         .padding(.top, QBankSpacing.space3)
                 }
                 ForEach(model.studiedSemesters) { semester in
@@ -237,9 +237,7 @@ struct HomeView: View {
                         .padding(.top, QBankSpacing.space5)
                         .padding(.bottom, -QBankSpacing.space2)
                     if courses.isEmpty {
-                        EmptyCard(message: model.showsEditing
-                            ? "No courses yet. Tap + to add one, or import its first question file."
-                            : "A course appears here when its first question file is imported.")
+                        EmptyCard(message: "No courses yet. Tap + to add one, or import its first question file.")
                     }
                     ForEach(courses) { course in
                         courseLink(course)
@@ -346,9 +344,7 @@ struct HomeView: View {
     private func courseLink(_ course: CourseSummary) -> some View {
         cardLink(course)
             .contextMenu {
-                if model.showsEditing {
-                    heldMenu(course)
-                }
+                heldMenu(course)
             }
     }
 
@@ -361,9 +357,9 @@ struct HomeView: View {
             navigator.open(CourseRoute(id: course.id, name: Wording.name(course), kind: course.kind))
         }
         .accessibilityIdentifier("home.hold.open")
-        if model.canEdit {
+        if model.offersEditing {
             Button("Rename", systemImage: "pencil") {
-                sheet = .rename(course)
+                app.frozen.perform { sheet = .rename(course) }
             }
             .accessibilityIdentifier("home.hold.rename")
             if course.kind == .topic {
@@ -403,7 +399,7 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.hold.unarchive")
             }
             Button("Delete", systemImage: "trash", role: .destructive) {
-                deleting = DeleteRequest(target: .course(id: course.id, name: Wording.name(course)))
+                app.frozen.perform { deleting = DeleteRequest(target: .course(id: course.id, name: Wording.name(course))) }
             }
             .accessibilityIdentifier("home.hold.delete")
         }
@@ -484,8 +480,6 @@ private enum HomeSheet: Identifiable {
 private struct NoCourseChosen: View {
     /// Nil while the courses load.
     let hasCourses: Bool?
-    /// A user account adds one with the sidebar's +.
-    let canAdd: Bool
 
     var body: some View {
         VStack(spacing: QBankSpacing.space3) {
@@ -500,7 +494,7 @@ private struct NoCourseChosen: View {
                     .foregroundStyle(.qbank(.text1))
                 Text(hasCourses
                     ? "Its pages, folders, Review and Terms open here."
-                    : canAdd ? "Tap + to add one, or import its first question file." : "A course appears here when its first question file is imported.")
+                    : "Tap + to add one, or import its first question file.")
                     .qbankFont(.subheadline)
                     .foregroundStyle(.qbank(.text2))
                     .multilineTextAlignment(.center)

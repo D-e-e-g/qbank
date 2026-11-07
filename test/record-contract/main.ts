@@ -11,6 +11,7 @@
 import { copyFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { recordAccountDeletion } from "./account";
+import { recordAdmin } from "./admin";
 import { recordAgents } from "./agents";
 import { recordDeletion } from "./deletion";
 import { recordMakeQuestions } from "./make-questions";
@@ -29,9 +30,10 @@ const IMAGES: Record<string, string> = {
   c033890813f6a2c76a23688d2cf457fdd0ae7d62: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:5604fbb1ea804c87de595cd556a01ec224ad34a0557d99c34c64c741e7c44961",
   f4b1bb4033ad15b09619ad1c885e9eeb071a1c4f: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:69f9859a78e7473d5b082e70005024bd9c9cb1dd049e4082979163cb34eeb5ee",
   "9d2e5a265972afbc9495ebc682250b3418e8e9e7": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8f67dec72ed330427d62e7c8b236cad88791b65a0173ca9e77212c229b0927bb",
+  "30c52a4151b457b9134814352dc171c1200c4aef": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8bf01f7ba14408bc5d8b22f39b63e8ba46416c437eede0dfe0c3952193dad87b",
 };
 
-const SCENARIOS: (() => Promise<World[]>)[] = [recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];
+const SCENARIOS: (() => Promise<World[]>)[] = [recordAdmin, recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];
 
 const [commit, fixturesDir, openapiPath] = process.argv.slice(2);
 if (commit === undefined || fixturesDir === undefined || openapiPath === undefined || !/^[0-9a-f]{40}$/.test(commit)) {

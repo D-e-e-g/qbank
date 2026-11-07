@@ -14,7 +14,10 @@ final class AppModel {
     }
 
     private(set) var route: Route {
-        didSet { openOffline() }
+        didSet {
+            openOffline()
+            frozen.isOn = account?.role == .admin
+        }
     }
     /// Said on the sign-in screen after the server ended the session.
     private(set) var signedOutReason: String?
@@ -41,6 +44,8 @@ final class AppModel {
     let connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
     let deletions = Deletions()
+    /// The admin's look at a user account: each control answers with one note and changes nothing.
+    let frozen = FrozenView()
     /// Saved courses and unsent answers for the account on this phone. Nil when signed out.
     private(set) var offline: OfflineStore?
 
@@ -64,6 +69,7 @@ final class AppModel {
         let stored = try? client.storedSession()
         route = stored?.account.map(Self.route(for:)) ?? .signedOut
         openOffline()
+        frozen.isOn = account?.role == .admin
         connection.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
         }
@@ -205,6 +211,11 @@ final class AppModel {
         }
         if error.serverCode == .mustChangePassword, let account {
             route = .choosingPassword(account)
+            return true
+        }
+        // The server's backstop: a control let a write through, so the answer is the same note.
+        if error.isAdminReadOnly, frozen.isOn {
+            frozen.showNote()
             return true
         }
         return false

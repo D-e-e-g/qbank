@@ -7,7 +7,7 @@
   "tags": [
     {
       "name": "Agents",
-      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `finishedAt` null with `endsAt` past means the user's time ran out and the end is recorded when their app next opens the exam; until then it has no `result`.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
+      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key. A key the admin approved reaches nothing, whatever its scopes: the admin account has no content or answers of its own, and every operation answers the key with 403 `agent_key_not_allowed`.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `finishedAt` null with `endsAt` past means the user's time ran out and the end is recorded when their app next opens the exam; until then it has no `result`.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
     },
     {
       "name": "Agent keys",
@@ -5333,7 +5333,7 @@
               "string",
               "null"
             ],
-            "description": "Why not, as a sentence to show her: \"Making questions is not available on this account. Import works on every account.\", \"Making questions is not set up yet.\", or the daily limit."
+            "description": "Why not, as a sentence to show her: \"Making questions is not available on this account. Import works on every account.\", \"Making questions is not set up yet.\", the daily limit, or for the admin's session \"This is a read-only view of a user account. Nothing here can be changed.\""
           },
           "dailyLimit": {
             "type": "integer"
@@ -7091,7 +7091,7 @@
     "/api/semesters": {
       "get": {
         "summary": "List her semesters, courses and study topics",
-        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
+        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin's session reads the user account it looks after (GET /api/admin/students/viewing) and changes nothing in it (403 `admin_read_only`). Anyone else's answers 404, as an id that names nothing does.",
         "tags": [
           "Courses",
           "Agents"
@@ -7227,7 +7227,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7332,7 +7332,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7467,7 +7467,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7659,7 +7659,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7844,7 +7844,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8045,7 +8045,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8247,7 +8247,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8290,7 +8290,7 @@
       },
       "get": {
         "summary": "A course or topic, its folders, its pages, and its sets",
-        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin reaches the user account he looks after (GET /api/admin/students/viewing), as his read-only view does. Anyone else's answers 404, as an id that names nothing does.",
+        "description": "Every semester, course and topic belongs to one account, with everything in it: its folders, pages, sets, questions and terms. A user account reaches its own; the admin's session reads the user account it looks after (GET /api/admin/students/viewing) and changes nothing in it (403 `admin_read_only`). Anyone else's answers 404, as an id that names nothing does.",
         "tags": [
           "Courses",
           "Agents"
@@ -8356,7 +8356,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8403,7 +8403,7 @@
           "Agents"
         ],
         "summary": "Delete a course or topic",
-        "description": "Deletes a course or study topic with everything in it, as its preview named. It leaves Home (GET /api/semesters), the topic order, its own reads and everything in it (404, as an id that names nothing), study, Review, exams, Make questions and exam twins, the last course she used, and what an agent reads (GET /api/me/standing, and `courses` and `questions` of GET /api/me/export). Nothing in it is written: its folders, pages, sets, her answers, progress and past exams stay saved as they are, her answers count toward nothing while it is deleted, and an answer still on its way to one of its questions is saved. Its code, or a topic's name, is free again meanwhile. Refused with 409 `in_use` while a Make questions or twin job is still working in it, or an exam in it is in progress. GET /api/deleted-courses lists it for Undo. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
+        "description": "Deletes a course or study topic with everything in it, as its preview named. It leaves Home (GET /api/semesters), the topic order, its own reads and everything in it (404, as an id that names nothing), study, Review, exams, Make questions and exam twins, the last course she used, and what an agent reads (GET /api/me/standing, and `courses` and `questions` of GET /api/me/export). Nothing in it is written: its folders, pages, sets, her answers, progress and past exams stay saved as they are, her answers count toward nothing while it is deleted, and an answer still on its way to one of its questions is saved. Its code, or a topic's name, is free again meanwhile. Refused with 409 `in_use` while a Make questions or twin job is still working in it, or an exam in it is in progress. GET /api/deleted-courses lists it for Undo. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin's session is refused with 403 `admin_read_only`, and any other agent key with 403 `agent_key_not_allowed`.",
         "security": [
           {
             "sessionCookie": []
@@ -8464,7 +8464,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8509,7 +8509,7 @@
     "/api/courses/{id}/course-exams": {
       "post": {
         "summary": "Add a page to a course or topic",
-        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this.",
+        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). The admin's session is refused with 403 `admin_read_only`.",
         "tags": [
           "Courses",
           "Agents"
@@ -8580,7 +8580,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8625,7 +8625,7 @@
     "/api/course-exams/{id}": {
       "put": {
         "summary": "Rename a page, set its badge and set its folders",
-        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). Its owner and the admin can both do this. The folders sent replace the page's folders, in the order sent.",
+        "description": "A page of a course or topic is a name, an optional primer link, an optional badge, and the course's folders on it. A folder is on one page at most: a folder of another page is refused with 409, naming it (\"First Pass is in Exam 2.\"), as is a second page with the same name, and a folder whose name another folder on the page already has (\"Exam 3 already has a folder named First Pass.\"). A folder taken off the page goes back to the end of the course's Folders list, refused with 409 when a folder there has its name. A folder id or name the course does not have is refused with 400. Her past exams belong to the page holding every folder they were over (ExamSummary.courseExamId). The admin's session is refused with 403 `admin_read_only`. The folders sent replace the page's folders, in the order sent.",
         "tags": [
           "Courses",
           "Agents"
@@ -8696,7 +8696,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8743,7 +8743,7 @@
           "Agents"
         ],
         "summary": "Delete a page",
-        "description": "Deletes the page, as its preview named, and nothing else: no folder, set, question, exam twin, answer, Review clear, progress or past exam is written. While it is deleted, it leaves CourseDetail.exams and Exam setup's `courseExams`, PUT /api/course-exams/{id} answers 404, and its name is free for another page. Its folders read as on no page (Folder.examPageId null): they show at the end of the course's Folders list, in the page's order, with their sets and her progress, and she studies, renames, moves and deletes them as any folder there. Her past exams over it stay in Exam setup and GET /api/exams/{id}, with `courseExamId` null. Without `confirm`, only a page with no folders is deleted (as before), and one with folders is refused with 409 `confirmation_required`. Refused with 409 when one of its folders has the name of a folder already in the Folders list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Deletes the page, as its preview named, and nothing else: no folder, set, question, exam twin, answer, Review clear, progress or past exam is written. While it is deleted, it leaves CourseDetail.exams and Exam setup's `courseExams`, PUT /api/course-exams/{id} answers 404, and its name is free for another page. Its folders read as on no page (Folder.examPageId null): they show at the end of the course's Folders list, in the page's order, with their sets and her progress, and she studies, renames, moves and deletes them as any folder there. Her past exams over it stay in Exam setup and GET /api/exams/{id}, with `courseExamId` null. Without `confirm`, only a page with no folders is deleted (as before), and one with folders is refused with 409 `confirmation_required`. Refused with 409 when one of its folders has the name of a folder already in the Folders list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -8804,7 +8804,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8849,7 +8849,7 @@
     "/api/courses/{id}/folders": {
       "post": {
         "summary": "Make a folder",
-        "description": "A new, empty folder at the end of its list. A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this.",
+        "description": "A new, empty folder at the end of its list. A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The admin's session is refused with 403 `admin_read_only`.",
         "tags": [
           "Folders",
           "Agents"
@@ -8920,7 +8920,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8965,7 +8965,7 @@
     "/api/folders/{id}": {
       "patch": {
         "summary": "Rename a folder, or put it on a page",
-        "description": "A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The user account and the admin can both do this. Renaming it to its own name, or putting it on the page it is on, changes nothing.",
+        "description": "A name is unique within its list, ignoring case: one page's folders, or the course's Folders list (no page). A clash is refused with 409, naming the list (\"Exam 3 already has a folder named First Pass.\", \"NURS 402 already has a folder named Second Pass.\"). Two pages may each have a folder of the same name. The admin's session is refused with 403 `admin_read_only`. Renaming it to its own name, or putting it on the page it is on, changes nothing.",
         "tags": [
           "Folders",
           "Agents"
@@ -9036,7 +9036,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9083,7 +9083,7 @@
           "Agents"
         ],
         "summary": "Delete a folder and its sets",
-        "description": "Deletes the folder and every set in it, every version, as its preview named; it comes off its page. Its sets are hidden as DELETE /api/practice-sets/{id} hides one, and her answers to them stop counting while it is deleted. Her past exams over it stay, without it in their folders. Without `confirm`, only a folder that holds no set is deleted (as before), and one with sets is refused with 409 `confirmation_required`. Refused with 409 `in_use` while a Make questions job is measured against one of its sets or is still filing their exam twins, a twin job is twinning one of them, or an exam in progress asks their questions. A Make questions job that would file into it is not a refusal: its set goes to Unsorted, and the job says so. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Deletes the folder and every set in it, every version, as its preview named; it comes off its page. Its sets are hidden as DELETE /api/practice-sets/{id} hides one, and her answers to them stop counting while it is deleted. Her past exams over it stay, without it in their folders. Without `confirm`, only a folder that holds no set is deleted (as before), and one with sets is refused with 409 `confirmation_required`. Refused with 409 `in_use` while a Make questions job is measured against one of its sets or is still filing their exam twins, a twin job is twinning one of them, or an exam in progress asks their questions. A Make questions job that would file into it is not a refusal: its set goes to Unsorted, and the job says so. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -9144,7 +9144,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9189,7 +9189,7 @@
     "/api/practice-sets/{id}/move": {
       "post": {
         "summary": "Move a set to another folder",
-        "description": "Moves the set, every version of it, to `folderId` or to a new folder named `newFolderName` (send one of them). Answers and progress move with the set. The new folder follows the folder naming rule (see POST /api/courses/{id}/folders). The user account and the admin can both do this.",
+        "description": "Moves the set, every version of it, to `folderId` or to a new folder named `newFolderName` (send one of them). Answers and progress move with the set. The new folder follows the folder naming rule (see POST /api/courses/{id}/folders). The admin's session is refused with 403 `admin_read_only`.",
         "tags": [
           "Folders",
           "Agents"
@@ -9260,7 +9260,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9305,7 +9305,7 @@
     "/api/courses/{id}/folder-order": {
       "put": {
         "summary": "Put one list of folders in her order",
-        "description": "Saves the order of one page's folders, or of the course's Folders list. A list that does not name exactly the folders it holds is refused with 409, so a stale screen cannot drop or misplace one. The user account and the admin can both do this.",
+        "description": "Saves the order of one page's folders, or of the course's Folders list. A list that does not name exactly the folders it holds is refused with 409, so a stale screen cannot drop or misplace one. The admin's session is refused with 403 `admin_read_only`.",
         "tags": [
           "Folders",
           "Agents"
@@ -9387,7 +9387,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9589,7 +9589,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9636,7 +9636,7 @@
           "Agents"
         ],
         "summary": "Delete a set",
-        "description": "Deletes the set and every version of it, as its preview named. It is hidden everywhere: its folder, Review, exams and their Wrong questions, the course's counts, Import's name check (a new set may take its name), Make questions and exam twins. Her answers to it stay saved and stop counting while it is deleted; Undo makes them count again. Past exams that asked its questions keep them. Refused with 409 `in_use` while a Make questions job is measured against it or is still filing its exam twins, a twin job is twinning it, or an exam in progress asks its questions. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Deletes the set and every version of it, as its preview named. It is hidden everywhere: its folder, Review, exams and their Wrong questions, the course's counts, Import's name check (a new set may take its name), Make questions and exam twins. Her answers to it stay saved and stop counting while it is deleted; Undo makes them count again. Past exams that asked its questions keep them. Refused with 409 `in_use` while a Make questions job is measured against it or is still filing its exam twins, a twin job is twinning it, or an exam in progress asks its questions. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -9697,7 +9697,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9742,7 +9742,7 @@
     "/api/practice-sets/{id}/start-over": {
       "post": {
         "summary": "Start a practice set again at question 1",
-        "description": "Ends the sitting she would continue, so the set opens at question 1 and its row stops saying Continue. Every answer stays saved and still counts: no answer, score, or Review row changes. Her next answer to the set's first question opens a new sitting. An answer still on its way joins that sitting if it is open by then; otherwise it counts as every answer does and opens none. Asking with no sitting to end changes nothing. Only the user account can do this.",
+        "description": "Ends the sitting she would continue, so the set opens at question 1 and its row stops saying Continue. Every answer stays saved and still counts: no answer, score, or Review row changes. Her next answer to the set's first question opens a new sitting. An answer still on its way joins that sitting if it is open by then; otherwise it counts as every answer does and opens none. Asking with no sitting to end changes nothing. The admin's session is refused with 403 `admin_read_only`.",
         "tags": [
           "Courses"
         ],
@@ -9789,7 +9789,7 @@
             }
           },
           "403": {
-            "description": "The admin cannot start a set over, or a new password is required first.",
+            "description": "`admin_read_only`: the admin's session changes nothing. `must_change_password`: a new password is required first.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9887,7 +9887,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10046,7 +10046,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10151,231 +10151,7 @@
             }
           },
           "403": {
-            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or it has `manage` only and the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The database is not configured.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/weeks/rename": {
-      "post": {
-        "summary": "Rename a week's label",
-        "description": "Legacy: renames the course's folder named fromLabel (the one on no page, else its only folder of that name), as PATCH /api/folders/{id} does. A name its list already has is refused with 409.",
-        "tags": [
-          "Admin"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "courseId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "fromLabel": {
-                    "type": "string"
-                  },
-                  "toLabel": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "courseId",
-                  "fromLabel",
-                  "toLabel"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "How many current sets were renamed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "setCount": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "setCount"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in is required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The admin role is required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The database is not configured.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/practice-sets/{id}/move": {
-      "post": {
-        "summary": "Move a set to another week in the same course",
-        "description": "Legacy: moves the set, every version of it, to the folder named weekLabel (on the set's page, else on no page, else its only folder of that name), or to a new folder of that name in the Folders list, as POST /api/practice-sets/{id}/move does.",
-        "tags": [
-          "Admin"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "weekLabel": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "weekLabel"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The set in its new week.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetSummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request was refused.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in is required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContentError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The admin role is required.",
+            "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password. `admin_read_only`: the admin's session reads the user account it looks after and changes nothing in it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12117,7 +11893,7 @@
           "Review"
         ],
         "summary": "Clear a course's Review list",
-        "description": "Empties the list after confirmation. Answers and scores stay. The admin cannot call this.",
+        "description": "Empties the list after confirmation. Answers and scores stay. The admin's session is refused with 403 `admin_read_only`.",
         "parameters": [
           {
             "schema": {
@@ -12266,7 +12042,7 @@
           "Progress"
         ],
         "summary": "Remember the course she just opened",
-        "description": "Only the user account can move this. Opening a course as the admin does not change where she lands.",
+        "description": "Only the user account can move this: the admin's session is refused with 403 `admin_read_only`, so opening a course as the admin does not change where she lands.",
         "requestBody": {
           "required": true,
           "content": {
@@ -12626,7 +12402,7 @@
           "Exams"
         ],
         "summary": "Exam setup: the course's folders and her exams",
-        "description": "Every folder with a current question: how many questions an exam over it draws from (its exam bank when it has one, otherwise its practice questions), how many of those she last answered not fully right, and which source it uses. Then her running exam in this course and her ended exams, newest first. An exam whose time has run out is ended first. The admin reads the same, read-only. Then what every exam follows (`rules`), what each page would draw (`courseExams`), and, when `folderIds` (or legacy `weeks`) are given, what starting an exam over them would draw (`preview`), worked out as POST does.",
+        "description": "Every folder with a current question: how many questions an exam over it draws from (its exam bank when it has one, otherwise its practice questions), how many of those she last answered not fully right, and which source it uses. Then her running exam in this course and her ended exams, newest first. An exam whose time has run out is ended first. The admin reads the same, read-only, and ends nothing: an exam whose time ran out stays `inProgress` until her app next opens it. Then what every exam follows (`rules`), what each page would draw (`courseExams`), and, when `folderIds` (or legacy `weeks`) are given, what starting an exam over them would draw (`preview`), worked out as POST does.",
         "parameters": [
           {
             "schema": {
@@ -12739,7 +12515,7 @@
           "Exams"
         ],
         "summary": "Start an exam over the folders she ticked",
-        "description": "Draws up to 40 questions only from the sets in the ticked folders, in proportion to each folder's size, with 60 minutes for 40 or 1.5 minutes per question when the folders hold fewer. A folder with an exam bank gives its exam-bank questions; a folder without one gives its practice questions, and once the course has any exam bank the exam lists such folders in practiceWeeks. With pool `wrong`, only the questions she last answered not fully right are drawn: practice questions, exam-bank questions, and the exam twins of practice questions she got wrong (the one practice question of the same folder whose id the exam question names in twinOf) until she answers the twin fully right; a ticked folder with none is refused with `no_wrong_questions`. Send `folderIds`, or legacy `weeks` (folder names, each meaning every folder of that name), not both; with neither, it is refused with `no_folders`. A folder the course does not have is refused with `folder_not_found`, one with no questions with `folder_empty`, and a name no folder with questions has with `week_not_found`. A running exam of hers ends first. Answers go to POST /api/attempts with this exam's id as studySessionId. The admin cannot start one.",
+        "description": "Draws up to 40 questions only from the sets in the ticked folders, in proportion to each folder's size, with 60 minutes for 40 or 1.5 minutes per question when the folders hold fewer. A folder with an exam bank gives its exam-bank questions; a folder without one gives its practice questions, and once the course has any exam bank the exam lists such folders in practiceWeeks. With pool `wrong`, only the questions she last answered not fully right are drawn: practice questions, exam-bank questions, and the exam twins of practice questions she got wrong (the one practice question of the same folder whose id the exam question names in twinOf) until she answers the twin fully right; a ticked folder with none is refused with `no_wrong_questions`. Send `folderIds`, or legacy `weeks` (folder names, each meaning every folder of that name), not both; with neither, it is refused with `no_folders`. A folder the course does not have is refused with `folder_not_found`, one with no questions with `folder_empty`, and a name no folder with questions has with `week_not_found`. A running exam of hers ends first. Answers go to POST /api/attempts with this exam's id as studySessionId. The admin's session is refused with 403 `admin_read_only`.",
         "parameters": [
           {
             "schema": {
@@ -12832,7 +12608,7 @@
           "Agents"
         ],
         "summary": "One of her exams",
-        "description": "Its questions in the order served and the ones she has answered. Once it has ended, the result: points, fully right, partly right, missed, guessed, not answered, minutes used, the by-folder, by-week and by-clinical-judgment-step breakdowns, each question's mark, how many practice questions went to Review, and how many exam-bank questions she got wrong (they stay out of Review). An exam whose time has run out is ended first. An agent key with `read` reads its own account's exams (their ids are in GET /api/me/export, `studySessions` whose `mode` is `exam`) and never ends one: an exam whose time ran out reads with `finishedAt` and `result` null until her app next opens it.",
+        "description": "Its questions in the order served and the ones she has answered. Once it has ended, the result: points, fully right, partly right, missed, guessed, not answered, minutes used, the by-folder, by-week and by-clinical-judgment-step breakdowns, each question's mark, how many practice questions went to Review, and how many exam-bank questions she got wrong (they stay out of Review). An exam whose time has run out is ended first. An agent key with `read` reads its own account's exams (their ids are in GET /api/me/export, `studySessions` whose `mode` is `exam`) and never ends one, and neither does the admin's session: an exam whose time ran out reads with `finishedAt` and `result` null until her app next opens it.",
         "security": [
           {
             "sessionCookie": []
@@ -13011,7 +12787,7 @@
           "Exams"
         ],
         "summary": "End her exam and score it",
-        "description": "`finished` when she finishes, `left` when she leaves midway, `timeout` when her time runs out. What she answered is scored; skipped and unreached questions score 0 and stay out of Review. After the time limit the end is recorded as a timeout. Ending an ended exam returns it unchanged. The admin cannot call this.",
+        "description": "`finished` when she finishes, `left` when she leaves midway, `timeout` when her time runs out. What she answered is scored; skipped and unreached questions score 0 and stay out of Review. After the time limit the end is recorded as a timeout. Ending an ended exam returns it unchanged. The admin's session is refused with 403 `admin_read_only`.",
         "parameters": [
           {
             "schema": {
@@ -13094,7 +12870,7 @@
           "Agents"
         ],
         "summary": "What deleting a set takes with it",
-        "description": "For the warning before a set (a practice set, or an exam set from Folder.examSets) is deleted: its questions, every version of it, her answers to it and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The id is its current version; an earlier one is refused with 404. The user account and the admin can both do this.",
+        "description": "For the warning before a set (a practice set, or an exam set from Folder.examSets) is deleted: its questions, every version of it, her answers to it and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The id is its current version; an earlier one is refused with 404. The user account and the admin can both read this.",
         "security": [
           {
             "sessionCookie": []
@@ -13151,7 +12927,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13200,7 +12976,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a set",
-        "description": "Brings back a set she deleted on its own, every version as it was, with her answers counting again. A set that went with its folder comes back with the folder, and is refused here with 409; so is one whose folder is deleted. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Brings back a set she deleted on its own, every version as it was, with her answers counting again. A set that went with its folder comes back with the folder, and is refused here with 409; so is one whose folder is deleted. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -13257,7 +13033,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13306,7 +13082,7 @@
           "Agents"
         ],
         "summary": "What deleting a folder takes with it",
-        "description": "For the warning before a folder is deleted: every set in it (count and titles), their questions, her answers to them, its page, her past exams over it, and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both do this.",
+        "description": "For the warning before a folder is deleted: every set in it (count and titles), their questions, her answers to them, its page, her past exams over it, and how her standing changes. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both read this.",
         "security": [
           {
             "sessionCookie": []
@@ -13363,7 +13139,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13412,7 +13188,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a folder",
-        "description": "Brings back a folder she deleted and the sets that went with it, as they were: on its page if that page is still there, else at its place in the Folders list. A set she had deleted on its own before stays deleted. Refused with 409 when its list has a folder of its name now, naming that list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Brings back a folder she deleted and the sets that went with it, as they were: on its page if that page is still there, else at its place in the Folders list. A set she had deleted on its own before stays deleted. Refused with 409 when its list has a folder of its name now, naming that list: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -13469,7 +13245,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13518,7 +13294,7 @@
           "Agents"
         ],
         "summary": "What deleting a page changes",
-        "description": "For the warning before a page is deleted. The page alone goes: its folders (count and names), their sets and exam bank, her answers to them and her past exams over it all stay, and `progress` is the same before and after, since deleting a page changes no answer, Review list, score or Wrong question. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both do this.",
+        "description": "For the warning before a page is deleted. The page alone goes: its folders (count and names), their sets and exam bank, her answers to them and her past exams over it all stay, and `progress` is the same before and after, since deleting a page changes no answer, Review list, score or Wrong question. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. The user account and the admin can both read this.",
         "security": [
           {
             "sessionCookie": []
@@ -13575,7 +13351,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13624,7 +13400,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a page",
-        "description": "Brings back a page she deleted, as it was: in its place among the course's pages, with its folders back on it in its order and her past exams over them on it again. A folder she put on another page meanwhile stays there, and one she deleted stays in Recently deleted, coming back to the page with its own Undo. Refused with 409 when the course has another page of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The user account and the admin can both do this.",
+        "description": "Brings back a page she deleted, as it was: in its place among the course's pages, with its folders back on it in its order and her past exams over them on it again. A folder she put on another page meanwhile stays there, and one she deleted stays in Recently deleted, coming back to the page with its own Undo. Refused with 409 when the course has another page of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. The admin's session is refused with 403 `admin_read_only`.",
         "security": [
           {
             "sessionCookie": []
@@ -13681,7 +13457,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13729,7 +13505,7 @@
           "Delete"
         ],
         "summary": "What deleting a past exam changes",
-        "description": "For the warning before one of her past exams is deleted: her answers on it, which questions go back to an earlier answer or to not answered, and how her Review list, scores and Wrong questions change. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. An exam whose time ran out is ended first. The admin reads hers.",
+        "description": "For the warning before one of her past exams is deleted: her answers on it, which questions go back to an earlier answer or to not answered, and how her Review list, scores and Wrong questions change. Show her `message` (or your own words from the counts), and send `confirm` with the delete: it deletes exactly what this named. `refusal` is the sentence the delete would be refused with right now (a job or an exam in progress still uses it), or null. An exam whose time ran out is ended first. The admin reads hers and ends nothing: an exam whose time ran out reads as still going, with `refusal` set, until her app next opens it.",
         "parameters": [
           {
             "schema": {
@@ -13971,7 +13747,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14020,7 +13796,7 @@
           "Agents"
         ],
         "summary": "Undo deleting a course or topic",
-        "description": "Brings back a course or study topic she deleted, whole: its folders, pages, sets (one she had deleted on its own before stays in its Recently deleted), her answers counting again, and her past exams, in its semester or her topics as before. Refused with 409 when its semester has a course of its code now, or she has a topic of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin is refused with 403 `admin_cannot_delete_course`, and any other agent key with 403 `agent_key_not_allowed`.",
+        "description": "Brings back a course or study topic she deleted, whole: its folders, pages, sets (one she had deleted on its own before stays in its Recently deleted), her answers counting again, and her past exams, in its semester or her topics as before. Refused with 409 when its semester has a course of its code now, or she has a topic of its name now: rename one of them first. Undo brings it back exactly as it was for 30 days (`undoDays`); after that it stays hidden and Undo is refused with 409 `undo_expired`. Nothing is ever deleted except by this request. Only the user account that owns it can do this, itself or with its own agent key with the `manage` scope; the admin's session is refused with 403 `admin_read_only`, and any other agent key with 403 `agent_key_not_allowed`.",
         "security": [
           {
             "sessionCookie": []
@@ -14149,7 +13925,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14234,7 +14010,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14320,7 +14096,7 @@
             }
           },
           "403": {
-            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), or the role refusal the operation names.",
+            "description": "Refused, with the sentence in `message`: `agent_key_not_allowed` (the key has no `manage` scope, or the admin approved it: the admin account has no content of its own), `must_change_password` (the account has a temporary password), `admin_read_only` (a change, from the admin's session, which reads the user account it looks after and changes nothing in it), or the role refusal the operation names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14358,7 +14134,7 @@
           "Make questions"
         ],
         "summary": "Whether she may make questions, and the choices",
-        "description": "Every signed-in account may ask. `available` is false, with a sentence in `reason`, for an account not in QUESTION_MAKER_ACCOUNTS, when the server has no Claude API key, or at the daily limit. It says the same for exam twins (POST /api/twin-jobs): show the Twin option only while `available` is true.",
+        "description": "Every signed-in account may ask. `available` is false, with a sentence in `reason`, for the admin's session (which makes nothing: every job it would start or answer is refused with 403 `admin_read_only`), for an account not in QUESTION_MAKER_ACCOUNTS, when the server has no Claude API key, or at the daily limit. It says the same for exam twins (POST /api/twin-jobs): show the Twin option only while `available` is true.",
         "responses": {
           "200": {
             "description": "Status and choices.",
@@ -14452,7 +14228,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14542,7 +14318,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14603,7 +14379,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14675,7 +14451,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14777,7 +14553,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14889,7 +14665,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14980,7 +14756,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15082,7 +14858,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15173,7 +14949,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15255,7 +15031,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15346,7 +15122,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15435,7 +15211,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15496,7 +15272,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15567,7 +15343,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -15649,7 +15425,7 @@
             }
           },
           "403": {
-            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, or `must_change_password`.",
+            "description": "`not_allowed` (\"Making questions is not available on this account. Import works on every account.\") for an account not in QUESTION_MAKER_ACCOUNTS, `admin_read_only` for a change from the admin's session, or `must_change_password`.",
             "content": {
               "application/json": {
                 "schema": {

@@ -44,7 +44,7 @@ struct CourseView: View {
         .qbankScreenBackground()
         .navigationTitle(model.course.map(Wording.name) ?? route.name ?? "Course")
         .screenColumnTitle()
-        .plusMenu(model.isStudent && model.course != nil, more: model.course != nil) {
+        .plusMenu(model.course != nil, more: model.course != nil) {
             if let course = model.course {
                 addMenu(course)
             }
@@ -129,7 +129,7 @@ struct CourseView: View {
         Menu {
             Section("Add to \(Wording.name(course))") {
                 Button {
-                    sheet = .importFile
+                    app.frozen.perform { sheet = .importFile }
                 } label: {
                     Text("Import a question file")
                     Text("A JSON file from your agent")
@@ -147,26 +147,26 @@ struct CourseView: View {
                     .accessibilityIdentifier("course.add.make")
                 }
                 Button("New folder", systemImage: "folder.badge.plus") {
-                    sheet = .newFolder
+                    app.frozen.perform { sheet = .newFolder }
                 }
                 .accessibilityIdentifier("course.add.folder")
                 Button("New page", systemImage: "square.stack.3d.up") {
-                    sheet = .newPage
+                    app.frozen.perform { sheet = .newPage }
                 }
                 .accessibilityIdentifier("course.add.page")
             }
         } label: {
             Image(systemName: "plus")
         }
-        .disabled(!model.canEdit || order != nil)
+        .disabled(!model.offersEditing || order != nil)
         .accessibilityLabel("Add to \(Wording.name(course))")
         .accessibilityIdentifier("course.add")
     }
 
-    /// Rename is offered to the student, for a topic and for a course that is in a semester.
-    /// A read-only admin does not get it. Offline, nothing here can be renamed.
+    /// Rename is offered for a topic and for a course that is in a semester. Offline, nothing here
+    /// can be renamed.
     private var showsRename: Bool {
-        guard model.isStudent, model.canEdit, let course = model.course else { return false }
+        guard model.offersEditing, let course = model.course else { return false }
         return course.kind == .topic || course.semester != nil
     }
 
@@ -177,7 +177,7 @@ struct CourseView: View {
         MoreMenu(name: model.course.map(Wording.name) ?? "", identifier: "course.more") {
             if showsRename {
                 Button("Rename", systemImage: "pencil") {
-                    renamesCourse = true
+                    app.frozen.perform { renamesCourse = true }
                 }
                 .accessibilityIdentifier("course.rename")
             }
@@ -259,9 +259,7 @@ struct CourseView: View {
         VStack(alignment: .leading, spacing: 6) {
             SectionHead(title: "Pages")
             if layout.pages.isEmpty {
-                EmptyCard(message: model.isStudent
-                    ? "No pages yet. Tap + to make \(model.nextPageName)."
-                    : "No pages yet.", systemImage: "square.stack.3d.up")
+                EmptyCard(message: "No pages yet. Tap + to make \(model.nextPageName).", systemImage: "square.stack.3d.up")
                     .accessibilityIdentifier("course.noPages")
             } else {
                 QBankListGroup {
@@ -281,7 +279,7 @@ struct CourseView: View {
         // As on the web, ordering is offered only when there are two folders to put in order, and
         // while the phone can save it. Done stays while she is already ordering.
         let hasOrder = layout.looseFolders.count > 1
-        let offersEdit = order != nil || (hasOrder && model.canEdit)
+        let offersEdit = order != nil || (hasOrder && model.offersEditing)
         return VStack(alignment: .leading, spacing: 6) {
             SectionHead(
                 title: "Folders",
@@ -290,7 +288,7 @@ struct CourseView: View {
                 identifier: "course.editFolders",
                 isEnabled: !isSavingOrder
             ) {
-                editOrder(layout.looseFolders)
+                app.frozen.perform { editOrder(layout.looseFolders) }
             }
             FolderList(folders: layout.looseFolders, order: $order)
             Text(order == nil ? "Folders on no page. Open one to see its sets." : "Drag a folder by its grip, or use the arrows, to put them in your order.")

@@ -62,6 +62,12 @@ public struct QBankClient: Sendable {
         return session
     }
 
+    /// The user accounts the admin may look at, with the one chosen on the web. Refused for a user
+    /// account.
+    public func students() async throws(QBankError) -> StudentList {
+        try await send(Request(.get, "/api/admin/students"))
+    }
+
     /// The session stored on this device, without asking the server.
     public func storedSession() throws(QBankError) -> StoredSession? {
         try loadSession()

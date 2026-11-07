@@ -92,7 +92,7 @@ struct DeletedCoursesView: View {
             if model.bringingBack == .course(id: course.id, name: name) {
                 ProgressView()
                     .frame(minWidth: 44, minHeight: 32)
-            } else if model.isStudent {
+            } else {
                 Button("Bring back") {
                     Task { await model.bringBack(course) }
                 }

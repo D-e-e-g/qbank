@@ -21,11 +21,6 @@ final class DeletedCoursesModel {
         self.app = app
     }
 
-    /// Only she brings back her courses; the owner reads them.
-    var isStudent: Bool {
-        app.account?.role == .student
-    }
-
     var needsConnection: Bool {
         !app.connection.isOnline
     }
@@ -53,7 +48,7 @@ final class DeletedCoursesModel {
 
     /// Brings one back whole, then reads the list again; Home reads its courses again too.
     func bringBack(_ course: DeletedCourse) async {
-        guard bringingBack == nil else { return }
+        guard !app.frozen.refuses(), bringingBack == nil else { return }
         let target = DeleteTarget.course(id: course.id, name: Wording.name(course))
         bringingBack = target
         problem = nil

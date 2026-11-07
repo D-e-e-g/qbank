@@ -48,6 +48,13 @@ public enum QBankError: Error, Sendable, Equatable {
         }
     }
 
+    /// True when the server refused a write because an admin's session sent it: the admin only looks
+    /// at the user account it has chosen, and nothing there can be changed.
+    public var isAdminReadOnly: Bool {
+        guard let code = serverCode else { return false }
+        return code == .adminReadOnly || code == .adminCannotRecordAnswer || code == .adminCannotDeleteExam
+    }
+
     /// The server code, when the server sent one.
     public var serverCode: ServerError.Code? {
         if case .server(let error) = self { return error.code }
@@ -96,6 +103,8 @@ public struct ServerError: Error, Sendable, Equatable {
         // out), and no key of hers with that id.
         public static let pairingNotFound: Code = "pairing_not_found"
         public static let agentKeyNotFound: Code = "agent_key_not_found"
+        /// Any write to a user account's content from an admin's session.
+        public static let adminReadOnly: Code = "admin_read_only"
         // Any request whose fields do not meet the route's rules, such as a new password under 8 characters.
         public static let invalidRequest: Code = "invalid_request"
         // Content.

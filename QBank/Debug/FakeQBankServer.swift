@@ -19,8 +19,10 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     static let resetStudent = Credentials(email: "reset@example.com", password: "synthetic-temp-1")
     /// The one student the server lets make questions, with a set being written and copies to check.
     static let maker = Credentials(email: "maker@example.com", password: "synthetic-pass-2")
-    /// The owner, an admin, whose view of the courses is read-only.
+    /// The owner, an admin, who looks at `student`'s account in the frozen view and changes nothing.
     static let owner = Credentials(email: "owner@example.com", password: "synthetic-pass-3")
+    /// The email the owner's frozen view names for `student`'s account.
+    static let viewedEmail = "sam@example.com"
     /// The one email on the owner's sign-up list, with no account yet: it signs up with any password
     /// of 8 to 128 characters. Every other email is refused.
     static let signUpEmail = "new.user@example.com"
@@ -138,7 +140,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
 
     /// - Parameters:
     ///   - signedIn: Starts with the session of `account`, as `sessionToken`.
-    ///   - account: Who is signed in: `student`, `maker` to make questions, or `owner`.
+    ///   - account: Who is signed in: `student`, `maker` to make questions, or `owner`, who reads the
+    ///     same courses and is refused every write to them.
     ///   - makerIsSetUp: False: the server has no Claude key, so making questions is not set up yet.
     ///   - place: The course she used last, or nil for none.
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
@@ -262,6 +265,9 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         if FakeAgents.handles(path) {
             return agents.answer(method: method, path: path, body: body, email: account.email)
         }
+        if account.role == "admin", let reply = adminAnswer(method: method, path: path, body: body, email: account.email) {
+            return reply
+        }
         if let reply = courseDeletion(method: method, path: path, query: query, email: account.email) {
             return reply
         }
@@ -271,7 +277,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         if let reply = twinJobs.answer(method: method, path: path, body: body, email: account.email, library: self) {
             return reply
         }
-        if let reply = deletions.answer(method: method, path: path, query: query, isStudent: true, library: self) {
+        if let reply = deletions.answer(method: method, path: path, query: query, library: self) {
             return reply
         }
         switch (method, path) {
@@ -335,6 +341,45 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             return reply
         }
         return failure(404, "request_refused", "That is not in the app.")
+    }
+
+    // MARK: The admin
+
+    /// What only the admin's session is answered: the accounts it may look at, that it makes no
+    /// questions, and the refusal of every write to the account it looks at, in the server's words.
+    /// Its own account, Repair and the temporary password are its own; a file check writes nothing.
+    private func adminAnswer(method: String, path: String, body: [String: Any], email: String) -> Reply? {
+        switch (method, path) {
+        case ("GET", "/api/admin/students"):
+            return (200, Self.adminStudents)
+        case ("GET", "/api/question-maker"):
+            guard let (status, answer) = questionMaker.answer(method: method, path: path, body: body, email: email, library: self) else { return nil }
+            return (status, answer.merging(["available": false, "reason": Self.adminReadOnly]) { _, refused in refused })
+        case ("POST", "/api/imports/check"), ("PUT", "/api/me/palette"):
+            return nil
+        case ("GET", _):
+            return nil
+        case ("POST", "/api/attempts"):
+            return failure(403, "admin_cannot_record_answer", "The admin cannot record an answer as her.")
+        case (_, _) where path.hasPrefix("/api/admin/"):
+            return nil
+        case (_, _) where path.hasPrefix("/api/exams/") && (method == "DELETE" || path.hasSuffix("/undo-delete")):
+            return failure(403, "admin_cannot_delete_exam", "Only the user account can delete her exams or bring them back.")
+        default:
+            return failure(403, "admin_read_only", Self.adminReadOnly)
+        }
+    }
+
+    private static let adminReadOnly = "This is a read-only view of a user account. Nothing here can be changed."
+
+    private static var adminStudents: [String: Any] {
+        [
+            "students": [
+                ["id": "fake-student", "email": viewedEmail, "name": "Sam Student", "createdAt": "2026-01-05T12:00:00.000Z"],
+                ["id": "fake-maker", "email": maker.email, "name": "Max Maker", "createdAt": "2026-02-09T12:00:00.000Z"],
+            ],
+            "viewingId": "fake-student",
+        ]
     }
 
     // MARK: Accounts

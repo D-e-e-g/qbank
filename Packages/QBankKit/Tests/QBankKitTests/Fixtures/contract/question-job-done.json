@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "9d2e5a265972afbc9495ebc682250b3418e8e9e7",
+  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
   "request": {
     "method": "GET",
     "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401",
@@ -97,9 +97,9 @@
           "kind": "exam"
         }
       ],
-      "createdAt": "2026-11-05 00:30:43.658-05",
-      "updatedAt": "2026-11-05 00:30:43.714-05",
-      "finishedAt": "2026-11-05 00:30:43.714-05",
+      "createdAt": "2026-11-06 17:20:00.645-05",
+      "updatedAt": "2026-11-06 17:20:00.703-05",
+      "finishedAt": "2026-11-06 17:20:00.703-05",
       "failure": null,
       "warnings": [],
       "usage": {

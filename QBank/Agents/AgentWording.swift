@@ -29,10 +29,16 @@ nonisolated enum AgentWording {
         let detail: String
     }
 
-    /// What a scope lets an agent do, in plain words, when the server has not described it. The
-    /// admin's keys reach the user account he looks after.
+    /// What the admin's key reaches, whatever it asks for: an agent key reaches only its own
+    /// account's content, and the server refuses every use of the admin's.
+    static let adminKeyReach = "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none."
+
+    /// What a scope lets an agent do, in plain words, when the server has not described it.
     static func scopeWords(_ scope: AgentScope, admin: Bool) -> ScopeWords {
-        let whose = admin ? "the user account you look after" : "your account"
+        if admin {
+            return ScopeWords(title: adminScopeTitle(scope), detail: adminKeyReach)
+        }
+        let whose = "your account"
         switch scope {
         case .import:
             return ScopeWords(
@@ -46,12 +52,21 @@ nonisolated enum AgentWording {
             )
         case .manage:
             return ScopeWords(
-                title: admin ? "Add, change, and delete content" : "Add, change, and delete your content",
+                title: "Add, change, and delete your content",
                 detail: "The sets, questions, folders, courses, and topics of \(whose), as you can in QBank. Anything it deletes goes to Recently deleted, where Undo brings it back for 30 days."
             )
         default:
             // A scope added after this version: shown by its name, as the contract asks.
             return ScopeWords(title: scope.rawValue, detail: "QBank has not described this one here yet.")
+        }
+    }
+
+    private static func adminScopeTitle(_ scope: AgentScope) -> String {
+        switch scope {
+        case .import: "Import question sets"
+        case .read: "Read progress, read-only"
+        case .manage: "Add, change, and delete content"
+        default: scope.rawValue
         }
     }
 
@@ -76,7 +91,8 @@ nonisolated enum AgentWording {
         pairing.scopes.map { scope in
             let words = scopeWords(scope, admin: admin)
             let text = pairing.scopeTexts.first { $0.scope == scope }?.text
-            return AskedScope(scope: scope, title: words.title, detail: text ?? words.detail, isStrongest: isStrongest(scope))
+            // The server describes what a user account's key does, which the admin's does not.
+            return AskedScope(scope: scope, title: words.title, detail: admin ? words.detail : text ?? words.detail, isStrongest: isStrongest(scope))
         }
     }
 
@@ -150,9 +166,6 @@ nonisolated enum AgentWording {
         "Revoked \(name). It stopped working just now."
     }
 
-    /// The line under a set her agent imported. The admin reads the user account's sets, so to him it
-    /// is an agent, not his.
-    static func importedBy(isStudent: Bool) -> String {
-        isStudent ? "Imported by your agent" : "Imported by an agent"
-    }
+    /// The line under a set her agent imported. The frozen view says it as she reads it.
+    static let importedBy = "Imported by your agent"
 }
