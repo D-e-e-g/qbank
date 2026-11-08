@@ -32,7 +32,7 @@ The copy describes only what the build does. Apple rejects a listing that promis
 
 Up to 170 characters; can change at any time without a new review.
 
-> Practice NCLEX-style questions on your iPhone or iPad: all eight question formats, rationales for every answer, a Review list of what you missed, and timed exams.
+> Practice NCLEX-style questions on your iPhone or iPad: all nine question formats, rationales for every answer, a Review list of what you missed, and timed exams.
 
 ## Description
 
@@ -42,7 +42,7 @@ Up to 4,000 characters. Paste as is.
 QBank is a question bank for nursing students preparing for course exams and the NCLEX. Sign in with your QBank account and pick up where you left off on the web: the same courses, the same questions, and the same progress.
 
 Practice the way the exam asks
-- Eight NCLEX-style question formats: single answer, select all that apply, priority and first action, highlight, ordering, matching, matrix, and drop-down.
+- Nine NCLEX-style question formats: single answer, select all that apply, priority and first action, highlight, ordering, matching, matrix, matrix with several answers per row, and drop-down.
 - Tables and images inside the question, like a real chart.
 - Mark an answer as a guess, so a lucky guess still comes back for review.
 - After each answer: what was right, what each choice means, the rationale, a key takeaway, and the terms used in the question.
@@ -133,7 +133,7 @@ The list follows the approved phase-W wireframes (`qbank-ios-wireframes`, approv
 | 5 | 1c-1 Review | missed, partly right, guessed, "Practice these" | Review what you missed |
 | 6 | 1c-3 Exam setup, wrong questions only | folder picker with wrong counts | Exams from your weak spots |
 | 7 | 1c-4 Exam in progress | timer, Skip for now, Submit and continue | Timed like test day |
-| 8 | 1b-8 Matrix | a matrix question | All eight question formats |
+| 8 | 1b-8 Matrix | a matrix question | All nine question formats |
 | 9 | 1e-1 Home, no connection | offline banner, answers waiting to send | Study without signal |
 
 Left out on purpose: sign-in and password screens (Guideline 2.3.3: screenshots show the app in use, not its login page), Settings, and the phase 3, Q, and 4 frames until those ship. Phase 4 adds the first-run frame (4-1, "Use it on this phone") as screenshot 3 when that mode exists.
