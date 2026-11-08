@@ -12,6 +12,8 @@ nonisolated enum AnswerDraft: Equatable, Sendable {
     case order([Int])
     case match([String?])
     case matrix([String?])
+    /// Column names checked on each row. An empty list is a row with nothing checked yet.
+    case matrixmulti([[String]])
     case cloze([Int?])
     /// A format this version of the app cannot show.
     case unsupported
@@ -31,6 +33,7 @@ nonisolated enum AnswerDraft: Equatable, Sendable {
             }
         case .match(let pairs, _): self = .match(pairs.map { _ in nil })
         case .matrix(_, let rows): self = .matrix(rows.map { _ in nil })
+        case .matrixmulti(_, let rows): self = .matrixmulti(rows.map { _ in [] })
         case .cloze(let cloze): self = .cloze(cloze.blanks.map { _ in nil })
         case .unsupported: self = .unsupported
         }
@@ -47,6 +50,7 @@ nonisolated enum AnswerDraft: Equatable, Sendable {
         case (.order(let positions), .order(let items)) where positions.sorted() == Array(items.indices): self = .order(positions)
         case (.match(let choices), .match(let pairs, _)) where choices.count == pairs.count: self = .match(choices)
         case (.matrix(let choices), .matrix(_, let rows)) where choices.count == rows.count: self = .matrix(choices)
+        case (.matrixmulti(let choices), .matrixmulti(_, let rows)) where choices.count == rows.count: self = .matrixmulti(choices)
         case (.cloze(let choices), .cloze(let cloze)) where choices.count == cloze.blanks.count: self = .cloze(choices)
         default: return nil
         }
@@ -62,6 +66,7 @@ nonisolated enum AnswerDraft: Equatable, Sendable {
         case .order(let positions): .order(positions: positions)
         case .match(let choices): choices.contains(nil) ? nil : .match(choices: choices)
         case .matrix(let choices): choices.contains(nil) ? nil : .matrix(choices: choices)
+        case .matrixmulti(let choices): choices.contains(where: \.isEmpty) ? nil : .matrixmulti(choices: choices)
         case .cloze(let choices): choices.contains(nil) ? nil : .cloze(choices: choices)
         case .unsupported: nil
         }
@@ -133,6 +138,17 @@ nonisolated enum AnswerDraft: Equatable, Sendable {
         let item = positions.remove(at: source)
         positions.insert(item, at: destination)
         return .order(positions)
+    }
+
+    /// Checks or clears one column on a matrixmulti row. The same column on a row counts once.
+    func checking(_ column: String, at row: Int) -> AnswerDraft {
+        guard case .matrixmulti(var choices) = self, choices.indices.contains(row) else { return self }
+        if let index = choices[row].firstIndex(of: column) {
+            choices[row].remove(at: index)
+        } else {
+            choices[row].append(column)
+        }
+        return .matrixmulti(choices)
     }
 
     /// Sets one row's match, one matrix row's column, or one blank's option.

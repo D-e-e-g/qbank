@@ -1,6 +1,6 @@
 import Foundation
 
-/// The eight question formats the runner supports.
+/// The nine question formats the runner supports.
 public enum QuestionType: String, Codable, Sendable, CaseIterable {
     case single
     case priority
@@ -9,6 +9,8 @@ public enum QuestionType: String, Codable, Sendable, CaseIterable {
     case order
     case match
     case matrix
+    /// A matrix where one row can fit more than one column.
+    case matrixmulti
     case cloze
 }
 
@@ -168,6 +170,7 @@ public enum QuestionBody: Sendable, Equatable {
     case order(items: [OrderItem])
     case match(pairs: [MatchPair], extra: [MatchExtra])
     case matrix(columns: [String], rows: [MatrixRow])
+    case matrixmulti(columns: [String], rows: [MatrixMultiRow])
     case cloze(Cloze)
     /// A format added to the server after this version of the app.
     case unsupported(typeName: String)
@@ -181,6 +184,7 @@ public enum QuestionBody: Sendable, Equatable {
         case .order: .order
         case .match: .match
         case .matrix: .matrix
+        case .matrixmulti: .matrixmulti
         case .cloze: .cloze
         case .unsupported: nil
         }
@@ -203,9 +207,19 @@ public enum QuestionBody: Sendable, Equatable {
         case .highlight: self = .highlight(segments: try required(raw.segments, "segments"))
         case .order: self = .order(items: try required(raw.items, "items"))
         case .match: self = .match(pairs: try required(raw.pairs, "pairs"), extra: raw.extra ?? [])
-        case .matrix: self = .matrix(columns: try required(raw.columns, "columns"), rows: try required(raw.rows, "rows"))
+        case .matrix:
+            self = .matrix(columns: try required(raw.columns, "columns"), rows: try Self.rows(MatrixRow.self, in: json))
+        case .matrixmulti:
+            self = .matrixmulti(columns: try required(raw.columns, "columns"), rows: try Self.rows(MatrixMultiRow.self, in: json))
         case .cloze: self = .cloze(try required(raw.cloze, "cloze"))
         }
+    }
+
+    /// Rows are read only after the type is known. A matrix row's answer is one column name, and a
+    /// matrixmulti row's answer is a list, so the two cannot share one decoder.
+    private static func rows<T: Decodable>(_: T.Type, in json: JSONValue) throws -> [T] {
+        guard let value = json["rows"] else { throw RawBody.Missing(field: "rows") }
+        return try value.decode([T].self)
     }
 
     private struct RawBody: Decodable {
@@ -220,7 +234,6 @@ public enum QuestionBody: Sendable, Equatable {
         let pairs: [MatchPair]?
         let extra: [MatchExtra]?
         let columns: [String]?
-        let rows: [MatrixRow]?
         let cloze: Cloze?
     }
 }
@@ -306,6 +319,25 @@ public struct MatchExtra: Codable, Sendable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case right = "r"
+        case why
+    }
+}
+
+/// One matrix row where several columns can be right. `answers` are the column names that fit.
+public struct MatrixMultiRow: Codable, Sendable, Equatable {
+    public let text: String
+    public let answers: [String]
+    public let why: String?
+
+    public init(text: String, answers: [String], why: String? = nil) {
+        self.text = text
+        self.answers = answers
+        self.why = why
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case text = "t"
+        case answers = "ans"
         case why
     }
 }

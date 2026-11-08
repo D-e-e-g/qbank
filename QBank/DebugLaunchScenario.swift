@@ -89,6 +89,8 @@ nonisolated enum DebugLaunchScenario {
         case owner = "owner"
         /// As `owner`, with the exam of `examInProgress` running on the account it looks at.
         case ownerExamInProgress = "owner-exam-in-progress"
+        /// Signed in, with Weeks 1-3 holding one matrixmulti question instead of the mixed set.
+        case matrixMulti = "matrix-multi"
     }
 
     struct UnknownScenario: Error, CustomStringConvertible {
@@ -159,6 +161,12 @@ nonisolated enum DebugLaunchScenario {
             return model(
                 server: FakeQBankServer(signedIn: true, as: FakeQBankServer.owner, examInProgress: scenario == .ownerExamInProgress),
                 session: FakeQBankServer.storedOwnerSession(), defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .matrixMulti:
+            return model(
+                server: FakeQBankServer(signedIn: true, matrixMultiSet: true, answersFile: answersFile),
+                session: FakeQBankServer.storedStudentSession(),
+                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )
         }
     }

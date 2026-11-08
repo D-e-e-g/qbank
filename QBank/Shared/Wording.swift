@@ -244,6 +244,7 @@ nonisolated enum Wording {
         case .order: "Ordering"
         case .match: "Matching"
         case .matrix: "Matrix"
+        case .matrixmulti: "Matrix, check all that fit"
         case .cloze: "Drop-down"
         case nil: "Question"
         }

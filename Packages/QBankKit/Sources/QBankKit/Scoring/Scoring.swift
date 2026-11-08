@@ -94,7 +94,8 @@ public enum Scoring {
     /// Scores one question. Pass nil for a question she skipped or never reached.
     ///
     /// The maximum is 1 for single and priority, the number of correct options for select-all and
-    /// highlight, and one point per item, pair, row, or blank for the rest. A wrong, empty, or
+    /// highlight, the number of correct boxes for a matrix where a row can fit more than one
+    /// column, and one point per item, pair, row, or blank for the rest. A wrong, empty, or
     /// out-of-range answer is scored; only an answer in another format throws.
     public static func score(_ body: QuestionBody, response: AnswerResponse?) throws(ScoringError) -> Score {
         let maxPoints = try maximum(for: body)
@@ -119,6 +120,7 @@ public enum Scoring {
         case .order(let items): items.count
         case .match(let pairs, _): pairs.count
         case .matrix(_, let rows): rows.count
+        case .matrixmulti(let columns, let rows): matrixBoxes(columns: columns, rows: rows).count(where: \.isCorrect)
         case .cloze(let cloze): cloze.blanks.count
         case .unsupported(let typeName): throw ScoringError(message: "Cannot score a \(typeName) question.")
         }
@@ -136,6 +138,8 @@ public enum Scoring {
             return exact(pairs.map(\.right), choices)
         case (.matrix(_, let rows), .matrix(let choices)):
             return exact(rows.map(\.answer), choices)
+        case (.matrixmulti(let columns, let rows), .matrixmulti(let choices)):
+            return plusMinus(matrixBoxes(columns: columns, rows: rows), matrixPicks(columns: columns, rowCount: rows.count, choices: choices))
         case (.cloze(let cloze), .cloze(let choices)):
             return exact(cloze.blanks.map(\.answer), choices)
         default:
@@ -163,15 +167,51 @@ public enum Scoring {
     private static func exact<T: Equatable>(_ expected: [T], _ choices: [T?]) -> Int {
         expected.indices.count { index in index < choices.count && choices[index] == expected[index] }
     }
+
+    /// One option per box, in row order, so the select-all rule scores the table.
+    private static func matrixBoxes(columns: [String], rows: [MatrixMultiRow]) -> [QuestionOption] {
+        rows.flatMap { row in
+            let right = Set(row.answers)
+            return columns.map { QuestionOption(text: $0, isCorrect: right.contains($0)) }
+        }
+    }
+
+    /// The box index of each column she checked. A repeated name on a row counts once.
+    /// A name that is not a column is a wrong box, and a row past the table is ignored.
+    private static func matrixPicks(columns: [String], rowCount: Int, choices: [[String]]) -> [Int] {
+        let width = columns.count
+        var picks: [Int] = []
+        var unknown: [String: Int] = [:]
+        var extra = rowCount * width
+        for row in 0..<min(choices.count, rowCount) {
+            for name in choices[row] {
+                if let column = columns.firstIndex(of: name) {
+                    picks.append(row * width + column)
+                    continue
+                }
+                let key = "\(row)\u{0000}\(name)"
+                if let known = unknown[key] {
+                    picks.append(known)
+                    continue
+                }
+                unknown[key] = extra
+                picks.append(extra)
+                extra += 1
+            }
+        }
+        return picks
+    }
 }
 
 extension QuestionType {
     /// The scoring rule the feedback banner explains under the points. Select-all and highlight
-    /// share one sentence and ordering has its own; the other formats score a point per part and
+    /// share one sentence. A matrix where a row can fit more than one column has the same rule,
+    /// in the words of a box. Ordering has its own. The other formats score a point per part and
     /// add none.
     public var scoringRule: String? {
         switch self {
         case .sata, .highlight: "+1 for each correct choice, -1 for each wrong one"
+        case .matrixmulti: "+1 for each correct box, -1 for each wrong one"
         case .order: "items in the right position; full credit needs all of them"
         case .single, .priority, .match, .matrix, .cloze: nil
         }

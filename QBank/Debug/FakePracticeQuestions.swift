@@ -10,9 +10,13 @@ nonisolated enum FakePracticeQuestions {
         [single, priority, selectAll, highlight, ordering, matching, matrix, dropDown]
     }
 
+    /// The one-question set the `matrix-multi` scenario puts in Weeks 1-3. It is not one of `templates`,
+    /// so the mixed set stays the eight formats.
+    static let findingsSetID = "findings-v1"
+
     /// The question at `index` of a set, with the id the set listing gives it.
     static func question(setID: String, index: Int) -> [String: Any] {
-        var question = templates[index % templates.count]
+        var question = setID == findingsSetID ? matrixMulti : templates[index % templates.count]
         question["id"] = "\(setID)-q\(index)"
         question["publicId"] = "Q\(index + 1)"
         question["position"] = index + 1
@@ -21,6 +25,7 @@ nonisolated enum FakePracticeQuestions {
 
     /// The template behind a question id such as `mixed-v1-q3`.
     static func template(forQuestionID id: String) -> [String: Any]? {
+        if id.hasPrefix("\(findingsSetID)-") { return matrixMulti }
         guard let suffix = id.split(separator: "-").last, suffix.hasPrefix("q"), let index = Int(suffix.dropFirst()) else { return nil }
         return templates[index % templates.count]
     }
@@ -192,6 +197,29 @@ nonisolated enum FakePracticeQuestions {
                 ["t": "The nurse explains when they will meet and what stays confidential", "ans": "Orientation", "why": "Setting roles and limits begins the relationship."],
                 ["t": "The client names a problem and practices a new coping skill", "ans": "Working", "why": "Exploring problems and practicing skills is the working phase."],
                 ["t": "The client asks to stay longer because the nurse is the only one who understands", "ans": "Termination", "why": "Feelings about ending belong to termination."],
+            ],
+        ],
+        "terms": [],
+    ] }
+
+    /// A table where a finding can fit more than one column. Four boxes are right.
+    private static var matrixMulti: [String: Any] { [
+        "type": "matrixmulti",
+        "topic": "Fluid volume findings",
+        "cj": "Analyze cues",
+        "stem": "A nurse is comparing a client's findings with two fluid-volume problems. Some findings fit one problem, and some fit both.",
+        "ask": "For each finding, check every disorder it fits. A finding may fit more than one column.",
+        "rationale": "Dry mouth, poor turgor, and a weak pulse fit too little fluid. Crackles, standing neck veins, and swollen ankles fit too much. A sudden weight change can go either way.",
+        "takeaway": "Match each finding to every fluid problem it fits, and remember that weight can move both ways.",
+        "body": [
+            "columns": ["Hypovolemia", "Hypervolemia", "Both volume problems written out so the header wraps"],
+            "rows": [
+                ["t": "Dry mouth, poor skin turgor, and a weak pulse", "ans": ["Hypovolemia"],
+                 "why": "These fit too little fluid."],
+                ["t": "Crackles in the lungs, standing neck veins, and swollen ankles", "ans": ["Hypervolemia"],
+                 "why": "These fit too much fluid."],
+                ["t": "A sudden change in weight compared with yesterday", "ans": ["Hypovolemia", "Hypervolemia"],
+                 "why": "Weight can move either way."],
             ],
         ],
         "terms": [],

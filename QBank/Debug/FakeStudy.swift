@@ -102,7 +102,7 @@ nonisolated final class FakeStudy: Sendable {
     /// How many questions each set has, by set id.
     static let setSizes: [String: Int] = [
         "rights-v1": 17, "communication-v1": 14, "psychosocial-v1": 12, "psychosocial-v2": 12, "depression-v1": 18,
-        "anxiety-v1": 13, "mixed-v1": 8, "vitals-v1": 43, "safety-v1": 42, "mobility-v1": 61,
+        "anxiety-v1": 13, "mixed-v1": 8, FakePracticeQuestions.findingsSetID: 1, "vitals-v1": 43, "safety-v1": 42, "mobility-v1": 61,
     ]
 
     /// The questions she had last answered not fully right before this run of the app.
@@ -133,8 +133,10 @@ nonisolated final class FakeStudy: Sendable {
     private let state: Mutex<State>
     private let now: Date
 
-    /// - Parameter examInProgress: She left an exam over Weeks 1-2 going, started five minutes ago.
-    init(now: Date, examInProgress: Bool = false) {
+    /// - Parameters:
+    ///   - examInProgress: She left an exam over Weeks 1-2 going, started five minutes ago.
+    ///   - matrixMultiSet: Weeks 1-3 holds the one-question check-all table instead of the mixed set.
+    init(now: Date, examInProgress: Bool = false, matrixMultiSet: Bool = false) {
         self.now = now
         let day: TimeInterval = 86_400
         let mentalHealth = FakeQBankServer.mentalHealthID, fundamentals = FakeQBankServer.fundamentalsID
@@ -143,7 +145,7 @@ nonisolated final class FakeStudy: Sendable {
                 Folder(id: Self.week1, courseID: mentalHealth, name: "Week 1", examPageID: Self.exam1, sortOrder: 1, sets: ["rights-v1"], bank: Self.ids("bank1", 17)),
                 Folder(id: Self.week2, courseID: mentalHealth, name: "Week 2", examPageID: Self.exam1, sortOrder: 2, sets: ["communication-v1", "psychosocial-v2"], bank: []),
                 Folder(id: Self.week3, courseID: mentalHealth, name: "Week 3", examPageID: Self.exam2, sortOrder: 1, sets: ["depression-v1", "anxiety-v1"], bank: Self.ids("bank3", 31)),
-                Folder(id: Self.weeks1to3, courseID: mentalHealth, name: "Weeks 1-3", examPageID: nil, sortOrder: 1, sets: ["mixed-v1"], bank: []),
+                Folder(id: Self.weeks1to3, courseID: mentalHealth, name: "Weeks 1-3", examPageID: nil, sortOrder: 1, sets: [matrixMultiSet ? FakePracticeQuestions.findingsSetID : "mixed-v1"], bank: []),
                 Folder(id: "f0000000-0000-4000-8000-000000002201", courseID: fundamentals, name: "Week 1", examPageID: nil, sortOrder: 1, sets: ["vitals-v1"], bank: []),
                 Folder(id: "f0000000-0000-4000-8000-000000002202", courseID: fundamentals, name: "Week 2", examPageID: nil, sortOrder: 2, sets: ["safety-v1"], bank: []),
                 Folder(id: "f0000000-0000-4000-8000-000000002203", courseID: fundamentals, name: "Week 3", examPageID: nil, sortOrder: 3, sets: ["mobility-v1"], bank: []),
@@ -393,6 +395,7 @@ nonisolated final class FakeStudy: Sendable {
         case .order: "Ordered response"
         case .match: "Matching"
         case .matrix: "Matrix"
+        case .matrixmulti: "Matrix, check all that fit"
         case .cloze: "Drop-down cloze"
         case nil: "Question"
         }
@@ -1426,6 +1429,7 @@ nonisolated enum FakeAnswers {
         case .order(let items): .order(positions: Array(items.indices))
         case .match(let pairs, _): .match(choices: pairs.map(\.right))
         case .matrix(_, let rows): .matrix(choices: rows.map(\.answer))
+        case .matrixmulti(_, let rows): .matrixmulti(choices: rows.map(\.answers))
         case .cloze(let cloze): .cloze(choices: cloze.blanks.map(\.answer))
         case .unsupported: nil
         }
@@ -1440,6 +1444,8 @@ nonisolated enum FakeAnswers {
         case .order(let items): .order(positions: Array(items.indices.reversed()))
         case .match(let pairs, _): .match(choices: pairs.indices.map { pairs[(($0 + 1) % pairs.count)].right })
         case .matrix(let columns, let rows): .matrix(choices: rows.map { row in columns.first { $0 != row.answer } ?? row.answer })
+        case .matrixmulti(let columns, let rows):
+            .matrixmulti(choices: rows.map { row in columns.first { !row.answers.contains($0) }.map { [$0] } ?? [] })
         case .cloze(let cloze): .cloze(choices: cloze.blanks.map { ($0.answer + 1) % max(1, $0.options.count) })
         case .unsupported: nil
         }
