@@ -47,6 +47,7 @@ struct SetProgressTests {
         #expect(model.countText == "3 of 4")
         #expect(model.progress == 0.5, "the earlier answers count in the bar")
         #expect(model.pickedUp?.number == 3)
+        #expect(!model.showsNewRunNotice, "a set she is still in does not say a new run is starting")
         #expect(!model.isRevealed)
         #expect(model.canCheck == false)
     }
@@ -129,6 +130,7 @@ struct SetProgressTests {
         #expect(model.answeredCount == 0)
         #expect(model.attempt?.feedback == nil)
         #expect(model.isLast == false)
+        #expect(!model.showsNewRunNotice, "Start over of a set she has not finished says nothing")
     }
 
     @Test func startOverWithoutAConnectionLeavesHerPlaceAndSaysWhy() async throws {
@@ -316,6 +318,7 @@ struct SetProgressTests {
         await retake.load()
         #expect(retake.index == 0, "a finished set opens fresh")
         #expect(retake.pickedUp == nil)
+        #expect(retake.showsNewRunNotice)
         #expect(retake.answeredCount == 0)
         retake.update(.single(0))
         await retake.check()
@@ -325,6 +328,7 @@ struct SetProgressTests {
         await again.load()
         #expect(app.offline?.waiting.contains { $0.submission.questionID == "q2" } == true)
         #expect(again.index == 1)
+        #expect(!again.showsNewRunNotice)
         #expect(again.answeredCount == 1)
     }
 
@@ -388,6 +392,90 @@ struct SetProgressTests {
     @Test func startOverAsksInHerWords() {
         #expect(Wording.startOverMessage(answers: 7) == "Your 7 answers stay saved and still count. The set begins again at question 1.")
         #expect(Wording.startOverMessage(answers: 1) == "Your 1 answer stays saved and still counts. The set begins again at question 1.")
+    }
+
+    // MARK: A finished set opens as a new run
+
+    @Test func aSetNotStartedShowsNoNotice() async throws {
+        let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.set())])
+        let (model, _) = PracticeModelTests.model(server)
+        await model.load()
+        #expect(model.index == 0)
+        #expect(!model.showsNewRunNotice)
+    }
+
+    @Test func aSittingThatListsEveryQuestionShowsTheNotice() async throws {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.set(sitting: Self.sitting([0, 1, 2, 3]))),
+            "POST /api/attempts": Self.saved("attempt-1", question: "q0"),
+        ])
+        let (model, _) = PracticeModelTests.model(server)
+        await model.load()
+        #expect(model.index == 0)
+        #expect(model.pickedUp == nil)
+        #expect(model.showsNewRunNotice)
+        model.update(.single(0))
+        await model.check()
+        #expect(model.showsNewRunNotice, "checking the answer stays on question 1")
+        #expect(model.canCheck == false)
+        model.next()
+        #expect(model.index == 1)
+        #expect(!model.showsNewRunNotice)
+    }
+
+    @Test func aDoneRowWithNoSittingShowsTheNotice() async throws {
+        let model = try await openRemembering(Self.row(answered: 4))
+        #expect(model.index == 0)
+        #expect(model.showsNewRunNotice)
+    }
+
+    @Test func aRetakeInProgressShowsNoNotice() async throws {
+        let model = try await openRemembering(Self.row(answered: 4, sitting: #"{"answeredCount":1}"#), sitting: Self.sitting([0]))
+        #expect(model.index == 1)
+        #expect(model.pickedUp != nil)
+        #expect(!model.showsNewRunNotice)
+    }
+
+    @Test func aSetLeftAfterStartOverShowsNoNotice() async throws {
+        let model = try await openRemembering(Self.row(answered: 2))
+        #expect(model.index == 0)
+        #expect(!model.showsNewRunNotice)
+    }
+
+    @Test func reviewAndAnExamShowNoNotice() async throws {
+        let done = Self.row(answered: 4)
+        let server = StubServer([
+            "GET /api/courses/c1": .ok(Bodies.courseDetail(sets: [done])),
+            "GET /api/courses/c1/review/practice": .ok(Self.set()),
+            "GET /api/practice-sets/set1": .ok(Self.set().replacingOccurrences(of: #""kind":"practice""#, with: #""kind":"exam""#)),
+        ])
+        let (app, _) = TestApp.make(server, account: .student())
+        _ = try await app.load(.course("c1")) { () async throws(QBankError) in try await app.client.course(id: "c1") }
+        let review = PracticeModel(app: app, source: .review(filter: .all, questionID: nil), courseID: "c1", title: "Review")
+        await review.load()
+        #expect(review.phase == .answering)
+        #expect(!review.showsNewRunNotice)
+        let exam = PracticeModel(app: app, source: .set(id: "set1"), courseID: "c1", title: "Exam bank")
+        await exam.load()
+        #expect(exam.phase == .failed("This set’s questions are asked only on exams."))
+        #expect(!exam.showsNewRunNotice)
+    }
+
+    /// The course row the runner reads, with this set's answers and, when given, a sitting to continue.
+    private static func row(answered: Int, questions: Int = 4, sitting: String = "null") -> String {
+        #"{"id":"set1","title":"t","description":"","questionCount":\#(questions),"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"imported","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":1,"lastAnsweredAt":"2026-10-12T10:00:00.000Z","questionIds":[],"sitting":\#(sitting)}"#
+    }
+
+    /// Opens the set after the course row is on the phone, as opening it from the course does.
+    private func openRemembering(_ row: String, sitting: String = "null", questions: Int = 4) async throws -> PracticeModel {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.set(questions: questions, sitting: sitting)),
+            "GET /api/courses/c1": .ok(Bodies.courseDetail(sets: [row])),
+        ])
+        let (model, app) = PracticeModelTests.model(server)
+        _ = try await app.load(.course("c1")) { () async throws(QBankError) in try await app.client.course(id: "c1") }
+        await model.load()
+        return model
     }
 
     // MARK: The fake server

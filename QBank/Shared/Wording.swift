@@ -151,12 +151,20 @@ nonisolated enum Wording {
             }
             return "\(word) \(when(set.activeSince, now: now)) · \(count(set.questionCount, "question"))"
         }
-        if set.questionCount > 0, set.answeredCount >= set.questionCount {
+        if everyQuestionAnswered(set) {
             let finished = set.lastAnsweredAt ?? set.activeSince
             return "Done \(when(finished, now: now)) · \(set.fullyRightCount) of \(set.questionCount) fully right"
         }
         return "\(set.answeredCount) of \(set.questionCount) answered"
     }
+
+    /// Every question of the set has an answer, which is when its row can say Done.
+    static func everyQuestionAnswered(_ set: PracticeSetSummary) -> Bool {
+        set.questionCount > 0 && set.answeredCount >= set.questionCount
+    }
+
+    /// Above question 1 when a finished set opens. Answering starts a new run, and nothing else says so.
+    static let newRunNotice = "You've answered this set before. Answering now starts a new practice run."
 
     /// The word that says a set opens where she left it.
     static let continueWord = "Continue"

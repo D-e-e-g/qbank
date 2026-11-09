@@ -12,7 +12,7 @@ import QBankKit
 /// A set she left midway opens at the first question she has not answered, from its sitting on the
 /// server and the answers still waiting on the phone, and the answers she already checked count in
 /// the result. The server closes the sitting once every question has an answer, so a finished set
-/// opens at question 1. Review and samples have no sitting.
+/// opens at question 1, and the runner says so above that question. Review and samples have no sitting.
 @Observable
 final class PracticeModel {
     /// Her work on one question during this run. A question she answered earlier in the sitting
@@ -64,6 +64,8 @@ final class PracticeModel {
     private(set) var answeredEarlier: Set<String> = []
     /// Set while she is still on the question a set picked up at.
     private(set) var pickedUp: PickedUp?
+    /// True on question 1 when this opening is a new run of a set she already finished.
+    private(set) var showsNewRunNotice = false
     /// True while Check answer is sending.
     private(set) var isChecking = false
     /// True while Start over is asking QBank.
@@ -190,7 +192,7 @@ final class PracticeModel {
                 phase = .failed("That set is not in this course.")
                 return
             }
-            begin(await countingWaiting(waitingBefore, in: loaded))
+            await begin(await countingWaiting(waitingBefore, in: loaded))
         } catch {
             if app.handle(error) { return }
             if case .transport = error, !isReview, !isSample {
@@ -222,7 +224,7 @@ final class PracticeModel {
         return counted
     }
 
-    private func begin(_ loaded: PracticeSet) {
+    private func begin(_ loaded: PracticeSet) async {
         practiceSet = loaded
         questions = loaded.questions.sorted { $0.position < $1.position }
         let answered = Set(loaded.sitting?.answeredQuestionIDs ?? [])
@@ -244,11 +246,19 @@ final class PracticeModel {
             answeredEarlier = answered
             index = place
             pickedUp = PickedUp(number: place + 1, lastAnsweredAt: answers.values.map(\.answeredAt).max())
+            showsNewRunNotice = false
         } else {
             practiceSet?.sitting = nil
             answeredEarlier = []
             index = 0
             pickedUp = nil
+            // A sitting that lists every question is finished. Once the server has closed it, the
+            // course row says the same thing: every question answered, and nothing to continue.
+            var finished = !answered.isEmpty
+            if !finished {
+                finished = await courseRowIsFinished()
+            }
+            showsNewRunNotice = !questions.isEmpty && finished
         }
         problem = nil
         startedAt = now()
@@ -372,12 +382,22 @@ final class PracticeModel {
         var fresh = practiceSet
         fresh.sitting = nil
         await app.offline?.keep(fresh)
-        begin(fresh)
+        await begin(fresh)
+    }
+
+    /// The course row says Done for this set: every question has an answer and nothing is left to
+    /// continue. That is the same decision the row shows, read from the course already on the phone.
+    private func courseRowIsFinished() async -> Bool {
+        guard case .set(let id) = source else { return false }
+        guard let course = await app.offline?.saved(.course(courseID))?.value else { return false }
+        guard let set = course.folders.lazy.flatMap(\.sets).first(where: { $0.id == id }) else { return false }
+        return Wording.continuing(set) == nil && Wording.everyQuestionAnswered(set)
     }
 
     /// The next question she has not answered, or the set result after the last one.
     func next() {
         guard isRevealed || attempt?.draft == .unsupported else { return }
+        showsNewRunNotice = false
         pickedUp = nil
         if let nextIndex {
             problem = nil

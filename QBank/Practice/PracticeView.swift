@@ -151,6 +151,8 @@ private struct QuestionPage: View {
         VStack(alignment: .leading, spacing: 18) {
             if let pickedUp = model.pickedUp {
                 PickedUpLine(model: model, pickedUp: pickedUp)
+            } else if model.showsNewRunNotice {
+                NewRunNotice()
             }
             if let problem = model.problem {
                 ProblemText(text: problem)
@@ -214,6 +216,22 @@ private struct QuestionPage: View {
             }
             AccessibilityNotification.Announcement(attempt.feedback?.label ?? "").post()
         }
+    }
+}
+
+/// A finished set opened at question 1. Nothing to tap: answering goes on underneath it, and it
+/// leaves when she moves to the next question.
+private struct NewRunNotice: View {
+    var body: some View {
+        Text(Wording.newRunNotice)
+            .qbankFont(.subheadline, weight: .medium)
+            .foregroundStyle(.qbank(.tint))
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, QBankSpacing.space4)
+            .padding(.vertical, QBankSpacing.space4)
+            .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+            .accessibilityIdentifier("practice.newRun")
     }
 }
 

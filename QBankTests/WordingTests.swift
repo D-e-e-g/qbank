@@ -46,6 +46,13 @@ struct WordingTests {
         #expect(Wording.status(try set("restored", answered: 0), now: now) == "Restored today · 17 questions")
         #expect(Wording.status(try set("imported", answered: 9), now: now) == "9 of 17 answered")
         #expect(Wording.status(try set("imported", answered: 17, right: 13, last: #""2026-10-12T10:00:00.000Z""#), now: now) == "Done today · 13 of 17 fully right")
+        #expect(Wording.everyQuestionAnswered(try set("imported", answered: 17)))
+        #expect(!Wording.everyQuestionAnswered(try set("imported", answered: 9)))
+        #expect(!Wording.everyQuestionAnswered(try set("imported", answered: 0)))
+    }
+
+    @Test func newRunNotice() {
+        #expect(Wording.newRunNotice == "You've answered this set before. Answering now starts a new practice run.")
     }
 
     @Test func answeredPercentRoundsAndCaps() throws {
