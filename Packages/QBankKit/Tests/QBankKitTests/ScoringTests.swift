@@ -92,6 +92,59 @@ struct ScoringTests {
         try expectScore(body, .matrix(choices: ["Nonessential", "Indicated", "Indicated"]), 0, .incorrect)
     }
 
+    @Test func matrixMulti() throws {
+        let body = QuestionBody.matrixmulti(
+            columns: ["Column A", "Column B", "Column C"],
+            rows: [
+                MatrixMultiRow(text: "Finding one", answers: ["Column A"]),
+                MatrixMultiRow(text: "Finding two", answers: ["Column A", "Column B", "Column C"]),
+                MatrixMultiRow(text: "Finding three", answers: ["Column B", "Column C"]),
+            ]
+        )
+        let all = AnswerResponse.matrixmulti(choices: [
+            ["Column A"], ["Column A", "Column B", "Column C"], ["Column B", "Column C"],
+        ])
+        let score = try Scoring.score(body, response: all)
+        #expect(score.maxPoints == 6)
+        #expect(score.pointsText(for: .matrixmulti) == "6 of 6 points")
+        try expectScore(body, all, 6, .correct)
+        #expect(try Scoring.score(body, response: nil).maxPoints == 6)
+        try expectScore(body, .matrixmulti(choices: [["Column A"], ["Column A"], ["Column B"]]), 3, .partial)
+        try expectScore(body, .matrixmulti(choices: [["Column A"], ["Column A"], ["Column A", "Column B"]]), 2, .partial)
+        try expectScore(body, .matrixmulti(choices: [["Column B", "Column C"], ["Column A"], []]), 0, .incorrect)
+        let blank = try Scoring.score(body, response: .matrixmulti(choices: [[], ["Column A", "Column B", "Column C"], ["Column B", "Column C"]]))
+        #expect(blank.points == 5)
+        #expect(blank.status == .partial)
+        #expect(blank.pointsText(for: .matrixmulti) == "5 of 6 points")
+        try expectScore(
+            body,
+            .matrixmulti(choices: [["Column A", "Column A"], ["Column C", "Column B", "Column A"], ["Column C", "Column B"]]),
+            6,
+            .correct
+        )
+        try expectScore(
+            body,
+            .matrixmulti(choices: [["Column A", "Nope"], ["Column A", "Column B", "Column C"], ["Column B", "Column C"]]),
+            5,
+            .partial
+        )
+        let findings = QuestionBody.matrixmulti(
+            columns: ["Hypovolemia", "Hypervolemia", "Both volume problems written out so the header wraps"],
+            rows: [
+                MatrixMultiRow(text: "Dry mouth", answers: ["Hypovolemia"]),
+                MatrixMultiRow(text: "Crackles", answers: ["Hypervolemia"]),
+                MatrixMultiRow(text: "Weight", answers: ["Hypovolemia", "Hypervolemia"]),
+            ]
+        )
+        let mixed = try Scoring.score(findings, response: .matrixmulti(choices: [
+            ["Hypovolemia", "Both volume problems written out so the header wraps"],
+            ["Hypervolemia"],
+            ["Hypovolemia"],
+        ]))
+        #expect(mixed == Score(points: 2, maxPoints: 4, status: .partial, answered: true))
+        #expect(mixed.pointsText(for: .matrixmulti) == "2 of 4 points")
+    }
+
     @Test func cloze() throws {
         let body = QuestionBody.cloze(Cloze(text: "{0} and {1}", blanks: [
             ClozeBlank(options: ["a", "b"], answer: 0),
@@ -127,6 +180,14 @@ struct ScoringTests {
         #expect(throws: ScoringError.self) {
             try Scoring.score(.single(options: Self.options([0], count: 3)), response: .sata(picks: [0]))
         }
+        let matrix = QuestionBody.matrix(columns: ["A"], rows: [MatrixRow(text: "Row", answer: "A")])
+        #expect(throws: ScoringError.self) {
+            try Scoring.score(matrix, response: .matrixmulti(choices: [["A"]]))
+        }
+        let multi = QuestionBody.matrixmulti(columns: ["A"], rows: [MatrixMultiRow(text: "Row", answers: ["A"])])
+        #expect(throws: ScoringError.self) {
+            try Scoring.score(multi, response: .matrix(choices: ["A"]))
+        }
         #expect(throws: ScoringError.self) {
             try Scoring.score(.unsupported(typeName: "hotspot"), response: nil)
         }
@@ -137,6 +198,7 @@ struct ScoringTests {
     @Test func rulesExplainPlusMinusAndOrdering() {
         #expect(QuestionType.sata.scoringRule == "+1 for each correct choice, -1 for each wrong one")
         #expect(QuestionType.highlight.scoringRule == "+1 for each correct choice, -1 for each wrong one")
+        #expect(QuestionType.matrixmulti.scoringRule == "+1 for each correct box, -1 for each wrong one")
         #expect(QuestionType.order.scoringRule == "items in the right position; full credit needs all of them")
         for type in [QuestionType.single, .priority, .match, .matrix, .cloze] {
             #expect(type.scoringRule == nil)

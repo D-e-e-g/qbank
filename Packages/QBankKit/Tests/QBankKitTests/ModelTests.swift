@@ -36,6 +36,22 @@ struct ModelTests {
         #expect(throws: DecodingError.self) { try Self.question(type: "cloze", body: #"{"cloze": {"text": "x"}}"#) }
     }
 
+    @Test func matrixMultiDecodesAListOfColumnsAndKeepsAPlainLayout() throws {
+        let question = try Self.question(
+            type: "matrixmulti",
+            body: #"{"columns":["Column A","Column B"],"rows":[{"t":"Finding","ans":["Column A","Column B"],"why":"Both"}]}"#
+        )
+        #expect(question.body == .matrixmulti(
+            columns: ["Column A", "Column B"],
+            rows: [MatrixMultiRow(text: "Finding", answers: ["Column A", "Column B"], why: "Both")]
+        ))
+        var generator = SeededGenerator(state: 1)
+        #expect(Layout.make(for: question.body, using: &generator) == .plain)
+        #expect(throws: DecodingError.self) {
+            try Self.question(type: "matrix", body: #"{"columns":["Column A"],"rows":[{"t":"Finding","ans":["Column A"]}]}"#)
+        }
+    }
+
     @Test func matchWithoutDistractors() throws {
         let question = try Self.question(type: "match", body: #"{"pairs": [{"l": "A", "r": "B"}]}"#)
         #expect(question.body == .match(pairs: [MatchPair(left: "A", right: "B")], extra: []))
@@ -50,6 +66,7 @@ struct ModelTests {
             (.order(positions: [2, 0, 1]), #"{"positions":[2,0,1],"type":"order"}"#),
             (.match(choices: ["A", nil]), #"{"choices":["A",null],"type":"match"}"#),
             (.matrix(choices: [nil, "B"]), #"{"choices":[null,"B"],"type":"matrix"}"#),
+            (.matrixmulti(choices: [["Column A"], []]), #"{"choices":[["Column A"],[]],"type":"matrixmulti"}"#),
             (.cloze(choices: [1, nil]), #"{"choices":[1,null],"type":"cloze"}"#),
         ]
         for (response, json) in cases {

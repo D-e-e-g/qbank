@@ -367,7 +367,7 @@ struct DebugLaunchScenarioTests {
         let app = try #require(Self.launch("signed-in"))
         let set = try await app.client.practiceSet(id: "mixed-v1")
         #expect(set.courseID == FakeQBankServer.mentalHealthID)
-        #expect(set.questions.compactMap(\.type) == QuestionType.allCases)
+        #expect(set.questions.compactMap(\.type) == QuestionType.allCases.filter { $0 != .matrixmulti })
         #expect(set.questions.allSatisfy { !$0.rationale.isEmpty && !$0.takeaway.isEmpty })
         #expect(set.questions[1].table != nil)
         #expect(set.questions[0].images.first?.placement == .rationale)
@@ -387,6 +387,23 @@ struct DebugLaunchScenarioTests {
         let mixed = try #require(course.folders.first { $0.id == FakeStudy.weeks1to3 }?.sets.first)
         #expect(mixed.answeredCount == 1)
         #expect(mixed.fullyRightCount == 0)
+    }
+
+    @Test func matrixMultiScenarioServesTheCheckAllTable() async throws {
+        let app = try #require(Self.launch("matrix-multi"))
+        let set = try await app.client.practiceSet(id: FakePracticeQuestions.findingsSetID)
+        #expect(set.questions.compactMap(\.type) == [.matrixmulti])
+        #expect(set.questions[0].ask == "For each finding, check every disorder it fits. A finding may fit more than one column.")
+        let response = AnswerResponse.matrixmulti(choices: [["Hypovolemia"], ["Hypervolemia"], ["Hypovolemia"]])
+        let score = try Scoring.score(set.questions[0].body, response: response)
+        #expect(score == Score(points: 3, maxPoints: 4, status: .partial, answered: true))
+        #expect(score.pointsText(for: .matrixmulti) == "3 of 4 points")
+        #expect(set.questions[0].type?.scoringRule == "+1 for each correct box, -1 for each wrong one")
+        let course = try await app.client.course(id: FakeQBankServer.mentalHealthID)
+        #expect(course.questionCount == 86)
+        let folder = try #require(course.folders.first { $0.id == FakeStudy.weeks1to3 })
+        #expect(folder.sets.map(\.id) == [FakePracticeQuestions.findingsSetID])
+        #expect(folder.sets[0].questionCount == 1)
     }
 
     @Test func unknownScenarioIsRejected() {

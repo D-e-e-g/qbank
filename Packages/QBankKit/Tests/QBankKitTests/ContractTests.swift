@@ -325,7 +325,7 @@ struct ContentContractTests {
         #expect(set.kind == .practice)
         #expect(set.weekLabel == "Week 1")
         #expect(set.folderID != nil)
-        #expect(set.questions.compactMap(\.type) == QuestionType.allCases)
+        #expect(set.questions.compactMap(\.type) == QuestionType.allCases.filter { $0 != .matrixmulti })
         #expect(set.questions.map(\.publicID) == ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"])
 
         let single = set.questions[0]

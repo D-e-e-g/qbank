@@ -85,6 +85,7 @@ struct WordingTests {
         #expect(Wording.format(.order) == "Ordering")
         #expect(Wording.format(.match) == "Matching")
         #expect(Wording.format(.matrix) == "Matrix")
+        #expect(Wording.format(.matrixmulti) == "Matrix, check all that fit")
         #expect(Wording.format(.cloze) == "Drop-down")
         #expect(Wording.format(nil) == "Question")
     }

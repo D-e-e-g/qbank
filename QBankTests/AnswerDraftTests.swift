@@ -20,6 +20,8 @@ struct AnswerDraftTests {
         #expect(AnswerDraft(body: .match(pairs: pairs, extra: []), layout: .plain) == .match([nil, nil]))
         let rows = [MatrixRow(text: "Row", answer: "Yes")]
         #expect(AnswerDraft(body: .matrix(columns: ["Yes", "No"], rows: rows), layout: .plain) == .matrix([nil]))
+        let multi = QuestionBody.matrixmulti(columns: ["A", "B"], rows: [MatrixMultiRow(text: "One", answers: ["A"]), MatrixMultiRow(text: "Two", answers: ["B"])])
+        #expect(AnswerDraft(body: multi, layout: .plain) == .matrixmulti([[], []]))
         let cloze = Cloze(text: "{0} {1}", blanks: [ClozeBlank(options: ["a"], answer: 0), ClozeBlank(options: ["b"], answer: 0)])
         #expect(AnswerDraft(body: .cloze(cloze), layout: .plain) == .cloze([nil, nil]))
         #expect(AnswerDraft(body: .unsupported(typeName: "hotspot"), layout: .plain) == .unsupported)
@@ -38,6 +40,8 @@ struct AnswerDraftTests {
         #expect(AnswerDraft.match(["R2", "R1"]).response == .match(choices: ["R2", "R1"]))
         #expect(AnswerDraft.matrix([nil]).response == nil)
         #expect(AnswerDraft.matrix(["No"]).response == .matrix(choices: ["No"]))
+        #expect(AnswerDraft.matrixmulti([["A"], []]).response == nil)
+        #expect(AnswerDraft.matrixmulti([["A"], ["B"]]).response == .matrixmulti(choices: [["A"], ["B"]]))
         #expect(AnswerDraft.cloze([0, nil]).response == nil)
         #expect(AnswerDraft.cloze([0, 2]).response == .cloze(choices: [0, 2]))
         #expect(AnswerDraft.unsupported.response == nil)
@@ -73,7 +77,7 @@ struct AnswerDraftTests {
         #expect(AnswerDraft.single(nil).canStrike)
         #expect(AnswerDraft.priority(nil).canStrike)
         #expect(AnswerDraft.sata([]).canStrike)
-        for draft in [AnswerDraft.highlight([1]), .order([0, 1]), .match([nil]), .matrix([nil]), .cloze([nil]), .unsupported] {
+        for draft in [AnswerDraft.highlight([1]), .order([0, 1]), .match([nil]), .matrix([nil]), .matrixmulti([[]]), .cloze([nil]), .unsupported] {
             var struck: Set<Int> = []
             #expect(!draft.canStrike)
             #expect(draft.striking(1, in: &struck) == draft)
@@ -98,6 +102,11 @@ struct AnswerDraftTests {
         #expect(AnswerDraft.match(["R1"]).choosing(nil, at: 0) == .match([nil]))
         #expect(AnswerDraft.matrix([nil, nil]).choosing("Yes", at: 0) == .matrix(["Yes", nil]))
         #expect(AnswerDraft.matrix([nil]).choosing("Yes", at: 4) == .matrix([nil]))
+        #expect(AnswerDraft.matrixmulti([[]]).choosing("A", at: 0) == .matrixmulti([[]]))
+        #expect(AnswerDraft.matrixmulti([[], []]).checking("A", at: 0) == .matrixmulti([["A"], []]))
+        #expect(AnswerDraft.matrixmulti([["A"], ["B"]]).checking("A", at: 0) == .matrixmulti([[], ["B"]]))
+        #expect(AnswerDraft.matrixmulti([["A"], ["B"]]).checking("A", at: 0).checking("B", at: 0) == .matrixmulti([["B"], ["B"]]))
+        #expect(AnswerDraft.matrixmulti([["A"]]).checking("B", at: 3) == .matrixmulti([["A"]]))
         #expect(AnswerDraft.cloze([nil, nil]).choosing(option: 2, forBlank: 1) == .cloze([nil, 2]))
         #expect(AnswerDraft.cloze([nil]).choosing(option: 2, forBlank: 3) == .cloze([nil]))
     }
@@ -146,6 +155,9 @@ struct AnswerDraftTests {
         #expect(AnswerDraft(response: .match(choices: ["R2"]), body: .match(pairs: pairs, extra: [])) == nil)
         let rows = [MatrixRow(text: "r", answer: "Yes")]
         #expect(AnswerDraft(response: .matrix(choices: ["No"]), body: .matrix(columns: ["Yes", "No"], rows: rows)) == .matrix(["No"]))
+        let multi = QuestionBody.matrixmulti(columns: ["A", "B"], rows: [MatrixMultiRow(text: "One", answers: ["A"]), MatrixMultiRow(text: "Two", answers: ["A", "B"])])
+        #expect(AnswerDraft(response: .matrixmulti(choices: [["A"], []]), body: multi) == .matrixmulti([["A"], []]))
+        #expect(AnswerDraft(response: .matrixmulti(choices: [["A"]]), body: multi) == nil)
         let cloze = Cloze(text: "{0}", blanks: [ClozeBlank(options: ["a", "b"], answer: 0)])
         #expect(AnswerDraft(response: .cloze(choices: [1]), body: .cloze(cloze)) == .cloze([1]))
     }

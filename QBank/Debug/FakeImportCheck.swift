@@ -8,7 +8,8 @@ import QBankKit
 nonisolated struct FakeImportCheck {
     static let labels: [QuestionType: String] = [
         .single: "Single answer", .priority: "Priority / first action", .sata: "Select all that apply",
-        .order: "Ordered response", .match: "Matching", .matrix: "Matrix", .highlight: "Highlight", .cloze: "Drop-down cloze",
+        .order: "Ordered response", .match: "Matching", .matrix: "Matrix",
+        .matrixmulti: "Matrix, check all that fit", .highlight: "Highlight", .cloze: "Drop-down cloze",
     ]
 
     let title: String?

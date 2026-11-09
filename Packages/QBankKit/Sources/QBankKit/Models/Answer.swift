@@ -7,6 +7,7 @@ import Foundation
 /// - `order`: `positions[i]` is the original item index she placed at position i (top first).
 /// - `match`: `choices[i]` is the right-hand text she paired with left item i, or nil.
 /// - `matrix`: `choices[i]` is the column name she picked for row i, or nil.
+/// - `matrixmulti`: `choices[i]` is the column names she checked for row i. An empty list is a blank row.
 /// - `cloze`: `choices[i]` is the option index she picked for blank i, or nil.
 public enum AnswerResponse: Codable, Sendable, Equatable, Hashable {
     case single(choice: Int)
@@ -16,6 +17,7 @@ public enum AnswerResponse: Codable, Sendable, Equatable, Hashable {
     case order(positions: [Int])
     case match(choices: [String?])
     case matrix(choices: [String?])
+    case matrixmulti(choices: [[String]])
     case cloze(choices: [Int?])
 
     public var type: QuestionType {
@@ -27,6 +29,7 @@ public enum AnswerResponse: Codable, Sendable, Equatable, Hashable {
         case .order: .order
         case .match: .match
         case .matrix: .matrix
+        case .matrixmulti: .matrixmulti
         case .cloze: .cloze
         }
     }
@@ -46,6 +49,7 @@ public enum AnswerResponse: Codable, Sendable, Equatable, Hashable {
         case .order: self = .order(positions: try container.decode([Int].self, forKey: .positions))
         case .match: self = .match(choices: try container.decode([String?].self, forKey: .choices))
         case .matrix: self = .matrix(choices: try container.decode([String?].self, forKey: .choices))
+        case .matrixmulti: self = .matrixmulti(choices: try container.decode([[String]].self, forKey: .choices))
         case .cloze: self = .cloze(choices: try container.decode([Int?].self, forKey: .choices))
         }
     }
@@ -58,6 +62,7 @@ public enum AnswerResponse: Codable, Sendable, Equatable, Hashable {
         case .sata(let picks), .highlight(let picks): try container.encode(picks, forKey: .picks)
         case .order(let positions): try container.encode(positions, forKey: .positions)
         case .match(let choices), .matrix(let choices): try container.encode(choices, forKey: .choices)
+        case .matrixmulti(let choices): try container.encode(choices, forKey: .choices)
         case .cloze(let choices): try container.encode(choices, forKey: .choices)
         }
     }
@@ -128,7 +133,7 @@ public enum Layout: Codable, Sendable, Equatable, Hashable {
             return .match(choices: (pairs.map(\.right) + extra.map(\.right)).shuffled(using: &generator))
         case .cloze(let cloze):
             return .cloze(blanks: cloze.blanks.map { Array($0.options.indices).shuffled(using: &generator) })
-        case .highlight, .matrix, .unsupported:
+        case .highlight, .matrix, .matrixmulti, .unsupported:
             return .plain
         }
     }
