@@ -46,6 +46,24 @@ struct ScoringTests {
         try expectScore(body, .sata(picks: []), 0, .incorrect)
     }
 
+    /// Every option may be correct. Picking all of them is full marks, picking some is partial, and picking none is not correct.
+    @Test func selectAllWhenEveryOptionIsCorrect() throws {
+        let body = QuestionBody.sata(options: Self.options([0, 1, 2, 3], count: 4))
+        #expect(try Scoring.score(body, response: nil).maxPoints == 4)
+        let all = try Scoring.score(body, response: .sata(picks: [0, 1, 2, 3]))
+        try expectScore(body, .sata(picks: [0, 1, 2, 3]), 4, .correct)
+        #expect(all.label == "Correct")
+        #expect(all.pointsText(for: .sata) == "4 of 4 points")
+        let some = try Scoring.score(body, response: .sata(picks: [1, 3]))
+        try expectScore(body, .sata(picks: [1, 3]), 2, .partial)
+        #expect(some.label == "Partly correct")
+        #expect(some.pointsText(for: .sata) == "2 of 4 points")
+        let none = try Scoring.score(body, response: .sata(picks: []))
+        try expectScore(body, .sata(picks: []), 0, .incorrect)
+        #expect(none.label == "Not correct")
+        #expect(none.pointsText(for: .sata) == "0 of 4 points")
+    }
+
     @Test func highlight() throws {
         let body = QuestionBody.highlight(segments: Self.options([1, 2], count: 4))
         try expectScore(body, .highlight(picks: [1, 2]), 2, .correct)

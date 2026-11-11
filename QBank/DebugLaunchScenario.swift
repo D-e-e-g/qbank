@@ -91,6 +91,8 @@ nonisolated enum DebugLaunchScenario {
         case ownerExamInProgress = "owner-exam-in-progress"
         /// Signed in, with Weeks 1-3 holding one matrixmulti question instead of the mixed set.
         case matrixMulti = "matrix-multi"
+        /// Signed in, with Weeks 1-3 holding one select-all question whose every option is correct.
+        case sataAllCorrect = "sata-all-correct"
     }
 
     struct UnknownScenario: Error, CustomStringConvertible {
@@ -165,6 +167,12 @@ nonisolated enum DebugLaunchScenario {
         case .matrixMulti:
             return model(
                 server: FakeQBankServer(signedIn: true, matrixMultiSet: true, answersFile: answersFile),
+                session: FakeQBankServer.storedStudentSession(),
+                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .sataAllCorrect:
+            return model(
+                server: FakeQBankServer(signedIn: true, sataAllCorrectSet: true, answersFile: answersFile),
                 session: FakeQBankServer.storedStudentSession(),
                 defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )
