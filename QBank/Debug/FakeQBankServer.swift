@@ -146,14 +146,15 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     ///   - place: The course she used last, or nil for none.
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
     ///   - matrixMultiSet: Weeks 1-3 holds one matrixmulti question instead of the mixed set.
+    ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
         place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, matrixMultiSet: Bool = false,
-        now: Date = .now, answersFile: URL? = nil
+        sataAllCorrectSet: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
         self.answersFile = answersFile
-        study = FakeStudy(now: now, examInProgress: examInProgress, matrixMultiSet: matrixMultiSet)
+        study = FakeStudy(now: now, examInProgress: examInProgress, matrixMultiSet: matrixMultiSet, sataAllCorrectSet: sataAllCorrectSet)
         questionMaker = FakeQuestionMaker(allowed: [Self.maker.email], isSetUp: makerIsSetUp, seededFor: Self.maker.email, now: now)
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
         agents = FakeAgents(studentEmail: Self.student.email, now: now)
@@ -896,6 +897,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         "anxiety-v1": ("Anxiety, Panic, and Anxiolytics", 13, 0, "imported", false),
         "mixed-v1": ("Mixed Clinical Judgment", 8, 4, "imported", false),
         FakePracticeQuestions.findingsSetID: ("Findings and Disorders", 1, 1, "imported", false),
+        FakePracticeQuestions.allCorrectSetID: ("Safe Blood Draw", 1, 1, "imported", false),
         "vitals-v1": ("Vital Signs Under Pressure", 43, 30, "imported", false),
         "safety-v1": ("Safety and Infection Control", 42, 22, "imported", false),
         "mobility-v1": ("Mobility and Skin Integrity", 61, 8, "imported", false),

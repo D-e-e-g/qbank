@@ -89,8 +89,8 @@ nonisolated struct FakeImportCheck {
                     errors.append("\(tag)needs at least 3 options")
                 } else if type != .sata, oks != 1 {
                     errors.append("\(tag)needs exactly one option with \"ok\": true (found \(oks))")
-                } else if type == .sata, oks < 1 || oks == options.count {
-                    errors.append("\(tag)select-all needs some correct and some incorrect options")
+                } else if type == .sata, oks < 1 {
+                    errors.append("\(tag)select-all needs at least one correct option")
                 }
             }
             for term in question["terms"] as? [String] ?? [] where !(terms[term] is [Any]) {

@@ -389,6 +389,34 @@ struct DebugLaunchScenarioTests {
         #expect(mixed.fullyRightCount == 0)
     }
 
+    @Test func sataAllCorrectScenarioServesAQuestionWhoseEveryOptionIsCorrect() async throws {
+        let app = try #require(Self.launch("sata-all-correct"))
+        let set = try await app.client.practiceSet(id: FakePracticeQuestions.allCorrectSetID)
+        #expect(set.questions.count == 1)
+        guard case .sata(let options) = set.questions[0].body else {
+            Issue.record("expected a select-all question")
+            return
+        }
+        #expect(options.count >= 3)
+        #expect(options.allSatisfy { $0.isCorrect })
+        let picks = Array(options.indices)
+        let score = try Scoring.score(set.questions[0].body, response: .sata(picks: picks))
+        #expect(score == Score(points: options.count, maxPoints: options.count, status: .correct, answered: true))
+        #expect(score.label == "Correct")
+        #expect(score.pointsText(for: .sata) == "\(options.count) of \(options.count) points")
+        let saved = try await app.client.recordAttempt(
+            AttemptSubmission(clientAttemptID: "fake-all", questionID: set.questions[0].id, response: .sata(picks: picks))
+        )
+        #expect(saved.status == .correct)
+        #expect(saved.points == options.count)
+        #expect(saved.maxPoints == options.count)
+        #expect(saved.label == "Correct")
+        #expect(saved.pointsText == "\(options.count) of \(options.count) points")
+        let course = try await app.client.course(id: FakeQBankServer.mentalHealthID)
+        let folder = try #require(course.folders.first { $0.id == FakeStudy.weeks1to3 })
+        #expect(folder.sets.map(\.id) == [FakePracticeQuestions.allCorrectSetID])
+    }
+
     @Test func matrixMultiScenarioServesTheCheckAllTable() async throws {
         let app = try #require(Self.launch("matrix-multi"))
         let set = try await app.client.practiceSet(id: FakePracticeQuestions.findingsSetID)

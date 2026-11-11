@@ -102,7 +102,8 @@ nonisolated final class FakeStudy: Sendable {
     /// How many questions each set has, by set id.
     static let setSizes: [String: Int] = [
         "rights-v1": 17, "communication-v1": 14, "psychosocial-v1": 12, "psychosocial-v2": 12, "depression-v1": 18,
-        "anxiety-v1": 13, "mixed-v1": 8, FakePracticeQuestions.findingsSetID: 1, "vitals-v1": 43, "safety-v1": 42, "mobility-v1": 61,
+        "anxiety-v1": 13, "mixed-v1": 8, FakePracticeQuestions.findingsSetID: 1, FakePracticeQuestions.allCorrectSetID: 1,
+        "vitals-v1": 43, "safety-v1": 42, "mobility-v1": 61,
     ]
 
     /// The questions she had last answered not fully right before this run of the app.
@@ -133,10 +134,18 @@ nonisolated final class FakeStudy: Sendable {
     private let state: Mutex<State>
     private let now: Date
 
+    /// The set Weeks 1-3 holds: the mixed set, unless a scenario replaces it with one question.
+    private static func weeks1to3Set(matrixMulti: Bool, sataAllCorrect: Bool) -> String {
+        if sataAllCorrect { return FakePracticeQuestions.allCorrectSetID }
+        if matrixMulti { return FakePracticeQuestions.findingsSetID }
+        return "mixed-v1"
+    }
+
     /// - Parameters:
     ///   - examInProgress: She left an exam over Weeks 1-2 going, started five minutes ago.
     ///   - matrixMultiSet: Weeks 1-3 holds the one-question check-all table instead of the mixed set.
-    init(now: Date, examInProgress: Bool = false, matrixMultiSet: Bool = false) {
+    ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
+    init(now: Date, examInProgress: Bool = false, matrixMultiSet: Bool = false, sataAllCorrectSet: Bool = false) {
         self.now = now
         let day: TimeInterval = 86_400
         let mentalHealth = FakeQBankServer.mentalHealthID, fundamentals = FakeQBankServer.fundamentalsID
@@ -145,7 +154,10 @@ nonisolated final class FakeStudy: Sendable {
                 Folder(id: Self.week1, courseID: mentalHealth, name: "Week 1", examPageID: Self.exam1, sortOrder: 1, sets: ["rights-v1"], bank: Self.ids("bank1", 17)),
                 Folder(id: Self.week2, courseID: mentalHealth, name: "Week 2", examPageID: Self.exam1, sortOrder: 2, sets: ["communication-v1", "psychosocial-v2"], bank: []),
                 Folder(id: Self.week3, courseID: mentalHealth, name: "Week 3", examPageID: Self.exam2, sortOrder: 1, sets: ["depression-v1", "anxiety-v1"], bank: Self.ids("bank3", 31)),
-                Folder(id: Self.weeks1to3, courseID: mentalHealth, name: "Weeks 1-3", examPageID: nil, sortOrder: 1, sets: [matrixMultiSet ? FakePracticeQuestions.findingsSetID : "mixed-v1"], bank: []),
+                Folder(
+                    id: Self.weeks1to3, courseID: mentalHealth, name: "Weeks 1-3", examPageID: nil, sortOrder: 1,
+                    sets: [Self.weeks1to3Set(matrixMulti: matrixMultiSet, sataAllCorrect: sataAllCorrectSet)], bank: []
+                ),
                 Folder(id: "f0000000-0000-4000-8000-000000002201", courseID: fundamentals, name: "Week 1", examPageID: nil, sortOrder: 1, sets: ["vitals-v1"], bank: []),
                 Folder(id: "f0000000-0000-4000-8000-000000002202", courseID: fundamentals, name: "Week 2", examPageID: nil, sortOrder: 2, sets: ["safety-v1"], bank: []),
                 Folder(id: "f0000000-0000-4000-8000-000000002203", courseID: fundamentals, name: "Week 3", examPageID: nil, sortOrder: 3, sets: ["mobility-v1"], bank: []),

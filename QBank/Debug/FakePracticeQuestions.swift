@@ -14,9 +14,13 @@ nonisolated enum FakePracticeQuestions {
     /// so the mixed set stays the eight formats.
     static let findingsSetID = "findings-v1"
 
+    /// The one-question set the `sata-all-correct` scenario puts in Weeks 1-3: a select-all whose
+    /// every option is correct.
+    static let allCorrectSetID = "sata-all-v1"
+
     /// The question at `index` of a set, with the id the set listing gives it.
     static func question(setID: String, index: Int) -> [String: Any] {
-        var question = setID == findingsSetID ? matrixMulti : templates[index % templates.count]
+        var question = specialTemplate(setID: setID) ?? templates[index % templates.count]
         question["id"] = "\(setID)-q\(index)"
         question["publicId"] = "Q\(index + 1)"
         question["position"] = index + 1
@@ -25,9 +29,19 @@ nonisolated enum FakePracticeQuestions {
 
     /// The template behind a question id such as `mixed-v1-q3`.
     static func template(forQuestionID id: String) -> [String: Any]? {
-        if id.hasPrefix("\(findingsSetID)-") { return matrixMulti }
+        let setID = id.split(separator: "-").dropLast().joined(separator: "-")
+        if let special = specialTemplate(setID: setID) { return special }
         guard let suffix = id.split(separator: "-").last, suffix.hasPrefix("q"), let index = Int(suffix.dropFirst()) else { return nil }
         return templates[index % templates.count]
+    }
+
+    /// A set that is not one of the eight repeating formats.
+    private static func specialTemplate(setID: String) -> [String: Any]? {
+        switch setID {
+        case findingsSetID: matrixMulti
+        case allCorrectSetID: allCorrectSelectAll
+        default: nil
+        }
     }
 
     private static var single: [String: Any] { [
@@ -197,6 +211,26 @@ nonisolated enum FakePracticeQuestions {
                 ["t": "The nurse explains when they will meet and what stays confidential", "ans": "Orientation", "why": "Setting roles and limits begins the relationship."],
                 ["t": "The client names a problem and practices a new coping skill", "ans": "Working", "why": "Exploring problems and practicing skills is the working phase."],
                 ["t": "The client asks to stay longer because the nurse is the only one who understands", "ans": "Termination", "why": "Feelings about ending belong to termination."],
+            ],
+        ],
+        "terms": [],
+    ] }
+
+    /// A select-all whose every option is a correct action.
+    private static var allCorrectSelectAll: [String: Any] { [
+        "type": "sata",
+        "topic": "Before a blood draw",
+        "cj": "Take action",
+        "stem": "A nurse is about to draw blood from an adult client who is calm and has agreed to the test.",
+        "ask": "Which actions does the nurse take? Select all that apply.",
+        "rationale": "Each action is part of a safe draw: the right client, clean hands, the labeled tube, and pressure on the site afterward.",
+        "takeaway": "Every listed action belongs in the draw.",
+        "body": [
+            "options": [
+                ["t": "Check the client's name and date of birth against the label", "ok": true, "why": "The tube has to belong to this client."],
+                ["t": "Clean the hands before putting on gloves", "ok": true, "why": "Clean hands come before gloves."],
+                ["t": "Label the tube at the bedside", "ok": true, "why": "Labeling at the bedside keeps the specimen with the client."],
+                ["t": "Hold pressure on the site after the needle comes out", "ok": true, "why": "Pressure stops the bleeding."],
             ],
         ],
         "terms": [],
