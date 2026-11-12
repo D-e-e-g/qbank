@@ -51,7 +51,8 @@ final class AddHereUITests: XCTestCase {
         app.buttons["newCourse.save"].tap()
         XCTAssertTrue(app.navigationBars["NURS 406"].appears(timeout: 10), "the new course opens")
         XCTAssertTrue(app.staticTexts["This course has no question sets yet."].exists)
-        XCTAssertTrue(app.buttons["course.add"].exists)
+        // The + comes into the toolbar a moment after the course's lists, once the push has landed.
+        XCTAssertTrue(app.buttons["course.add"].appears(timeout: 5))
         goBack(app, from: "NURS 406")
         XCTAssertTrue(app.buttons["home.course.NURS 406"].appears(timeout: 5))
 

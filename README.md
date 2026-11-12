@@ -18,7 +18,7 @@ test/sim.sh -- xcodebuild test \
   -destination 'platform=iOS Simulator,id={{UDID}}'
 ```
 
-`test/sim.sh` creates a fresh simulator for the run and deletes it afterwards. It picks an iPhone; pass `--device "iPad Pro 13-inch (M5)"` to run on an iPad, where the iPad layout's UI tests run and the iPhone layout's skip. `test/release-checks.sh` checks the repository rules and needs no Xcode.
+`test/sim.sh` creates a fresh simulator for the run and deletes it afterwards. It picks an iPhone; pass `--device "iPad Pro 13-inch (M5)"` to run on an iPad, where the iPad layout's UI tests run and the iPhone layout's skip. `test/release-checks.sh` checks the repository rules, including the 1,000 code-line limit in `test/max-lines.conf`, and needs no Xcode. [docs/ci.md](docs/ci.md) says how to read and update that list.
 
 ## Layout
 
