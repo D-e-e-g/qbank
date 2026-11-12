@@ -67,7 +67,7 @@ struct ExamView: View {
 
     private var runner: some View {
         RunnerShell(count: isOnQuestion ? model.countText : "", title: model.title, progress: model.progress) {
-            if isOnQuestion {
+            if model.isRunning {
                 Button("End exam") {
                     // Only End exam leaves a running exam, so the frozen view's way out is here:
                     // back to the screen under it with the note, and the exam goes on as it was.
