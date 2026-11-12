@@ -880,6 +880,18 @@ else
   pass "the app and its packages say agent, never Firstmate"
 fi
 
+# --- Code-line limit --------------------------------------------------------------
+#
+# test/max-lines.rb counts Swift and shell the way docs/ci.md describes.
+# Files already over the limit are listed in test/max-lines.conf and exempt
+# until they are split. It needs no simulator.
+
+if ruby test/max-lines.rb; then
+  pass "hand-written source stays within the code-line limit"
+else
+  fail "hand-written source stays within the code-line limit"
+fi
+
 echo
 if [ "$FAILURES" -gt 0 ]; then
   echo "$FAILURES check(s) failed." >&2

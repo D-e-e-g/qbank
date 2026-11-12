@@ -9,11 +9,17 @@ Every pull request and every push to `main` runs two Linux jobs on GitHub-hosted
 `Linux checks`:
 
 - `shellcheck` over `test/*.sh` and `scripts/*.sh`
-- `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, and the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git)
+- `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git), and the 1,000 code-line limit (`test/max-lines.conf`)
 
 `Secrets`: `test/leak-check.sh` runs [gitleaks](https://github.com/gitleaks/gitleaks), a pinned release whose checksum the job checks, over the commits the change adds and over every tracked file at HEAD, and fails on any finding. It uses gitleaks' own rules with no exceptions (`.gitleaks.toml` only extends the defaults). Findings print redacted. To run it on a Mac with gitleaks installed: `test/leak-check.sh origin/main HEAD`.
 
 The workflow references no secrets, reads the repository with a `contents: read` token, and never runs on a Mac. There is no `pull_request_target` workflow.
+
+### Code-line limit
+
+`ruby test/max-lines.rb`, which `test/release-checks.sh` runs, fails when a hand-written source file has more than 1,000 code lines. A code line is a line that is not blank and not only a comment. The check counts Swift and shell, tests included. `test/max-lines.conf` names each exclusion with a one-line reason: the pinned OpenAPI document, recorded fixtures and snapshots, build output, and non-code assets. A tracked file that matches neither an inclusion nor an exclusion fails until it is named there.
+
+Files already over 1,000 are listed in that config with their code-line count, kept for reference. A listed file is exempt until it is split. The check warns, and does not fail, if a listed file grows past its recorded count, if the file is gone, or if it now has 1,000 code lines or fewer, so an in-flight change is not blocked. A file that is not listed fails when it has more than 1,000 code lines. The no-growth rule for a listed file switches on when that file is split: remove its entry in the split, and from then on it fails if it goes over 1,000. `ruby test/max-lines.rb --dump` prints every counted file's code-line count, highest first.
 
 ## Trusted code: `xcode.yml`
 
