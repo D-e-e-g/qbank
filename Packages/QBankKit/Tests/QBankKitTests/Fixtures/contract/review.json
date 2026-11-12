@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review",
@@ -28,7 +28,7 @@
           "format": "Drop-down cloze",
           "status": "partial",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.515Z",
+          "answeredAt": "2026-11-12T02:58:06.156Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -40,7 +40,7 @@
           "format": "Matrix",
           "status": "partial",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.508Z",
+          "answeredAt": "2026-11-12T02:58:06.146Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -52,7 +52,7 @@
           "format": "Matching",
           "status": "partial",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.502Z",
+          "answeredAt": "2026-11-12T02:58:06.137Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -64,7 +64,7 @@
           "format": "Ordered response",
           "status": "partial",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.496Z",
+          "answeredAt": "2026-11-12T02:58:06.128Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -76,7 +76,7 @@
           "format": "Priority / first action",
           "status": "correct",
           "guessed": true,
-          "answeredAt": "2026-11-06T22:19:53.484Z",
+          "answeredAt": "2026-11-12T02:58:06.113Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -88,7 +88,7 @@
           "format": "Select all that apply",
           "status": "incorrect",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.478Z",
+          "answeredAt": "2026-11-12T02:58:06.103Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         },
         {
@@ -100,7 +100,7 @@
           "format": "Single answer",
           "status": "incorrect",
           "guessed": false,
-          "answeredAt": "2026-11-06T22:19:53.472Z",
+          "answeredAt": "2026-11-12T02:58:06.090Z",
           "setTitle": "Week 1 - Set 1: Invented basics"
         }
       ]

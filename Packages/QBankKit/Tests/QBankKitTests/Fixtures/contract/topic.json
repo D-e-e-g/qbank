@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
   "request": {
     "method": "GET",
     "path": "/api/courses/70000000-0000-4000-8000-000000000001",
@@ -37,13 +37,14 @@
               "title": "Invented cardiac drugs",
               "description": "Invented practice questions.",
               "questionCount": 2,
-              "importedAt": "2026-11-06T22:19:59.976Z",
-              "activeSince": "2026-11-06T22:19:59.976Z",
+              "importedAt": "2026-11-12T02:58:13.624Z",
+              "activeSince": "2026-11-12T02:58:13.624Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 0,
-              "lastAnsweredAt": "2026-11-06T22:19:59.994Z",
+              "lastAnsweredAt": "2026-11-12T02:58:13.651Z",
+              "run": "midway",
               "sitting": {
                 "answeredCount": 1
               },
@@ -64,13 +65,14 @@
               "title": "Invented loose questions",
               "description": "Invented practice questions.",
               "questionCount": 1,
-              "importedAt": "2026-11-06T22:19:59.981Z",
-              "activeSince": "2026-11-06T22:19:59.981Z",
+              "importedAt": "2026-11-12T02:58:13.632Z",
+              "activeSince": "2026-11-12T02:58:13.632Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
+              "run": "new",
               "sitting": null,
               "questionIds": [
                 "9e000000-0000-4000-8000-000000070003"
@@ -93,13 +95,14 @@
               "title": "Invented cardiac drugs",
               "description": "Invented practice questions.",
               "questionCount": 2,
-              "importedAt": "2026-11-06T22:19:59.976Z",
-              "activeSince": "2026-11-06T22:19:59.976Z",
+              "importedAt": "2026-11-12T02:58:13.624Z",
+              "activeSince": "2026-11-12T02:58:13.624Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 0,
-              "lastAnsweredAt": "2026-11-06T22:19:59.994Z",
+              "lastAnsweredAt": "2026-11-12T02:58:13.651Z",
+              "run": "midway",
               "sitting": {
                 "answeredCount": 1
               },
@@ -124,13 +127,14 @@
               "title": "Invented loose questions",
               "description": "Invented practice questions.",
               "questionCount": 1,
-              "importedAt": "2026-11-06T22:19:59.981Z",
-              "activeSince": "2026-11-06T22:19:59.981Z",
+              "importedAt": "2026-11-12T02:58:13.632Z",
+              "activeSince": "2026-11-12T02:58:13.632Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
               "fullyRightCount": 0,
               "lastAnsweredAt": null,
+              "run": "new",
               "sitting": null,
               "questionIds": [
                 "9e000000-0000-4000-8000-000000070003"

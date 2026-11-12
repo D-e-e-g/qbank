@@ -1,10 +1,10 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
   "request": {
     "method": "DELETE",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702",
     "query": {
-      "confirm": "6f62863d01b05892"
+      "confirm": "2045288bbed095fd"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

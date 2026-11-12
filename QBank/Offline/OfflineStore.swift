@@ -217,7 +217,7 @@ final class OfflineStore {
                 guard !Task.isCancelled else { return false }
                 listedSets.insert(set.id)
                 if let saved = try? await cache.value(for: .practiceSet(set.id)), saved.savedAt >= set.importedAt,
-                   !waiting.isEmpty || saved.value.sitting?.answeredQuestionIDs.count == set.sitting?.answeredCount { continue }
+                   !waiting.isEmpty || Self.copy(saved.value, matches: set) { continue }
                 do {
                     let practice = try await client.practiceSet(id: set.id)
                     guard !Task.isCancelled else { return false }
@@ -232,6 +232,12 @@ final class OfflineStore {
             await removeUnlisted(courses: Set(ids), sets: listedSets)
         }
         return complete
+    }
+
+    /// Whether the copy of a set saved on the phone still says what its row says: the same sitting,
+    /// and the same run when the copy has one.
+    private static func copy(_ copy: PracticeSet, matches row: PracticeSetSummary) -> Bool {
+        copy.sitting?.answeredQuestionIDs.count == row.sitting?.answeredCount && (copy.run == nil || copy.run == row.run)
     }
 
     /// Forgets courses no longer on Home and sets no longer in a course. While answers wait, their

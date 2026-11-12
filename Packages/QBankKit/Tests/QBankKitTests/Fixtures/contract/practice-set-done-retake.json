@@ -1,0 +1,113 @@
+{
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
+  "request": {
+    "method": "GET",
+    "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "id": "5e700000-0000-4000-8000-000000000301",
+      "courseId": "c0000000-0000-4000-8000-000000000301",
+      "title": "Week 1 - Set 1: Invented basics",
+      "weekLabel": "Week 1",
+      "folderId": "00000000-0000-4000-8018-000000000001",
+      "kind": "practice",
+      "questions": [
+        {
+          "id": "00000000-0000-4000-8018-000000000002",
+          "publicId": "Q1",
+          "position": 1,
+          "type": "single",
+          "topic": "Invented topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        },
+        {
+          "id": "00000000-0000-4000-8018-000000000003",
+          "publicId": "Q2",
+          "position": 2,
+          "type": "single",
+          "topic": "Invented topic 2",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        },
+        {
+          "id": "00000000-0000-4000-8018-000000000004",
+          "publicId": "Q3",
+          "position": 3,
+          "type": "single",
+          "topic": "Invented topic 3",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        }
+      ],
+      "run": "done",
+      "sitting": null
+    }
+  }
+}

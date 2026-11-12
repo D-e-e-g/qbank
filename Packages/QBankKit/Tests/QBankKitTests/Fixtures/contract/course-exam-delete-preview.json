@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
   "request": {
     "method": "GET",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -66,7 +66,7 @@
         "body": "Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days."
       },
       "refusal": null,
-      "confirm": "10e588274fff01e6",
+      "confirm": "cec573d8f099af7d",
       "undoDays": 30
     }
   }

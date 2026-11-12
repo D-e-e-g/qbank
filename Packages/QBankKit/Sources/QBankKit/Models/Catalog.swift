@@ -534,6 +534,31 @@ public struct PracticeSetSummary: Codable, Sendable, Equatable, Identifiable {
     /// What she would continue, the row's "7 of 12 answered · Continue". Nil when there is nothing to
     /// continue, and from a server or a saved copy from before sittings: the row reads as it always did.
     public internal(set) var sitting: Sitting?
+    /// Where she stands in the set. From a server or a saved copy from before `run`, read from the
+    /// counts and the sitting by the rule the app used then.
+    public internal(set) var run: SetRun
+
+    init(
+        id: String, title: String, description: String, questionCount: Int, importedAt: Date, activeSince: Date,
+        status: Status, canRestore: Bool, answeredCount: Int, fullyRightCount: Int, lastAnsweredAt: Date?,
+        questionIDs: [String], importedByAgent: ImportingAgent?, sitting: Sitting? = nil, run: SetRun? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.questionCount = questionCount
+        self.importedAt = importedAt
+        self.activeSince = activeSince
+        self.status = status
+        self.canRestore = canRestore
+        self.answeredCount = answeredCount
+        self.fullyRightCount = fullyRightCount
+        self.lastAnsweredAt = lastAnsweredAt
+        self.questionIDs = questionIDs
+        self.importedByAgent = importedByAgent
+        self.sitting = sitting
+        self.run = run ?? SetRun(answeredCount: answeredCount, questionCount: questionCount, continues: sitting != nil)
+    }
 
     /// The sitting a row shows.
     public struct Sitting: Codable, Sendable, Equatable {
@@ -549,7 +574,28 @@ public struct PracticeSetSummary: Codable, Sendable, Equatable, Identifiable {
         case id, title, description, questionCount, importedAt, activeSince, status, canRestore
         case answeredCount, fullyRightCount, lastAnsweredAt
         case questionIDs = "questionIds"
-        case importedByAgent, sitting
+        case importedByAgent, sitting, run
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(
+            id: container.decode(String.self, forKey: .id),
+            title: container.decode(String.self, forKey: .title),
+            description: container.decode(String.self, forKey: .description),
+            questionCount: container.decode(Int.self, forKey: .questionCount),
+            importedAt: container.decode(Date.self, forKey: .importedAt),
+            activeSince: container.decode(Date.self, forKey: .activeSince),
+            status: container.decode(Status.self, forKey: .status),
+            canRestore: container.decode(Bool.self, forKey: .canRestore),
+            answeredCount: container.decode(Int.self, forKey: .answeredCount),
+            fullyRightCount: container.decode(Int.self, forKey: .fullyRightCount),
+            lastAnsweredAt: container.decodeIfPresent(Date.self, forKey: .lastAnsweredAt),
+            questionIDs: container.decode([String].self, forKey: .questionIDs),
+            importedByAgent: container.decodeIfPresent(ImportingAgent.self, forKey: .importedByAgent),
+            sitting: container.decodeIfPresent(Sitting.self, forKey: .sitting),
+            run: SetRun.decodeIfPresent(from: container, forKey: .run)
+        )
     }
 }
 

@@ -137,30 +137,26 @@ nonisolated enum Wording {
         return minutes.rounded() == minutes ? "\(Int(minutes)) min" : String(format: "%.1f min", minutes)
     }
 
-    /// A set's line on the Course screen: when it arrived, how far she got, or how it went. Continue
-    /// shows only on a row that opens the set.
+    /// A set's line on the Course screen: when it arrived, how far she got, or how it went, by where
+    /// she stands in it. Continue shows only on a row that opens the set.
     static func status(_ set: PracticeSetSummary, opens: Bool = true, now: Date = .now) -> String {
         if opens, let answered = continuing(set) {
             return "\(answered) · \(continueWord)"
         }
-        if set.answeredCount == 0 {
+        switch set.run {
+        case .new:
             let word = switch set.status {
             case .imported: "Imported"
             case .replaced: "Replaced"
             case .restored: "Restored"
             }
             return "\(word) \(when(set.activeSince, now: now)) · \(count(set.questionCount, "question"))"
-        }
-        if everyQuestionAnswered(set) {
+        case .done:
             let finished = set.lastAnsweredAt ?? set.activeSince
             return "Done \(when(finished, now: now)) · \(set.fullyRightCount) of \(set.questionCount) fully right"
+        case .midway, .restarted:
+            return "\(set.answeredCount) of \(set.questionCount) answered"
         }
-        return "\(set.answeredCount) of \(set.questionCount) answered"
-    }
-
-    /// Every question of the set has an answer, which is when its row can say Done.
-    static func everyQuestionAnswered(_ set: PracticeSetSummary) -> Bool {
-        set.questionCount > 0 && set.answeredCount >= set.questionCount
     }
 
     /// Above question 1 when a finished set opens. Answering starts a new run, and nothing else says so.
@@ -169,9 +165,11 @@ nonisolated enum Wording {
     /// The word that says a set opens where she left it.
     static let continueWord = "Continue"
 
-    /// How far a set she can continue has got: "7 of 12 answered". Nil when there is nothing to continue.
+    /// How far a set she can continue has got: "7 of 12 answered". Nil when there is nothing to
+    /// continue, which a set that is not Midway never has.
     static func continuing(_ set: PracticeSetSummary) -> String? {
-        set.sitting.map { "\($0.answeredCount) of \(set.questionCount) answered" }
+        guard set.run == .midway, let sitting = set.sitting else { return nil }
+        return "\(sitting.answeredCount) of \(set.questionCount) answered"
     }
 
     /// The line under a set's title when it opens where she left it: "Picked up at 8 · 7 answered

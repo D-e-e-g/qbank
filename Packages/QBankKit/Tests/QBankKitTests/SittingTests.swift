@@ -130,13 +130,22 @@ struct SittingTests {
 
     @Test func waitingAnswersCountInTheSittingWithThePhonesScore() throws {
         let set = try Self.set("practice-set-sitting")
-        let third = set.questions[2].id
-        let counted = set.counting(waiting: [Self.pending(third, at: 100_000_000)])
+        let second = set.questions[1].id
+        let counted = set.counting(waiting: [Self.pending(second, at: 100_000_000)])
         let sitting = try #require(counted.sitting)
-        #expect(sitting.answeredQuestionIDs == set.questions.map(\.id))
+        #expect(sitting.answeredQuestionIDs == [set.questions[0].id, second])
         #expect(sitting.id == set.sitting?.id)
-        #expect(sitting.answers.count == 3)
-        #expect(sitting.answers.last?.clientAttemptID == "waiting-\(third)")
+        #expect(sitting.answers.count == 2)
+        #expect(sitting.answers.last?.clientAttemptID == "waiting-\(second)")
+        #expect(counted.run == .midway)
+    }
+
+    /// The server closes a sitting once it has an answer to every question, and the set is Done.
+    @Test func aWaitingAnswerThatCompletesTheSittingMakesTheSetDone() throws {
+        let set = try Self.set("practice-set-sitting")
+        let counted = set.counting(waiting: [Self.pending(set.questions[2].id, at: 100_000_000)])
+        #expect(counted.sitting == nil)
+        #expect(counted.run == .done)
     }
 
     @Test func aSetWithNoSittingBeginsOneFromItsWaitingAnswers() throws {
@@ -185,12 +194,92 @@ struct SittingTests {
         #expect(set.counting(answer) == set)
     }
 
+    // MARK: Where she stands
+
+    private static func row(json run: String?, answered: Int = 3, sitting: Int? = nil) throws -> PracticeSetSummary {
+        let sitting = sitting.map { #","sitting":{"answeredCount":\#($0)}"# } ?? ""
+        let run = run.map { #","run":"\#($0)""# } ?? ""
+        let row = #"{"id":"s","title":"t","description":"","questionCount":12,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"imported","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":0,"lastAnsweredAt":null,"questionIds":[]\#(sitting)\#(run)}"#
+        return try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(row.utf8))
+    }
+
+    /// Each run as the server sends it, on the set and on its course row: a new set, one midway
+    /// with a sitting row or without one yet, one she started over, and a Done set with a retake open.
+    @Test(arguments: [
+        ("practice-set", "course", SetRun.new),
+        ("practice-set-sitting-day-one", "course-sitting-day-one", .midway),
+        ("practice-set-sitting", "course-sitting", .midway),
+        ("practice-set-after-start-over", "course-after-start-over", .restarted),
+        ("practice-set-done-retake", "course-done-retake", .done),
+    ])
+    func eachRunAsTheServerSendsIt(set: String, course: String, run: SetRun) throws {
+        let practice = try Self.set(set)
+        #expect(practice.run == run)
+        #expect(try Self.rows(course).first { $0.id == practice.id }?.run == run)
+        #expect((practice.sitting != nil) == (run == .midway), "a sitting comes exactly with Midway")
+    }
+
+    @Test(arguments: SetRun.allCases)
+    func aRowAndTheSetReadTheServersRun(_ run: SetRun) throws {
+        // The counts say something else on purpose: the run is what the row and the runner follow.
+        #expect(try Self.row(json: run.rawValue, answered: 3, sitting: nil).run == run)
+        let question = #"{"id":"q1","publicId":"Q1","position":1,"type":"single","topic":"","cj":null,"stem":"S","ask":"A","rationale":"R","takeaway":"T","terms":[],"body":{"options":[{"t":"A","ok":true}]}}"#
+        let set = #"{"id":"s1","courseId":"c1","title":"T","weekLabel":"W","kind":"practice","questions":[\#(question)],"sitting":null,"run":"\#(run.rawValue)"}"#
+        let read = try QBankJSON.decoder.decode(PracticeSet.self, from: Data(set.utf8))
+        #expect(read.run == run)
+        #expect(try QBankJSON.decoder.decode(PracticeSet.self, from: QBankJSON.encoder.encode(read)).run == run, "the copy on the phone keeps it")
+        let row = try Self.row(json: run.rawValue)
+        #expect(try QBankJSON.decoder.decode(PracticeSetSummary.self, from: QBankJSON.encoder.encode(row)).run == run)
+    }
+
+    /// Without `run`, from a server or a saved copy from before it, a row reads by the rule the app
+    /// used then; the set itself leaves it to its row.
+    @Test func aRowFromBeforeRunReadsItFromItsCounts() throws {
+        #expect(try Self.row(json: nil, answered: 0).run == .new)
+        #expect(try Self.row(json: nil, answered: 3, sitting: 3).run == .midway)
+        #expect(try Self.row(json: nil, answered: 3).run == .restarted)
+        #expect(try Self.row(json: nil, answered: 12).run == .done)
+        #expect(try Self.row(json: nil, answered: 12, sitting: 1).run == .done, "Done comes first, as on the server")
+        #expect(try Self.row(json: "later", answered: 3, sitting: 3).run == .midway, "a run this version does not know reads as if it were absent")
+        let question = #"{"id":"q1","publicId":"Q1","position":1,"type":"single","topic":"","cj":null,"stem":"S","ask":"A","rationale":"R","takeaway":"T","terms":[],"body":{"options":[{"t":"A","ok":true}]}}"#
+        let older = #"{"id":"s1","courseId":"c1","title":"T","weekLabel":"W","kind":"practice","questions":[\#(question)],"sitting":null}"#
+        #expect(try QBankJSON.decoder.decode(PracticeSet.self, from: Data(older.utf8)).run == nil)
+    }
+
+    /// Bug (b): one answer on a Done set opened a sitting in the copy on the phone, so without a
+    /// connection the set opened at question 2 where the server opens it at 1.
+    @Test func anAnswerOnADoneSetLeavesTheCopyOnThePhoneDone() throws {
+        var set = try Self.set("practice-set")
+        set.run = .done
+        let answer = SittingAnswer(
+            clientAttemptID: "a1", questionID: set.questions[0].id,
+            feedback: Feedback(phone: Score(points: 1, maxPoints: 1, status: .correct, answered: true), type: .single),
+            guessed: false, answeredAt: .now
+        )
+        #expect(set.counting(answer) == set)
+        #expect(set.counting(waiting: [Self.pending(set.questions[0].id), Self.pending(set.questions[1].id, at: 1)]) == set)
+    }
+
+    @Test(arguments: [SetRun.new, .restarted, .midway])
+    func anAnswerOnASetNotDoneBeginsOrExtendsASitting(_ run: SetRun) throws {
+        var set = try Self.set("practice-set")
+        set.run = run
+        let counted = set.counting(waiting: [Self.pending(set.questions[0].id)])
+        #expect(counted.run == .midway)
+        #expect(counted.sitting?.answeredQuestionIDs == [set.questions[0].id])
+    }
+
     // MARK: Her row on the phone
 
-    private static func row(questions: Int = 12, answered: Int, sitting: Int?) -> PracticeSetSummary {
-        var row = WaitingProgressTests.set("s", questions: questions, answered: answered)
-        row.sitting = sitting.map(PracticeSetSummary.Sitting.init(answeredCount:))
-        return row
+    private static func row(questions: Int = 12, answered: Int, sitting: Int?, run: SetRun? = nil) -> PracticeSetSummary {
+        let row = WaitingProgressTests.set("s", questions: questions, answered: answered)
+        return PracticeSetSummary(
+            id: row.id, title: row.title, description: row.description, questionCount: row.questionCount,
+            importedAt: row.importedAt, activeSince: row.activeSince, status: row.status, canRestore: row.canRestore,
+            answeredCount: row.answeredCount, fullyRightCount: row.fullyRightCount, lastAnsweredAt: row.lastAnsweredAt,
+            questionIDs: row.questionIDs, importedByAgent: nil,
+            sitting: sitting.map(PracticeSetSummary.Sitting.init(answeredCount:)), run: run
+        )
     }
 
     private static func waiting(_ count: Int, from start: Int = 0, joins: Bool = true) -> WaitingProgress {
@@ -200,27 +289,49 @@ struct SittingTests {
     }
 
     @Test func aRowsSittingCountsItsWaitingAnswers() {
-        let night = Self.waiting(3, from: 7).counting(Self.row(answered: 7, sitting: 7))
+        let night = Self.waiting(3, from: 7).counting(Self.row(answered: 7, sitting: 7, run: .midway))
         #expect(night.sitting?.answeredCount == 10)
         #expect(night.answeredCount == 10)
+        #expect(night.run == .midway)
     }
 
     @Test func waitingAnswersThatFinishTheSittingMakeTheSetDone() {
-        let counted = Self.waiting(5, from: 7).counting(Self.row(answered: 7, sitting: 7))
+        let counted = Self.waiting(5, from: 7).counting(Self.row(answered: 7, sitting: 7, run: .midway))
         #expect(counted.sitting == nil)
         #expect(counted.answeredCount == 12)
+        #expect(counted.run == .done)
     }
 
-    @Test func aFreshSetOrARetakeBeginsASittingFromItsWaitingAnswers() {
-        #expect(Self.waiting(2).counting(Self.row(answered: 0, sitting: nil)).sitting?.answeredCount == 2)
-        let retake = Self.waiting(1).counting(Self.row(answered: 12, sitting: nil))
-        #expect(retake.sitting?.answeredCount == 1)
+    @Test(arguments: [SetRun.new, .restarted])
+    func aSetThatOpensAtQuestionOneBeginsASittingFromItsWaitingAnswers(_ run: SetRun) {
+        let counted = Self.waiting(2).counting(Self.row(answered: run == .new ? 0 : 5, sitting: nil, run: run))
+        #expect(counted.sitting?.answeredCount == 2)
+        #expect(counted.run == .midway)
+    }
+
+    /// Bug (a): the server's rule is that once every question has an answer there is nothing to
+    /// continue, even with a retake under way. Answers waiting on the phone do not change that: the row
+    /// said "3 of 12 answered · Continue" on a Done set.
+    @Test func aRetakeWaitingOnThePhoneLeavesADoneSetDone() {
+        let retake = Self.waiting(3).counting(Self.row(answered: 12, sitting: nil))
+        #expect(retake.sitting == nil)
         #expect(retake.answeredCount == 12)
+        #expect(retake.run == .done)
+        let open = Self.waiting(3).counting(Self.row(answered: 12, sitting: 1, run: .done))
+        #expect(open.sitting == nil, "a retake the server listed by mistake is not continued either")
+        #expect(open.run == .done)
     }
 
     @Test func aWaitingReviewAnswerLeavesTheRowsSittingAsItIs() {
-        #expect(Self.waiting(1, joins: false).counting(Self.row(answered: 12, sitting: nil)).sitting == nil)
-        #expect(Self.waiting(1, joins: false).counting(Self.row(answered: 7, sitting: 7)).sitting?.answeredCount == 7)
+        let done = Self.waiting(1, joins: false).counting(Self.row(answered: 12, sitting: nil))
+        #expect(done.sitting == nil)
+        #expect(done.run == .done)
+        let midway = Self.waiting(1, joins: false).counting(Self.row(answered: 7, sitting: 7, run: .midway))
+        #expect(midway.sitting?.answeredCount == 7)
+        #expect(midway.run == .midway)
+        let restarted = Self.waiting(1, joins: false).counting(Self.row(answered: 7, sitting: nil, run: .restarted))
+        #expect(restarted.sitting == nil)
+        #expect(restarted.run == .restarted)
     }
 
     @Test func aRowWithNoWaitingAnswersKeepsItsSitting() {

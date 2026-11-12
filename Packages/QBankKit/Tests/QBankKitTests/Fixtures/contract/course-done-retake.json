@@ -1,0 +1,100 @@
+{
+  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
+  "request": {
+    "method": "GET",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "id": "c0000000-0000-4000-8000-000000000301",
+      "kind": "course",
+      "code": "NURS 101",
+      "title": "Invented Nursing Basics",
+      "archivedAt": null,
+      "semester": {
+        "id": "5e000000-0000-4000-8000-000000000301",
+        "number": 1,
+        "name": "Semester 1"
+      },
+      "questionCount": 3,
+      "examQuestionCount": 3,
+      "examTimeLimitSeconds": 270,
+      "weekCount": 1,
+      "folderCount": 1,
+      "termCount": 0,
+      "reviewCount": 0,
+      "answeredCount": 3,
+      "fullyRightCount": 3,
+      "points": 3,
+      "maxPoints": 3,
+      "weeks": [
+        {
+          "label": "Week 1",
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000301",
+              "title": "Week 1 - Set 1: Invented basics",
+              "description": "Invented practice questions.",
+              "questionCount": 3,
+              "importedAt": "2026-11-12T02:58:07.805Z",
+              "activeSince": "2026-11-12T02:58:07.805Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 3,
+              "fullyRightCount": 3,
+              "lastAnsweredAt": "2026-11-12T02:58:07.919Z",
+              "run": "done",
+              "sitting": null,
+              "questionIds": [
+                "00000000-0000-4000-8018-000000000002",
+                "00000000-0000-4000-8018-000000000003",
+                "00000000-0000-4000-8018-000000000004"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0
+        }
+      ],
+      "folders": [
+        {
+          "id": "00000000-0000-4000-8018-000000000001",
+          "name": "Week 1",
+          "examPageId": null,
+          "sortOrder": 1,
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000301",
+              "title": "Week 1 - Set 1: Invented basics",
+              "description": "Invented practice questions.",
+              "questionCount": 3,
+              "importedAt": "2026-11-12T02:58:07.805Z",
+              "activeSince": "2026-11-12T02:58:07.805Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 3,
+              "fullyRightCount": 3,
+              "lastAnsweredAt": "2026-11-12T02:58:07.919Z",
+              "run": "done",
+              "sitting": null,
+              "questionIds": [
+                "00000000-0000-4000-8018-000000000002",
+                "00000000-0000-4000-8018-000000000003",
+                "00000000-0000-4000-8018-000000000004"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      ],
+      "exams": []
+    }
+  }
+}

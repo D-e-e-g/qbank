@@ -918,11 +918,12 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         let earlier = Self.earlierProgress[id]
         let questionIDs = (0..<entry.questions).map { "\(id)-q\($0)" }
         // Once she answers here, the set's line counts her answers, as the server's does.
-        let (latest, overlapping, sitting) = state.withLock { state in
+        let (latest, overlapping, sitting, run) = state.withLock { state in
             (
                 questionIDs.compactMap { state.latest[$0] },
                 questionIDs.prefix(earlier?.answered ?? 0).compactMap { state.latest[$0]?.status },
-                Self.continuing(setID: id, questionIDs: questionIDs, state: state)
+                Self.continuing(setID: id, questionIDs: questionIDs, state: state),
+                Self.run(setID: id, questionIDs: questionIDs, state: state)
             )
         }
         var json: [String: Any] = [
@@ -931,6 +932,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             "status": entry.status, "canRestore": entry.canRestore, "questionIds": questionIDs,
             "importedByAgent": FakeAgents.importer(ofSet: id) ?? NSNull(),
             "sitting": sitting.map { ["answeredCount": $0.count] as Any } ?? NSNull(),
+            "run": run,
         ]
         if latest.isEmpty {
             json["answeredCount"] = earlier?.answered ?? 0
@@ -1121,6 +1123,7 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
             "kind": "practice",
             "questions": (0..<entry.questions).map { FakePracticeQuestions.question(setID: id, index: $0) },
             "sitting": sittingJSON(id, questionCount: entry.questions),
+            "run": state.withLock { Self.run(setID: id, questionIDs: (0..<entry.questions).map { "\(id)-q\($0)" }, state: $0) },
         ])
     }
 
@@ -1131,15 +1134,26 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         Set(questionIDs.prefix(earlierProgress[setID]?.answered ?? 0)).union(questionIDs.filter { latest[$0] != nil })
     }
 
+    /// Where she stands in the set, the `run` every row and the set itself send: New with nothing
+    /// answered, Done once every question has an answer even with a retake open, Midway with a
+    /// sitting to continue, and otherwise Restarted.
+    private static func run(setID: String, questionIDs: [String], state: State) -> String {
+        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
+        if answered.isEmpty { return "new" }
+        if answered.count == questionIDs.count { return "done" }
+        return continuing(setID: setID, questionIDs: questionIDs, state: state) == nil ? "restarted" : "midway"
+    }
+
     /// The questions answered in the sitting she would continue, in the set's order, or nil when
-    /// there is nothing to continue.
+    /// there is nothing to continue: once every question has an answer, even with a retake open.
     private static func continuing(setID: String, questionIDs: [String], state: State) -> [String]? {
         let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
+        if answered.count == questionIDs.count { return nil }
         let sitting = state.sittings[setID]
         let inSitting: Set<String>
         if let sitting, sitting.isOpen {
             inSitting = sitting.own.union(sitting.seeded.intersection(answered))
-        } else if answered.count == questionIDs.count || sitting?.endedByStartOver == true {
+        } else if sitting?.endedByStartOver == true {
             inSitting = []
         } else {
             inSitting = answered
