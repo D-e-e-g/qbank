@@ -170,7 +170,7 @@ final class ExamModel {
     /// End exam is offered while she is on a question, also with an answer on its way.
     var canEnd: Bool {
         switch running {
-        case .answering, .saving: true
+        case .answering, .saving, .endPending(_, _, isTrying: false): true
         case .ending, .endPending, nil: false
         }
     }

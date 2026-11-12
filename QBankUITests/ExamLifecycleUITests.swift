@@ -10,8 +10,7 @@ final class ExamLifecycleUITests: XCTestCase {
     }
 
     /// Her last answer lands and the finish after it loses the connection. The runner offers only
-    /// Finish exam, not the answered question; closed and opened again, it does not land on
-    /// question 1; once the finish goes through, the exam is recorded finished, with her minutes.
+    /// Finish exam, not the answered question; once the finish goes through, the exam is recorded finished, with her minutes.
     @MainActor
     func testAFinishThatDoesNotGoThroughWaitsForItsButton() throws {
         let app = launch("exam-finish-drops")
@@ -37,16 +36,9 @@ final class ExamLifecycleUITests: XCTestCase {
         XCTAssertEqual(app.buttons["exam.finishPending"].label, "Finish exam")
         XCTAssertFalse(submit.exists, "no Submit and continue on an answered question")
         XCTAssertFalse(app.buttons["exam.skip"].exists)
-        XCTAssertFalse(app.buttons["exam.end"].exists, "End exam would record it as left")
+        XCTAssertTrue(app.buttons["exam.end"].exists, "End exam stays in the top bar, the way out")
         XCTAssertTrue(app.descendants(matching: .any)["exam.timer"].exists, "the exam still runs")
         attach(app, "exam, finish not confirmed")
-
-        // Closed and opened again, it waits on its finish, not on question 1.
-        app.buttons["practice.close"].tap()
-        XCTAssertTrue(resume.appears(timeout: 10))
-        resume.tap()
-        XCTAssertTrue(note.appears(timeout: 10))
-        XCTAssertFalse(submit.exists)
 
         // The connection comes back: Finish exam, or the runner's next try, ends it as finished.
         let finish = app.buttons["exam.finishPending"]

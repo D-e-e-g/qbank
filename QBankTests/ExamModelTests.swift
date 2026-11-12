@@ -227,7 +227,7 @@ struct ExamModelTests {
         await model.end(.left)
         #expect(model.running == .endPending(.left, problem: Self.keepsTrying, isTrying: false))
         #expect(model.pendingEnd == .left)
-        #expect(!model.canEnd, "End exam gives way to the pending end's own button")
+        #expect(model.canEnd, "End exam stays offered while an end waits to be tried")
         #expect(model.pendingEndNote(.left) == "You chose to end the exam. End it to see your result.")
         server["POST /api/exams/e1/finish"] = .ok(StudyBodies.exam(ended: "left", result: StudyBodies.result()))
         await model.retryEnd()
@@ -381,7 +381,7 @@ struct ExamModelTests {
         #expect(model.pendingEnd == .finished)
         #expect(model.pendingEndNote(.finished) == "3 of 3 questions answered. Finish the exam to see your result.")
         #expect(!model.canSubmit)
-        #expect(!model.canEnd, "End exam would record a fully answered exam as left")
+        #expect(model.canEnd, "End exam stays offered while an end waits to be tried")
 
         // The guess box and the answer of a sent question stay as sent, and nothing goes again.
         let sent = model.items[2]
