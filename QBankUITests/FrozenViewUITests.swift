@@ -158,6 +158,20 @@ final class FrozenViewUITests: XCTestCase {
         XCTAssertTrue(note.disappears(timeout: 5), "the note stayed after \(control)", file: file, line: line)
     }
 
+    /// The frame once it holds still: a toolbar item can still be gliding into place just after a push.
+    @MainActor
+    private func settledFrame(of element: XCUIElement) -> CGRect {
+        var last = element.frame
+        let deadline = Date().addingTimeInterval(3)
+        while Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.3)
+            let now = element.frame
+            if now == last { return now }
+            last = now
+        }
+        return last
+    }
+
     /// Walks the screens the frozen view shares with the user's, keeping each screen's picture and
     /// where its controls sit.
     @MainActor
@@ -173,7 +187,7 @@ final class FrozenViewUITests: XCTestCase {
             for identifier in identifiers {
                 let element = app.descendants(matching: .any)[identifier].firstMatch
                 XCTAssertTrue(element.appears(timeout: 5), "\(name): no \(identifier) on \(screen)")
-                frames["\(screen) \(identifier)"] = element.frame
+                frames["\(screen) \(identifier)"] = settledFrame(of: element)
             }
             attach(app, "\(name) \(screen)")
         }
