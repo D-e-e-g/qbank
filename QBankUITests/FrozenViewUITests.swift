@@ -170,10 +170,12 @@ final class FrozenViewUITests: XCTestCase {
                 note.tap()
                 XCTAssertTrue(note.disappears(timeout: 5))
             }
-            for identifier in identifiers {
-                let element = app.descendants(matching: .any)[identifier].firstMatch
+            let elements = identifiers.map { app.descendants(matching: .any)[$0].firstMatch }
+            for (identifier, element) in zip(identifiers, elements) {
                 XCTAssertTrue(element.appears(timeout: 5), "\(name): no \(identifier) on \(screen)")
-                frames["\(screen) \(identifier)"] = element.frame
+            }
+            for (identifier, frame) in zip(identifiers, settledFrames(elements, on: "\(name) \(screen)")) {
+                frames["\(screen) \(identifier)"] = frame
             }
             attach(app, "\(name) \(screen)")
         }
@@ -219,6 +221,23 @@ final class FrozenViewUITests: XCTestCase {
         XCTAssertTrue(app.buttons["exam.end"].appears(timeout: 5))
         keep("Exam", ["exam.end", "practice.count", "exam.skip", "exam.submit"])
         app.terminate()
+        return frames
+    }
+
+    /// Where the controls sit once the screen is still: the same frames on two looks in a row. A
+    /// screen's + and More come into its toolbar once it is up and its course has loaded, and glide
+    /// into place for a moment after they first exist; a frame read then is neither view's layout.
+    @MainActor
+    private func settledFrames(_ elements: [XCUIElement], on screen: String) -> [CGRect] {
+        var frames = elements.map(\.frame)
+        let deadline = Date.now.addingTimeInterval(10)
+        while Date.now < deadline {
+            RunLoop.current.run(until: .now.addingTimeInterval(0.2))
+            let now = elements.map(\.frame)
+            if now == frames { return now }
+            frames = now
+        }
+        XCTFail("\(screen) never stood still")
         return frames
     }
 }
