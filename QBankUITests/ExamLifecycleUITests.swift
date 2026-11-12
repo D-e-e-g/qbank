@@ -43,11 +43,13 @@ final class ExamLifecycleUITests: XCTestCase {
         // The connection comes back: Finish exam, or the runner's next try, ends it as finished.
         let finish = app.buttons["exam.finishPending"]
         let title = app.staticTexts["examResult.title"]
-        let enabled = NSPredicate(format: "isEnabled == true")
-        if XCTWaiter.wait(for: [expectation(for: enabled, evaluatedWith: finish)], timeout: 20) == .completed, finish.exists {
-            finish.tap()
+        // Each tap asks at once; the runner's own tries are spaced further apart each time, so she taps again.
+        let deadline = Date().addingTimeInterval(60)
+        while !title.exists, Date() < deadline {
+            if finish.exists, finish.isEnabled { finish.tap() }
+            _ = title.waitForExistence(timeout: 1.5)
         }
-        XCTAssertTrue(title.appears(timeout: 40))
+        XCTAssertTrue(title.appears(timeout: 10))
         let points = app.staticTexts["examResult.points"].label
         XCTAssertFalse(points.contains("Ended early"), points)
         XCTAssertFalse(points.contains("Time ran out"), points)
