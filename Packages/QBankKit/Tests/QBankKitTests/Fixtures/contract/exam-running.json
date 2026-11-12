@@ -28,11 +28,11 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-12T18:05:17.822Z",
-      "endsAt": "2026-11-12T18:11:17.822Z",
+      "startedAt": "2026-11-12T22:58:43.576Z",
+      "endsAt": "2026-11-12T23:04:43.576Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-12T18:05:17.838Z",
+      "serverNow": "2026-11-12T22:58:43.593Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",
@@ -99,9 +99,39 @@
           "weekLabel": "Week 2"
         },
         {
+          "id": "00000000-0000-4000-8010-000000000011",
+          "publicId": "R2",
+          "position": 3,
+          "type": "single",
+          "topic": "Invented week 2 topic 2",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 2"
+        },
+        {
           "id": "00000000-0000-4000-8010-000000000013",
           "publicId": "E2",
-          "position": 3,
+          "position": 4,
           "type": "single",
           "topic": "Invented exam topic 2",
           "cj": "Analyze cues",
@@ -131,36 +161,6 @@
           "images": [],
           "terms": [],
           "weekLabel": "Week 1"
-        },
-        {
-          "id": "00000000-0000-4000-8010-000000000011",
-          "publicId": "R2",
-          "position": 4,
-          "type": "single",
-          "topic": "Invented week 2 topic 2",
-          "cj": "Analyze cues",
-          "stem": "An invented stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented rationale.",
-          "takeaway": "Invented takeaway.",
-          "body": {
-            "options": [
-              {
-                "t": "Right",
-                "ok": true
-              },
-              {
-                "t": "Wrong"
-              },
-              {
-                "t": "Also wrong"
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 2"
         }
       ],
       "answeredQuestionIds": [

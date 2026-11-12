@@ -13,8 +13,8 @@
     "body": {
       "examId": "e0000000-0000-4000-8000-000000000701",
       "courseId": "c0000000-0000-4000-8000-000000000701",
-      "startedAt": "2026-11-12T18:05:23.260Z",
-      "finishedAt": "2026-11-12T18:05:23.370Z",
+      "startedAt": "2026-11-12T22:58:48.014Z",
+      "finishedAt": "2026-11-12T22:58:48.035Z",
       "questionCount": 3,
       "answeredCount": 2,
       "changedCount": 1,
@@ -51,7 +51,7 @@
         "body": "Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days."
       },
       "refusal": null,
-      "confirm": "db1745d3a13be725",
+      "confirm": "a88b74b460df4146",
       "undoDays": 30
     }
   }

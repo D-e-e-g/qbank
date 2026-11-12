@@ -13,7 +13,7 @@
     "body": {
       "examId": "e0000000-0000-4000-8000-000000000702",
       "courseId": "c0000000-0000-4000-8000-000000000701",
-      "startedAt": "2026-11-12T18:05:23.857Z",
+      "startedAt": "2026-11-12T22:58:48.143Z",
       "finishedAt": null,
       "questionCount": 3,
       "answeredCount": 0,
@@ -51,7 +51,7 @@
         "body": "You answered none of its questions, so your progress stays as it is. You can undo this for 30 days."
       },
       "refusal": "This exam is still going. Finish or leave it, then delete it.",
-      "confirm": "7dccf2b523e3054b",
+      "confirm": "61072547b6a50479",
       "undoDays": 30
     }
   }

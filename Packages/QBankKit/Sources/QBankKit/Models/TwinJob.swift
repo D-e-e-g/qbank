@@ -158,7 +158,7 @@ public struct TwinJob: Decodable, Sendable, Hashable, Identifiable {
     }
 
     /// The exam on the twins, once the job is done: the body of `POST /api/courses/{id}/exams`.
-    /// `QBankClient.startExam(courseID:on:)` sends it exactly as the server wrote it.
+    /// `QBankClient.startExam(courseID:on:replaces:)` sends it as the server wrote it, with `replaces` added.
     public struct Exam: Codable, Sendable, Hashable {
         /// The body as the server sent it.
         public let body: JSONValue
@@ -174,6 +174,13 @@ public struct TwinJob: Decodable, Sendable, Hashable, Identifiable {
 
         public init(from decoder: any Decoder) throws {
             body = try JSONValue(from: decoder)
+        }
+
+        /// The body with `replaces` set: the running exam she agreed to end, or null.
+        func replacing(_ examID: String?) -> Exam {
+            guard case .object(var fields) = body else { return self }
+            fields["replaces"] = examID.map(JSONValue.string) ?? .null
+            return Exam(body: .object(fields))
         }
 
         public func encode(to encoder: any Encoder) throws {

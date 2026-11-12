@@ -84,11 +84,13 @@ async function studying(): Promise<World> {
   await world.record("review-practice", `${review}/practice`, 200, { query: { filter: "missed" } });
   await world.record("review-practice-one", `${review}/practice`, 200, { query: { question: id("Q1") } });
 
-  // An exam over every question, one answered, then finished; then one over her wrong questions.
+  // An exam over every question, one answered, then finished; then one over her wrong questions,
+  // and a start the running one refuses. The app always says which running exam a start ends:
+  // none (null) here.
   const exams = `/api/courses/${courseId}/exams`;
   await world.record("exam-setup", exams, 200);
-  await world.record("exam-start-no-wrong", exams, 400, { method: "POST", json: { folderIds: [week2], pool: "wrong" } });
-  const exam = await world.record("exam-start", exams, 201, { method: "POST", json: { folderIds: [week1, week2], pool: "all" } });
+  await world.record("exam-start-no-wrong", exams, 400, { method: "POST", json: { folderIds: [week2], pool: "wrong", replaces: null } });
+  const exam = await world.record("exam-start", exams, 201, { method: "POST", json: { folderIds: [week1, week2], pool: "all", replaces: null } });
   const examId = exam.str("id");
   await world.record("exam-setup-in-progress", exams, 200);
   const examQuestion = (publicId: string) => exam.find("questions", "publicId", publicId).str("id");
@@ -102,8 +104,9 @@ async function studying(): Promise<World> {
   await world.record("exam-finish", `/api/exams/${examId}/finish`, 200, { method: "POST", json: { reason: "finished" } });
   await world.record("exam-ended", `/api/exams/${examId}`, 200);
   await world.record("exam-attempt-after-end", "/api/attempts", 409, onExam("99999999-9999-4999-8999-999999999999", "R2", 0));
-  const wrong = await world.record("exam-start-wrong", exams, 201, { method: "POST", json: { folderIds: [week1], pool: "wrong" } });
+  const wrong = await world.record("exam-start-wrong", exams, 201, { method: "POST", json: { folderIds: [week1], pool: "wrong", replaces: null } });
   await world.record("exam-setup-after", exams, 200);
+  await world.record("exam-start-in-progress", exams, 409, { method: "POST", json: { folderIds: [week1, week2], pool: "all", replaces: null } });
 
   await world.record("place-put", "/api/me/place", 200, { method: "PUT", json: { courseId } });
   await world.record("place", "/api/me/place", 200);

@@ -4,7 +4,7 @@
     "method": "DELETE",
     "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
     "query": {
-      "confirm": "4dd0ce1a8df246f3"
+      "confirm": "bfc1f57940492e92"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

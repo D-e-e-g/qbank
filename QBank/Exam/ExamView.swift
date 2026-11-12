@@ -4,8 +4,9 @@ import SwiftUI
 
 /// An exam, full screen over the tabs: End exam, the question count over the weeks, the timer,
 /// one question at a time with Skip for now and Submit and continue, then the result. Swipe-down
-/// does not close it, so only End exam ends it. The timer keeps counting from the server's clock
-/// while she is away; coming back checks it with the server.
+/// does not close it, so only End exam ends it. An end the server has not confirmed leaves only
+/// its one button, which asks again. The timer keeps counting from the server's clock while she is
+/// away; coming back checks it with the server.
 struct ExamView: View {
     @State private var model: ExamModel
     @State private var asksToEnd = false
@@ -24,26 +25,28 @@ struct ExamView: View {
 
     var body: some View {
         Group {
-            if model.phase == .ended, let exam = model.exam, let result = exam.result {
+            if model.isEnded, let exam = model.exam, let result = exam.result {
                 ExamResultView(exam: exam, result: result, kind: kind, close: close)
                     .transition(.opacity)
             } else {
                 runner
             }
         }
-        .animation(QBankMotion.reveal, value: model.phase)
+        .animation(QBankMotion.reveal, value: model.isRunning)
+        .animation(QBankMotion.reveal, value: model.isEnded)
+        .animation(QBankMotion.reveal, value: model.pendingEnd)
         .qbankScreenBackground()
         .interactiveDismissDisabled()
-        .frozenRunnerNote(frozen, clearing: isRunning ? RunnerNote.footerClearance : 0)
+        .frozenRunnerNote(frozen, clearing: model.isRunning ? RunnerNote.footerClearance : 0)
         .task { await model.load() }
         .task { await model.runClock() }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { await model.resync() }
         }
-        .onChange(of: model.phase) {
+        .onChange(of: model.canEnd) {
             // Time ran out or the exam ended elsewhere while she was asked: nothing is left to end.
-            if model.phase != .running { asksToEnd = false }
+            if !model.canEnd { asksToEnd = false }
         }
         .confirmSheet(
             isPresented: $asksToEnd,
@@ -57,11 +60,14 @@ struct ExamView: View {
         }
     }
 
-    private var isRunning: Bool { model.phase == .running }
+    /// On a question: not loading, ended, or left with only an end to confirm.
+    private var isOnQuestion: Bool {
+        model.isRunning && model.pendingEnd == nil
+    }
 
     private var runner: some View {
-        RunnerShell(count: isRunning ? model.countText : "", title: model.title, progress: model.progress) {
-            if isRunning {
+        RunnerShell(count: isOnQuestion ? model.countText : "", title: model.title, progress: model.progress) {
+            if model.isRunning {
                 Button("End exam") {
                     // Only End exam leaves a running exam, so the frozen view's way out is here:
                     // back to the screen under it with the note, and the exam goes on as it was.
@@ -72,13 +78,13 @@ struct ExamView: View {
                     }
                 }
                     .buttonStyle(.qbank(.plain, size: .small))
-                    .disabled(model.isEnding)
+                    .disabled(!model.canEnd)
                     .accessibilityIdentifier("exam.end")
             } else {
                 RunnerCloseButton { close(.done) }
             }
         } trailing: {
-            if isRunning {
+            if model.isRunning {
                 QBankTimerPill(secondsRemaining: Int(model.secondsLeft.rounded(.up)), compact: true)
                     // Inset as far as End exam's label is on the other side: the small button's 12pt.
                     .padding(.trailing, QBankButtonStyle.Size.small.horizontalPadding)
@@ -89,13 +95,23 @@ struct ExamView: View {
         } content: {
             content
         } footer: {
-            if isRunning, model.item != nil {
+            if let reason = model.pendingEnd {
+                Button {
+                    Task { await model.retryEnd() }
+                } label: {
+                    ButtonLabel(text: reason == .left ? "End exam" : "Finish exam", isBusy: model.isBusy)
+                }
+                .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                .disabled(model.isBusy)
+                .answersWhenFrozen(frozen)
+                .accessibilityIdentifier("exam.finishPending")
+            } else if model.isRunning, model.item != nil {
                 HStack(spacing: QBankSpacing.space3) {
                     Button("Skip for now") {
                         Task { await model.skip() }
                     }
                     .buttonStyle(.qbank(.quiet, size: .large, fullWidth: true))
-                    .disabled(model.isBusy)
+                    .disabled(!model.isAnswering)
                     .accessibilityIdentifier("exam.skip")
                     Button(model.isLastPending ? "Finish exam" : "Submit and continue") {
                         Task { await model.submit() }
@@ -116,6 +132,8 @@ struct ExamView: View {
             RunnerNote(text: "Loading the exam.")
         case .failed(let problem):
             RunnerNote(text: problem)
+        case .running(.endPending(let reason, let problem, _)):
+            PendingEndPage(note: model.pendingEndNote(reason), problem: problem)
         case .running, .ended:
             if let question = model.question, let item = model.item {
                 ExamQuestionPage(model: model, question: question, item: item)
@@ -147,7 +165,7 @@ private struct ExamQuestionPage: View {
                 SkippedNotice(
                     left: model.skippedLeft,
                     isFirst: model.wrappedTo == model.index,
-                    isBusy: model.isBusy
+                    isBusy: !model.isAnswering
                 ) {
                     Task { await model.end(.finished) }
                 }
@@ -174,7 +192,7 @@ private struct ExamQuestionPage: View {
                 layout: item.layout,
                 draft: item.draft,
                 revealed: false,
-                isLocked: model.isBusy,
+                isLocked: !model.isAnswering,
                 struck: item.struck,
                 onStrike: { model.toggleStrike($0) }
             ) { draft in
@@ -182,11 +200,31 @@ private struct ExamQuestionPage: View {
             }
             if item.draft != .unsupported {
                 GuessToggle(isOn: Binding(get: { item.guessed }, set: { model.setGuessed($0) }))
-                    .disabled(model.isBusy)
+                    .disabled(!model.isAnswering)
             }
         }
         .onAppear {
             scroll.scroll(to: RunnerScroll.top, anchor: .top)
+        }
+    }
+}
+
+/// An end the server has not confirmed: why the last try failed, and what is left to do. The
+/// footer's one button asks again.
+private struct PendingEndPage: View {
+    let note: String
+    let problem: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            if let problem {
+                ProblemText(text: problem)
+            }
+            Text(note)
+                .qbankFont(.body)
+                .foregroundStyle(.qbank(.text1))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("exam.pendingEnd")
         }
     }
 }

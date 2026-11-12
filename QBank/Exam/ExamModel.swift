@@ -23,8 +23,24 @@ final class ExamModel {
     enum Phase: Equatable {
         case loading
         case failed(String)
-        case running
+        case running(Running)
         case ended
+    }
+
+    /// What the runner is doing while the exam runs: one value, so an answer on its way, an end
+    /// asked for and an end not yet confirmed never mix.
+    enum Running: Equatable {
+        /// On a question. `problem` says why her last Submit did not go through.
+        case answering(problem: String?)
+        /// Her answer on its way; `retrying` after a dropped connection, under "No connection".
+        case saving(retrying: Bool)
+        /// The end asked of the server from a question, not answered yet.
+        case ending(ExamEndReason)
+        /// The end she asked for, or the one an exam with nothing left to answer needs, not
+        /// confirmed by the server yet. Its one button asks again, and the clock does too, further
+        /// apart each time. `isTrying` while a request is on its way; `problem` says why the last
+        /// one failed.
+        case endPending(ExamEndReason, problem: String?, isTrying: Bool)
     }
 
     let examID: String
@@ -36,10 +52,6 @@ final class ExamModel {
     private(set) var isReturning = false
     /// The skipped question the runner wrapped back to, for "This is the first one."
     private(set) var wrappedTo: Int?
-    private(set) var isSaving = false
-    private(set) var isWaiting = false
-    private(set) var isEnding = false
-    private(set) var problem: String?
     /// Seconds left, from the server's clock.
     private(set) var secondsLeft: TimeInterval = 0
 
@@ -52,6 +64,9 @@ final class ExamModel {
     /// moment its answer arrived, so a wrong phone clock does not change her time.
     private var deadline: ContinuousClock.Instant?
     private var sending: Task<Void, Never>?
+    /// While an end is pending: when the clock asks again, and how long it waits after that.
+    private var nextEndTry: ContinuousClock.Instant?
+    private var endRetryDelay = ExamModel.firstRetryDelay
 
     init(
         app: AppModel,
@@ -103,8 +118,61 @@ final class ExamModel {
         questions.isEmpty ? 0 : Double(submittedCount) / Double(questions.count)
     }
 
+    /// What the runner is doing, while the exam runs.
+    var running: Running? {
+        if case .running(let running) = phase { return running }
+        return nil
+    }
+
+    var isRunning: Bool {
+        running != nil
+    }
+
+    var isEnded: Bool {
+        phase == .ended
+    }
+
+    /// On a question, with nothing on its way.
+    var isAnswering: Bool {
+        if case .answering = running { return true }
+        return false
+    }
+
+    /// An answer or an end on its way: the question waits.
     var isBusy: Bool {
-        isSaving || isEnding
+        switch running {
+        case .saving, .ending: true
+        case .endPending(_, _, let isTrying): isTrying
+        case .answering, nil: false
+        }
+    }
+
+    /// A dropped connection is holding her answer: "No connection".
+    var isWaiting: Bool {
+        running == .saving(retrying: true)
+    }
+
+    /// Why her last Submit, or the last ask to end, did not go through.
+    var problem: String? {
+        switch running {
+        case .answering(let problem): problem
+        case .endPending(_, let problem, _): problem
+        case .saving, .ending, nil: nil
+        }
+    }
+
+    /// The end she asked for that the server has not confirmed yet: the runner offers only that.
+    var pendingEnd: ExamEndReason? {
+        if case .endPending(let reason, _, _) = running { return reason }
+        return nil
+    }
+
+    /// End exam is offered while she is on a question, also with an answer on its way.
+    var canEnd: Bool {
+        switch running {
+        case .answering, .saving, .endPending(_, _, isTrying: false): true
+        case .ending, .endPending, nil: false
+        }
     }
 
     /// The last question still open: its button finishes the exam.
@@ -112,8 +180,9 @@ final class ExamModel {
         pendingCount == 1 && item?.submitted == false
     }
 
+    /// Her open answer can go: she is on a question not yet submitted, with an answer.
     var canSubmit: Bool {
-        !isBusy && item?.draft.response != nil
+        isAnswering && item?.submitted == false && item?.draft.response != nil
     }
 
     /// Skipped questions left once she is working back through them.
@@ -124,6 +193,19 @@ final class ExamModel {
     /// The question in the end sheet, in the web's words.
     var endMessage: String {
         "The \(Wording.count(submittedCount, "question")) you answered will be scored. Skipped and unreached questions score 0 and stay out of Review."
+    }
+
+    /// What is left to do while an end is not confirmed: "3 of 3 questions answered. Finish the
+    /// exam to see your result."
+    func pendingEndNote(_ reason: ExamEndReason) -> String {
+        switch reason {
+        case .finished:
+            "\(submittedCount) of \(Wording.count(questions.count, "question")) answered. Finish the exam to see your result."
+        case .left:
+            "You chose to end the exam. End it to see your result."
+        case .timeout:
+            "Time is up. Finish the exam to see your result."
+        }
     }
 
     // MARK: Loading
@@ -140,11 +222,15 @@ final class ExamModel {
     }
 
     /// Reads the exam again when she comes back to the app: its time is checked with the server,
-    /// and an exam whose time ran out while she was away arrives ended. Her open answers stay.
+    /// and an exam whose time ran out, or whose end went through while she was away, arrives
+    /// ended. Her open answers stay.
     func resync() async {
-        guard phase == .running, !isEnding else { return }
+        switch running {
+        case .answering, .saving, .endPending(_, _, isTrying: false): break
+        case .ending, .endPending, nil: return
+        }
         guard let fresh = try? await app.client.exam(id: examID) else { return }
-        guard phase == .running else { return }
+        guard isRunning else { return }
         if fresh.isRunning {
             exam = fresh
             startClock(fresh)
@@ -162,7 +248,7 @@ final class ExamModel {
             return
         }
         guard items.isEmpty else {
-            phase = .running
+            if !isRunning { phase = .running(.answering(problem: nil)) }
             startClock(loaded)
             return
         }
@@ -176,8 +262,16 @@ final class ExamModel {
                 submitted: answered.contains(question.id)
             )
         }
-        index = nextStop(from: -1)?.index ?? 0
-        phase = .running
+        if let stop = nextStop(from: -1) {
+            index = stop.index
+            phase = .running(.answering(problem: nil))
+        } else {
+            // Every answer is in, but the end never went through: finishing is all that is left,
+            // and the clock asks for it at once.
+            index = 0
+            phase = .running(.endPending(.finished, problem: nil, isTrying: false))
+            nextEndTry = clock()
+        }
         startClock(loaded)
         if app.frozen.isOn { app.frozen.showNote() }
     }
@@ -189,21 +283,29 @@ final class ExamModel {
         tick()
     }
 
-    /// Counts the time down and ends the exam when it runs out. A failed end is tried again on
-    /// the next tick.
+    /// Counts the time down. When it runs out the exam ends; an end not confirmed yet is asked
+    /// again, further apart each time, and as a timeout once the time is out.
     func tick() {
-        guard phase == .running, let deadline else { return }
-        let left = clock().duration(to: deadline)
+        guard let running, let deadline else { return }
+        let now = clock()
+        let left = now.duration(to: deadline)
         secondsLeft = max(0, Double(left.components.seconds) + Double(left.components.attoseconds) / 1e18)
         // In the frozen view the exam is hers: it ends when her app next reads it.
-        if secondsLeft <= 0, !isEnding, !app.frozen.isOn {
-            Task { await end(.timeout) }
+        guard !app.frozen.isOn else { return }
+        switch running {
+        case .answering, .saving:
+            if secondsLeft <= 0 { beginEnd(.timeout) }
+        case .endPending(let reason, _, let isTrying):
+            guard !isTrying, let nextEndTry, now >= nextEndTry else { return }
+            beginEnd(secondsLeft <= 0 ? .timeout : reason)
+        case .ending:
+            break
         }
     }
 
     /// Ticks once a second while the exam runs.
     func runClock() async {
-        while !Task.isCancelled, phase == .running || phase == .loading {
+        while !Task.isCancelled, isRunning || phase == .loading {
             tick()
             do {
                 try await sleep(.seconds(1))
@@ -215,9 +317,15 @@ final class ExamModel {
 
     // MARK: Answering
 
+    /// Whether her work on the question on screen can still change: she is on it, and it has not
+    /// been sent.
+    private var isEditable: Bool {
+        isAnswering && items.indices.contains(index) && !items[index].submitted
+    }
+
     /// Replaces her open answer. A struck choice cannot be picked until she restores it.
     func update(_ draft: AnswerDraft) {
-        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index), !items[index].submitted else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         guard items[index].struck.isDisjoint(with: draft.picked) else { return }
         items[index].draft = draft
     }
@@ -225,12 +333,13 @@ final class ExamModel {
     /// Strikes out a choice she has ruled out, or restores a struck one. Strikes stay with the
     /// question while she moves between questions, end with the exam, and are never sent.
     func toggleStrike(_ option: Int) {
-        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index), !items[index].submitted else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         items[index].draft = items[index].draft.striking(option, in: &items[index].struck)
     }
 
+    /// The guess flag goes with her answer, so it cannot change once the answer is sent.
     func setGuessed(_ guessed: Bool) {
-        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index) else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         items[index].guessed = guessed
     }
 
@@ -244,11 +353,10 @@ final class ExamModel {
             // Catches an answer the question cannot take before it leaves the phone.
             _ = try Scoring.score(question.body, response: response)
         } catch {
-            problem = error.message
+            phase = .running(.answering(problem: error.message))
             return
         }
-        problem = nil
-        isSaving = true
+        phase = .running(.saving(retrying: false))
         let at = index
         let submission = AttemptSubmission(
             clientAttemptID: item.clientAttemptID,
@@ -263,11 +371,9 @@ final class ExamModel {
         await task.value
     }
 
+    /// Sends one answer until the server has it, while the runner is saving it. An end asked for
+    /// meanwhile drops it.
     private func send(_ submission: AttemptSubmission, at position: Int) async {
-        defer {
-            isSaving = false
-            isWaiting = false
-        }
         var delay = Self.firstRetryDelay
         while true {
             do {
@@ -275,19 +381,22 @@ final class ExamModel {
                 markSubmitted(position)
                 return
             } catch where Self.isTransient(error) {
-                isWaiting = true
+                guard isSaving else { return }
+                phase = .running(.saving(retrying: true))
             } catch {
-                if error == .cancelled || isEnding { return }
+                guard isSaving, error != .cancelled else { return }
                 if error.serverCode == .alreadyAnswered {
                     markSubmitted(position)
                 } else if error.serverCode == .examFinished {
                     if let ended = try? await app.client.exam(id: examID) {
-                        show(ended)
-                    } else {
-                        problem = Wording.problem(error)
+                        if isSaving { show(ended) }
+                    } else if isSaving {
+                        phase = .running(.answering(problem: Wording.problem(error)))
                     }
-                } else if !app.handle(error) {
-                    problem = Wording.problem(error)
+                } else if app.handle(error) {
+                    phase = .running(.answering(problem: nil))
+                } else {
+                    phase = .running(.answering(problem: Wording.problem(error)))
                 }
                 return
             }
@@ -296,13 +405,18 @@ final class ExamModel {
             } catch {
                 return
             }
-            if Task.isCancelled || isEnding || phase != .running { return }
+            if Task.isCancelled || !isSaving { return }
             delay = min(delay * 2, Self.longestRetryDelay)
         }
     }
 
+    private var isSaving: Bool {
+        if case .saving = running { return true }
+        return false
+    }
+
     private func markSubmitted(_ position: Int) {
-        guard items.indices.contains(position), phase == .running else { return }
+        guard isSaving, items.indices.contains(position) else { return }
         items[position].submitted = true
         items[position].skipped = false
         go(from: position)
@@ -310,20 +424,21 @@ final class ExamModel {
 
     /// Leaves the question open for later and moves on.
     func skip() async {
-        guard !app.frozen.refuses(), !isBusy, items.indices.contains(index) else { return }
-        problem = nil
+        guard !app.frozen.refuses(), isAnswering, items.indices.contains(index) else { return }
         items[index].skipped = true
         go(from: index)
     }
 
+    /// Moves to the next question still open, or, with none left, finishes the exam.
     private func go(from position: Int) {
         guard let stop = nextStop(from: position) else {
-            Task { await end(.finished) }
+            beginEnd(.finished)
             return
         }
         if stop.wrapped { isReturning = true }
         wrappedTo = stop.wrapped ? stop.index : nil
         index = stop.index
+        phase = .running(.answering(problem: nil))
     }
 
     /// The next question not yet submitted, wrapping back to skipped ones.
@@ -357,26 +472,68 @@ final class ExamModel {
 
     // MARK: Ending
 
-    /// Ends the exam and shows the result. Her open answer, if one is still sending, is dropped,
-    /// as on the web: the end scores what the server has.
+    /// Ends the exam and shows the result: End exam, Finish exam beside the skipped questions, or
+    /// the one button of an end not confirmed yet. Her open answer, if one is still sending, is
+    /// dropped, as on the web: the end scores what the server has.
     func end(_ reason: ExamEndReason) async {
-        guard !app.frozen.refuses(), phase == .running, !isEnding else { return }
-        isEnding = true
+        guard !app.frozen.refuses() else { return }
+        switch running {
+        case .answering, .saving, .endPending(_, _, isTrying: false):
+            await beginEnd(reason).value
+        case .ending, .endPending, nil:
+            return
+        }
+    }
+
+    /// Asks the end of the server once more, at once: the button of an end not confirmed yet.
+    func retryEnd() async {
+        guard let pendingEnd else { return }
+        await end(secondsLeft <= 0 ? .timeout : pendingEnd)
+    }
+
+    /// Moves the runner to the end on its way and asks the server for it. The request runs apart
+    /// from the answer it may cancel.
+    @discardableResult
+    private func beginEnd(_ reason: ExamEndReason) -> Task<Void, Never> {
+        if case .endPending(_, let problem, _) = running {
+            phase = .running(.endPending(reason, problem: problem, isTrying: true))
+        } else {
+            phase = .running(.ending(reason))
+        }
         sending?.cancel()
-        problem = nil
+        return Task { await finish(reason) }
+    }
+
+    private func finish(_ reason: ExamEndReason) async {
         do {
             let ended = try await app.client.finishExam(id: examID, reason: reason)
-            isEnding = false
+            endRetryDelay = Self.firstRetryDelay
+            nextEndTry = nil
             show(ended)
         } catch {
-            isEnding = false
-            if app.handle(error) { return }
-            // The server's own refusal says what happened; anything else is the connection, as on the web.
-            if case .server(let server) = error {
-                problem = server.message
+            guard isRunning else { return }
+            if app.handle(error) {
+                pend(reason, problem: nil, retry: false)
+            } else if Self.isTransient(error) {
+                pend(reason, problem: "Could not end the exam. Check the connection; QBank keeps trying.", retry: true)
+            } else if case .server(let server) = error {
+                // The server's own refusal says what happened, and asking again on a timer would not change it.
+                pend(reason, problem: server.message, retry: false)
             } else {
-                problem = "Could not end the exam. Check the connection and try again."
+                pend(reason, problem: "Could not end the exam. Check the connection and try again.", retry: false)
             }
+        }
+    }
+
+    /// The end is not confirmed: the runner offers only it, and with `retry` the clock asks again
+    /// after the current wait, which doubles up to the longest.
+    private func pend(_ reason: ExamEndReason, problem: String?, retry: Bool) {
+        phase = .running(.endPending(reason, problem: problem, isTrying: false))
+        if retry {
+            nextEndTry = clock().advanced(by: endRetryDelay)
+            endRetryDelay = min(endRetryDelay * 2, Self.longestRetryDelay)
+        } else {
+            nextEndTry = nil
         }
     }
 }

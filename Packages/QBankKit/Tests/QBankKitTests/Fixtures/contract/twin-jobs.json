@@ -59,9 +59,9 @@
           "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-12 13:05:33.807-05",
-          "updatedAt": "2026-11-12 13:05:33.812-05",
-          "finishedAt": "2026-11-12 13:05:33.812-05",
+          "createdAt": "2026-11-12 17:58:53.291-05",
+          "updatedAt": "2026-11-12 17:58:53.294-05",
+          "finishedAt": "2026-11-12 17:58:53.294-05",
           "failure": "The model did not answer.",
           "warnings": [],
           "usage": {
@@ -119,9 +119,9 @@
           "note": "QBank writes exam twins of 3 questions in Week 6.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-12 13:05:33.764-05",
-          "updatedAt": "2026-11-12 13:05:33.775-05",
-          "finishedAt": "2026-11-12 13:05:33.775-05",
+          "createdAt": "2026-11-12 17:58:53.268-05",
+          "updatedAt": "2026-11-12 17:58:53.272-05",
+          "finishedAt": "2026-11-12 17:58:53.272-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -211,9 +211,9 @@
             ],
             "pool": "wrong"
           },
-          "createdAt": "2026-11-12 13:05:33.669-05",
-          "updatedAt": "2026-11-12 13:05:33.709-05",
-          "finishedAt": "2026-11-12 13:05:33.709-05",
+          "createdAt": "2026-11-12 17:58:53.2-05",
+          "updatedAt": "2026-11-12 17:58:53.228-05",
+          "finishedAt": "2026-11-12 17:58:53.228-05",
           "failure": null,
           "warnings": [],
           "usage": {

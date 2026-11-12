@@ -29,8 +29,13 @@ final class ExamSetupModel {
     private(set) var setup: ExamSetup?
     /// The course, for its exam pages and her order of their folders.
     private(set) var detail: CourseDetail?
-    /// When the setup arrived, for the running exam's minutes left.
+    /// When the setup arrived, or the server named her running exam, for its minutes left.
     private(set) var loadedAt = Date.now
+    /// Her running exam, as last read. Starting an exam ends it, so Start waits until this is
+    /// known and asks first while one runs.
+    private(set) var running: RunningExam = .unknown
+    /// "Start a new exam?" is open, about `running`'s exam.
+    var asksToReplace = false
     /// The ticked folders, by id.
     private(set) var ticked: Set<String> = []
     var wrongOnly = false
@@ -273,6 +278,7 @@ final class ExamSetupModel {
             setup = loaded
             setupPick = pick
             loadedAt = now()
+            running = RunningExam(loaded.inProgress)
             problem = nil
             if !hasTicked {
                 hasTicked = true
@@ -307,15 +313,48 @@ final class ExamSetupModel {
         return try? await app.load(.course(id)) { () async throws(QBankError) in try await app.client.course(id: id) }.value
     }
 
-    /// Starts the exam over the ticked folders. A running exam of hers ends first, which she was
-    /// asked about. Returns the new exam to open, or nil after a refusal, said in her words.
+    /// Start exam: the folders are ticked and whether it ends a running exam is known.
+    var canStart: Bool {
+        !picked.isEmpty && running.isKnown && !isStarting && !isTwinning && !needsConnection
+    }
+
+    /// Start exam: asks first while an exam of hers runs, otherwise starts it. Returns the new
+    /// exam to open, or nil.
     func start() async -> Exam? {
-        guard isStudent, !picked.isEmpty, !isStarting, !needsConnection else { return nil }
+        guard isStudent, canStart else { return nil }
+        if running.exam != nil {
+            asksToReplace = true
+            return nil
+        }
+        return await start(replacing: nil)
+    }
+
+    /// Starts the exam once she agreed that her running exam ends.
+    func startReplacing() async -> Exam? {
+        guard isStudent, canStart, let exam = running.exam else { return nil }
+        return await start(replacing: exam.id)
+    }
+
+    /// Starts the exam over the ticked folders, with the running exam she agreed to end. One
+    /// running that she was not asked about, such as one started on another device since the last
+    /// read, starts nothing and asks her now. Returns the new exam to open, or nil after a refusal,
+    /// said in her words.
+    private func start(replacing: String?) async -> Exam? {
         isStarting = true
         defer { isStarting = false }
         problem = nil
         do {
-            return try await app.client.startExam(courseID: course.id, folderIDs: picked.map(\.id), pool: wrongOnly ? .wrong : .all)
+            switch try await app.client.startExam(courseID: course.id, folderIDs: picked.map(\.id), pool: wrongOnly ? .wrong : .all, replaces: replacing) {
+            case .started(let exam):
+                // The new exam runs now; the setup is read again once its screen closes.
+                running = .unknown
+                return exam
+            case .examInProgress(let other):
+                running = .running(other)
+                loadedAt = now()
+                asksToReplace = true
+                return nil
+            }
         } catch {
             report(error)
             return nil

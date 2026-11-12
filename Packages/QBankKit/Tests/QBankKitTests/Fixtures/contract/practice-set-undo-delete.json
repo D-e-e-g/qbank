@@ -21,13 +21,13 @@
           "title": "Heart A",
           "description": "Invented set.",
           "questionCount": 4,
-          "importedAt": "2026-11-12T18:05:22.812Z",
-          "activeSince": "2026-11-12T18:05:22.812Z",
+          "importedAt": "2026-11-12T22:58:47.903Z",
+          "activeSince": "2026-11-12T22:58:47.903Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 3,
           "fullyRightCount": 2,
-          "lastAnsweredAt": "2026-11-12T18:05:23.062Z",
+          "lastAnsweredAt": "2026-11-12T22:58:47.963Z",
           "run": "midway",
           "sitting": {
             "answeredCount": 3
@@ -45,13 +45,13 @@
           "title": "Heart B",
           "description": "Invented set.",
           "questionCount": 3,
-          "importedAt": "2026-11-12T18:05:22.831Z",
-          "activeSince": "2026-11-12T18:05:22.831Z",
+          "importedAt": "2026-11-12T22:58:47.910Z",
+          "activeSince": "2026-11-12T22:58:47.910Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 1,
           "fullyRightCount": 0,
-          "lastAnsweredAt": "2026-11-12T18:05:23.090Z",
+          "lastAnsweredAt": "2026-11-12T22:58:47.974Z",
           "run": "midway",
           "sitting": {
             "answeredCount": 1

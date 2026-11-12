@@ -4,7 +4,7 @@
     "method": "DELETE",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702",
     "query": {
-      "confirm": "bf43ddacc9daa4b8"
+      "confirm": "4e8d10b95aef055e"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

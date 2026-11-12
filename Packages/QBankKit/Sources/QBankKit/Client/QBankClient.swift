@@ -566,14 +566,32 @@ public struct QBankClient: Sendable {
     /// Starts an exam over the ticked folders, sized and timed by the server's rules and drawn from
     /// their sets in proportion to each folder's size. With `.wrong`, only the questions she last
     /// answered not fully right; a ticked folder with none is refused with 400 `no_wrong_questions`.
-    public func startExam(courseID: String, folderIDs: [String], pool: ExamPool = .all) async throws(QBankError) -> Exam {
-        try await send(Request(.post, "/api/courses/\(courseID)/exams", body: StartExamRequest(folderIds: folderIDs, pool: pool)))
+    ///
+    /// `replaces` is the running exam she agreed to end, or nil when the app knows of none. When
+    /// another exam is running, nothing starts or ends, and the answer is `.examInProgress` with it.
+    public func startExam(courseID: String, folderIDs: [String], pool: ExamPool = .all, replaces: String?) async throws(QBankError) -> ExamStart {
+        try await startExam(Request(.post, "/api/courses/\(courseID)/exams", body: StartExamRequest(folderIds: folderIDs, pool: pool, replaces: replaces)))
     }
 
     /// Starts the exam a finished twin job names, on its twins, sending its body as the server
-    /// wrote it. A running exam of hers ends first, as with `startExam(courseID:folderIDs:pool:)`.
-    public func startExam(courseID: String, on twins: TwinJob.Exam) async throws(QBankError) -> Exam {
-        try await send(Request(.post, "/api/courses/\(courseID)/exams", body: twins))
+    /// wrote it with `replaces` added, as with `startExam(courseID:folderIDs:pool:replaces:)`.
+    public func startExam(courseID: String, on twins: TwinJob.Exam, replaces: String?) async throws(QBankError) -> ExamStart {
+        try await startExam(Request(.post, "/api/courses/\(courseID)/exams", body: twins.replacing(replaces)))
+    }
+
+    private func startExam(_ call: Request) async throws(QBankError) -> ExamStart {
+        let (data, status) = try await exchange(call, accepting: [409])
+        guard status == 409 else {
+            return .started(try decode(Exam.self, from: data, status: status, for: call))
+        }
+        if let refusal = try? QBankJSON.decoder.decode(ExamInProgressRefusal.self, from: data), refusal.error == ServerError.Code.examInProgress.rawValue {
+            return .examInProgress(refusal.inProgress)
+        }
+        // Any other conflict is a refusal like every route's.
+        guard let body = try? QBankJSON.decoder.decode(ErrorBody.self, from: data) else {
+            throw .unexpectedResponse(status: status, detail: String(decoding: data.prefix(200), as: UTF8.self))
+        }
+        throw .server(ServerError(status: status, code: .init(rawValue: body.error), message: body.message, retryAfterSeconds: body.retryAfterSeconds))
     }
 
     /// One exam. An exam whose time ran out is ended first.
