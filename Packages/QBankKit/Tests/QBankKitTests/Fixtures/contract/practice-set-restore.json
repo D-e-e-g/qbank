@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "POST",
     "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",
@@ -15,13 +15,14 @@
       "title": "Week 1 - Set 1: Invented basics",
       "description": "Invented practice questions.",
       "questionCount": 2,
-      "importedAt": "2026-11-06T22:19:54.251Z",
-      "activeSince": "2026-11-06T22:19:54.261Z",
+      "importedAt": "2026-11-12T03:19:09.576Z",
+      "activeSince": "2026-11-12T03:19:09.586Z",
       "status": "restored",
       "canRestore": true,
       "answeredCount": 0,
       "fullyRightCount": 0,
       "lastAnsweredAt": null,
+      "run": "new",
       "sitting": null,
       "questionIds": [
         "00000000-0000-4000-8011-000000000006",

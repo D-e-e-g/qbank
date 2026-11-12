@@ -23,7 +23,6 @@ struct ExamSetupView: View {
     @State private var model: ExamSetupModel
     @State private var running: ExamRoute?
     @State private var exit: ExamExit?
-    @State private var asksToReplace = false
     /// The past exam she asked to delete, while its warning is open.
     @State private var deleting: DeleteRequest?
     /// The pick whose plan is taking a moment, so the last plan is dimmed rather than read as its.
@@ -49,7 +48,7 @@ struct ExamSetupView: View {
                     if let problem = model.problem {
                         ProblemText(text: problem)
                     }
-                    if let exam = model.setup?.inProgress {
+                    if let exam = model.running.exam {
                         runningExam(exam)
                     }
                 }
@@ -79,14 +78,14 @@ struct ExamSetupView: View {
             if !Task.isCancelled { slowPick = model.pick }
         }
         .confirmSheet(
-            isPresented: $asksToReplace,
+            isPresented: $model.asksToReplace,
             title: "Start a new exam?",
             message: "The exam in progress ends now. What you answered on it is scored, and the rest score 0.",
             confirm: "Start new exam",
             isDestructive: false,
             identifier: "exam.replaceSheet"
         ) {
-            start()
+            open { await model.startReplacing() }
         }
         .fullScreenCover(item: $running, onDismiss: closed) { route in
             ExamView(app: app, examID: route.id, kind: model.course.kind) { how in
@@ -237,15 +236,11 @@ struct ExamSetupView: View {
                     .foregroundStyle(.qbank(.text3))
                 Button("Start exam") {
                     app.frozen.perform {
-                        if model.setup?.inProgress != nil {
-                            asksToReplace = true
-                        } else {
-                            start()
-                        }
+                        open { await model.start() }
                     }
                 }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
-                .disabled(model.picked.isEmpty || model.isStarting || model.isTwinning || model.needsConnection)
+                .disabled(!model.canStart)
                 .answersWhenFrozen(app.frozen)
                 .padding(.top, QBankSpacing.space1)
                 .accessibilityIdentifier("exam.start")
@@ -331,9 +326,10 @@ struct ExamSetupView: View {
         model.isPlanUpdating && slowPick == model.pick
     }
 
-    private func start() {
+    /// Opens the exam a start gave, full screen.
+    private func open(_ start: @escaping () async -> Exam?) {
         Task {
-            if let exam = await model.start() {
+            if let exam = await start() {
                 running = ExamRoute(id: exam.id)
             }
         }

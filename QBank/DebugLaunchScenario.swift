@@ -79,6 +79,10 @@ nonisolated enum DebugLaunchScenario {
         /// As `signedIn`, with an exam over Mental Health's Weeks 1-2 left in progress, so deleting
         /// what it asks is refused for now.
         case examInProgress = "exam-in-progress"
+        /// As `examInProgress`, with every question of the exam but its last answered, and the
+        /// connection lost for the first six requests to end it: her last answer lands, and the
+        /// finish after it does not, for a while.
+        case examFinishDrops = "exam-finish-drops"
         /// `FakeQBankServer.maker` is signed in: the server lets her make questions, with one set
         /// being written and the questions copied from two photos waiting for her check.
         case maker = "maker"
@@ -151,6 +155,14 @@ nonisolated enum DebugLaunchScenario {
         case .signedIn, .examInProgress:
             return model(
                 server: FakeQBankServer(signedIn: true, examInProgress: scenario == .examInProgress, answersFile: answersFile),
+                session: FakeQBankServer.storedStudentSession(),
+                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .examFinishDrops:
+            return model(
+                server: FakeQBankServer(
+                    signedIn: true, examInProgress: true, examLastQuestionOpen: true, droppedFinishes: 6, answersFile: answersFile
+                ),
                 session: FakeQBankServer.storedStudentSession(),
                 defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )

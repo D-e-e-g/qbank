@@ -45,6 +45,28 @@ struct DebugLaunchScenarioTests {
         #expect(setup.exams.count == 3, "her past exams as in signed-in")
     }
 
+    /// Her last answer lands, and the finish after it loses the connection six times: the runner
+    /// waits on the finish, then the exam is recorded finished, not left or timed out.
+    @Test func examFinishDropsScenarioLosesTheFinishAfterTheLastAnswer() async throws {
+        let app = try #require(Self.launch("exam-finish-drops"))
+        let running = try #require(try await app.client.examSetup(courseID: FakeQBankServer.mentalHealthID).inProgress)
+        let exam = try await app.client.exam(id: running.id)
+        #expect(exam.answeredQuestionIDs == exam.questions.dropLast().map(\.id))
+        let last = try #require(exam.questions.last)
+        guard case .priority = last.body else {
+            Issue.record("the last question is \(last.body), not the priority one the UI test answers")
+            return
+        }
+        for _ in 0..<6 {
+            await #expect(throws: QBankError.transport(.networkConnectionLost)) {
+                try await app.client.finishExam(id: exam.id, reason: .finished)
+            }
+        }
+        let ended = try await app.client.finishExam(id: exam.id, reason: .finished)
+        #expect(ended.endReason == .finished)
+        #expect(ended.result?.minutesUsed == 5)
+    }
+
     /// Through the fake server: a wrong password deletes nothing, the right one deletes her account,
     /// and then it neither works on this phone nor signs in again.
     @Test func signedInScenarioDeletesHerAccountWithHerPassword() async throws {
@@ -523,7 +545,7 @@ struct DebugLaunchScenarioTests {
 
         // A folder with nothing wrong is refused, as the server words it.
         let wrongOnly = try await #require(throws: QBankError.self) {
-            try await app.client.startExam(courseID: course.id, folderIDs: [FakeStudy.week3], pool: .wrong)
+            try await app.client.startExam(courseID: course.id, folderIDs: [FakeStudy.week3], pool: .wrong, replaces: nil)
         }
         #expect(wrongOnly.serverCode == .noWrongQuestions)
         #expect(Wording.problem(wrongOnly) == "Week 3 has no wrong questions. Untick it, or turn off Wrong questions only.")

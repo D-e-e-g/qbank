@@ -18,7 +18,6 @@ struct TwinJobView: View {
     @State private var running: ExamRoute?
     @State private var exit: ExamExit?
     @State private var asksToStop = false
-    @State private var asksToReplace = false
     @Environment(HomeNavigator.self) private var navigator: HomeNavigator?
 
     init(app: AppModel, route: TwinJobRoute) {
@@ -58,6 +57,8 @@ struct TwinJobView: View {
         .screenColumnTitle()
         // Follows the job again whenever it goes back to work, and once it has ended, reads it once more.
         .task(id: model.isWorking) { await model.follow() }
+        // Once the twins are ready, and again after an exam: whether an exam of hers is running.
+        .task(id: model.needsRunningExam) { await model.readRunningExam() }
         .refreshable { await model.load() }
         .confirmSheet(
             isPresented: $asksToStop,
@@ -70,14 +71,14 @@ struct TwinJobView: View {
             Task { await model.stop() }
         }
         .confirmSheet(
-            isPresented: $asksToReplace,
+            isPresented: $model.asksToReplace,
             title: "Start a new exam?",
             message: "The exam in progress ends now. What you answered on it is scored, and the rest score 0.",
             confirm: "Start new exam",
             isDestructive: false,
             identifier: "twins.replaceSheet"
         ) {
-            start()
+            open { await model.startReplacing() }
         }
         .fullScreenCover(item: $running, onDismiss: closed) { route in
             ExamView(app: app, examID: route.id, kind: model.course.kind) { how in
@@ -113,21 +114,17 @@ struct TwinJobView: View {
                         .foregroundStyle(.qbank(.text2))
                         .accessibilityIdentifier("twins.stopped")
                 }
-                if let problem = model.actionProblem {
+                if let problem = model.actionProblem ?? model.runningProblem {
                     ProblemText(text: problem)
                 }
                 if model.isDone {
                     Button {
-                        if model.inProgress != nil {
-                            asksToReplace = true
-                        } else {
-                            start()
-                        }
+                        open { await model.start() }
                     } label: {
                         ButtonLabel(text: "Start exam on the twins", isBusy: model.isStarting)
                     }
                     .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
-                    .disabled(job.exam == nil || model.isStarting || model.needsConnection)
+                    .disabled(!model.canStart)
                     .padding(.top, QBankSpacing.space1)
                     .accessibilityIdentifier("twins.start")
                 } else if Twins.isRunning(job) {
@@ -182,9 +179,10 @@ struct TwinJobView: View {
         }
     }
 
-    private func start() {
+    /// Opens the exam a start gave, full screen.
+    private func open(_ start: @escaping () async -> Exam?) {
         Task {
-            if let exam = await model.startExam() {
+            if let exam = await start() {
                 running = ExamRoute(id: exam.id)
             }
         }
@@ -192,7 +190,7 @@ struct TwinJobView: View {
 
     /// After the exam's full screen closed: she may have asked for Review or the course.
     private func closed() {
-        Task { await model.examClosed() }
+        model.examClosed()
         switch exit {
         case .openReview:
             navigator?.open(StudyRoute.review(model.course))

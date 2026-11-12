@@ -121,6 +121,8 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     /// Where her answers and sittings outlast the app, for a test that kills it and comes back.
     private let answersFile: URL?
     private let offline = Mutex(false)
+    /// Requests to end an exam still to lose the connection.
+    private let finishesToDrop: Mutex<Int>
     /// Review, Terms, exams and the course's exams.
     private let study: FakeStudy
     /// Make questions, for `maker` only.
@@ -145,16 +147,24 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     ///   - makerIsSetUp: False: the server has no Claude key, so making questions is not set up yet.
     ///   - place: The course she used last, or nil for none.
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
+    ///   - examLastQuestionOpen: That exam has every question but its last answered.
+    ///   - droppedFinishes: How many requests to end an exam lose the connection before one reaches
+    ///     the server, as when the signal goes right after her last answer.
     ///   - matrixMultiSet: Weeks 1-3 holds one matrixmulti question instead of the mixed set.
     ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
-        place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, matrixMultiSet: Bool = false,
+        place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, examLastQuestionOpen: Bool = false,
+        droppedFinishes: Int = 0, matrixMultiSet: Bool = false,
         sataAllCorrectSet: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
         self.answersFile = answersFile
-        study = FakeStudy(now: now, examInProgress: examInProgress, matrixMultiSet: matrixMultiSet, sataAllCorrectSet: sataAllCorrectSet)
+        study = FakeStudy(
+            now: now, examInProgress: examInProgress, examLastQuestionOpen: examLastQuestionOpen, matrixMultiSet: matrixMultiSet,
+            sataAllCorrectSet: sataAllCorrectSet
+        )
+        finishesToDrop = Mutex(droppedFinishes)
         questionMaker = FakeQuestionMaker(allowed: [Self.maker.email], isSetUp: makerIsSetUp, seededFor: Self.maker.email, now: now)
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
         agents = FakeAgents(studentEmail: Self.student.email, now: now)
@@ -212,6 +222,14 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         if isOffline { throw URLError(.notConnectedToInternet) }
         let url = request.url ?? URL(string: "https://fake.invalid")!
+        if request.httpMethod == "POST", url.path().hasPrefix("/api/exams/"), url.path().hasSuffix("/finish"),
+           finishesToDrop.withLock({ left in
+               guard left > 0 else { return false }
+               left -= 1
+               return true
+           }) {
+            throw URLError(.networkConnectionLost)
+        }
         // A repeated parameter, such as exam setup's folderIds, keeps every value, joined by commas:
         // no id has one.
         let query = (URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [])

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -106,9 +106,10 @@
           "terms": []
         }
       ],
+      "run": "midway",
       "sitting": {
         "id": "00000000-0000-4000-8018-000000000005",
-        "startedAt": "2026-11-06T22:19:54.950Z",
+        "startedAt": "2026-11-12T03:19:10.273Z",
         "answeredQuestionIds": [
           "00000000-0000-4000-8018-000000000002",
           "00000000-0000-4000-8018-000000000003"
@@ -121,7 +122,7 @@
             "points": 1,
             "maxPoints": 1,
             "guessed": false,
-            "answeredAt": "2026-11-06T22:19:54.930Z",
+            "answeredAt": "2026-11-12T03:19:10.255Z",
             "inReview": false,
             "label": "Correct",
             "pointsText": null,
@@ -146,7 +147,7 @@
             "points": 1,
             "maxPoints": 1,
             "guessed": false,
-            "answeredAt": "2026-11-06T22:19:54.950Z",
+            "answeredAt": "2026-11-12T03:19:10.273Z",
             "inReview": false,
             "label": "Correct",
             "pointsText": null,

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
@@ -9,7 +9,8 @@
       "folderIds": [
         "f0000000-0000-4000-8000-000000000501"
       ],
-      "pool": "wrong"
+      "pool": "wrong",
+      "replaces": null
     }
   },
   "response": {
@@ -29,25 +30,25 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-06T22:20:02.788Z",
-      "endsAt": "2026-11-06T22:24:32.788Z",
+      "startedAt": "2026-11-12T03:19:18.869Z",
+      "endsAt": "2026-11-12T03:23:48.869Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-06T22:20:02.788Z",
+      "serverNow": "2026-11-12T03:19:18.869Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8021-000000000009",
-          "publicId": "XB02",
+          "publicId": "XA01",
           "position": 1,
           "type": "sata",
-          "topic": "Harder B 2",
+          "topic": "Harder A 1",
           "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
           "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder B 2.",
+          "rationale": "Invented twin rationale for Harder A 1.",
           "takeaway": "Report changes.",
           "body": {
-            "twinOf": "B02",
+            "twinOf": "A01",
             "options": [
               {
                 "t": "Heart rate of 124",
@@ -80,17 +81,17 @@
         },
         {
           "id": "00000000-0000-4000-8021-000000000010",
-          "publicId": "XA01",
+          "publicId": "XB02",
           "position": 2,
           "type": "sata",
-          "topic": "Harder A 1",
+          "topic": "Harder B 2",
           "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+          "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
           "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder A 1.",
+          "rationale": "Invented twin rationale for Harder B 2.",
           "takeaway": "Report changes.",
           "body": {
-            "twinOf": "A01",
+            "twinOf": "B02",
             "options": [
               {
                 "t": "Heart rate of 124",

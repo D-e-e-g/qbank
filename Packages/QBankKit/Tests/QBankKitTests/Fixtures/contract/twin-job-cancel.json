@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "POST",
     "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000502/cancel",
@@ -57,9 +57,9 @@
       "note": "QBank writes exam twins of 3 questions in Week 6.",
       "sets": [],
       "exam": null,
-      "createdAt": "2026-11-06 17:20:02.81-05",
-      "updatedAt": "2026-11-06 17:20:02.815-05",
-      "finishedAt": "2026-11-06 17:20:02.815-05",
+      "createdAt": "2026-11-11 22:19:18.895-05",
+      "updatedAt": "2026-11-11 22:19:18.899-05",
+      "finishedAt": "2026-11-11 22:19:18.899-05",
       "failure": null,
       "warnings": [],
       "usage": {

@@ -89,7 +89,7 @@ struct DeletionTests {
     @Test func aTickedSetTheServerRefusesForNowHoldsTheOthersBack() async throws {
         let app = Self.app()
         let course = await Self.course(app)
-        _ = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week2])
+        _ = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week2], replaces: nil)
         let sets = try #require(course.folder(FakeStudy.week2)?.sets)
         let model = DeleteSetsModel(app: app, sets: sets)
         await model.load()
@@ -348,7 +348,7 @@ struct DeletionTests {
     /// An exam in progress asks the folder's questions: the warning says so, and Delete waits.
     @Test func aDeleteTheServerRefusesForNowSaysWhyAndWaits() async throws {
         let app = Self.app()
-        _ = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week2])
+        _ = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week2], replaces: nil)
         let model = DeleteModel(app: app, target: .folder(id: FakeStudy.week2, name: "Week 2"))
         await model.load()
         #expect(model.warning?.refusal == "An exam in progress asks questions from Week 2. Finish or leave that exam first.")
@@ -361,7 +361,7 @@ struct DeletionTests {
 
     @Test func anExamStillGoingCannotBeDeleted() async throws {
         let app = Self.app()
-        let running = try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week1])
+        let running = try #require(try await app.client.startExam(courseID: FakeQBankServer.mentalHealthID, folderIDs: [FakeStudy.week1], replaces: nil).started)
         let model = DeleteModel(app: app, target: .exam(id: running.id))
         await model.load()
         #expect(model.warning?.refusal == "This exam is still going. Finish or leave it, then delete it.")

@@ -92,9 +92,11 @@ struct TwinJobTests {
         ExamSetupModel(app: app, route: ExamSetupRoute(course: course))
     }
 
+    /// The job's screen once the job has ended and, when it is done, her running exam is read.
     static func follow(_ app: AppModel, _ job: TwinJob) async -> TwinJobModel {
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: course, jobID: job.id, seed: job), pollInterval: .zero)
         await model.follow()
+        await model.readRunningExam()
         return model
     }
 
@@ -190,10 +192,11 @@ struct TwinJobTests {
             "Week 2 · 2 questions · Twins of Psychosocial Assessment and Safety Screening",
         ])
         #expect(job.exam?.folderIDs == [FakeStudy.week2])
-        #expect(model.inProgress == nil)
+        #expect(model.running == .none)
+        #expect(model.canStart)
 
         // The exam her job names starts on exactly the twins.
-        let exam = try #require(await model.startExam())
+        let exam = try #require(await model.start())
         #expect(exam.pool == .wrong)
         #expect(exam.folderIDs == [FakeStudy.week2])
         #expect(exam.questions.count == 7)
@@ -211,12 +214,73 @@ struct TwinJobTests {
 
     @Test func herRunningExamIsAskedAboutBeforeTheExamOnTheTwins() async throws {
         let app = MakeQuestionsTests.app()
-        _ = try await app.client.startExam(courseID: Self.course.id, folderIDs: [FakeStudy.week1])
+        let running = try #require(try await app.client.startExam(courseID: Self.course.id, folderIDs: [FakeStudy.week1], replaces: nil).started)
         let setup = try await Self.week2(app)
         let started = try #require(await setup.writeTwins())
         let model = await Self.follow(app, started)
         #expect(model.isDone)
-        #expect(model.inProgress?.folderIDs == [FakeStudy.week1])
+        #expect(model.running.exam?.folderIDs == [FakeStudy.week1])
+        #expect(await model.start() == nil)
+        #expect(model.asksToReplace)
+        model.asksToReplace = false
+
+        // She agrees: the running exam ends as left, and the exam on the twins starts.
+        let exam = try #require(await model.startReplacing())
+        #expect(exam.folderIDs == [FakeStudy.week2])
+        let after = try await app.client.examSetup(courseID: Self.course.id)
+        #expect(after.inProgress?.id == exam.id)
+        #expect(after.exams.first { $0.id == running.id }?.endReason == .left)
+    }
+
+    /// An exam started elsewhere after the twin page read none: the server refuses, nothing ends,
+    /// and the question comes up about that exam.
+    @Test func anExamStartedElsewhereMeanwhileIsAskedAboutNotEnded() async throws {
+        let app = MakeQuestionsTests.app()
+        let setup = try await Self.week2(app)
+        let started = try #require(await setup.writeTwins())
+        let model = await Self.follow(app, started)
+        #expect(model.running == .none)
+        let elsewhere = try #require(try await app.client.startExam(courseID: Self.course.id, folderIDs: [FakeStudy.week1], replaces: nil).started)
+
+        #expect(await model.start() == nil)
+        #expect(model.actionProblem == nil)
+        #expect(model.asksToReplace)
+        #expect(model.running.exam?.id == elsewhere.id)
+        #expect(try await app.client.examSetup(courseID: Self.course.id).inProgress?.id == elsewhere.id, "still running")
+
+        let exam = try #require(await model.startReplacing())
+        #expect(try await app.client.examSetup(courseID: Self.course.id).inProgress?.id == exam.id)
+    }
+
+    /// The audit's sequence: the read of her running exam fails, and Start used to count that as
+    /// none and end her exam unasked. Start stays off, the read is tried again, and then it asks.
+    @Test func startStaysOffUntilTheRunningExamIsRead() async throws {
+        let running = StudyBodies.summary("run", weeks: ["Week 1"], folders: ["f1"], finished: false)
+        let server = StubServer(["GET /api/twin-jobs/j1": .ok(Self.jobBody(status: "done"))])
+        server.script("GET /api/courses/c1/exams", [.offline])
+        server["GET /api/courses/c1/exams"] = .ok(StudyBodies.setup(folders: StudyBodies.threePools, inProgress: running))
+        let (app, _) = TestApp.make(server, account: .student())
+        let twins = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
+        await twins.follow()
+        #expect(twins.isDone)
+        #expect(twins.running == .unknown)
+        #expect(twins.needsRunningExam)
+        #expect(!twins.canStart, "Start waits for the read")
+        #expect(await twins.start() == nil)
+        #expect(!server.calls.contains("POST /api/courses/c1/exams"))
+
+        await twins.readRunningExam()
+        #expect(server.calls.filter { $0 == "GET /api/courses/c1/exams" }.count == 2, "the failed read is tried again")
+        #expect(twins.running.exam?.id == "run")
+        #expect(twins.runningProblem == nil)
+        #expect(twins.canStart)
+        #expect(await twins.start() == nil)
+        #expect(twins.asksToReplace)
+        #expect(!server.calls.contains("POST /api/courses/c1/exams"))
+
+        // After an exam closes, Start waits for a new read.
+        twins.examClosed()
+        #expect(!twins.canStart)
     }
 
     @Test func aRefusalIsSaidUntilSheChangesTheFoldersOrThePool() async throws {
@@ -276,7 +340,8 @@ struct TwinJobTests {
         #expect(model.job?.status == .failed)
         #expect(model.job?.failure == "These exam twins were not written. Start them again.")
         #expect(!model.isDone)
-        #expect(await model.startExam() == nil)
+        #expect(!model.needsRunningExam)
+        #expect(await model.start() == nil)
         #expect(server.calls == ["GET /api/twin-jobs/j1"])
     }
 
@@ -297,6 +362,7 @@ struct TwinJobTests {
         let (app, _) = TestApp.make(server, account: .student())
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
+        await model.readRunningExam()
         #expect(model.isDone)
         #expect(model.problem == nil)
         #expect(server.calls == ["GET /api/twin-jobs/j1", "GET /api/twin-jobs/j1", "GET /api/courses/c1/exams"])
@@ -312,10 +378,13 @@ struct TwinJobTests {
         let (app, _) = TestApp.make(server, account: .student())
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
-        #expect(await model.startExam()?.id == "e1")
+        await model.readRunningExam()
+        #expect(await model.start()?.id == "e1")
         let body = try #require(server.requests.last?.httpBody)
         let sent = try JSONDecoder().decode(JSONValue.self, from: body)
-        #expect(sent == .object(["folderIds": .array([.string("f2"), .string("f1")]), "pool": .string("wrong"), "later": .bool(true)]))
+        #expect(sent == .object([
+            "folderIds": .array([.string("f2"), .string("f1")]), "pool": .string("wrong"), "later": .bool(true), "replaces": .null,
+        ]))
     }
 
     // MARK: Bodies

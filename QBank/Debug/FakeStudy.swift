@@ -143,9 +143,10 @@ nonisolated final class FakeStudy: Sendable {
 
     /// - Parameters:
     ///   - examInProgress: She left an exam over Weeks 1-2 going, started five minutes ago.
+    ///   - examLastQuestionOpen: That exam has every question but its last answered.
     ///   - matrixMultiSet: Weeks 1-3 holds the one-question check-all table instead of the mixed set.
     ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
-    init(now: Date, examInProgress: Bool = false, matrixMultiSet: Bool = false, sataAllCorrectSet: Bool = false) {
+    init(now: Date, examInProgress: Bool = false, examLastQuestionOpen: Bool = false, matrixMultiSet: Bool = false, sataAllCorrectSet: Bool = false) {
         self.now = now
         let day: TimeInterval = 86_400
         let mentalHealth = FakeQBankServer.mentalHealthID, fundamentals = FakeQBankServer.fundamentalsID
@@ -185,11 +186,26 @@ nonisolated final class FakeStudy: Sendable {
             ]
         ))
         seedPastExams()
-        if examInProgress {
-            _ = begin(
-                courseID: FakeQBankServer.mentalHealthID, folderIDs: [Self.week1, Self.week2], pool: .all,
-                at: now.addingTimeInterval(-5 * 60), endingRunning: false
-            )
+        if examInProgress, case .success(let id) = begin(
+            courseID: FakeQBankServer.mentalHealthID, folderIDs: [Self.week1, Self.week2], pool: .all,
+            at: now.addingTimeInterval(-5 * 60), endingRunning: false
+        ), examLastQuestionOpen {
+            answerAllButLast(id)
+        }
+    }
+
+    /// Answers every question of the exam but its last, each right, as she would have.
+    private func answerAllButLast(_ id: String) {
+        state.withLock { state in
+            guard let index = state.exams.firstIndex(where: { $0.id == id }) else { return }
+            for (position, question) in state.exams[index].questions.dropLast().enumerated() {
+                guard let body = Self.question(question.id)?.body, let response = FakeAnswers.right(body),
+                      let score = try? Scoring.score(body, response: response) else { continue }
+                state.exams[index].answers[question.id] = Answer(
+                    clientAttemptID: "seed-\(id)-\(position)", status: score.status, points: score.points, maxPoints: score.maxPoints,
+                    guessed: false, response: response, shuffle: nil
+                )
+            }
         }
     }
 
@@ -575,23 +591,42 @@ nonisolated final class FakeStudy: Sendable {
         ]
     }
 
+    /// Starts an exam. `replaces`, when sent, says which running exam she agreed to end, or null
+    /// for none; without it, as from an app before it, any running exam ends unasked.
     private func start(_ courseID: String, body: [String: Any]) -> Reply {
         let folderIDs = body["folderIds"] as? [String] ?? []
         let pool = (body["pool"] as? String).flatMap(ExamPool.init(rawValue:)) ?? .all
-        switch begin(courseID: courseID, folderIDs: folderIDs, pool: pool, at: .now, endingRunning: true) {
+        let replaces: Replaces = body.keys.contains("replaces") ? .exam(body["replaces"] as? String) : .unsaid
+        switch begin(courseID: courseID, folderIDs: folderIDs, pool: pool, at: .now, endingRunning: true, replaces: replaces) {
         case .success(let id): return examView(id, status: 201)
-        case .failure(let refusal): return Self.failure(400, refusal.code, refusal.message)
+        case .failure(let refusal):
+            guard let runningID = refusal.runningID, let running = state.withLock({ state in state.exams.first { $0.id == runningID }.map { summaryJSON($0, in: state) } }) else {
+                return Self.failure(400, refusal.code, refusal.message)
+            }
+            return (409, ["error": refusal.code, "message": refusal.message, "inProgress": running])
         }
     }
 
     struct Refusal: Error {
         let code: String
         let message: String
+        /// The running exam a start did not agree to end, for its 409.
+        var runningID: String?
+    }
+
+    /// What a start says about her running exam, as the server's `replaces`.
+    enum Replaces {
+        /// Nothing, as an app from before `replaces`: a running exam ends unasked.
+        case unsaid
+        /// The running exam she agreed to end, or nil when the app knows of none running.
+        case exam(String?)
     }
 
     /// Draws an exam as the server does, folder by folder in her order and without shuffling, so a
     /// test knows which question comes when.
-    private func begin(courseID: String, folderIDs: [String], pool: ExamPool, at startedAt: Date, endingRunning: Bool) -> Result<String, Refusal> {
+    private func begin(
+        courseID: String, folderIDs: [String], pool: ExamPool, at startedAt: Date, endingRunning: Bool, replaces: Replaces = .unsaid
+    ) -> Result<String, Refusal> {
         let (course, latest, twinOf, sizes) = state.withLock { (Self.ordered($0, courseID: courseID), $0.latest, $0.twinOf, $0.sizes) }
         guard !folderIDs.isEmpty else { return .failure(Refusal(code: "no_folders", message: "Tick at least one folder.")) }
         if folderIDs.contains(where: { id in !course.contains { $0.id == id } }) {
@@ -616,6 +651,16 @@ nonisolated final class FakeStudy: Sendable {
             draw(folder).prefix(row.drawn).map { (id: $0, folder: folder.id, name: folder.name) }
         }
         let practiceWeeks = course.contains { !$0.bank.isEmpty } ? ticked.filter(\.bank.isEmpty).map(\.name) : nil
+        // A running exam of hers she did not agree to end refuses the start, and nothing changes. An
+        // exam whose time has run out is not running: it ends as a timeout whatever `replaces` says.
+        if case .exam(let agreed) = replaces, let unconfirmed = state.withLock({ state in
+            state.exams.filter { $0.finishedAt == nil && startedAt < $0.endsAt && $0.id != agreed }.max { $0.startedAt < $1.startedAt }
+        }) {
+            return .failure(Refusal(
+                code: "exam_in_progress", message: "An exam is still running. Starting a new one ends it, so confirm that first.",
+                runningID: unconfirmed.id
+            ))
+        }
         // A running exam of hers ends first, as if she had left it.
         if endingRunning {
             for exam in state.withLock({ $0.exams.filter { $0.finishedAt == nil } }) {

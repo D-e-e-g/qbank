@@ -410,7 +410,10 @@ struct ContentContractTests {
             return
         }
         #expect(original.removeValue(forKey: "sitting") == .null)
-        #expect(try JSONDecoder().decode(JSONValue.self, from: QBankJSON.encoder.encode(set)) == .object(original))
+        let copy = try JSONDecoder().decode(JSONValue.self, from: QBankJSON.encoder.encode(set))
+        // A kit that does not read the set's run yet leaves it out of the copy; one that does keeps it.
+        if copy["run"] == nil { original.removeValue(forKey: "run") }
+        #expect(copy == .object(original))
     }
 }
 
@@ -636,8 +639,12 @@ struct ExamContractTests {
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
         let folders = folderIDs(of: fixture)
-        let exam = try await client.startExam(courseID: courseID(of: fixture), folderIDs: folders, pool: .all)
+        let started = try await client.startExam(courseID: courseID(of: fixture), folderIDs: folders, pool: .all, replaces: nil)
         try expectRequest(transport.requests.first, matches: fixture)
+        guard case .started(let exam) = started else {
+            Issue.record("no exam started: \(started)")
+            return
+        }
         #expect(folders.count == 2, "Week 1 and Week 2")
         #expect(exam.isRunning)
         #expect(exam.result == nil)
@@ -651,10 +658,36 @@ struct ExamContractTests {
         let fixture = try Fixture.load("exam-start-wrong")
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
-        let exam = try await client.startExam(courseID: courseID(of: fixture), folderIDs: folderIDs(of: fixture), pool: .wrong)
+        let started = try await client.startExam(courseID: courseID(of: fixture), folderIDs: folderIDs(of: fixture), pool: .wrong, replaces: nil)
         try expectRequest(transport.requests.first, matches: fixture)
+        guard case .started(let exam) = started else {
+            Issue.record("no exam started: \(started)")
+            return
+        }
         #expect(exam.pool == .wrong)
         #expect(exam.weeks == ["Week 1"])
+    }
+
+    /// A start that says no exam is running while one is: nothing starts, and the answer names the
+    /// running exam as Exam setup lists it, for the question the app asks.
+    @Test func startOverARunningExamItDidNotNameIsRefusedWithThatExam() async throws {
+        let fixture = try Fixture.load("exam-start-in-progress")
+        let transport = try FixtureTransport([fixture])
+        let (client, _) = TestClient.make(transport)
+        let answer = try await client.startExam(courseID: courseID(of: fixture), folderIDs: folderIDs(of: fixture), pool: .all, replaces: nil)
+        try expectRequest(transport.requests.first, matches: fixture)
+        let running = try #require(try Fixture.load("exam-setup-after").decodeBody(ExamSetup.self).inProgress)
+        #expect(answer == .examInProgress(running))
+    }
+
+    /// The field is always sent: null says no exam is known to run, which an absent field does not.
+    @Test func startSaysWhichRunningExamItEnds() async throws {
+        let transport = try FixtureTransport("exam-start", "exam-start")
+        let (client, _) = TestClient.make(transport)
+        _ = try await client.startExam(courseID: "c1", folderIDs: ["f1"], replaces: nil)
+        _ = try await client.startExam(courseID: "c1", folderIDs: ["f1"], replaces: "e1")
+        let bodies = try transport.requests.map { try JSONDecoder().decode(JSONValue.self, from: #require($0.httpBody)) }
+        #expect(bodies.map { $0["replaces"] } == [.null, .string("e1")])
     }
 
     @Test func weekWithoutWrongQuestionsIsRefused() async throws {
@@ -662,7 +695,7 @@ struct ExamContractTests {
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
         let error = await #expect(throws: QBankError.self) {
-            try await client.startExam(courseID: courseID(of: fixture), folderIDs: folderIDs(of: fixture), pool: .wrong)
+            try await client.startExam(courseID: courseID(of: fixture), folderIDs: folderIDs(of: fixture), pool: .wrong, replaces: nil)
         }
         #expect(error?.serverCode == .noWrongQuestions)
         try expectRequest(transport.requests.first, matches: fixture)
