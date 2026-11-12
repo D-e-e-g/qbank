@@ -52,7 +52,7 @@ struct ExamResultView: View {
 
     private var head: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Kicker("Exam result · \(Wording.folders(exam.weeks))\(exam.pool == .wrong ? " · Wrong questions only" : "")")
+            Kicker("Exam result · \(Wording.folders(exam.weeks))\(exam.pool == .wrong ? " · Wrong questions only" : "")", color: .text2)
             Text("\(result.fullyRight) of \(result.questionCount) fully right")
                 .qbankFont(.largeTitle)
                 .foregroundStyle(.qbank(.text1))
@@ -63,6 +63,13 @@ struct ExamResultView: View {
                 .monospacedDigit()
                 .foregroundStyle(.qbank(.text2))
                 .accessibilityIdentifier("examResult.points")
+            ResultSplitBar(segments: [
+                .init(count: result.fullyRight, color: .chartCorrect),
+                .init(count: result.partial, color: .chartPartial),
+                .init(count: result.missed, color: .chartWrong),
+                .init(count: result.unanswered, color: .separatorStrong),
+            ])
+            .padding(.vertical, QBankSpacing.space2)
             if let practiceWeeks = exam.practiceWeeks, !practiceWeeks.isEmpty {
                 Text(Wording.practiceFolders(practiceWeeks, before: false))
                     .qbankFont(.subheadline)
@@ -86,24 +93,29 @@ struct ExamResultView: View {
 
     private var stats: some View {
         HStack(spacing: QBankSpacing.space2) {
-            stat(result.partial, "Partly right")
-            stat(result.missed, "Missed")
-            stat(result.guessed, "Guessed")
-            stat(result.unanswered, "Not answered")
+            stat(result.partial, "Partly right", .chartPartial)
+            stat(result.missed, "Missed", .chartWrong)
+            stat(result.guessed, "Guessed", .guess)
+            stat(result.unanswered, "Not answered", .separatorStrong)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Score summary")
     }
 
-    private func stat(_ value: Int, _ label: String) -> some View {
+    private func stat(_ value: Int, _ label: String, _ dot: QBankColorToken) -> some View {
         VStack(spacing: 2) {
             Text("\(value)")
                 .qbankFont(.title3, weight: .bold)
                 .monospacedDigit()
                 .foregroundStyle(.qbank(.text1))
+            Circle()
+                .fill(.qbank(dot))
+                .frame(width: 8, height: 8)
+                .padding(.vertical, 2)
+                .accessibilityHidden(true)
             Text(label)
                 .qbankFont(.caption1)
-                .foregroundStyle(.qbank(.text3))
+                .foregroundStyle(.qbank(.text2))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -162,27 +174,7 @@ struct ExamResultView: View {
             section(title) {
                 QBankListGroup {
                     ForEach(rows) { row in
-                        HStack(spacing: QBankSpacing.space4) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(row.label)
-                                    .qbankFont(.subheadline, weight: .medium)
-                                    .foregroundStyle(.qbank(.text1))
-                                if let detail = detail(row.label) {
-                                    Text(detail)
-                                        .qbankFont(.footnote)
-                                        .foregroundStyle(.qbank(.text3))
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            Text("\(row.right) of \(row.total)")
-                                .qbankFont(.subheadline, weight: .semibold)
-                                .monospacedDigit()
-                                .foregroundStyle(.qbank(.text2))
-                        }
-                        .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
-                        .padding(.vertical, QBankSpacing.rowPaddingVertical)
-                        .frame(minHeight: QBankSpacing.rowMin)
-                        .accessibilityElement(children: .combine)
+                        ResultStepRow(label: row.label, detail: detail(row.label), right: row.right, total: row.total)
                     }
                 }
             }

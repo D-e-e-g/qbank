@@ -40,6 +40,8 @@ final class AppModel {
     @ObservationIgnored private var palettePicks = 0
     /// The optional Face ID lock, turned on in Settings and kept on this phone.
     let lock: AppLock
+    /// The highlighter pen's color, kept on this phone.
+    let highlighter: HighlighterStore
     /// Whether the phone has a network path.
     let connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
@@ -56,6 +58,7 @@ final class AppModel {
         client: QBankClient,
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
+        highlighter: HighlighterStore = HighlighterStore(),
         storage: PhoneStorage,
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
@@ -63,6 +66,7 @@ final class AppModel {
         self.client = client
         self.look = look
         self.lock = lock
+        self.highlighter = highlighter
         self.storage = storage
         self.connection = connection
         self.networkWatcher = networkWatcher

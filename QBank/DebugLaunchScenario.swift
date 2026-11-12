@@ -256,6 +256,7 @@ nonisolated enum DebugLaunchScenario {
             ),
             look: lookStore,
             lock: AppLock(defaults: defaults, owner: owner),
+            highlighter: HighlighterStore(defaults: defaults),
             storage: storage,
             connection: connection
         )

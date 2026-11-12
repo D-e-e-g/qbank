@@ -2,9 +2,10 @@ import QBankDesign
 import QBankKit
 import SwiftUI
 
-/// The set result: how many fully right, points and time, the partly right, missed and guessed
-/// counts, the score by clinical judgment step, and every question, which opens in place with its
-/// stem, rationale and takeaway.
+/// The set result: how many fully right, points and time, a bar split into fully right, partly
+/// right and missed, the counts in tiles with the bar's colors, the score by clinical judgment step
+/// with a meter each, and every question, which opens in place with its stem, rationale and
+/// takeaway, without her marks.
 struct PracticeResultView: View {
     let result: PracticeResult
     var kind: CourseKind = .course
@@ -19,20 +20,7 @@ struct PracticeResultView: View {
                 section("By clinical judgment step") {
                     QBankListGroup {
                         ForEach(result.steps, id: \.label) { step in
-                            HStack(spacing: QBankSpacing.space4) {
-                                Text(step.label)
-                                    .qbankFont(.subheadline, weight: .medium)
-                                    .foregroundStyle(.qbank(.text1))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text("\(step.right) of \(step.total)")
-                                    .qbankFont(.subheadline, weight: .semibold)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.qbank(.text2))
-                            }
-                            .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
-                            .padding(.vertical, QBankSpacing.rowPaddingVertical)
-                            .frame(minHeight: QBankSpacing.rowMin)
-                            .accessibilityElement(children: .combine)
+                            ResultStepRow(label: step.label, right: step.right, total: step.total)
                         }
                     }
                 }
@@ -76,7 +64,7 @@ struct PracticeResultView: View {
 
     private var head: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Kicker("\(result.isReview ? "Review finished" : "Set finished") · \(result.title)")
+            Kicker("\(result.isReview ? "Review finished" : "Set finished") · \(result.title)", color: .text2)
             Text("\(result.fullyRight) of \(result.questionCount) fully right")
                 .qbankFont(.largeTitle)
                 .foregroundStyle(.qbank(.text1))
@@ -87,41 +75,33 @@ struct PracticeResultView: View {
                 .monospacedDigit()
                 .foregroundStyle(.qbank(.text2))
                 .accessibilityIdentifier("result.points")
+            ResultSplitBar(segments: [
+                .init(count: result.fullyRight, color: .chartCorrect),
+                .init(count: result.partial, color: .chartPartial),
+                .init(count: result.missed, color: .chartWrong),
+            ])
+            .padding(.top, QBankSpacing.space4)
         }
         .padding(.top, QBankSpacing.space3)
     }
 
     private var stats: some View {
-        HStack(spacing: QBankSpacing.space3) {
-            stat(result.partial, "Partly right")
-            stat(result.missed, "Missed")
-            stat(result.guessed, "Guessed")
+        Grid(horizontalSpacing: QBankSpacing.space3, verticalSpacing: QBankSpacing.space3) {
+            GridRow {
+                stat(result.fullyRight, "Fully right", .chartCorrect)
+                stat(result.partial, "Partly right", .chartPartial)
+            }
+            GridRow {
+                stat(result.missed, "Missed", .chartWrong)
+                stat(result.guessed, "Guessed", .guess)
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Score summary")
     }
 
-    private func stat(_ value: Int, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("\(value)")
-                .qbankFont(.title3, weight: .bold)
-                .monospacedDigit()
-                .foregroundStyle(.qbank(.text1))
-            Text(label)
-                .qbankFont(.footnote)
-                .foregroundStyle(.qbank(.text3))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .padding(QBankSpacing.space4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.qbank(.surface), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: QBankRadius.sm, style: .continuous)
-                .strokeBorder(.qbank(.separator), lineWidth: QBankBorder.hairline)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("result.stat.\(label)")
+    private func stat(_ value: Int, _ label: String, _ dot: QBankColorToken) -> some View {
+        ResultTile(value: value, label: label, dot: dot, identifier: "result.stat.\(label)")
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

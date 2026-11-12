@@ -31,7 +31,9 @@ struct RationaleImages: View {
 }
 
 /// Readings such as vital signs. A wide table scrolls sideways inside its own box instead of
-/// squeezing; long cells wrap at a readable width.
+/// squeezing; long cells wrap at a readable width. What is read takes teal, so it looks apart from
+/// what is answered: the caption and the header band. Row labels are semibold. Color never says a
+/// reading is abnormal, since spotting that is often the question. Every cell can be marked.
 private struct ExhibitTable: View {
     let table: QuestionTable
     @State private var width: CGFloat = 0
@@ -40,19 +42,17 @@ private struct ExhibitTable: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let caption = table.caption {
-                Text(caption)
-                    .qbankFont(.footnote, weight: .semibold)
-                    .foregroundStyle(.qbank(.text2))
+                MarkableText(text: caption, part: .tableCaption, style: .footnote, weight: .semibold, color: .exhibit)
             }
             ScrollView(.horizontal) {
                 Grid(alignment: .topLeading, horizontalSpacing: 0, verticalSpacing: 0) {
                     if !table.head.isEmpty {
                         GridRow {
                             ForEach(table.head.indices, id: \.self) { index in
-                                cell(table.head[index], isHead: true)
+                                cell(table.head[index], part: .tableHead(column: index), isHead: true)
                             }
                         }
-                        .background(.qbank(.surfaceSunken))
+                        .background(.qbank(.exhibitSoft))
                     }
                     ForEach(table.rows.indices, id: \.self) { row in
                         if row > 0 || !table.head.isEmpty {
@@ -63,7 +63,7 @@ private struct ExhibitTable: View {
                         }
                         GridRow {
                             ForEach(table.rows[row].indices, id: \.self) { index in
-                                cell(table.rows[row][index], isHead: false)
+                                cell(table.rows[row][index], part: .tableCell(row: row, column: index), isHead: false)
                             }
                         }
                     }
@@ -84,18 +84,19 @@ private struct ExhibitTable: View {
         .accessibilityIdentifier("practice.table")
     }
 
-    private func cell(_ text: String, isHead: Bool) -> some View {
-        Text(text)
-            .qbankFont(.subheadline, weight: isHead ? .semibold : nil)
-            .monospacedDigit()
-            .foregroundStyle(.qbank(isHead ? .text2 : .text1))
-            .lineLimit(isHead ? 1 : nil)
-            .fixedSize(horizontal: isHead, vertical: true)
-            .frame(maxWidth: isHead ? nil : cellMax, alignment: .leading)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityAddTraits(isHead ? .isHeader : [])
+    private func cell(_ text: String, part: MarkablePart, isHead: Bool) -> some View {
+        var isRowLabel = false
+        if case .tableCell(_, column: 0) = part { isRowLabel = true }
+        return MarkableText(
+            text: text, part: part, style: .subheadline, weight: isHead || isRowLabel ? .semibold : nil,
+            color: isHead ? .exhibit : .text1, monospacedDigits: true, singleLine: isHead,
+            markInset: MarkableText.tightInset, isHeader: isHead
+        )
+        .fixedSize(horizontal: isHead, vertical: true)
+        .frame(maxWidth: isHead ? nil : cellMax, alignment: .leading)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
