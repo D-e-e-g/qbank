@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
@@ -28,11 +28,11 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-06T22:19:53.551Z",
-      "endsAt": "2026-11-06T22:25:53.551Z",
-      "finishedAt": "2026-11-06T22:19:53.571Z",
+      "startedAt": "2026-11-12T02:57:50.936Z",
+      "endsAt": "2026-11-12T03:03:50.936Z",
+      "finishedAt": "2026-11-12T02:57:50.959Z",
       "endReason": "finished",
-      "serverNow": "2026-11-06T22:19:53.577Z",
+      "serverNow": "2026-11-12T02:57:50.966Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",
@@ -69,11 +69,11 @@
           "weekLabel": "Week 1"
         },
         {
-          "id": "00000000-0000-4000-8010-000000000010",
-          "publicId": "R1",
+          "id": "00000000-0000-4000-8010-000000000011",
+          "publicId": "R2",
           "position": 2,
           "type": "single",
-          "topic": "Invented week 2 topic 1",
+          "topic": "Invented week 2 topic 2",
           "cj": "Analyze cues",
           "stem": "An invented stem.",
           "ask": "Which is right?",
@@ -99,11 +99,11 @@
           "weekLabel": "Week 2"
         },
         {
-          "id": "00000000-0000-4000-8010-000000000011",
-          "publicId": "R2",
+          "id": "00000000-0000-4000-8010-000000000010",
+          "publicId": "R1",
           "position": 3,
           "type": "single",
-          "topic": "Invented week 2 topic 2",
+          "topic": "Invented week 2 topic 1",
           "cj": "Analyze cues",
           "stem": "An invented stem.",
           "ask": "Which is right?",
@@ -224,6 +224,16 @@
             "shuffle": null
           },
           {
+            "questionId": "00000000-0000-4000-8010-000000000011",
+            "status": "unanswered",
+            "label": "Not answered",
+            "points": 0,
+            "maxPoints": 1,
+            "guessed": false,
+            "response": null,
+            "shuffle": null
+          },
+          {
             "questionId": "00000000-0000-4000-8010-000000000010",
             "status": "correct",
             "label": "Correct",
@@ -242,16 +252,6 @@
                 1
               ]
             }
-          },
-          {
-            "questionId": "00000000-0000-4000-8010-000000000011",
-            "status": "unanswered",
-            "label": "Not answered",
-            "points": 0,
-            "maxPoints": 1,
-            "guessed": false,
-            "response": null,
-            "shuffle": null
           },
           {
             "questionId": "00000000-0000-4000-8010-000000000013",

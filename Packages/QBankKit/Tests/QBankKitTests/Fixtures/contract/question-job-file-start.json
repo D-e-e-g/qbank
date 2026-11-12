@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "POST",
     "path": "/api/question-jobs",
@@ -90,8 +90,8 @@
       "title": null,
       "photoCount": 0,
       "sets": [],
-      "createdAt": "2026-11-06 17:20:00.712-05",
-      "updatedAt": "2026-11-06 17:20:00.712-05",
+      "createdAt": "2026-11-11 21:57:59.911-05",
+      "updatedAt": "2026-11-11 21:57:59.911-05",
       "finishedAt": null,
       "failure": null,
       "warnings": [],

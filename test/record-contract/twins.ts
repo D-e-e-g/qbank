@@ -84,7 +84,7 @@ export async function recordTwins(): Promise<World[]> {
   expect(twinsA !== undefined && twinsB !== undefined, "the twins were not filed beside both sets", done.value);
   world.name(twinsA.str("setId"), "5e700000-0000-4000-8000-000000000504");
   world.name(twinsB.str("setId"), "5e700000-0000-4000-8000-000000000505");
-  const exam = await world.record("twin-exam-start", `/api/courses/${courseId}/exams`, 201, { method: "POST", json: { folderIds: [week5], pool: "wrong" } });
+  const exam = await world.record("twin-exam-start", `/api/courses/${courseId}/exams`, 201, { method: "POST", json: { folderIds: [week5], pool: "wrong", replaces: null } });
   world.name(exam.str("id"), "e0000000-0000-4000-8000-000000000501");
   await world.ok(`/api/exams/${exam.str("id")}/finish`, 200, { method: "POST", json: { reason: "finished" } });
   await world.record("twin-job-cancel-finished", `/api/twin-jobs/${job}/cancel`, 409, { method: "POST" });

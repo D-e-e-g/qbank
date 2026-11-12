@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -9,7 +9,8 @@
       "folderIds": [
         "f0000000-0000-4000-8000-000000000201"
       ],
-      "pool": "wrong"
+      "pool": "wrong",
+      "replaces": null
     }
   },
   "response": {
@@ -29,11 +30,11 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 90,
-      "startedAt": "2026-11-06T22:19:53.582Z",
-      "endsAt": "2026-11-06T22:21:23.582Z",
+      "startedAt": "2026-11-12T02:57:50.973Z",
+      "endsAt": "2026-11-12T02:59:20.973Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-06T22:19:53.582Z",
+      "serverNow": "2026-11-12T02:57:50.973Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "POST",
     "path": "/api/agent-pairings/approve",
@@ -29,8 +29,8 @@
         }
       ],
       "status": "approved",
-      "createdAt": "2026-11-06T22:19:52.633Z",
-      "expiresAt": "2026-11-06T22:29:52.633Z"
+      "createdAt": "2026-11-12T02:57:49.882Z",
+      "expiresAt": "2026-11-12T03:07:49.882Z"
     }
   }
 }

@@ -307,10 +307,39 @@ public struct ExamResult: Codable, Sendable, Equatable {
     public let items: [Item]
 }
 
-/// The body of `POST /api/courses/{id}/exams`.
+/// The answer to `QBankClient.startExam`.
+public enum ExamStart: Sendable, Equatable {
+    /// The new exam, running. The exam it replaced, if any, ended as left.
+    case started(Exam)
+    /// An exam of hers is running that the request did not name in `replaces`, so nothing started
+    /// and nothing ended: this is that exam, to ask her about.
+    case examInProgress(ExamSummary)
+}
+
+/// The body of `POST /api/courses/{id}/exams`. `replaces` is always sent: the running exam she
+/// agreed to end, or null when the app knows of none running.
 struct StartExamRequest: Encodable {
     let folderIds: [String]
     let pool: ExamPool
+    let replaces: String?
+
+    enum CodingKeys: String, CodingKey {
+        case folderIds, pool, replaces
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(folderIds, forKey: .folderIds)
+        try container.encode(pool, forKey: .pool)
+        // Null, not left out: a missing field asks for the old start, which ends any running exam.
+        try container.encode(replaces, forKey: .replaces)
+    }
+}
+
+/// The 409 of `POST /api/courses/{id}/exams` when an exam is running that `replaces` did not name.
+struct ExamInProgressRefusal: Decodable {
+    let error: String
+    let inProgress: ExamSummary
 }
 
 /// The body of `POST /api/exams/{id}/finish`.

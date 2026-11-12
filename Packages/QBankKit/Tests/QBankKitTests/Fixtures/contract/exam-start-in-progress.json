@@ -1,0 +1,49 @@
+{
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "request": {
+    "method": "POST",
+    "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": {
+      "folderIds": [
+        "f0000000-0000-4000-8000-000000000201",
+        "f0000000-0000-4000-8000-000000000202"
+      ],
+      "pool": "all",
+      "replaces": null
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {},
+    "body": {
+      "error": "exam_in_progress",
+      "message": "An exam is still running. Starting a new one ends it, so confirm that first.",
+      "inProgress": {
+        "id": "e0000000-0000-4000-8000-000000000202",
+        "courseId": "c0000000-0000-4000-8000-000000000201",
+        "weeks": [
+          "Week 1"
+        ],
+        "folderIds": [
+          "f0000000-0000-4000-8000-000000000201"
+        ],
+        "courseExamId": null,
+        "pool": "wrong",
+        "practiceWeeks": [],
+        "questionCount": 1,
+        "timeLimitSeconds": 90,
+        "startedAt": "2026-11-12T02:57:50.973Z",
+        "endsAt": "2026-11-12T02:59:20.973Z",
+        "finishedAt": null,
+        "endReason": null,
+        "answeredCount": 0,
+        "fullyRight": null,
+        "points": null,
+        "maxPoints": null,
+        "minutesUsed": null
+      }
+    }
+  }
+}

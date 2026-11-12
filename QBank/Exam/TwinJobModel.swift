@@ -16,14 +16,18 @@ final class TwinJobModel {
     private(set) var actionProblem: String?
     /// The job is not hers or not there anymore.
     private(set) var isGone = false
-    /// Her exam in progress, read once the twins are ready: starting the exam on them ends it.
-    private(set) var inProgress: ExamSummary?
+    /// Her running exam, read once the twins are ready: starting the exam on them ends it, so
+    /// Start waits until this is known, and asks first while one runs.
+    private(set) var running: RunningExam = .unknown
+    /// Why her running exam could not be read. It is read again until it is known.
+    private(set) var runningProblem: String?
+    /// "Start a new exam?" is open, about `running`'s exam.
+    var asksToReplace = false
     private(set) var isStopping = false
     private(set) var isStarting = false
 
     private let app: AppModel
     private let pollInterval: Duration
-    private var hasReadSetup = false
 
     init(app: AppModel, route: TwinJobRoute, pollInterval: Duration = .seconds(2)) {
         self.app = app
@@ -50,6 +54,16 @@ final class TwinJobModel {
         !app.connection.isOnline
     }
 
+    /// The twins are ready and whether an exam of hers is running is not known yet.
+    var needsRunningExam: Bool {
+        isDone && !running.isKnown
+    }
+
+    /// Start exam on the twins: the job names the exam, and whether it ends a running one is known.
+    var canStart: Bool {
+        isDone && job?.exam != nil && running.isKnown && !isStarting && !needsConnection
+    }
+
     func load() async {
         do {
             job = try await app.client.twinJob(id: route.jobID)
@@ -61,9 +75,6 @@ final class TwinJobModel {
                 isGone = true
             }
             problem = Wording.problem(error) ?? "Could not load the exam twins. Trying again."
-        }
-        if isDone, !hasReadSetup {
-            await readSetup()
         }
     }
 
@@ -77,11 +88,20 @@ final class TwinJobModel {
         }
     }
 
-    /// Her exam in progress, so Start exam on the twins asks first, as Exam setup does.
-    private func readSetup() async {
-        guard let setup = try? await app.client.examSetup(courseID: route.course.id) else { return }
-        hasReadSetup = true
-        inProgress = setup.inProgress
+    /// Reads whether an exam of hers is running, every couple of seconds until it is known, for as
+    /// long as the screen is open, so Start exam on the twins asks first, as Exam setup does.
+    func readRunningExam() async {
+        while needsRunningExam, !Task.isCancelled {
+            do {
+                running = RunningExam(try await app.client.examSetup(courseID: route.course.id).inProgress)
+                runningProblem = nil
+                return
+            } catch {
+                if app.handle(error) { return }
+                runningProblem = "Could not check for an exam in progress. Trying again."
+            }
+            try? await Task.sleep(for: pollInterval)
+        }
     }
 
     /// Stops the job. Nothing more is written or filed; sets already filed stay.
@@ -98,18 +118,43 @@ final class TwinJobModel {
         }
     }
 
-    /// Starts the exam the job names, sent as it is: the folders the twins are in, and the pool
-    /// she picked. Her exam in progress ends first, which she was asked about. Returns the exam to
-    /// open, or nil after a refusal, said in her words.
-    func startExam() async -> Exam? {
+    /// Start exam on the twins: asks first while an exam of hers runs, otherwise starts it.
+    /// Returns the exam to open, or nil.
+    func start() async -> Exam? {
+        guard canStart else { return nil }
+        if running.exam != nil {
+            asksToReplace = true
+            return nil
+        }
+        return await startExam(replacing: nil)
+    }
+
+    /// Starts the exam once she agreed that her running exam ends.
+    func startReplacing() async -> Exam? {
+        guard canStart, let exam = running.exam else { return nil }
+        return await startExam(replacing: exam.id)
+    }
+
+    /// Starts the exam the job names, sent as it is, the folders the twins are in and the pool she
+    /// picked, with the running exam she agreed to end. An exam running that she was not asked
+    /// about starts nothing and asks her now. Returns the exam to open, or nil after a refusal,
+    /// said in her words.
+    private func startExam(replacing: String?) async -> Exam? {
         guard let job, let exam = job.exam, !isStarting, !needsConnection else { return nil }
         isStarting = true
         actionProblem = nil
         defer { isStarting = false }
         do {
-            let started = try await app.client.startExam(courseID: job.course.id, on: exam)
-            inProgress = nil
-            return started
+            switch try await app.client.startExam(courseID: job.course.id, on: exam, replaces: replacing) {
+            case .started(let started):
+                // The new exam runs now; it is read again for the next Start.
+                running = .unknown
+                return started
+            case .examInProgress(let other):
+                running = .running(other)
+                asksToReplace = true
+                return nil
+            }
         } catch {
             if app.handle(error) { return nil }
             actionProblem = Wording.problem(error) ?? "Could not start the exam."
@@ -118,8 +163,7 @@ final class TwinJobModel {
     }
 
     /// After the exam's full screen closed: an exam she left running asks again before the next one.
-    func examClosed() async {
-        hasReadSetup = false
-        if isDone { await readSetup() }
+    func examClosed() {
+        running = .unknown
     }
 }

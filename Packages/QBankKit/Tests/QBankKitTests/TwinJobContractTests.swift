@@ -113,15 +113,19 @@ struct TwinJobContractTests {
         #expect(exam.body == fixture.response.body["exam"])
     }
 
-    /// Start exam on the twins sends the job's exam exactly as the server wrote it.
+    /// Start exam on the twins sends the job's exam as the server wrote it, saying no exam is running.
     @Test func theExamOnTheTwinsStartsFromTheJobsExamAsItIs() async throws {
         let done = try Fixture.load("twin-job-done")
         let start = try Fixture.load("twin-exam-start")
         let transport = try FixtureTransport([done, start])
         let (client, _) = TestClient.make(transport)
         let job = try await client.twinJob(id: Self.job)
-        let exam = try await client.startExam(courseID: job.course.id, on: try #require(job.exam))
+        let started = try await client.startExam(courseID: job.course.id, on: try #require(job.exam), replaces: nil)
         try expectRequest(transport.requests.last, matches: start)
+        guard case .started(let exam) = started else {
+            Issue.record("no exam started: \(started)")
+            return
+        }
         #expect(exam.pool == .wrong)
         #expect(exam.folderIDs == [Self.week5])
         #expect(exam.questions.count == 3)

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "GET",
     "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501",
@@ -89,9 +89,9 @@
         ],
         "pool": "wrong"
       },
-      "createdAt": "2026-11-06 17:20:02.757-05",
-      "updatedAt": "2026-11-06 17:20:02.782-05",
-      "finishedAt": "2026-11-06 17:20:02.782-05",
+      "createdAt": "2026-11-11 21:58:02.574-05",
+      "updatedAt": "2026-11-11 21:58:02.604-05",
+      "finishedAt": "2026-11-11 21:58:02.604-05",
       "failure": null,
       "warnings": [],
       "usage": {

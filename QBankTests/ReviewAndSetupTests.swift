@@ -369,7 +369,71 @@ struct ExamSetupModelTests {
         let exam = await model.start()
         #expect(exam?.id == "e1")
         let body = try #require(server.requests.last?.httpBody)
-        #expect(String(decoding: body, as: UTF8.self) == #"{"folderIds":["f1","f2"],"pool":"wrong"}"#)
+        #expect(String(decoding: body, as: UTF8.self) == #"{"folderIds":["f1","f2"],"pool":"wrong","replaces":null}"#, "no exam is known to run")
+    }
+
+    // MARK: Starting over a running exam
+
+    @Test func startWaitsUntilTheRunningExamIsKnown() async throws {
+        let server = server()
+        server.script("GET /api/courses/c1/exams", [.offline])
+        let model = model(server)
+        #expect(!model.canStart)
+        #expect(await model.start() == nil)
+        await model.load()
+        #expect(model.running == .unknown, "a failed read is not \"none running\"")
+        #expect(!model.canStart)
+        await model.load()
+        #expect(model.running == .none)
+        model.toggle(model.folders[0])
+        #expect(model.canStart)
+        #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
+    }
+
+    @Test func aRunningExamIsAskedAboutAndNamedAsTheOneToEnd() async throws {
+        let running = StudyBodies.summary("run", weeks: ["Week 1"], folders: ["f1"], finished: false, endsAt: "2026-10-12T00:17:01.000Z")
+        let server = StubServer([
+            "GET /api/courses/c1/exams": .ok(StudyBodies.setup(folders: StudyBodies.threePools, inProgress: running)),
+            "POST /api/courses/c1/exams": StubServer.Reply(status: 201, body: StudyBodies.exam()),
+        ])
+        let model = model(server)
+        await model.load()
+        #expect(model.running.exam?.id == "run")
+        model.toggle(model.folders[1])
+        #expect(await model.start() == nil)
+        #expect(model.asksToReplace)
+        #expect(server.calls.allSatisfy { $0.hasPrefix("GET") }, "nothing starts before she agrees")
+        model.asksToReplace = false
+        #expect(await model.startReplacing()?.id == "e1")
+        let body = try #require(server.requests.last?.httpBody)
+        #expect(String(decoding: body, as: UTF8.self) == #"{"folderIds":["f2"],"pool":"all","replaces":"run"}"#)
+        #expect(model.running == .unknown, "the new exam runs; the setup is read again when it closes")
+    }
+
+    /// An exam started on another device after the setup was read: the server refuses, and the
+    /// question comes up about that exam instead of an error.
+    @Test func anExamTheSetupDidNotKnowBringsUpTheQuestion() async throws {
+        let other = StudyBodies.summary("other", weeks: ["Week 3"], folders: ["f3"], finished: false, answered: 1, questions: 4, endsAt: "2026-10-12T00:20:00.000Z")
+        let server = server()
+        let model = model(server)
+        await model.load()
+        #expect(model.running == .none)
+        model.toggle(model.folders[0])
+        server["POST /api/courses/c1/exams"] = StubServer.Reply(
+            status: 409,
+            body: #"{"error":"exam_in_progress","message":"An exam is still running. Starting a new one ends it, so confirm that first.","inProgress":\#(other)}"#
+        )
+        #expect(await model.start() == nil)
+        #expect(model.problem == nil)
+        #expect(model.asksToReplace)
+        let exam = try #require(model.running.exam)
+        #expect(exam.id == "other")
+        #expect(model.runningLine(exam) == "Week 3 · 1 of 4 answered · 15 min left", "Resume shows it")
+        #expect(String(decoding: try #require(server.requests.last?.httpBody), as: UTF8.self).hasSuffix(#""replaces":null}"#))
+
+        server["POST /api/courses/c1/exams"] = StubServer.Reply(status: 201, body: StudyBodies.exam())
+        #expect(await model.startReplacing()?.id == "e1")
+        #expect(String(decoding: try #require(server.requests.last?.httpBody), as: UTF8.self).hasSuffix(#""replaces":"other"}"#))
     }
 
     @Test func aRefusedStartIsSaidInTheServersWords() async throws {

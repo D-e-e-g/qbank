@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "30c52a4151b457b9134814352dc171c1200c4aef",
+  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
   "request": {
     "method": "GET",
     "path": "/api/question-maker",
@@ -15,7 +15,7 @@
       "reason": "You have started 4 sets in the last 24 hours, the most for one day.",
       "dailyLimit": 4,
       "startedToday": 4,
-      "nextAvailableAt": "2026-11-07T22:20:00.645Z",
+      "nextAvailableAt": "2026-11-13T02:57:59.810Z",
       "levels": [
         {
           "level": "exam",

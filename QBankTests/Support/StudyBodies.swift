@@ -1,4 +1,5 @@
 import Foundation
+import QBankKit
 
 /// Invented server bodies for the study screens, shaped like the real routes' answers: Review,
 /// exams, and courses with folders and exam pages.
@@ -167,5 +168,13 @@ enum StudyBodies {
 
     static func reviewQuestion(_ id: String, status: String, guessed: Bool = false) -> String {
         #"{"questionId":"\#(id)","topic":"Invented \#(id)","weekLabel":"Week 1","format":"Single answer","status":"\#(status)","guessed":\#(guessed),"answeredAt":"2026-10-10T00:00:00.000Z","setTitle":"Invented set"}"#
+    }
+}
+
+extension ExamStart {
+    /// The exam that started, or nil when the server named a running exam instead.
+    var started: Exam? {
+        if case .started(let exam) = self { return exam }
+        return nil
     }
 }
