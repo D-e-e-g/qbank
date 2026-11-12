@@ -1,10 +1,10 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "DELETE",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000701",
     "query": {
-      "confirm": "8450f0114aa6493b"
+      "confirm": "c7a99978c66ece87"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

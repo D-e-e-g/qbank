@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/semesters",
@@ -44,7 +44,7 @@
           "name": "Semester 2",
           "startsOn": null,
           "endsOn": null,
-          "archivedAt": "2026-11-12T02:57:58.921Z",
+          "archivedAt": "2026-11-12T03:19:15.820Z",
           "courses": []
         }
       ],
@@ -71,7 +71,7 @@
           "code": "",
           "title": "Invented Spanish Verbs",
           "sortOrder": 2,
-          "archivedAt": "2026-11-12T02:57:58.972Z",
+          "archivedAt": "2026-11-12T03:19:15.859Z",
           "questionCount": 0,
           "weekCount": 0,
           "folderCount": 0,

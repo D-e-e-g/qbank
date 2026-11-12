@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
@@ -30,11 +30,11 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-12T02:58:02.613Z",
-      "endsAt": "2026-11-12T03:02:32.613Z",
+      "startedAt": "2026-11-12T03:19:18.869Z",
+      "endsAt": "2026-11-12T03:23:48.869Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-12T02:58:02.613Z",
+      "serverNow": "2026-11-12T03:19:18.869Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8021-000000000009",

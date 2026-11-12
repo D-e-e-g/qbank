@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/practice",
@@ -21,9 +21,47 @@
       "kind": "practice",
       "questions": [
         {
+          "id": "00000000-0000-4000-8010-000000000004",
+          "publicId": "Q3",
+          "position": 1,
+          "type": "sata",
+          "topic": "Invented select-all topic",
+          "cj": "Analyze cues",
+          "stem": "An invented finding.",
+          "ask": "Select all that apply.",
+          "rationale": "Three are right.",
+          "takeaway": "Count the right ones.",
+          "body": {
+            "options": [
+              {
+                "t": "Right one",
+                "ok": true,
+                "why": "Yes."
+              },
+              {
+                "t": "Right two",
+                "ok": true,
+                "why": "Yes."
+              },
+              {
+                "t": "Wrong one",
+                "why": "No."
+              },
+              {
+                "t": "Right three",
+                "ok": true,
+                "why": "Yes."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": []
+        },
+        {
           "id": "00000000-0000-4000-8010-000000000002",
           "publicId": "Q1",
-          "position": 1,
+          "position": 2,
           "type": "single",
           "topic": "Invented single topic",
           "cj": "Analyze cues",
@@ -94,47 +132,10 @@
               "meaning": "An invented definition of a fast heart rate."
             }
           ]
-        },
-        {
-          "id": "00000000-0000-4000-8010-000000000004",
-          "publicId": "Q3",
-          "position": 2,
-          "type": "sata",
-          "topic": "Invented select-all topic",
-          "cj": "Analyze cues",
-          "stem": "An invented finding.",
-          "ask": "Select all that apply.",
-          "rationale": "Three are right.",
-          "takeaway": "Count the right ones.",
-          "body": {
-            "options": [
-              {
-                "t": "Right one",
-                "ok": true,
-                "why": "Yes."
-              },
-              {
-                "t": "Right two",
-                "ok": true,
-                "why": "Yes."
-              },
-              {
-                "t": "Wrong one",
-                "why": "No."
-              },
-              {
-                "t": "Right three",
-                "ok": true,
-                "why": "Yes."
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": []
         }
       ],
-      "sitting": null
+      "sitting": null,
+      "run": "new"
     }
   }
 }

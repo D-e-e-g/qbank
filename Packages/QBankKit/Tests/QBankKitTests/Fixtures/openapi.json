@@ -401,6 +401,9 @@
             ],
             "description": "The sitting she would continue, so the row says Continue. Null when opening the set starts it at question 1: a new set, one with every question answered by any route (even with a retake under way), one she answered only on exams, or one she chose Start over on, whose answeredCount above still counts every answer she has given."
           },
+          "run": {
+            "$ref": "#/components/schemas/SetRun"
+          },
           "questionIds": {
             "type": "array",
             "items": {
@@ -433,6 +436,7 @@
           "fullyRightCount",
           "lastAnsweredAt",
           "sitting",
+          "run",
           "questionIds",
           "importedByAgent"
         ]
@@ -448,6 +452,16 @@
         "required": [
           "answeredCount"
         ]
+      },
+      "SetRun": {
+        "type": "string",
+        "enum": [
+          "new",
+          "midway",
+          "restarted",
+          "done"
+        ],
+        "description": "Where the user is in a practice set, on SetSummary and PracticeSet alike, worked out once here so every app reads the same and needs no other request: `new`, nothing answered; `midway`, a sitting to continue (exactly when `sitting` is not null), so the set says Continue; `restarted`, answers given, yet the set opens at question 1, after Start over or when answered only on exams; `done`, every question answered by any route, even with a retake under way, so opening it begins a new run. Only `midway` continues; every other run opens the set at question 1. Always `new` where there is no user's study to read: a Review list, an exam set, and an agent key. A client reading a response without it (an older server, or a copy saved before) works it out from `sitting`, `answeredCount` and `questionCount` as before."
       },
       "ImportingAgent": {
         "type": "object",
@@ -827,6 +841,9 @@
               }
             ],
             "description": "Where she left this set: open it at the first question not in `answeredQuestionIds`, with the answers counted in the result. Null opens it at question 1; so it is for a Review list, an exam set, and an agent key."
+          },
+          "run": {
+            "$ref": "#/components/schemas/SetRun"
           }
         },
         "required": [
@@ -837,7 +854,8 @@
           "folderId",
           "kind",
           "questions",
-          "sitting"
+          "sitting",
+          "run"
         ]
       },
       "PracticeQuestion": {

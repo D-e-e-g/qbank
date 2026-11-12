@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/twin-jobs",
@@ -59,9 +59,9 @@
           "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-11 21:58:02.671-05",
-          "updatedAt": "2026-11-11 21:58:02.676-05",
-          "finishedAt": "2026-11-11 21:58:02.676-05",
+          "createdAt": "2026-11-11 22:19:18.917-05",
+          "updatedAt": "2026-11-11 22:19:18.921-05",
+          "finishedAt": "2026-11-11 22:19:18.921-05",
           "failure": "The model did not answer.",
           "warnings": [],
           "usage": {
@@ -119,9 +119,9 @@
           "note": "QBank writes exam twins of 3 questions in Week 6.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-11 21:58:02.644-05",
-          "updatedAt": "2026-11-11 21:58:02.65-05",
-          "finishedAt": "2026-11-11 21:58:02.65-05",
+          "createdAt": "2026-11-11 22:19:18.895-05",
+          "updatedAt": "2026-11-11 22:19:18.899-05",
+          "finishedAt": "2026-11-11 22:19:18.899-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -211,9 +211,9 @@
             ],
             "pool": "wrong"
           },
-          "createdAt": "2026-11-11 21:58:02.574-05",
-          "updatedAt": "2026-11-11 21:58:02.604-05",
-          "finishedAt": "2026-11-11 21:58:02.604-05",
+          "createdAt": "2026-11-11 22:19:18.835-05",
+          "updatedAt": "2026-11-11 22:19:18.862-05",
+          "finishedAt": "2026-11-11 22:19:18.862-05",
           "failure": null,
           "warnings": [],
           "usage": {

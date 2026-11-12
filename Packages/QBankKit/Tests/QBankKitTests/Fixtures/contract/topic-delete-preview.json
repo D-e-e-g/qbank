@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000802/delete-preview",
@@ -30,7 +30,7 @@
         "body": "You can bring it back for 30 days."
       },
       "refusal": null,
-      "confirm": "8b1bdad66f796eb7",
+      "confirm": "07cf12654aec5e44",
       "undoDays": 30
     }
   }

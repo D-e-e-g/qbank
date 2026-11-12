@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
@@ -28,25 +28,25 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-12T02:57:50.936Z",
-      "endsAt": "2026-11-12T03:03:50.936Z",
+      "startedAt": "2026-11-12T03:19:08.869Z",
+      "endsAt": "2026-11-12T03:25:08.869Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-12T02:57:50.955Z",
+      "serverNow": "2026-11-12T03:19:08.886Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",
-          "publicId": "E1",
+          "publicId": "E2",
           "position": 1,
           "type": "single",
-          "topic": "Invented exam topic 1",
+          "topic": "Invented exam topic 2",
           "cj": "Analyze cues",
           "stem": "An invented exam stem.",
           "ask": "Which is right?",
           "rationale": "Invented exam rationale.",
           "takeaway": "Invented exam takeaway.",
           "body": {
-            "twinOf": "Q1",
+            "twinOf": "Q2",
             "options": [
               {
                 "t": "Right",
@@ -130,17 +130,17 @@
         },
         {
           "id": "00000000-0000-4000-8010-000000000013",
-          "publicId": "E2",
+          "publicId": "E1",
           "position": 4,
           "type": "single",
-          "topic": "Invented exam topic 2",
+          "topic": "Invented exam topic 1",
           "cj": "Analyze cues",
           "stem": "An invented exam stem.",
           "ask": "Which is right?",
           "rationale": "Invented exam rationale.",
           "takeaway": "Invented exam takeaway.",
           "body": {
-            "twinOf": "Q2",
+            "twinOf": "Q1",
             "options": [
               {
                 "t": "Right",

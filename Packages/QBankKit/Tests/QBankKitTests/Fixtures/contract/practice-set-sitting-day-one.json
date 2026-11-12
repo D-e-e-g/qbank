@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "c76c09b863392d22575f230cad18cfeca8a4da52",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -106,6 +106,7 @@
           "terms": []
         }
       ],
+      "run": "midway",
       "sitting": {
         "id": null,
         "startedAt": null,
@@ -120,7 +121,7 @@
             "points": 1,
             "maxPoints": 1,
             "guessed": false,
-            "answeredAt": "2026-11-12T02:57:52.451Z",
+            "answeredAt": "2026-11-12T03:19:10.255Z",
             "inReview": false,
             "label": "Correct",
             "pointsText": null,
