@@ -1134,50 +1134,23 @@ nonisolated final class FakeQBankServer: HTTPTransport, FakeQuestionLibrary, Fak
         Set(questionIDs.prefix(earlierProgress[setID]?.answered ?? 0)).union(questionIDs.filter { latest[$0] != nil })
     }
 
-    /// Where she stands in the set, the `run` every row and the set itself send: New with nothing
-    /// answered, Done once every question has an answer even with a retake open, Midway with a
-    /// sitting to continue, and otherwise Restarted.
+    /// Where she stands in the set, by the server's rule.
     private static func run(setID: String, questionIDs: [String], state: State) -> String {
-        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
-        if answered.isEmpty { return "new" }
-        if answered.count == questionIDs.count { return "done" }
-        return continuing(setID: setID, questionIDs: questionIDs, state: state) == nil ? "restarted" : "midway"
+        FakeSittingRules.run(answered: answered(setID: setID, questionIDs: questionIDs, latest: state.latest), sitting: state.sittings[setID], questionIDs: questionIDs)
     }
 
-    /// The questions answered in the sitting she would continue, in the set's order, or nil when
-    /// there is nothing to continue: once every question has an answer, even with a retake open.
+    /// The questions answered in the sitting she would continue, in the set's order, or nil.
     private static func continuing(setID: String, questionIDs: [String], state: State) -> [String]? {
-        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
-        if answered.count == questionIDs.count { return nil }
-        let sitting = state.sittings[setID]
-        let inSitting: Set<String>
-        if let sitting, sitting.isOpen {
-            inSitting = sitting.own.union(sitting.seeded.intersection(answered))
-        } else if sitting?.endedByStartOver == true {
-            inSitting = []
-        } else {
-            inSitting = answered
-        }
-        let shown = questionIDs.filter(inSitting.contains)
-        return shown.isEmpty || shown.count == questionIDs.count ? nil : shown
+        FakeSittingRules.continuing(answered: answered(setID: setID, questionIDs: questionIDs, latest: state.latest), sitting: state.sittings[setID], questionIDs: questionIDs)
     }
 
     /// The sitting an answer joins, opening one if it should. Runs before the answer is counted, so
     /// the seed is what she had before it.
     private static func join(_ questionID: String, setID: String, questionIDs: [String], fromReview: Bool, at date: Date, state: inout State) {
-        if var sitting = state.sittings[setID], sitting.isOpen {
-            sitting.own.insert(questionID)
-            sitting.closeIfFinished(answered: Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest), questionIDs: questionIDs)
+        let answered = answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
+        if let sitting = FakeSittingRules.joining(questionID, answered: answered, sitting: state.sittings[setID], questionIDs: questionIDs, fromReview: fromReview, at: date) {
             state.sittings[setID] = sitting
-            return
         }
-        guard !fromReview else { return }
-        let answered = Self.answered(setID: setID, questionIDs: questionIDs, latest: state.latest)
-        let beginsAgain = answered.count == questionIDs.count || state.sittings[setID]?.endedByStartOver == true
-        if beginsAgain, questionIDs.first != questionID { return }
-        var sitting = FakeSitting(seeded: beginsAgain ? [] : answered, own: [questionID], startedAt: date)
-        sitting.closeIfFinished(answered: answered, questionIDs: questionIDs)
-        state.sittings[setID] = sitting
     }
 
     private func sittingJSON(_ setID: String, questionCount: Int) -> Any {
@@ -1581,24 +1554,6 @@ private nonisolated struct FakeSubmission: Decodable {
     let shuffle: Layout?
     let studySessionId: String?
     let fromReview: Bool?
-}
-
-/// A set's latest sitting: open, or closed when she finished it or chose Start over.
-private nonisolated struct FakeSitting: Codable {
-    var isOpen = true
-    var endedByStartOver = false
-    /// The answers it opened with.
-    let seeded: Set<String>
-    /// The questions answered in it.
-    var own: Set<String>
-    let startedAt: Date
-
-    /// Closes it once it has an answer to every question.
-    mutating func closeIfFinished(answered: Set<String>, questionIDs: [String]) {
-        if own.union(seeded.intersection(answered)).isSuperset(of: questionIDs) {
-            isOpen = false
-        }
-    }
 }
 
 /// What `FakeQBankServer` keeps of her answers between launches.

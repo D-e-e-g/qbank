@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000701/deleted",
@@ -44,8 +44,8 @@
               "questionCount": 3
             }
           ],
-          "deletedAt": "2026-11-12T02:58:11.134Z",
-          "undoUntil": "2026-12-12T02:58:11.134Z",
+          "deletedAt": "2026-11-12T18:05:23.720Z",
+          "undoUntil": "2026-12-12T18:05:23.720Z",
           "undoRefusal": null,
           "deletedByAgent": null
         }
@@ -58,8 +58,8 @@
           "questionCount": 3,
           "folderId": "f0000000-0000-4000-8000-000000000702",
           "folderName": "Week 2",
-          "deletedAt": "2026-11-12T02:58:11.155Z",
-          "undoUntil": "2026-12-12T02:58:11.155Z",
+          "deletedAt": "2026-11-12T18:05:23.796Z",
+          "undoUntil": "2026-12-12T18:05:23.796Z",
           "undoRefusal": null,
           "deletedByAgent": null
         }
@@ -81,17 +81,17 @@
           ],
           "questionCount": 3,
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-12T02:58:11.062Z",
-          "endsAt": "2026-11-12T03:02:41.062Z",
-          "finishedAt": "2026-11-12T02:58:11.083Z",
+          "startedAt": "2026-11-12T18:05:23.260Z",
+          "endsAt": "2026-11-12T18:09:53.260Z",
+          "finishedAt": "2026-11-12T18:05:23.370Z",
           "endReason": "finished",
           "answeredCount": 2,
           "fullyRight": 2,
           "points": 2,
           "maxPoints": 3,
           "minutesUsed": 1,
-          "deletedAt": "2026-11-12T02:58:11.147Z",
-          "undoUntil": "2026-12-12T02:58:11.147Z"
+          "deletedAt": "2026-11-12T18:05:23.766Z",
+          "undoUntil": "2026-12-12T18:05:23.766Z"
         }
       ]
     }

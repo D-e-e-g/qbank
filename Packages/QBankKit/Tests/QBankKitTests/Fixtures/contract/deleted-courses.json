@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "28dc24ea2464c089e3a1715a1aa73c0bbbace4c1",
+  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
   "request": {
     "method": "GET",
     "path": "/api/deleted-courses",
@@ -20,8 +20,8 @@
           "title": "Pharmacology",
           "semester": null,
           "questionCount": 3,
-          "deletedAt": "2026-11-12T02:58:11.959Z",
-          "undoUntil": "2026-12-12T02:58:11.959Z",
+          "deletedAt": "2026-11-12T18:05:25.566Z",
+          "undoUntil": "2026-12-12T18:05:25.566Z",
           "undoRefusal": null,
           "deletedByAgent": null
         },
@@ -36,8 +36,8 @@
             "name": "Semester 2"
           },
           "questionCount": 5,
-          "deletedAt": "2026-11-12T02:58:11.939Z",
-          "undoUntil": "2026-12-12T02:58:11.939Z",
+          "deletedAt": "2026-11-12T18:05:25.533Z",
+          "undoUntil": "2026-12-12T18:05:25.533Z",
           "undoRefusal": "Semester 2 already has a course with the code NURS 220. Rename one of them, then bring this one back.",
           "deletedByAgent": null
         }
