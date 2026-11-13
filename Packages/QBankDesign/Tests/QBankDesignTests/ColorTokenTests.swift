@@ -11,7 +11,7 @@ struct ColorTokenTests {
 
     @Test("Every semantic token equals the web value", arguments: QBankPalette.allCases, QBankAppearance.allCases)
     func semanticTokensMatch(palette: QBankPalette, appearance: QBankAppearance) throws {
-        for token in QBankColorToken.allCases {
+        for token in QBankColorToken.webCases {
             let expected = try web.color(token.cssName, palette: palette, appearance: appearance)
             #expect(
                 token.value(palette: palette, appearance: appearance) == expected,
@@ -23,7 +23,7 @@ struct ColorTokenTests {
     @Test("Every semantic color the web defines has a Swift token")
     func noWebTokenIsMissing() throws {
         let themed = try #require(web.blocks["[data-theme=\"light\"]"]).keys
-        let swiftNames = Set(QBankColorToken.allCases.map(\.cssName))
+        let swiftNames = Set(QBankColorToken.webCases.map(\.cssName))
         #expect(Set(themed).subtracting(swiftNames).sorted() == [])
         let dark = try #require(web.blocks["[data-theme=\"dark\"]"]).keys
         #expect(Set(dark) == Set(themed))
@@ -84,7 +84,7 @@ struct ColorTokenTests {
         #expect(Set(webPalettes) == Set(QBankPalette.allCases.map(\.rawValue)))
         #expect(QBankPalette.default == .dusk)
         // :root (no data-palette) is dusk too.
-        for token in QBankColorToken.allCases {
+        for token in QBankColorToken.webCases {
             let root = try WebTokens.color(WebTokens.resolve(token.cssName, in: web.blocks[":root"] ?? [:]))
             #expect(root == token.value(palette: .dusk, appearance: .light), "\(token.cssName) on :root")
         }

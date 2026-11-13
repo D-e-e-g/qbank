@@ -42,14 +42,16 @@ final class StrikeOutUITests: XCTestCase {
         XCTAssertTrue(option.isSelected)
         attach(app, "strike, practice, restored and picked")
 
-        // A long press offers the same.
+        // Touch and hold on a choice's words goes to the highlighter, not a strike menu; the X
+        // still strikes.
         let other = app.buttons["practice.option.2"]
-        other.press(forDuration: 1)
-        let menuStrike = app.buttons["Strike out"]
-        XCTAssertTrue(menuStrike.appears(timeout: 5))
-        attach(app, "strike, practice, long press")
-        menuStrike.tap()
+        other.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 70, dy: 23)).press(forDuration: 1)
+        waitForLabel(other, valueContaining: "highlight: ")
+        XCTAssertFalse(app.buttons["Strike out"].exists, "no strike menu")
+        XCTAssertNotEqual(other.value as? String, "Struck out")
+        app.buttons["practice.strike.2"].tap()
         expectStruck(other, app.buttons["practice.strike.2"])
+        attachLooks(app, "strike, practice, struck with a mark")
 
         // Checking shows every verdict as it would without strikes, and the controls go away.
         let check = app.buttons["practice.check"]

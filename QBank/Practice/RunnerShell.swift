@@ -3,12 +3,15 @@ import QBankKit
 import SwiftUI
 
 /// The runner's frame, shared by practice and exams: a leading action (✕, or End exam), the
-/// question count over the title, a trailing item (the exam timer), the progress track, the
-/// scrolling question, and the pinned footer actions. Content scrolls under both bars.
+/// question count over the title, a trailing item (the exam timer), the progress track or a strip
+/// with a step per question, the scrolling question, and the pinned footer actions. Content
+/// scrolls under both bars.
 struct RunnerShell<Leading: View, Trailing: View, Content: View, Footer: View>: View {
     let count: String
     let title: String
     let progress: Double
+    /// One step per question, in order. Empty draws the plain track.
+    var strip: [RunnerStep] = []
     @ViewBuilder let leading: Leading
     @ViewBuilder let trailing: Trailing
     @ViewBuilder let content: Content
@@ -55,7 +58,7 @@ struct RunnerShell<Leading: View, Trailing: View, Content: View, Footer: View>: 
                         .foregroundStyle(.qbank(.text1))
                     Text(title)
                         .qbankFont(.caption1)
-                        .foregroundStyle(.qbank(.text3))
+                        .foregroundStyle(.qbank(.text2))
                         .lineLimit(1)
                 }
                 .accessibilityElement(children: .combine)
@@ -65,9 +68,15 @@ struct RunnerShell<Leading: View, Trailing: View, Content: View, Footer: View>: 
             }
             .padding(.horizontal, QBankSpacing.space3)
             .frame(minHeight: 48)
-            QBankProgressBar(value: progress, height: 3, accessibilityTitle: "Progress")
-                .padding(.horizontal, Device.gutter)
-                .padding(.bottom, QBankSpacing.space3)
+            Group {
+                if strip.isEmpty {
+                    QBankProgressBar(value: progress, height: 3, accessibilityTitle: "Progress")
+                } else {
+                    RunnerStrip(steps: strip, progress: progress)
+                }
+            }
+            .padding(.horizontal, Device.gutter)
+            .padding(.bottom, QBankSpacing.space3)
         }
         .background { RunnerBar(edge: .bottom) }
     }
@@ -214,9 +223,11 @@ struct WaitingBanner: View {
     }
 }
 
-/// The format in the tint, then the topic, over the stem: "Matrix   Phases of the relationship".
+/// The format in the tint, then the topic, over the stem: "Matrix   Phases of the relationship",
+/// and the highlighter's pen at the right while she can mark the question.
 struct QuestionMeta<Extra: View>: View {
     let question: Question
+    var pen: HighlighterPen?
     @ViewBuilder let extra: Extra
 
     var body: some View {
@@ -225,19 +236,72 @@ struct QuestionMeta<Extra: View>: View {
                 .foregroundStyle(.qbank(.tint))
             if !question.topic.isEmpty {
                 Text(question.topic)
-                    .foregroundStyle(.qbank(.text3))
+                    .foregroundStyle(.qbank(.text2))
             }
             extra
         }
         .qbankFont(.footnote, weight: .semibold)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("practice.meta")
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // The pen is a 44-point target that overhangs the line, so the line keeps its height.
+        .padding(.trailing, pen == nil ? 0 : QBankSpacing.rowMin - 6)
+        .overlay(alignment: .trailing) {
+            if let pen {
+                pen.padding(.trailing, -6)
+            }
+        }
     }
 }
 
 extension QuestionMeta where Extra == EmptyView {
-    init(question: Question) {
-        self.init(question: question) { EmptyView() }
+    init(question: Question, pen: HighlighterPen? = nil) {
+        self.init(question: question, pen: pen) { EmptyView() }
+    }
+}
+
+/// A question's step on the runner's strip: in practice its result once checked, in a timed exam
+/// only answered or skipped, never right or wrong.
+enum RunnerStep: Equatable {
+    case correct
+    case partial
+    case wrong
+    case answered
+    case skipped
+    case current
+    case open
+
+    var fill: QBankColorToken {
+        switch self {
+        case .correct: .chartCorrect
+        case .partial: .chartPartial
+        case .wrong: .chartWrong
+        case .answered: .text3
+        case .skipped: .guess
+        case .current: .tint
+        case .open: .separatorStrong
+        }
+    }
+}
+
+/// One short bar per question, 2 points apart. A glance cue: the words stay in the results.
+private struct RunnerStrip: View {
+    let steps: [RunnerStep]
+    let progress: Double
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(.qbank(step.fill))
+            }
+        }
+        .frame(height: 4)
+        .animation(QBankMotion.select, value: steps)
+        .accessibilityElement()
+        .accessibilityLabel("Progress")
+        .accessibilityValue(QBankProgressPill.percentText(progress))
+        .accessibilityIdentifier("practice.strip")
     }
 }
 

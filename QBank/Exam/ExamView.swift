@@ -66,7 +66,7 @@ struct ExamView: View {
     }
 
     private var runner: some View {
-        RunnerShell(count: isOnQuestion ? model.countText : "", title: model.title, progress: model.progress) {
+        RunnerShell(count: isOnQuestion ? model.countText : "", title: model.title, progress: model.progress, strip: model.strip) {
             if model.isRunning {
                 Button("End exam") {
                     // Only End exam leaves a running exam, so the frozen view's way out is here:
@@ -146,12 +146,13 @@ struct ExamView: View {
 }
 
 /// One exam question: the notices, format and topic, stem, exhibits, ask, her answer, and the
-/// guess flag. No feedback until the end.
+/// guess flag. No feedback until the end. A skipped question keeps her marks; they end with the exam.
 private struct ExamQuestionPage: View {
     let model: ExamModel
     let question: Question
     let item: ExamModel.Item
     @Environment(\.runnerScroll) private var scroll
+    @State private var isPenOpen = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -170,23 +171,17 @@ private struct ExamQuestionPage: View {
                     Task { await model.end(.finished) }
                 }
             }
-            QuestionMeta(question: question) {
+            QuestionMeta(question: question, pen: HighlighterPen(store: model.highlighter, isOpen: $isPenOpen)) {
                 if item.skipped {
                     Text("Skipped earlier")
                         .foregroundStyle(.qbank(.guess))
                 }
             }
-            Text(question.stem)
-                .qbankFont(.stem)
-                .foregroundStyle(.qbank(.text1))
+            MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("practice.stem")
             StemExhibits(question: question)
-            Text(question.ask)
-                .qbankFont(.headline)
-                .foregroundStyle(.qbank(.text1))
+            MarkableText(text: question.ask, part: .ask, style: .headline, identifier: "practice.ask", isHeader: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
             AnswerArea(
                 question: question,
                 layout: item.layout,
@@ -203,9 +198,20 @@ private struct ExamQuestionPage: View {
                     .disabled(!model.isAnswering)
             }
         }
+        .highlighter(highlighting, store: model.highlighter, isOpen: $isPenOpen) { model.clearHighlights() }
         .onAppear {
             scroll.scroll(to: RunnerScroll.top, anchor: .top)
         }
+    }
+
+    private var highlighting: Highlighting {
+        let pen = model.highlighter
+        return Highlighting(
+            highlights: item.highlights,
+            color: pen.color,
+            paint: { model.highlight($0, in: $1, color: pen.color) },
+            erase: { model.eraseHighlight(at: $0, in: $1) }
+        )
     }
 }
 

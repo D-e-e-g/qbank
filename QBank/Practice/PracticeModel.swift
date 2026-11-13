@@ -24,6 +24,8 @@ final class PracticeModel {
         var guessed = false
         /// Original indexes of the choices she has struck out, for this run only.
         var struck: Set<Int> = []
+        /// Her marks on the question's words, for this run on this device only. Never sent.
+        var highlights = Highlights()
         /// Made once per opening, so a retried send is never counted twice.
         let clientAttemptID: String
         /// The verdict once she has checked: the server's score and words, or the phone's while
@@ -143,6 +145,18 @@ final class PracticeModel {
     var progress: Double {
         guard !questions.isEmpty else { return 0 }
         return Double(answeredCount) / Double(questions.count)
+    }
+
+    /// The runner's strip: each question's result once it has one, the one she is on, and the rest.
+    var strip: [RunnerStep] {
+        attempts.indices.map { position in
+            switch attempts[position].score?.status {
+            case .correct: .correct
+            case .partial: .partial
+            case .incorrect: .wrong
+            case nil: position == index ? .current : .open
+            }
+        }
     }
 
     /// The questions with an answer in this sitting, this run's and the earlier ones.
@@ -287,6 +301,25 @@ final class PracticeModel {
     func setGuessed(_ guessed: Bool) {
         guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
         attempts[index].guessed = guessed
+    }
+
+    /// Marks words of the current question in a color. Marks stay with the question after Check
+    /// answer, beside the rationale, until the run ends, and are never sent.
+    func highlight(_ range: Range<Int>, in part: MarkablePart, color: HighlightColor) {
+        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        attempts[index].highlights.paint(range, in: part, color: color)
+    }
+
+    /// Erases the mark under a character of the current question.
+    func eraseHighlight(at offset: Int, in part: MarkablePart) {
+        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        attempts[index].highlights.erase(at: offset, in: part)
+    }
+
+    /// Clear highlights: every mark on the current question.
+    func clearHighlights() {
+        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        attempts[index].highlights.clear()
     }
 
     /// Sends the answer and shows the score and words the server gave it. Without a connection, or

@@ -75,7 +75,7 @@ struct PracticeView: View {
     }
 
     private var runner: some View {
-        RunnerShell(count: model.phase == .answering ? model.countText : "", title: model.title, progress: model.progress) {
+        RunnerShell(count: model.phase == .answering ? model.countText : "", title: model.title, progress: model.progress, strip: model.strip) {
             RunnerCloseButton { dismiss() }
         } trailing: {
             if model.waitingCount > 0 {
@@ -138,12 +138,14 @@ struct PracticeView: View {
 
 /// One question: format and topic, stem, exhibits, ask, then her answer. After Check answer, the
 /// verdict sits right under the ask, every choice carries its reason, and the rationale, key
-/// takeaway and terms follow.
+/// takeaway and terms follow. Her marks on the question's words stay beside the rationale until the
+/// set closes; the rationale and takeaway themselves are not marked.
 private struct QuestionPage: View {
     let model: PracticeModel
     let question: Question
     let attempt: PracticeModel.Attempt
     @Environment(\.runnerScroll) private var scroll
+    @State private var isPenOpen = false
 
     private var revealed: Bool { attempt.score != nil }
 
@@ -157,18 +159,12 @@ private struct QuestionPage: View {
             if let problem = model.problem {
                 ProblemText(text: problem)
             }
-            QuestionMeta(question: question)
-            Text(question.stem)
-                .qbankFont(.stem)
-                .foregroundStyle(.qbank(.text1))
+            QuestionMeta(question: question, pen: HighlighterPen(store: model.app.highlighter, isOpen: $isPenOpen))
+            MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("practice.stem")
             StemExhibits(question: question)
-            Text(question.ask)
-                .qbankFont(.headline)
-                .foregroundStyle(.qbank(.text1))
+            MarkableText(text: question.ask, part: .ask, style: .headline, identifier: "practice.ask", isHeader: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
             if let feedback = attempt.feedback {
                 VStack(alignment: .leading, spacing: QBankSpacing.space4) {
                     if model.isWaitingToSend {
@@ -205,6 +201,7 @@ private struct QuestionPage: View {
                     .padding(.top, QBankSpacing.space2)
             }
         }
+        .highlighter(highlighting, store: model.app.highlighter, isOpen: $isPenOpen) { model.clearHighlights() }
         .sensoryFeedback(.impact(weight: .light), trigger: revealed) { _, now in now }
         .onAppear {
             scroll.scroll(to: RunnerScroll.top, anchor: .top)
@@ -216,6 +213,16 @@ private struct QuestionPage: View {
             }
             AccessibilityNotification.Announcement(attempt.feedback?.label ?? "").post()
         }
+    }
+
+    private var highlighting: Highlighting {
+        let pen = model.app.highlighter
+        return Highlighting(
+            highlights: attempt.highlights,
+            color: pen.color,
+            paint: { model.highlight($0, in: $1, color: pen.color) },
+            erase: { model.eraseHighlight(at: $0, in: $1) }
+        )
     }
 }
 
@@ -399,16 +406,18 @@ private struct RationaleSections: View {
 /// A small uppercase label over a section: "RATIONALE", "KEY TAKEAWAY".
 struct Kicker: View {
     let text: String
+    var color: QBankColorToken = .text3
 
-    init(_ text: String) {
+    init(_ text: String, color: QBankColorToken = .text3) {
         self.text = text
+        self.color = color
     }
 
     var body: some View {
         Text(text)
             .textCase(.uppercase)
             .qbankFont(.footnote, weight: .semibold, trackingEm: QBankTextStyle.capsTrackingEm)
-            .foregroundStyle(.qbank(.text3))
+            .foregroundStyle(.qbank(color))
             .accessibilityAddTraits(.isHeader)
     }
 }

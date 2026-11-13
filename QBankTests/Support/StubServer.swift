@@ -119,6 +119,7 @@ enum TestApp {
             client: client,
             look: LookStore(defaults: defaults),
             lock: lock ?? AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
+            highlighter: HighlighterStore(defaults: defaults),
             storage: storage,
             connection: connection
         )

@@ -52,6 +52,34 @@ public enum QBankColorToken: String, CaseIterable, Sendable {
     case timerLowSoft
     case progressTrack
     case progressFill
+    // From the highlighting design board, not in the web's token files yet (see `boardOnly`).
+    /// The blue highlighter, behind words.
+    case highlightBlue
+    case highlightBlueText
+    /// The pink highlighter, behind words.
+    case highlightPink
+    case highlightPinkText
+    /// Teal for what is read rather than answered: exhibit table headers and captions.
+    case exhibit
+    case exhibitSoft
+    /// The Correct tag's words, darker than `correct` in light so small text stays readable.
+    case correctText
+    /// Result chart segments: fully right, partly right, missed. Each passes a red-green color-blind check.
+    case chartCorrect
+    case chartPartial
+    case chartWrong
+
+    /// The colors the highlighting design board added, with the board's values. The web's token
+    /// files do not define them yet, so only `webCases` is checked against the web.
+    public static let boardOnly: Set<QBankColorToken> = [
+        .highlightBlue, .highlightBlueText, .highlightPink, .highlightPinkText, .exhibit, .exhibitSoft,
+        .correctText, .chartCorrect, .chartPartial, .chartWrong,
+    ]
+
+    /// Every token the web's stylesheets define.
+    public static var webCases: [QBankColorToken] {
+        allCases.filter { !boardOnly.contains($0) }
+    }
 
     /// The matching CSS custom property, for example `--text-on-tint`.
     public var cssName: String {
@@ -122,6 +150,14 @@ public enum QBankColorToken: String, CaseIterable, Sendable {
         case .timerLowSoft: return QBankColorToken.wrongSoft.lightValue(palette)
         case .progressTrack: return C.paper300
         case .progressFill: return QBankColorToken.tint.lightValue(palette)
+        case .highlightBlue: return QBankRGBA(0xB9DBFA)
+        case .highlightPink: return QBankRGBA(0xFEBCCF)
+        case .highlightBlueText, .highlightPinkText: return C.paper850
+        case .exhibit: return QBankRGBA(0x08606F)
+        case .exhibitSoft: return QBankRGBA(0xD5F1F7)
+        case .correctText, .chartCorrect: return QBankRGBA(0x1F6B40)
+        case .chartPartial: return QBankRGBA(0xBD8412)
+        case .chartWrong: return C.brick600
         }
     }
 
@@ -169,6 +205,16 @@ public enum QBankColorToken: String, CaseIterable, Sendable {
         case .timerLowSoft: return QBankColorToken.wrongSoft.darkValue(palette)
         case .progressTrack: return C.paper800
         case .progressFill: return QBankColorToken.tint.darkValue(palette)
+        case .highlightBlue: return QBankRGBA(0x143A5C)
+        case .highlightBlueText: return QBankRGBA(0xD5E9F8)
+        case .highlightPink: return QBankRGBA(0x632344)
+        case .highlightPinkText: return QBankRGBA(0xFBDCE8)
+        case .exhibit: return QBankRGBA(0x74CDE2)
+        case .exhibitSoft: return QBankRGBA(0x0D2E35)
+        case .correctText: return C.sage400
+        case .chartCorrect: return QBankRGBA(0x2F9463)
+        case .chartPartial: return QBankRGBA(0xC49A2C)
+        case .chartWrong: return QBankRGBA(0xD8563F)
         }
     }
 }

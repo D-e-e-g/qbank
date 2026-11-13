@@ -14,6 +14,8 @@ final class ExamModel {
         var guessed = false
         /// Original indexes of the choices she has struck out, for this sitting only.
         var struck: Set<Int> = []
+        /// Her marks on the question's words, for this sitting on this device only. Never sent.
+        var highlights = Highlights()
         /// Made once per opening, so a retried send is never counted twice.
         let clientAttemptID: String
         var submitted: Bool
@@ -136,6 +138,15 @@ final class ExamModel {
     var isAnswering: Bool {
         if case .answering = running { return true }
         return false
+    }
+
+    /// The runner's strip: answered and skipped only, never right or wrong, and the one she is on.
+    var strip: [RunnerStep] {
+        items.indices.map { position in
+            if items[position].submitted { return .answered }
+            if position == index { return .current }
+            return items[position].skipped ? .skipped : .open
+        }
     }
 
     /// An answer or an end on its way: the question waits.
@@ -341,6 +352,28 @@ final class ExamModel {
     func setGuessed(_ guessed: Bool) {
         guard !app.frozen.refuses(), isEditable else { return }
         items[index].guessed = guessed
+    }
+
+    /// The highlighter's pen, kept on this phone.
+    var highlighter: HighlighterStore { app.highlighter }
+
+    /// Marks words of the open question in a color. A skipped question keeps its marks; they end
+    /// with the exam and are never sent.
+    func highlight(_ range: Range<Int>, in part: MarkablePart, color: HighlightColor) {
+        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        items[index].highlights.paint(range, in: part, color: color)
+    }
+
+    /// Erases the mark under a character of the open question.
+    func eraseHighlight(at offset: Int, in part: MarkablePart) {
+        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        items[index].highlights.erase(at: offset, in: part)
+    }
+
+    /// Clear highlights: every mark on the open question.
+    func clearHighlights() {
+        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        items[index].highlights.clear()
     }
 
     /// Sends the answer and moves on. An exam answer cannot wait on the phone like a practice one:
