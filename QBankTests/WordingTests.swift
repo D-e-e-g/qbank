@@ -35,20 +35,38 @@ struct WordingTests {
         #expect(Wording.examTime(course) == expected)
     }
 
+    private static func set(
+        _ status: String = "imported", answered: Int, right: Int = 0, last: String = "null", sitting: Int? = nil, run: String? = nil
+    ) throws -> PracticeSetSummary {
+        let sitting = sitting.map { #","sitting":{"answeredCount":\#($0)}"# } ?? ""
+        let run = run.map { #","run":"\#($0)""# } ?? ""
+        return try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(#"""
+        {"id":"s","title":"t","description":"","questionCount":17,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"\#(status)","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":\#(right),"lastAnsweredAt":\#(last),"questionIds":[]\#(sitting)\#(run)}
+        """#.utf8))
+    }
+
+    /// A row from a server before `run` reads by the counts and the sitting, as it always did.
     @Test func setStatusLines() throws {
-        func set(_ status: String, answered: Int, right: Int = 0, last: String = "null") throws -> PracticeSetSummary {
-            try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(#"""
-            {"id":"s","title":"t","description":"","questionCount":17,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"\#(status)","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":\#(right),"lastAnsweredAt":\#(last),"questionIds":[]}
-            """#.utf8))
-        }
-        #expect(Wording.status(try set("imported", answered: 0), now: now) == "Imported today · 17 questions")
-        #expect(Wording.status(try set("replaced", answered: 0), now: now) == "Replaced today · 17 questions")
-        #expect(Wording.status(try set("restored", answered: 0), now: now) == "Restored today · 17 questions")
-        #expect(Wording.status(try set("imported", answered: 9), now: now) == "9 of 17 answered")
-        #expect(Wording.status(try set("imported", answered: 17, right: 13, last: #""2026-10-12T10:00:00.000Z""#), now: now) == "Done today · 13 of 17 fully right")
-        #expect(Wording.everyQuestionAnswered(try set("imported", answered: 17)))
-        #expect(!Wording.everyQuestionAnswered(try set("imported", answered: 9)))
-        #expect(!Wording.everyQuestionAnswered(try set("imported", answered: 0)))
+        #expect(Wording.status(try Self.set("imported", answered: 0), now: now) == "Imported today · 17 questions")
+        #expect(Wording.status(try Self.set("replaced", answered: 0), now: now) == "Replaced today · 17 questions")
+        #expect(Wording.status(try Self.set("restored", answered: 0), now: now) == "Restored today · 17 questions")
+        #expect(Wording.status(try Self.set("imported", answered: 9), now: now) == "9 of 17 answered")
+        #expect(Wording.status(try Self.set("imported", answered: 9, sitting: 4), now: now) == "4 of 17 answered · Continue")
+        #expect(Wording.status(try Self.set("imported", answered: 17, right: 13, last: #""2026-10-12T10:00:00.000Z""#), now: now) == "Done today · 13 of 17 fully right")
+    }
+
+    /// The server's `run` alone says which line a row shows, whatever the counts or the sitting say.
+    @Test func setStatusFollowsTheRun() throws {
+        let last = #""2026-10-12T10:00:00.000Z""#
+        #expect(Wording.status(try Self.set(answered: 0, run: "new"), now: now) == "Imported today · 17 questions")
+        #expect(Wording.status(try Self.set(answered: 9, sitting: 4, run: "midway"), now: now) == "4 of 17 answered · Continue")
+        #expect(Wording.status(try Self.set(answered: 9, sitting: 4, run: "midway"), opens: false, now: now) == "9 of 17 answered")
+        #expect(Wording.status(try Self.set(answered: 9, run: "restarted"), now: now) == "9 of 17 answered")
+        #expect(Wording.status(try Self.set(answered: 17, right: 13, last: last, run: "done"), now: now) == "Done today · 13 of 17 fully right")
+        // A Done set with a retake open never offers Continue, even if a sitting is listed.
+        let retake = try Self.set(answered: 17, right: 13, last: last, sitting: 1, run: "done")
+        #expect(Wording.continuing(retake) == nil)
+        #expect(Wording.status(retake, now: now) == "Done today · 13 of 17 fully right")
     }
 
     @Test func newRunNotice() {

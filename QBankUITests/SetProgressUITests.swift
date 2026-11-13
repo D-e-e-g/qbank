@@ -115,6 +115,58 @@ final class SetProgressUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["practice.pickedUp"].exists)
     }
 
+    /// A retake of a Done set leaves it Done, as the server says: the row never offers Continue, and
+    /// the set opens at question 1 again, online, offline from the copy on the phone, and while her
+    /// offline answer waits to be sent.
+    @MainActor
+    func testARetakeLeavesADoneSetDoneOnlineAndOffline() throws {
+        let title = "Rights, Law, and Ethics"
+        let app = launch("signed-in")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openFolder(app, "Week 1", on: "Exam 1")
+        let row = app.buttons["course.set.\(title)"]
+        XCTAssertTrue(row.appears(timeout: 5))
+        XCTAssertTrue(row.label.contains("Done "), row.label)
+
+        // Online: one answer begins a retake, and the row still says Done.
+        tapVisible(row, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        expectCount(app, "1 of 17")
+        answer(app, option: 0)
+        next(app)
+        expectCount(app, "2 of 17")
+        app.buttons["practice.close"].tap()
+        XCTAssertTrue(row.appears(timeout: 10))
+        waitForLabel(row, containing: "Done today")
+        XCTAssertFalse(row.label.contains("Continue"), row.label)
+        attach(app, "set progress: a retake leaves the row Done")
+
+        // It opens at question 1 again, and an answer made without signal waits on the phone.
+        tapVisible(row, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        expectCount(app, "1 of 17")
+        XCTAssertTrue(app.staticTexts["practice.newRun"].exists)
+        XCTAssertFalse(app.staticTexts["practice.pickedUp"].exists)
+        setNetwork(online: false)
+        answer(app, option: 0)
+        next(app)
+        XCTAssertEqual(app.buttons["practice.waiting"].label, "1 waiting to send")
+
+        // Her waiting answer counts, and the row still says Done.
+        app.buttons["practice.close"].tap()
+        XCTAssertTrue(row.appears(timeout: 10))
+        waitForLabel(row, containing: "Done today")
+        XCTAssertFalse(row.label.contains("Continue"), row.label)
+        attach(app, "set progress: offline, a retake leaves the row Done")
+
+        // The copy on the phone opens it at question 1, as the server would.
+        tapVisible(row, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        expectCount(app, "1 of 17")
+        XCTAssertTrue(app.staticTexts["practice.newRun"].exists)
+        XCTAssertFalse(app.staticTexts["practice.pickedUp"].exists)
+    }
+
     /// Day one: a set she is already midway through continues from the answers it has, with no row on
     /// the server yet, and says when she last answered.
     @MainActor

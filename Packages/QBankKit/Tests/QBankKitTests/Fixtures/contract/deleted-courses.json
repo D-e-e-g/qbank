@@ -20,8 +20,8 @@
           "title": "Pharmacology",
           "semester": null,
           "questionCount": 3,
-          "deletedAt": "2026-11-12T03:19:14.281Z",
-          "undoUntil": "2026-12-12T03:19:14.281Z",
+          "deletedAt": "2026-11-12T22:58:48.878Z",
+          "undoUntil": "2026-12-12T22:58:48.878Z",
           "undoRefusal": null,
           "deletedByAgent": null
         },
@@ -36,8 +36,8 @@
             "name": "Semester 2"
           },
           "questionCount": 5,
-          "deletedAt": "2026-11-12T03:19:14.264Z",
-          "undoUntil": "2026-12-12T03:19:14.264Z",
+          "deletedAt": "2026-11-12T22:58:48.861Z",
+          "undoUntil": "2026-12-12T22:58:48.861Z",
           "undoRefusal": "Semester 2 already has a course with the code NURS 220. Rename one of them, then bring this one back.",
           "deletedByAgent": null
         }

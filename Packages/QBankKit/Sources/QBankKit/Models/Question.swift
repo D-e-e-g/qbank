@@ -35,6 +35,9 @@ public struct PracticeSet: Codable, Sendable, Equatable, Identifiable {
     public let questions: [Question]
     /// How far she has got through the set this time.
     public var sitting: Sitting?
+    /// Where she stands in the set. Nil for a Review run or samples, and from a server or a saved
+    /// copy from before `run`: the runner then reads it from the set's row.
+    public var run: SetRun?
 
     /// Questions to practice that are not a set on the server, such as the samples of a set being
     /// made. Nothing about them is in any folder.
@@ -49,9 +52,22 @@ public struct PracticeSet: Codable, Sendable, Equatable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, weekLabel, kind, questions, sitting
+        case id, title, weekLabel, kind, questions, sitting, run
         case courseID = "courseId"
         case folderID = "folderId"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        courseID = try container.decode(String.self, forKey: .courseID)
+        title = try container.decode(String.self, forKey: .title)
+        weekLabel = try container.decode(String.self, forKey: .weekLabel)
+        folderID = try container.decodeIfPresent(String.self, forKey: .folderID)
+        kind = try container.decode(Kind.self, forKey: .kind)
+        questions = try container.decode([Question].self, forKey: .questions)
+        sitting = try container.decodeIfPresent(Sitting.self, forKey: .sitting)
+        run = SetRun.decodeIfPresent(from: container, forKey: .run)
     }
 }
 

@@ -29,21 +29,30 @@ extension PracticeSet {
     }
 
     /// The set with an answer she checked on this phone counted in its sitting, opening one if it has
-    /// none. The copy saved on the phone keeps her place this way, for when QBank cannot be reached.
+    /// none, as the server counts it. The copy saved on the phone keeps her place this way, for when
+    /// QBank cannot be reached. A Done set stays Done: a retake has nothing to continue, so the set
+    /// opens at question 1, as the server opens it. An answer that completes the sitting makes it Done.
     public func counting(_ answer: SittingAnswer) -> PracticeSet {
-        guard questions.contains(where: { $0.id == answer.questionID }) else { return self }
+        guard run != .done, questions.contains(where: { $0.id == answer.questionID }) else { return self }
         var answers = sitting?.answers.filter { $0.questionID != answer.questionID } ?? []
         answers.append(answer)
         let answered = Set(sitting?.answeredQuestionIDs ?? []).union([answer.questionID])
+        let answeredIDs = questions.map(\.id).filter(answered.contains)
         var set = self
+        guard answeredIDs.count < questions.count else {
+            set.sitting = nil
+            set.run = .done
+            return set
+        }
         set.sitting = Sitting(
             id: sitting?.id,
             // A sitting the phone begins starts with this answer. An answer left waiting from
             // before it, such as from a run she finished, is not part of it.
             startedAt: sitting == nil ? answer.answeredAt : sitting?.startedAt,
-            answeredQuestionIDs: questions.map(\.id).filter(answered.contains),
+            answeredQuestionIDs: answeredIDs,
             answers: answers
         )
+        set.run = .midway
         return set
     }
 

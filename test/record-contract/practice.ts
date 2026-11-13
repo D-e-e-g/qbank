@@ -192,6 +192,16 @@ async function continuing(): Promise<World> {
   await world.record("practice-set-after-start-over", setPath, 200);
   await world.record("course-after-start-over", `/api/courses/${courseId}`, 200);
 
+  // She answers every question from question 1, so the set is done. One more answer to Q1 begins a
+  // retake, and the set stays done with nothing to continue.
+  await world.ok("/api/attempts", 201, answer("cccccccc-3333-4333-8333-333333333333", "Q1"));
+  await world.ok("/api/attempts", 201, answer("dddddddd-4444-4444-8444-444444444444", "Q2"));
+  await world.ok("/api/attempts", 201, answer("eeeeeeee-5555-4555-8555-555555555555", "Q3"));
+  await world.ok("/api/attempts", 201, answer("ffffffff-6666-4666-8666-666666666666", "Q1"));
+  const retake = await world.record("practice-set-done-retake", setPath, 200);
+  expect(retake.get("run").value === "done" && retake.get("sitting").value === null, "a retake made a done set continue", retake.value);
+  await world.record("course-done-retake", `/api/courses/${courseId}`, 200);
+
   world.name(semester.str("id"), "5e000000-0000-4000-8000-000000000301");
   world.name(courseId, "c0000000-0000-4000-8000-000000000301");
   world.name(setId, "5e700000-0000-4000-8000-000000000301");

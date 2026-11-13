@@ -190,7 +190,7 @@ final class PracticeModel {
         // Read before asking QBank: an answer may reach it after its reply was written.
         let waitingBefore = app.offline?.waiting ?? []
         do {
-            let loaded = switch source {
+            var loaded = switch source {
             case .set(let id):
                 try await app.load(.practiceSet(id)) { () async throws(QBankError) in try await app.client.practiceSet(id: id) }.value
             case .review(let filter, let questionID):
@@ -206,7 +206,10 @@ final class PracticeModel {
                 phase = .failed("That set is not in this course.")
                 return
             }
-            await begin(await countingWaiting(waitingBefore, in: loaded))
+            if case .set(let id) = source, loaded.run == nil {
+                loaded.run = await savedRowRun(of: id)
+            }
+            begin(await countingWaiting(waitingBefore, in: loaded))
         } catch {
             if app.handle(error) { return }
             if case .transport = error, !isReview, !isSample {
@@ -238,13 +241,14 @@ final class PracticeModel {
         return counted
     }
 
-    private func begin(_ loaded: PracticeSet) async {
+    private func begin(_ loaded: PracticeSet) {
         practiceSet = loaded
         questions = loaded.questions.sorted { $0.position < $1.position }
-        let answered = Set(loaded.sitting?.answeredQuestionIDs ?? [])
-        // Every question answered is a finished set, which opens fresh.
+        // A Done set has nothing to continue, even with a retake under way: it opens fresh.
+        let sitting = loaded.run == .done ? nil : loaded.sitting
+        let answered = Set(sitting?.answeredQuestionIDs ?? [])
         let place = answered.isEmpty ? nil : questions.firstIndex { !answered.contains($0.id) }
-        let answers = place == nil ? [:] : Dictionary((loaded.sitting?.answers ?? []).map { ($0.questionID, $0) }) { _, latest in latest }
+        let answers = place == nil ? [:] : Dictionary((sitting?.answers ?? []).map { ($0.questionID, $0) }) { _, latest in latest }
         attempts = questions.map { question in
             let layout = makeLayout(question.body)
             let answer = answers[question.id]
@@ -266,11 +270,10 @@ final class PracticeModel {
             answeredEarlier = []
             index = 0
             pickedUp = nil
-            // A sitting that lists every question is finished. Once the server has closed it, the
-            // course row says the same thing: every question answered, and nothing to continue.
-            var finished = !answered.isEmpty
-            if !finished {
-                finished = await courseRowIsFinished()
+            // A sitting that lists every question is finished too, in a copy from before `run`.
+            let finished = loaded.run == .done || !answered.isEmpty
+            if finished {
+                practiceSet?.run = .done
             }
             showsNewRunNotice = !questions.isEmpty && finished
         }
@@ -414,17 +417,18 @@ final class PracticeModel {
         }
         var fresh = practiceSet
         fresh.sitting = nil
+        if fresh.run == .midway {
+            fresh.run = .restarted
+        }
         await app.offline?.keep(fresh)
-        await begin(fresh)
+        begin(fresh)
     }
 
-    /// The course row says Done for this set: every question has an answer and nothing is left to
-    /// continue. That is the same decision the row shows, read from the course already on the phone.
-    private func courseRowIsFinished() async -> Bool {
-        guard case .set(let id) = source else { return false }
-        guard let course = await app.offline?.saved(.course(courseID))?.value else { return false }
-        guard let set = course.folders.lazy.flatMap(\.sets).first(where: { $0.id == id }) else { return false }
-        return Wording.continuing(set) == nil && Wording.everyQuestionAnswered(set)
+    /// Where the course row saved on the phone says she stands in the set, for a set from a server
+    /// from before `run`. Nil when the course is not saved here.
+    private func savedRowRun(of id: String) async -> SetRun? {
+        guard let course = await app.offline?.saved(.course(courseID))?.value else { return nil }
+        return course.folders.lazy.flatMap(\.sets).first { $0.id == id }?.run
     }
 
     /// The next question she has not answered, or the set result after the last one.

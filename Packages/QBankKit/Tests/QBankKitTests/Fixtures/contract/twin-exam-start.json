@@ -30,59 +30,16 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-12T03:19:18.869Z",
-      "endsAt": "2026-11-12T03:23:48.869Z",
+      "startedAt": "2026-11-12T22:58:53.236Z",
+      "endsAt": "2026-11-12T23:03:23.236Z",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-12T03:19:18.869Z",
+      "serverNow": "2026-11-12T22:58:53.236Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8021-000000000009",
-          "publicId": "XA01",
-          "position": 1,
-          "type": "sata",
-          "topic": "Harder A 1",
-          "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
-          "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder A 1.",
-          "takeaway": "Report changes.",
-          "body": {
-            "twinOf": "A01",
-            "options": [
-              {
-                "t": "Heart rate of 124",
-                "ok": true,
-                "why": "Invented: fast."
-              },
-              {
-                "t": "New confusion",
-                "ok": true,
-                "why": "Invented: a change."
-              },
-              {
-                "t": "Mild thirst",
-                "why": "Invented: expected."
-              },
-              {
-                "t": "Soreness at the site",
-                "why": "Invented: expected."
-              },
-              {
-                "t": "Tired after walking",
-                "why": "Invented: expected."
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 5"
-        },
-        {
-          "id": "00000000-0000-4000-8021-000000000010",
           "publicId": "XB02",
-          "position": 2,
+          "position": 1,
           "type": "sata",
           "topic": "Harder B 2",
           "cj": "Recognize cues",
@@ -123,9 +80,9 @@
           "weekLabel": "Week 5"
         },
         {
-          "id": "00000000-0000-4000-8021-000000000011",
+          "id": "00000000-0000-4000-8021-000000000010",
           "publicId": "XA03",
-          "position": 3,
+          "position": 2,
           "type": "sata",
           "topic": "Harder A 3",
           "cj": "Recognize cues",
@@ -135,6 +92,49 @@
           "takeaway": "Report changes.",
           "body": {
             "twinOf": "A03",
+            "options": [
+              {
+                "t": "Heart rate of 124",
+                "ok": true,
+                "why": "Invented: fast."
+              },
+              {
+                "t": "New confusion",
+                "ok": true,
+                "why": "Invented: a change."
+              },
+              {
+                "t": "Mild thirst",
+                "why": "Invented: expected."
+              },
+              {
+                "t": "Soreness at the site",
+                "why": "Invented: expected."
+              },
+              {
+                "t": "Tired after walking",
+                "why": "Invented: expected."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 5"
+        },
+        {
+          "id": "00000000-0000-4000-8021-000000000011",
+          "publicId": "XA01",
+          "position": 3,
+          "type": "sata",
+          "topic": "Harder A 1",
+          "cj": "Recognize cues",
+          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+          "ask": "Which findings need a report? Select all that apply.",
+          "rationale": "Invented twin rationale for Harder A 1.",
+          "takeaway": "Report changes.",
+          "body": {
+            "twinOf": "A01",
             "options": [
               {
                 "t": "Heart rate of 124",

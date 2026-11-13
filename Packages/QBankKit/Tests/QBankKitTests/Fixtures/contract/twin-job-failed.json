@@ -57,9 +57,9 @@
       "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
       "sets": [],
       "exam": null,
-      "createdAt": "2026-11-11 22:19:18.917-05",
-      "updatedAt": "2026-11-11 22:19:18.921-05",
-      "finishedAt": "2026-11-11 22:19:18.921-05",
+      "createdAt": "2026-11-12 17:58:53.291-05",
+      "updatedAt": "2026-11-12 17:58:53.294-05",
+      "finishedAt": "2026-11-12 17:58:53.294-05",
       "failure": "The model did not answer.",
       "warnings": [],
       "usage": {

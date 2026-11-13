@@ -15,6 +15,10 @@ import Foundation
 /// asks only questions she has not answered in it. Once they cover the set, the sitting is over, as
 /// the server closes it. A waiting Review answer is left out: it counts once the server has it.
 ///
+/// Its run follows: a Done set stays Done, since a retake has nothing to continue; a set whose every
+/// question now has an answer is Done; and one whose waiting answers begin or extend a sitting is
+/// Midway.
+///
 /// Points stay as the server reported them.
 public struct WaitingProgress: Sendable, Equatable {
     /// The latest waiting answer to one question.
@@ -76,12 +80,22 @@ public struct WaitingProgress: Sendable, Equatable {
         }
         let inSitting = waiting.count { $0.joinsASitting }
         let sittingCount = (set.sitting?.answeredCount ?? 0) + inSitting
-        let sitting = inSitting == 0 ? set.sitting : sittingCount < set.questionCount ? PracticeSetSummary.Sitting(answeredCount: sittingCount) : nil
+        let answeredCount = max(answered, min(set.questionCount, sittingCount))
+        let run: SetRun
+        let sitting: PracticeSetSummary.Sitting?
+        if set.run == .done || (set.questionCount > 0 && answeredCount >= set.questionCount) {
+            (run, sitting) = (.done, nil)
+        } else if inSitting > 0 {
+            (run, sitting) = (.midway, PracticeSetSummary.Sitting(answeredCount: sittingCount))
+        } else {
+            // Only Review answers wait: the sitting stays as it is, and a New set now has answers.
+            (run, sitting) = (set.run == .new ? .restarted : set.run, set.sitting)
+        }
         return PracticeSetSummary(
             id: set.id, title: set.title, description: set.description, questionCount: set.questionCount,
             importedAt: set.importedAt, activeSince: set.activeSince, status: set.status, canRestore: set.canRestore,
-            answeredCount: max(answered, min(set.questionCount, sittingCount)), fullyRightCount: fullyRight, lastAnsweredAt: lastAnsweredAt,
-            questionIDs: set.questionIDs, importedByAgent: set.importedByAgent, sitting: sitting
+            answeredCount: answeredCount, fullyRightCount: fullyRight, lastAnsweredAt: lastAnsweredAt,
+            questionIDs: set.questionIDs, importedByAgent: set.importedByAgent, sitting: sitting, run: run
         )
     }
 

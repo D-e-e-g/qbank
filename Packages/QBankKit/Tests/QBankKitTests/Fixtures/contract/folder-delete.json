@@ -4,7 +4,7 @@
     "method": "DELETE",
     "path": "/api/folders/f0000000-0000-4000-8000-000000000701",
     "query": {
-      "confirm": "f270ba17a6206c10"
+      "confirm": "81da7e50eaf1528c"
     },
     "authorization": "Bearer synthetic-session-token",
     "body": null

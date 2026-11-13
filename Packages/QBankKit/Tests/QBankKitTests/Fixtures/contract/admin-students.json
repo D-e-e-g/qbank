@@ -16,13 +16,13 @@
           "id": "synthetic-user-2",
           "email": "student@example.com",
           "name": "Sam Student",
-          "createdAt": "2026-11-12T03:19:00.559Z"
+          "createdAt": "2026-11-12T22:58:35.144Z"
         },
         {
           "id": "synthetic-user-3",
           "email": "second.user@example.com",
           "name": "Second User",
-          "createdAt": "2026-11-12T03:19:00.649Z"
+          "createdAt": "2026-11-12T22:58:35.233Z"
         }
       ],
       "viewingId": "synthetic-user-2"

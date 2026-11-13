@@ -8,11 +8,12 @@ import Testing
 @MainActor
 struct SetProgressTests {
     /// A set of `count` single-answer questions, q0 to q(count - 1), where the first choice is right.
-    static func set(questions count: Int = 4, sitting: String = "null") -> String {
+    static func set(questions count: Int = 4, sitting: String = "null", run: String? = nil) -> String {
         let questions = (0..<count).map { index in
             #"{"id":"q\#(index)","publicId":"Q\#(index)","position":\#(index + 1),"type":"single","topic":"Invented \#(index)","cj":"Take action","stem":"Stem \#(index).","ask":"Which one?","rationale":"Because.","takeaway":"Remember.","terms":[],"body":{"options":[{"t":"Right","ok":true},{"t":"Wrong"}]}}"#
         }
-        return #"{"id":"set1","courseId":"c1","title":"Shock and perfusion","weekLabel":"Week 6","kind":"practice","questions":[\#(questions.joined(separator: ","))],"sitting":\#(sitting)}"#
+        let run = run.map { #","run":"\#($0)""# } ?? ""
+        return #"{"id":"set1","courseId":"c1","title":"Shock and perfusion","weekLabel":"Week 6","kind":"practice","questions":[\#(questions.joined(separator: ","))],"sitting":\#(sitting)\#(run)}"#
     }
 
     static func sitting(_ answered: [Int], id: String? = "s1", startedAt: String? = "2026-01-01T00:00:00.000Z", answeredAt: String = "2026-01-01T00:00:00.000Z") -> String {
@@ -298,7 +299,9 @@ struct SetProgressTests {
         #expect(again.index == 2)
     }
 
-    @Test func aFinishedRunOnThePhoneOpensFreshThenARetakeKeepsItsOwnPlace() async throws {
+    /// As the server does: once every question has an answer the set is Done, and a retake under way
+    /// has nothing to continue, so it opens fresh each time.
+    @Test func aFinishedRunOnThePhoneOpensFreshEvenWithARetakeUnderWay() async throws {
         let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.set(questions: 3))])
         let storage = PhoneStorage.memory()
         let offline = Connection(isOnline: false)
@@ -323,13 +326,13 @@ struct SetProgressTests {
         retake.update(.single(0))
         await retake.check()
 
-        // The first run's answers still wait, but they are not this run's.
         let (again, app) = PracticeModelTests.model(server, storage: storage, connection: offline, now: later)
         await again.load()
         #expect(app.offline?.waiting.contains { $0.submission.questionID == "q2" } == true)
-        #expect(again.index == 1)
-        #expect(!again.showsNewRunNotice)
-        #expect(again.answeredCount == 1)
+        #expect(again.index == 0)
+        #expect(again.pickedUp == nil)
+        #expect(again.showsNewRunNotice)
+        #expect(again.answeredCount == 0)
     }
 
     // MARK: Her copy on the phone
@@ -362,6 +365,32 @@ struct SetProgressTests {
         #expect(await store.saved(.practiceSet("set1"))?.value.sitting?.answeredQuestionIDs == ["q0", "q1"])
     }
 
+    @Test func savingCoursesRefreshesASetWhoseRunMoved() async throws {
+        let row = { (run: String) in
+            Bodies.set(id: "set1", questionIDs: ["q0", "q1", "q2", "q3"]).replacingOccurrences(of: #""questionIds""#, with: #""run":"\#(run)","questionIds""#)
+        }
+        let server = StubServer([
+            "GET /api/courses/c1": .ok(Bodies.courseDetail(sets: [row("restarted")])),
+            "GET /api/practice-sets/set1": .ok(Self.set(run: "restarted")),
+        ])
+        let (app, _) = TestApp.make(server, account: .student())
+        let store = try #require(app.offline)
+        let catalog = try Bodies.decodeCatalog(Bodies.semesters())
+        store.saveCourses(in: catalog, force: true)
+        await store.finishSavingCourses()
+        store.saveCourses(in: catalog, force: true)
+        await store.finishSavingCourses()
+        #expect(server.calls.count { $0 == "GET /api/practice-sets/set1" } == 1)
+
+        // She answered the rest on an exam: no sitting moved, but the set is Done now.
+        server["GET /api/courses/c1"] = .ok(Bodies.courseDetail(sets: [row("done")]))
+        server["GET /api/practice-sets/set1"] = .ok(Self.set(run: "done"))
+        store.saveCourses(in: catalog, force: true)
+        await store.finishSavingCourses()
+        #expect(server.calls.count { $0 == "GET /api/practice-sets/set1" } == 2)
+        #expect(await store.saved(.practiceSet("set1"))?.value.run == .done)
+    }
+
     // MARK: Words
 
     @Test func theRowSaysContinueWhileThereIsASitting() throws {
@@ -372,7 +401,7 @@ struct SetProgressTests {
         }
         let now = try #require(QBankJSON.parseDate("2026-10-12T12:00:00.000Z"))
         #expect(Wording.status(try row(answered: 7, sitting: #"{"answeredCount":7}"#), now: now) == "7 of 12 answered · Continue")
-        #expect(Wording.status(try row(answered: 12, sitting: #"{"answeredCount":1}"#), now: now) == "1 of 12 answered · Continue", "a retake")
+        #expect(Wording.status(try row(answered: 12, sitting: #"{"answeredCount":1}"#), now: now) == "Done today · 3 of 12 fully right", "a retake has nothing to continue")
         #expect(Wording.status(try row(answered: 7, sitting: #"{"answeredCount":7}"#), opens: false, now: now) == "7 of 12 answered", "a row that does not open the set")
         #expect(Wording.status(try row(answered: 7, sitting: "null"), now: now) == "7 of 12 answered", "after Start over")
         #expect(Wording.status(try row(answered: 12, sitting: "null"), now: now) == "Done today · 3 of 12 fully right")
@@ -429,11 +458,92 @@ struct SetProgressTests {
         #expect(model.showsNewRunNotice)
     }
 
-    @Test func aRetakeInProgressShowsNoNotice() async throws {
+    /// A Done set opens fresh even with a retake listed, from a server before `run` too.
+    @Test func aRetakeUnderWayStillOpensFreshWithTheNotice() async throws {
         let model = try await openRemembering(Self.row(answered: 4, sitting: #"{"answeredCount":1}"#), sitting: Self.sitting([0]))
-        #expect(model.index == 1)
-        #expect(model.pickedUp != nil)
+        #expect(model.index == 0)
+        #expect(model.pickedUp == nil)
+        #expect(model.showsNewRunNotice)
+    }
+
+    // MARK: The server's run
+
+    @Test func aDoneSetOpensFreshWithTheNoticeWhateverItsSitting() async throws {
+        for sitting in ["null", Self.sitting([0])] {
+            let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.set(sitting: sitting, run: "done"))])
+            let (model, _) = PracticeModelTests.model(server)
+            await model.load()
+            #expect(model.index == 0)
+            #expect(model.pickedUp == nil)
+            #expect(model.answeredCount == 0)
+            #expect(model.showsNewRunNotice)
+        }
+    }
+
+    @Test func aMidwaySetContinuesAndANewOrRestartedOneOpensFreshWithoutTheNotice() async throws {
+        let midway = StubServer(["GET /api/practice-sets/set1": .ok(Self.set(sitting: Self.sitting([0, 1]), run: "midway"))])
+        let (continuing, _) = PracticeModelTests.model(midway)
+        await continuing.load()
+        #expect(continuing.index == 2)
+        #expect(!continuing.showsNewRunNotice)
+        for run in ["new", "restarted"] {
+            let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.set(run: run))])
+            let (model, _) = PracticeModelTests.model(server)
+            await model.load()
+            #expect(model.index == 0)
+            #expect(!model.showsNewRunNotice, "\(run)")
+        }
+    }
+
+    /// The set's run comes before its row on the phone, which may be older.
+    @Test func theSetsRunComesBeforeItsSavedRow() async throws {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.set(run: "restarted")),
+            "GET /api/courses/c1": .ok(Bodies.courseDetail(sets: [Self.row(answered: 4)])),
+        ])
+        let (model, app) = PracticeModelTests.model(server)
+        _ = try await app.load(.course("c1")) { () async throws(QBankError) in try await app.client.course(id: "c1") }
+        await model.load()
+        #expect(model.index == 0)
         #expect(!model.showsNewRunNotice)
+    }
+
+    /// Bug (b): one answer on a Done set opened a sitting in the copy on the phone, so with no
+    /// connection next time the set opened at question 2 where the server opens it at 1.
+    @Test func anAnswerOnADoneSetLeavesItsCopyOpeningAtQuestionOne() async throws {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.set(run: "done")),
+            "POST /api/attempts": Self.saved("attempt-1", question: "q0"),
+        ])
+        let storage = PhoneStorage.memory()
+        let (online, _) = PracticeModelTests.model(server, storage: storage)
+        await online.load()
+        online.update(.single(0))
+        await online.check()
+        #expect(online.attempt?.feedback != nil)
+
+        let (offline, app) = PracticeModelTests.model(server, storage: storage, connection: Connection(isOnline: false))
+        await offline.load()
+        #expect(offline.index == 0)
+        #expect(offline.pickedUp == nil)
+        #expect(offline.showsNewRunNotice)
+        #expect(await app.offline?.saved(.practiceSet("set1"))?.value.run == .done)
+        #expect(await app.offline?.saved(.practiceSet("set1"))?.value.sitting == nil)
+    }
+
+    @Test func startOverLeavesTheCopyOnThePhoneRestarted() async throws {
+        let server = StubServer([
+            "GET /api/practice-sets/set1": .ok(Self.set(sitting: Self.sitting([0, 1]), run: "midway")),
+            "POST /api/practice-sets/set1/start-over": .ok(#"{"ended":true}"#),
+        ])
+        let (model, app) = PracticeModelTests.model(server)
+        await model.load()
+        await model.startOver()
+        #expect(model.index == 0)
+        #expect(!model.showsNewRunNotice)
+        let copy = await app.offline?.saved(.practiceSet("set1"))?.value
+        #expect(copy?.run == .restarted)
+        #expect(copy?.sitting == nil)
     }
 
     @Test func aSetLeftAfterStartOverShowsNoNotice() async throws {
@@ -496,18 +606,43 @@ struct SetProgressTests {
         _ = try await app.client.recordAttempt(review)
         #expect(try await app.client.practiceSet(id: "rights-v1").sitting == nil)
 
-        // Its first new answer is the retake.
+        // Its first new answer begins a retake, and the set stays Done with nothing to continue.
         _ = try await app.client.recordAttempt(AttemptSubmission(questionID: "rights-v1-q0", response: .single(choice: 0)))
         let retake = try await app.client.practiceSet(id: "rights-v1")
-        #expect(retake.sitting?.id != nil)
-        #expect(retake.sitting?.answeredQuestionIDs == ["rights-v1-q0"])
+        #expect(retake.sitting == nil)
+        #expect(retake.run == .done)
 
         // Start over ends it, and says when there is nothing to end.
         #expect(try await app.client.startPracticeSetOver(id: "rights-v1"))
-        #expect(try await app.client.practiceSet(id: "rights-v1").sitting == nil)
+        #expect(try await app.client.practiceSet(id: "rights-v1").run == .done)
         #expect(try await app.client.startPracticeSetOver(id: "rights-v1") == false)
         #expect(try await app.client.startPracticeSetOver(id: "communication-v1"))
-        #expect(try await app.client.practiceSet(id: "communication-v1").sitting == nil)
+        let restarted = try await app.client.practiceSet(id: "communication-v1")
+        #expect(restarted.sitting == nil)
+        #expect(restarted.run == .restarted)
+    }
+
+    /// The fake server sends `run` by the server's rule, on the set and on its row.
+    @Test func theFakeServerSendsEachSetsRun() async throws {
+        let app = try #require(DebugLaunchScenario.makeModel(
+            environment: [DebugLaunchScenario.scenarioKey: "signed-in"],
+            phoneFolder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        ))
+        #expect(try await app.client.practiceSet(id: "mixed-v1").run == .new)
+        #expect(try await app.client.practiceSet(id: "communication-v1").run == .midway)
+        #expect(try await app.client.practiceSet(id: "rights-v1").run == .done)
+        _ = try await app.client.recordAttempt(AttemptSubmission(questionID: "mixed-v1-q0", response: .single(choice: 0)))
+        #expect(try await app.client.practiceSet(id: "mixed-v1").run == .midway)
+        _ = try await app.client.recordAttempt(AttemptSubmission(questionID: "rights-v1-q0", response: .single(choice: 0)))
+
+        // NURS 310, the invented Mental Health course.
+        let rows = try await app.client.course(id: "8d7b4f0e-0000-4000-8000-000000000310").folders.flatMap(\.sets)
+        let row = { (title: String) in rows.first { $0.title == title } }
+        #expect(row("Mixed Clinical Judgment")?.run == .midway)
+        #expect(row("Therapeutic Communication and the Relationship")?.run == .midway)
+        #expect(row("Rights, Law, and Ethics")?.run == .done, "a retake leaves it Done")
+        #expect(row("Rights, Law, and Ethics")?.sitting == nil)
+        #expect(row("Depression and Antidepressants")?.run == .new)
     }
 
     @Test func theFakeServersAnswersOutlastTheAppOnlyWhenKept() async throws {
