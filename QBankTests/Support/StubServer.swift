@@ -72,16 +72,19 @@ final class StubServer: HTTPTransport {
     }
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        log.withLock { $0.append(request) }
         let key = "\(request.httpMethod ?? "GET") \(request.url?.path() ?? "")"
+        // Take the gate and scripted reply before the request shows in the log: a test waits for the log, then sends
+        // a second request, and that one must not be the request that finds the gate.
+        let gate = gates.withLock { $0.removeValue(forKey: key) }
         let scripted = scripts.withLock { scripts -> Reply? in
             guard var replies = scripts[key], !replies.isEmpty else { return nil }
             let reply = replies.removeFirst()
             scripts[key] = replies
             return reply
         }
+        log.withLock { $0.append(request) }
         let reply = scripted ?? routes.withLock { $0[key] } ?? .error(404, "request_refused", "Not stubbed: \(key)")
-        if let gate = gates.withLock({ $0.removeValue(forKey: key) }) {
+        if let gate {
             for await _ in gate {}
         }
         if reply.status < 0 { throw URLError(.notConnectedToInternet) }
