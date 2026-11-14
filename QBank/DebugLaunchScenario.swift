@@ -85,6 +85,9 @@ nonisolated enum DebugLaunchScenario {
         case examFinishDrops = "exam-finish-drops"
         /// As `examInProgress`, with that exam's time running out a minute after launch.
         case examTimeRunningOut = "exam-time-running-out"
+        /// As `signedIn`, on a slow connection: the reply to each practice answer and to Start over
+        /// takes `slowSaveReplyDelay` to arrive, so a test can act while one is on its way.
+        case slowSaves = "slow-saves"
         /// `FakeQBankServer.maker` is signed in: the server lets her make questions, with one set
         /// being written and the questions copied from two photos waiting for her check.
         case maker = "maker"
@@ -100,6 +103,10 @@ nonisolated enum DebugLaunchScenario {
         /// Signed in, with Weeks 1-3 holding one select-all question whose every option is correct.
         case sataAllCorrect = "sata-all-correct"
     }
+
+    /// How long a reply to a save takes in `Scenario.slowSaves`: long enough for a UI test to look
+    /// at the screen and tap while it waits.
+    static let slowSaveReplyDelay = Duration.seconds(4)
 
     struct UnknownScenario: Error, CustomStringConvertible {
         let name: String
@@ -171,6 +178,12 @@ nonisolated enum DebugLaunchScenario {
                 server: FakeQBankServer(
                     signedIn: true, examInProgress: true, examLastQuestionOpen: true, droppedFinishes: 6, answersFile: answersFile
                 ),
+                session: FakeQBankServer.storedStudentSession(),
+                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .slowSaves:
+            return model(
+                server: FakeQBankServer(signedIn: true, saveReplyDelay: slowSaveReplyDelay, answersFile: answersFile),
                 session: FakeQBankServer.storedStudentSession(),
                 defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )

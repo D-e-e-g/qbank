@@ -99,7 +99,7 @@ final class PracticeUITests: XCTestCase {
         tapVisible(app.buttons["practice.match.1"], in: app)
         XCTAssertTrue(app.buttons["Veracity"].appears(timeout: 5))
         attach(app, "1b-7 matching, menu open")
-        app.buttons["Veracity"].tap()
+        chooseFromMenu(app.buttons["Veracity"])
         choose(app, menu: "practice.match.2", option: "Justice")
         XCTAssertFalse(app.buttons["practice.check"].isEnabled, "one row is still empty")
         choose(app, menu: "practice.match.3", option: "Nonmaleficence")
@@ -218,14 +218,11 @@ final class PracticeUITests: XCTestCase {
         app.buttons["practice.next"].tap()
     }
 
-    /// Opens a menu and picks one of its options.
+    /// Opens a menu and picks one of its options, again if the menu drops the tap.
     @MainActor
     private func choose(_ app: XCUIApplication, menu: String, option: String) {
         tapVisible(app.buttons[menu], in: app)
-        let item = app.buttons[option]
-        XCTAssertTrue(item.appears(timeout: 5), "\(option) in \(menu)")
-        item.tap()
-        XCTAssertTrue(item.disappears(timeout: 5))
+        chooseFromMenu(app.buttons[option])
     }
 
     /// Moves each item to its place with the up buttons, first item first.

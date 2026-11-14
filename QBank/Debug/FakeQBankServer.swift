@@ -123,6 +123,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     private let offline = Mutex(false)
     /// Requests to end an exam still to lose the connection.
     private let finishesToDrop: Mutex<Int>
+    /// How long the reply to an answer or a Start over takes to arrive.
+    private let saveReplyDelay: Duration
     /// Review, Terms, exams and the course's exams.
     let study: FakeStudy
     /// Make questions, for `maker` only.
@@ -151,12 +153,14 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     ///   - examEndsIn: That exam's time runs out this long after `now`.
     ///   - droppedFinishes: How many requests to end an exam lose the connection before one reaches
     ///     the server, as when the signal goes right after her last answer.
+    ///   - saveReplyDelay: How long the reply to a practice answer or a Start over takes to arrive, as
+    ///     on a slow connection: the server has it at once, and the app hears back this much later.
     ///   - matrixMultiSet: Weeks 1-3 holds one matrixmulti question instead of the mixed set.
     ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
         place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, examLastQuestionOpen: Bool = false,
-        examEndsIn: TimeInterval? = nil, droppedFinishes: Int = 0, matrixMultiSet: Bool = false,
+        examEndsIn: TimeInterval? = nil, droppedFinishes: Int = 0, saveReplyDelay: Duration = .zero, matrixMultiSet: Bool = false,
         sataAllCorrectSet: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
@@ -166,6 +170,7 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             matrixMultiSet: matrixMultiSet, sataAllCorrectSet: sataAllCorrectSet
         )
         finishesToDrop = Mutex(droppedFinishes)
+        self.saveReplyDelay = saveReplyDelay
         questionMaker = FakeQuestionMaker(allowed: [Self.maker.email], isSetUp: makerIsSetUp, seededFor: Self.maker.email, now: now)
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
         agents = FakeAgents(studentEmail: Self.student.email, now: now)
@@ -240,6 +245,10 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         let fields = request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
         var headers = ["Content-Type": "application/json"]
         let (status, body) = answer(method: method, path: url.path(), query: query, token: token, body: fields, rawBody: request.httpBody)
+        // A slow connection: the server has the answer or the Start over, and its reply is on its way.
+        if saveReplyDelay > .zero, method == "POST", url.path() == "/api/attempts" || url.path().hasSuffix("/start-over") {
+            try await Task.sleep(for: saveReplyDelay)
+        }
         // A lock says how long in its header too, as the server's does.
         if let retryAfter = body["retryAfterSeconds"] as? Int {
             headers["retry-after"] = String(retryAfter)
