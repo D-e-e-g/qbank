@@ -33,7 +33,7 @@ nonisolated extension FakeStudy {
         return state.withLock { state in
             let course = Self.ordered(state, courseID: courseID)
             let folders = course.filter { !Self.pool($0, sizes: state.sizes).isEmpty }
-            let exams = state.exams.filter { $0.courseID == courseID }.sorted { $0.startedAt > $1.startedAt }
+            let exams = state.exams.filter { $0.courseID == courseID }.sorted { $0.startedAt > $1.startedAt }.map { $0.asRead(at: .now) }
             let summaries = exams.map { summaryJSON($0, in: state) }
             let pools = folders.map { folder -> [String: Any] in
                 [
@@ -60,8 +60,8 @@ nonisolated extension FakeStudy {
             let rules = ExamPlan.rules
             return [
                 "courseId": courseID, "weeks": weeks, "folders": pools,
-                "inProgress": exams.firstIndex { $0.finishedAt == nil }.map { summaries[$0] } ?? NSNull(),
-                "exams": exams.indices.filter { exams[$0].finishedAt != nil }.map { summaries[$0] },
+                "inProgress": exams.firstIndex { $0.isOpen(at: .now) }.map { summaries[$0] } ?? NSNull(),
+                "exams": exams.indices.filter { !exams[$0].isOpen(at: .now) }.map { summaries[$0] },
                 "rules": ["maxQuestions": rules.maxQuestions, "fullTimeSeconds": rules.fullTimeSeconds, "secondsPerQuestion": rules.secondsPerQuestion],
                 "preview": folderIDs.isEmpty ? NSNull() : Self.preview(course.filter { folderIDs.contains($0.id) }, in: course, draw: draw),
                 "courseExams": pages.map { page in
@@ -107,7 +107,9 @@ nonisolated extension FakeStudy {
         }?.id
     }
 
-    func summaryJSON(_ exam: Exam, in state: State) -> [String: Any] {
+    func summaryJSON(_ stored: Exam, in state: State) -> [String: Any] {
+        let now = Date.now
+        let exam = stored.asRead(at: now)
         let result = exam.finishedAt == nil ? nil : score(exam, in: state)
         return [
             "id": exam.id, "courseId": exam.courseID, "weeks": exam.names, "folderIds": exam.folderIDs,
@@ -115,6 +117,7 @@ nonisolated extension FakeStudy {
             "pool": exam.pool.rawValue, "practiceWeeks": exam.practiceWeeks.map { $0 as Any } ?? NSNull(),
             "questionCount": exam.questions.count, "timeLimitSeconds": exam.timeLimitSeconds,
             "startedAt": QBankJSON.formatDate(exam.startedAt), "endsAt": QBankJSON.formatDate(exam.endsAt),
+            "status": exam.readStatus(at: now).rawValue,
             "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)), "endReason": Self.json(exam.endReason?.rawValue),
             "answeredCount": exam.answers.count,
             "fullyRight": result.map { $0["fullyRight"] as Any } ?? NSNull(),
@@ -184,10 +187,11 @@ nonisolated extension FakeStudy {
             draw(folder).prefix(row.drawn).map { (id: $0, folder: folder.id, name: folder.name) }
         }
         let practiceWeeks = course.contains { !$0.bank.isEmpty } ? ticked.filter(\.bank.isEmpty).map(\.name) : nil
-        // A running exam of hers she did not agree to end refuses the start, and nothing changes. An
-        // exam whose time has run out is not running: it ends as a timeout whatever `replaces` says.
+        // An open exam of hers (running, or in its grace) she did not agree to end refuses the start,
+        // and nothing changes. One whose time is up is not open: it ends as a timeout whatever
+        // `replaces` says.
         if case .exam(let agreed) = replaces, let unconfirmed = state.withLock({ state in
-            state.exams.filter { $0.finishedAt == nil && startedAt < $0.endsAt && $0.id != agreed }.max { $0.startedAt < $1.startedAt }
+            state.exams.filter { $0.isOpen(at: startedAt) && $0.id != agreed }.max { $0.startedAt < $1.startedAt }
         }) {
             return .failure(Refusal(
                 code: "exam_in_progress", message: "An exam is still running. Starting a new one ends it, so confirm that first.",
@@ -215,7 +219,8 @@ nonisolated extension FakeStudy {
 
     func examView(_ id: String, status: Int = 200) -> Reply {
         settleExpired()
-        guard let exam = state.withLock({ $0.exams.first { $0.id == id } }) else {
+        let now = Date.now
+        guard let exam = state.withLock({ $0.exams.first { $0.id == id } })?.asRead(at: now) else {
             return Self.failure(404, "exam_not_found", "That exam is not in the app.")
         }
         let course = exam.courseID == FakeQBankServer.mentalHealthID ? ("NURS 310", "Mental Health") : ("NURS 220", "Fundamentals")
@@ -225,8 +230,9 @@ nonisolated extension FakeStudy {
             "weeks": exam.names, "folderIds": exam.folderIDs,
             "pool": exam.pool.rawValue, "practiceWeeks": exam.practiceWeeks.map { $0 as Any } ?? NSNull(),
             "timeLimitSeconds": exam.timeLimitSeconds, "startedAt": QBankJSON.formatDate(exam.startedAt),
-            "endsAt": QBankJSON.formatDate(exam.endsAt), "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)),
-            "endReason": Self.json(exam.endReason?.rawValue), "serverNow": QBankJSON.formatDate(.now),
+            "endsAt": QBankJSON.formatDate(exam.endsAt), "status": exam.readStatus(at: now).rawValue,
+            "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)),
+            "endReason": Self.json(exam.endReason?.rawValue), "serverNow": QBankJSON.formatDate(now),
             "questions": exam.questions.enumerated().map { Self.questionJSON($1.id, position: $0 + 1, week: $1.name) },
             "answeredQuestionIds": exam.questions.map(\.id).filter { exam.answers[$0] != nil },
             "result": result.map { $0 as Any } ?? NSNull(),
@@ -241,7 +247,8 @@ nonisolated extension FakeStudy {
         return examView(id)
     }
 
-    /// Ends the running exam. After its time is up, the end is a timeout at the moment time ran out.
+    /// Ends the exam that has not ended. Once its time has run out, the end is a timeout at the
+    /// moment time ran out, whatever was asked.
     private func close(_ id: String, reason: ExamEndReason) {
         state.withLock { state in
             guard let index = state.exams.firstIndex(where: { $0.id == id }), state.exams[index].finishedAt == nil else { return }
@@ -252,8 +259,10 @@ nonisolated extension FakeStudy {
         }
     }
 
+    /// Records the end of every exam whose time is up, past its end and its grace, exactly as a
+    /// reader already reads it. One in its grace stays open.
     func settleExpired() {
-        let expired = state.withLock { state in state.exams.filter { $0.finishedAt == nil && Date.now >= $0.endsAt }.map(\.id) }
+        let expired = state.withLock { state in state.exams.filter { $0.status(at: .now) == .expired }.map(\.id) }
         for id in expired { close(id, reason: .timeout) }
     }
 
@@ -265,7 +274,7 @@ nonisolated extension FakeStudy {
                 return Self.failure(404, "exam_not_found", "That exam is not in the app.")
             }
             let exam = state.exams[index]
-            guard exam.finishedAt == nil else {
+            guard exam.isOpen(at: .now) else {
                 return Self.failure(409, "exam_finished", "This exam has ended. That answer was not saved.")
             }
             guard let served = exam.questions.first(where: { $0.id == questionID }), let question = Self.question(questionID) else {

@@ -139,12 +139,14 @@ struct TermsModelTests {
 @MainActor
 struct ExamSetupModelTests {
     private static let course = CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics")
+    /// The model's clock: when the setup was read.
+    private static let readAt = QBankJSON.parseDate("2026-10-12T00:05:00.000Z")!
 
     private func model(
         _ server: StubServer, account: Account = .student(), route: ExamSetupRoute = ExamSetupRoute(course: course)
     ) -> ExamSetupModel {
         let (app, _) = TestApp.make(server, account: account)
-        return ExamSetupModel(app: app, route: route, now: { QBankJSON.parseDate("2026-10-12T00:05:00.000Z")! })
+        return ExamSetupModel(app: app, route: route, now: { Self.readAt })
     }
 
     private func server(pages: [StudyBodies.Page] = [], pools: [StudyBodies.Pool] = StudyBodies.threePools) -> StubServer {
@@ -428,7 +430,7 @@ struct ExamSetupModelTests {
         #expect(model.asksToReplace)
         let exam = try #require(model.running.exam)
         #expect(exam.id == "other")
-        #expect(model.runningLine(exam) == "Week 3 · 1 of 4 answered · 15 min left", "Resume shows it")
+        #expect(model.runningLine(exam, at: Self.readAt) == "Week 3 · 1 of 4 answered · 15 min left", "Resume shows it")
         #expect(String(decoding: try #require(server.requests.last?.httpBody), as: UTF8.self).hasSuffix(#""replaces":null}"#))
 
         server["POST /api/courses/c1/exams"] = StubServer.Reply(status: 201, body: StudyBodies.exam())
@@ -460,7 +462,7 @@ struct ExamSetupModelTests {
         let model = model(server)
         await model.load()
         let exam = try #require(model.setup?.inProgress)
-        #expect(model.runningLine(exam) == "Weeks 1-2 · Wrong questions only · 3 of 11 answered · 13 min left")
+        #expect(model.runningLine(exam, at: Self.readAt) == "Weeks 1-2 · Wrong questions only · 3 of 11 answered · 13 min left")
         let past = try #require(model.setup?.exams.first)
         #expect(past.pastLine == "12 min · Wrong questions only · Time ran out")
         #expect(past.scoreText == "15 of 22")

@@ -28,11 +28,13 @@ final class TwinJobModel {
 
     private let app: AppModel
     private let pollInterval: Duration
+    private let now: () -> Date
 
-    init(app: AppModel, route: TwinJobRoute, pollInterval: Duration = .seconds(2)) {
+    init(app: AppModel, route: TwinJobRoute, pollInterval: Duration = .seconds(2), now: @escaping () -> Date = { .now }) {
         self.app = app
         self.route = route
         self.pollInterval = pollInterval
+        self.now = now
         job = route.seed
     }
 
@@ -118,11 +120,12 @@ final class TwinJobModel {
         }
     }
 
-    /// Start exam on the twins: asks first while an exam of hers runs, otherwise starts it.
-    /// Returns the exam to open, or nil.
+    /// Start exam on the twins: asks first while an exam of hers is open, as the server does,
+    /// otherwise starts it. One whose time is up since it was read has ended, so it is not asked
+    /// about. Returns the exam to open, or nil.
     func start() async -> Exam? {
         guard canStart else { return nil }
-        if running.exam != nil {
+        if running.exam(at: now()) != nil {
             asksToReplace = true
             return nil
         }

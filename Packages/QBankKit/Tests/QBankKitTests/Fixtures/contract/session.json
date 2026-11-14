@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
   "request": {
     "method": "GET",
     "path": "/api/session",
@@ -19,7 +19,7 @@
         "mustChangePassword": false,
         "palette": "dusk"
       },
-      "expiresAt": "2027-12-17T22:58:36.017Z"
+      "expiresAt": "2027-12-19T02:55:45.351Z"
     }
   }
 }

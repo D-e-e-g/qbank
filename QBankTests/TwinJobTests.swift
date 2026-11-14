@@ -260,7 +260,10 @@ struct TwinJobTests {
         server.script("GET /api/courses/c1/exams", [.offline])
         server["GET /api/courses/c1/exams"] = .ok(StudyBodies.setup(folders: StudyBodies.threePools, inProgress: running))
         let (app, _) = TestApp.make(server, account: .student())
-        let twins = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
+        let twins = TwinJobModel(
+            app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero,
+            now: { QBankJSON.parseDate("2026-10-12T00:05:00.000Z")! }
+        )
         await twins.follow()
         #expect(twins.isDone)
         #expect(twins.running == .unknown)

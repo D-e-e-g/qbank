@@ -150,6 +150,7 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     ///   - place: The course she used last, or nil for none.
     ///   - examInProgress: She left an exam over Mental Health's Weeks 1-2 going.
     ///   - examLastQuestionOpen: That exam has every question but its last answered.
+    ///   - examEndsIn: That exam's time runs out this long after `now`.
     ///   - droppedFinishes: How many requests to end an exam lose the connection before one reaches
     ///     the server, as when the signal goes right after her last answer.
     ///   - saveReplyDelay: How long the reply to a practice answer or a Start over takes to arrive, as
@@ -159,14 +160,14 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
         place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, examLastQuestionOpen: Bool = false,
-        droppedFinishes: Int = 0, saveReplyDelay: Duration = .zero, matrixMultiSet: Bool = false,
+        examEndsIn: TimeInterval? = nil, droppedFinishes: Int = 0, saveReplyDelay: Duration = .zero, matrixMultiSet: Bool = false,
         sataAllCorrectSet: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
         self.answersFile = answersFile
         study = FakeStudy(
-            now: now, examInProgress: examInProgress, examLastQuestionOpen: examLastQuestionOpen, matrixMultiSet: matrixMultiSet,
-            sataAllCorrectSet: sataAllCorrectSet
+            now: now, examInProgress: examInProgress, examLastQuestionOpen: examLastQuestionOpen, examEndsIn: examEndsIn,
+            matrixMultiSet: matrixMultiSet, sataAllCorrectSet: sataAllCorrectSet
         )
         finishesToDrop = Mutex(droppedFinishes)
         self.saveReplyDelay = saveReplyDelay

@@ -29,10 +29,8 @@ final class ExamSetupModel {
     private(set) var setup: ExamSetup?
     /// The course, for its exam pages and her order of their folders.
     private(set) var detail: CourseDetail?
-    /// When the setup arrived, or the server named her running exam, for its minutes left.
-    private(set) var loadedAt = Date.now
-    /// Her running exam, as last read. Starting an exam ends it, so Start waits until this is
-    /// known and asks first while one runs.
+    /// Her exam that has not ended, as last read. Starting an exam ends it, so Start waits until
+    /// this is known and asks first while it is open.
     private(set) var running: RunningExam = .unknown
     /// "Start a new exam?" is open, about `running`'s exam.
     var asksToReplace = false
@@ -59,12 +57,17 @@ final class ExamSetupModel {
 
     private let app: AppModel
     private let now: () -> Date
+    private let sleep: (Duration) async throws -> Void
     private var hasTicked = false
 
-    init(app: AppModel, route: ExamSetupRoute, now: @escaping () -> Date = { .now }) {
+    init(
+        app: AppModel, route: ExamSetupRoute, now: @escaping () -> Date = { .now },
+        sleep: @escaping (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    ) {
         self.app = app
         self.route = route
         self.now = now
+        self.sleep = sleep
     }
 
     var course: CourseRef { route.course }
@@ -236,9 +239,11 @@ final class ExamSetupModel {
         return "\(name) · \(Wording.count(count, "folder")) ticked for you"
     }
 
-    /// "Weeks 1-2 · Wrong questions only · 3 of 11 answered · 12 min left".
-    func runningLine(_ exam: ExamSummary) -> String {
-        let minutesLeft = max(1, Int((exam.endsAt.timeIntervalSince(loadedAt) / 60).rounded(.up)))
+    /// "Weeks 1-2 · Wrong questions only · 3 of 11 answered · 12 min left" at `date`. Once its
+    /// time has run out, 0 min left.
+    func runningLine(_ exam: ExamSummary, at date: Date) -> String {
+        let secondsLeft = exam.status(at: date) == .running ? exam.endsAt.timeIntervalSince(date) : 0
+        let minutesLeft = max(0, Int((secondsLeft / 60).rounded(.up)))
         var parts = [Wording.folders(exam.weeks)]
         if exam.pool == .wrong { parts.append("Wrong questions only") }
         parts.append("\(exam.answeredCount) of \(exam.questionCount) answered")
@@ -277,7 +282,6 @@ final class ExamSetupModel {
             guard read == reads else { return }
             setup = loaded
             setupPick = pick
-            loadedAt = now()
             running = RunningExam(loaded.inProgress)
             problem = nil
             if !hasTicked {
@@ -318,11 +322,12 @@ final class ExamSetupModel {
         !picked.isEmpty && running.isKnown && !isStarting && !isTwinning && !needsConnection
     }
 
-    /// Start exam: asks first while an exam of hers runs, otherwise starts it. Returns the new
-    /// exam to open, or nil.
+    /// Start exam: asks first while an exam of hers is open, as the server does, otherwise starts
+    /// it. One whose time is up since the setup was read has ended, so it is not asked about.
+    /// Returns the new exam to open, or nil.
     func start() async -> Exam? {
         guard isStudent, canStart else { return nil }
-        if running.exam != nil {
+        if running.exam(at: now()) != nil {
             asksToReplace = true
             return nil
         }
@@ -351,13 +356,30 @@ final class ExamSetupModel {
                 return exam
             case .examInProgress(let other):
                 running = .running(other)
-                loadedAt = now()
                 asksToReplace = true
                 return nil
             }
         } catch {
             report(error)
             return nil
+        }
+    }
+
+    /// While the screen is open with her exam that has not ended: once its time is up, the setup is
+    /// read again, so it shows among her past exams with its score. A read that still finds it open,
+    /// as when this phone's clock runs ahead of the server's, or that fails, is tried again.
+    func followRunningExam() async {
+        var retry = Duration.zero
+        while let exam = running.exam, !Task.isCancelled {
+            let untilTimeUp = ExamStatus.timeUp(endsAt: exam.endsAt).timeIntervalSince(now())
+            do {
+                try await sleep(max(.milliseconds(Int64(max(0, untilTimeUp) * 1000)), retry) + .seconds(1))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, running.exam?.id == exam.id else { return }
+            await read(requested ?? pick)
+            retry = .seconds(5)
         }
     }
 

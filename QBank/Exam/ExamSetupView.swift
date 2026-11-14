@@ -48,8 +48,14 @@ struct ExamSetupView: View {
                     if let problem = model.problem {
                         ProblemText(text: problem)
                     }
-                    if let exam = model.running.exam {
-                        runningExam(exam)
+                    if model.running.exam != nil {
+                        // Its minutes left count down, and it leaves once its time is up, until the
+                        // setup read again lists it among her past exams.
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            if let exam = model.running.exam(at: context.date) {
+                                runningExam(exam, at: context.date)
+                            }
+                        }
                     }
                 }
                 content
@@ -63,6 +69,7 @@ struct ExamSetupView: View {
         .refreshable { await model.load() }
         .reloadsWithConnection(app) { await model.load() }
         .task { await model.load() }
+        .task(id: model.running.exam?.id) { await model.followRunningExam() }
         .onChange(of: app.deletions.revision) {
             // A past exam deleted here or brought back with Undo, or a folder deleted: the lists change.
             Task { await model.load() }
@@ -116,14 +123,14 @@ struct ExamSetupView: View {
         }
     }
 
-    private func runningExam(_ exam: ExamSummary) -> some View {
+    private func runningExam(_ exam: ExamSummary, at date: Date) -> some View {
         QBankListGroup {
             Button {
                 running = ExamRoute(id: exam.id)
             } label: {
                 QBankListRow(
                     "Exam in progress",
-                    detail: model.runningLine(exam),
+                    detail: model.runningLine(exam, at: date),
                     systemImage: "timer",
                     showsChevron: true
                 ) {
@@ -447,18 +454,18 @@ struct PastExamRow: View {
     var body: some View {
         HStack(spacing: QBankSpacing.space4) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(exam.finishedAt == nil ? "\(Wording.folders(exam.weeks)) · In progress" : exam.pastTitle)
+                Text(exam.hasEnded ? exam.pastTitle : "\(Wording.folders(exam.weeks)) · In progress")
                     .qbankFont(.body)
                     .foregroundStyle(.qbank(.text1))
-                Text(exam.finishedAt == nil ? "\(exam.answeredCount) of \(exam.questionCount) answered" : exam.pastLine)
+                Text(exam.hasEnded ? exam.pastLine : "\(exam.answeredCount) of \(exam.questionCount) answered")
                     .qbankFont(.footnote)
                     .foregroundStyle(.qbank(.text3))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(exam.finishedAt == nil ? "Resume" : exam.scoreText)
+            Text(exam.hasEnded ? exam.scoreText : "Resume")
                 .qbankFont(.subheadline, weight: .semibold)
                 .monospacedDigit()
-                .foregroundStyle(.qbank(exam.finishedAt == nil ? .tint : .text1))
+                .foregroundStyle(.qbank(exam.hasEnded ? .text1 : .tint))
             Image(systemName: "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.qbank(.text4))

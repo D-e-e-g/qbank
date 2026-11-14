@@ -84,13 +84,14 @@ enum StudyBodies {
     static func summary(
         _ id: String, weeks: [String], folders: [String]? = nil, courseExam: String? = nil, pool: String = "all",
         finished: Bool = true, reason: String = "finished", answered: Int = 3, questions: Int = 5, right: Int = 2,
-        endsAt: String = "2026-10-12T01:00:00.000Z"
+        endsAt: String = "2026-10-12T01:00:00.000Z", status: String? = nil
     ) -> String {
+        let statusField = status.map { #""status":"\#($0)","# } ?? ""
         let weekList = weeks.map { "\"\($0)\"" }.joined(separator: ",")
         let folderField = folders.map { #""folderIds":[\#($0.map { "\"\($0)\"" }.joined(separator: ","))],"# } ?? ""
         let courseExamField = courseExam.map { "\"\($0)\"" } ?? "null"
         let score = finished ? #""fullyRight":\#(right),"points":\#(right),"maxPoints":\#(questions),"minutesUsed":12"# : #""fullyRight":null,"points":null,"maxPoints":null,"minutesUsed":null"#
-        return #"{"id":"\#(id)","courseId":"c1","weeks":[\#(weekList)],\#(folderField)"courseExamId":\#(courseExamField),"pool":"\#(pool)","practiceWeeks":null,"questionCount":\#(questions),"timeLimitSeconds":\#(questions * 90),"startedAt":"2026-10-12T00:00:00.000Z","endsAt":"\#(endsAt)","finishedAt":\#(finished ? #""2026-10-12T00:12:00.000Z""# : "null"),"endReason":\#(finished ? "\"\(reason)\"" : "null"),"answeredCount":\#(answered),\#(score)}"#
+        return #"{"id":"\#(id)","courseId":"c1","weeks":[\#(weekList)],\#(folderField)"courseExamId":\#(courseExamField),"pool":"\#(pool)","practiceWeeks":null,"questionCount":\#(questions),"timeLimitSeconds":\#(questions * 90),"startedAt":"2026-10-12T00:00:00.000Z","endsAt":"\#(endsAt)",\#(statusField)"finishedAt":\#(finished ? #""2026-10-12T00:12:00.000Z""# : "null"),"endReason":\#(finished ? "\"\(reason)\"" : "null"),"answeredCount":\#(answered),\#(score)}"#
     }
 
     /// A folder's pool in the exam setup.

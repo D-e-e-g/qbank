@@ -1,0 +1,73 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "request": {
+    "method": "GET",
+    "path": "/api/exams/e0000000-0000-4000-8000-000000000202",
+    "query": {},
+    "authorization": "Bearer synthetic-session-token",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {},
+    "body": {
+      "id": "e0000000-0000-4000-8000-000000000202",
+      "courseId": "c0000000-0000-4000-8000-000000000201",
+      "courseCode": "NURS 101",
+      "courseTitle": "Invented Nursing Basics",
+      "weeks": [
+        "Week 1"
+      ],
+      "folderIds": [
+        "f0000000-0000-4000-8000-000000000201"
+      ],
+      "pool": "wrong",
+      "practiceWeeks": [],
+      "timeLimitSeconds": 90,
+      "startedAt": "2026-11-14T02:54:12.424Z",
+      "endsAt": "2026-11-14T02:55:42.424Z",
+      "status": "grace",
+      "finishedAt": null,
+      "endReason": null,
+      "serverNow": "2026-11-14T02:55:52.426Z",
+      "questions": [
+        {
+          "id": "00000000-0000-4000-8010-000000000012",
+          "publicId": "E1",
+          "position": 1,
+          "type": "single",
+          "topic": "Invented exam topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented exam stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented exam rationale.",
+          "takeaway": "Invented exam takeaway.",
+          "body": {
+            "twinOf": "Q1",
+            "options": [
+              {
+                "t": "Right",
+                "ok": true,
+                "why": "Yes."
+              },
+              {
+                "t": "Wrong",
+                "why": "No."
+              },
+              {
+                "t": "Also wrong",
+                "why": "No."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 1"
+        }
+      ],
+      "answeredQuestionIds": [],
+      "result": null
+    }
+  }
+}

@@ -83,6 +83,8 @@ nonisolated enum DebugLaunchScenario {
         /// connection lost for the first six requests to end it: her last answer lands, and the
         /// finish after it does not, for a while.
         case examFinishDrops = "exam-finish-drops"
+        /// As `examInProgress`, with that exam's time running out a minute after launch.
+        case examTimeRunningOut = "exam-time-running-out"
         /// As `signedIn`, on a slow connection: the reply to each practice answer and to Start over
         /// takes `slowSaveReplyDelay` to arrive, so a test can act while one is on its way.
         case slowSaves = "slow-saves"
@@ -162,6 +164,12 @@ nonisolated enum DebugLaunchScenario {
         case .signedIn, .examInProgress:
             return model(
                 server: FakeQBankServer(signedIn: true, examInProgress: scenario == .examInProgress, answersFile: answersFile),
+                session: FakeQBankServer.storedStudentSession(),
+                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
+            )
+        case .examTimeRunningOut:
+            return model(
+                server: FakeQBankServer(signedIn: true, examInProgress: true, examEndsIn: 60, answersFile: answersFile),
                 session: FakeQBankServer.storedStudentSession(),
                 defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
             )

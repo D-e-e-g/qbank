@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
   "request": {
     "method": "GET",
     "path": "/api/me/export",
@@ -13,7 +13,7 @@
     "body": {
       "format": "nclex-qbank-progress",
       "version": 1,
-      "exportedAt": "2026-11-12T22:58:43.629Z",
+      "exportedAt": "2026-11-14T02:55:52.443Z",
       "account": {
         "id": "synthetic-user-1",
         "name": "Sam Student",
@@ -48,7 +48,7 @@
               "format": "Drop-down cloze",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.535Z",
+              "answeredAt": "2026-11-14T02:55:52.351Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -60,7 +60,7 @@
               "format": "Matrix",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.527Z",
+              "answeredAt": "2026-11-14T02:55:52.345Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -72,7 +72,7 @@
               "format": "Matching",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.521Z",
+              "answeredAt": "2026-11-14T02:55:52.339Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -84,7 +84,7 @@
               "format": "Ordered response",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.515Z",
+              "answeredAt": "2026-11-14T02:55:52.334Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -96,7 +96,7 @@
               "format": "Priority / first action",
               "status": "correct",
               "guessed": true,
-              "answeredAt": "2026-11-12T22:58:43.503Z",
+              "answeredAt": "2026-11-14T02:55:52.323Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -108,7 +108,7 @@
               "format": "Select all that apply",
               "status": "incorrect",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.497Z",
+              "answeredAt": "2026-11-14T02:55:52.317Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -120,7 +120,7 @@
               "format": "Single answer",
               "status": "incorrect",
               "guessed": false,
-              "answeredAt": "2026-11-12T22:58:43.490Z",
+              "answeredAt": "2026-11-14T02:55:52.310Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             }
           ]
@@ -334,63 +334,6 @@
       ],
       "studySessions": [
         {
-          "id": "00000000-0000-4000-8010-000000000026",
-          "courseId": "c0000000-0000-4000-8000-000000000201",
-          "mode": "practice",
-          "setId": "5e700000-0000-4000-8000-000000000201",
-          "questionIds": [],
-          "examWeeks": null,
-          "examFolderIds": null,
-          "examPool": "all",
-          "examPracticeWeeks": null,
-          "seededQuestionIds": [],
-          "timeLimitSeconds": null,
-          "startedAt": "2026-11-12T22:58:43.490Z",
-          "finishedAt": "2026-11-12T22:58:43.535Z",
-          "score": null,
-          "endReason": "finished",
-          "deletedAt": null
-        },
-        {
-          "id": "e0000000-0000-4000-8000-000000000201",
-          "courseId": "c0000000-0000-4000-8000-000000000201",
-          "mode": "exam",
-          "setId": null,
-          "questionIds": [
-            "00000000-0000-4000-8010-000000000012",
-            "00000000-0000-4000-8010-000000000010",
-            "00000000-0000-4000-8010-000000000011",
-            "00000000-0000-4000-8010-000000000013"
-          ],
-          "examWeeks": [
-            "Week 1",
-            "Week 2"
-          ],
-          "examFolderIds": [
-            "f0000000-0000-4000-8000-000000000201",
-            "f0000000-0000-4000-8000-000000000202"
-          ],
-          "examPool": "all",
-          "examPracticeWeeks": [
-            "Week 2"
-          ],
-          "seededQuestionIds": null,
-          "timeLimitSeconds": 360,
-          "startedAt": "2026-11-12T22:58:43.576Z",
-          "finishedAt": "2026-11-12T22:58:43.597Z",
-          "score": {
-            "points": 1,
-            "answered": 1,
-            "maxPoints": 4,
-            "fullyRight": 1,
-            "minutesUsed": 1,
-            "reviewCount": 0,
-            "questionCount": 4
-          },
-          "endReason": "finished",
-          "deletedAt": null
-        },
-        {
           "id": "e0000000-0000-4000-8000-000000000202",
           "courseId": "c0000000-0000-4000-8000-000000000201",
           "mode": "exam",
@@ -408,10 +351,75 @@
           "examPracticeWeeks": [],
           "seededQuestionIds": null,
           "timeLimitSeconds": 90,
-          "startedAt": "2026-11-12T22:58:43.610Z",
-          "finishedAt": null,
+          "startedAt": "2026-11-14T02:52:22.431Z",
+          "finishedAt": "2026-11-14T02:53:52.431Z",
+          "score": {
+            "points": 0,
+            "answered": 0,
+            "maxPoints": 1,
+            "fullyRight": 0,
+            "minutesUsed": 2,
+            "reviewCount": 0,
+            "questionCount": 1
+          },
+          "endReason": "timeout",
+          "deletedAt": null
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000026",
+          "courseId": "c0000000-0000-4000-8000-000000000201",
+          "mode": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000201",
+          "questionIds": [],
+          "examWeeks": null,
+          "examFolderIds": null,
+          "examPool": "all",
+          "examPracticeWeeks": null,
+          "seededQuestionIds": [],
+          "timeLimitSeconds": null,
+          "startedAt": "2026-11-14T02:55:52.310Z",
+          "finishedAt": "2026-11-14T02:55:52.351Z",
           "score": null,
-          "endReason": null,
+          "endReason": "finished",
+          "deletedAt": null
+        },
+        {
+          "id": "e0000000-0000-4000-8000-000000000201",
+          "courseId": "c0000000-0000-4000-8000-000000000201",
+          "mode": "exam",
+          "setId": null,
+          "questionIds": [
+            "00000000-0000-4000-8010-000000000010",
+            "00000000-0000-4000-8010-000000000012",
+            "00000000-0000-4000-8010-000000000013",
+            "00000000-0000-4000-8010-000000000011"
+          ],
+          "examWeeks": [
+            "Week 1",
+            "Week 2"
+          ],
+          "examFolderIds": [
+            "f0000000-0000-4000-8000-000000000201",
+            "f0000000-0000-4000-8000-000000000202"
+          ],
+          "examPool": "all",
+          "examPracticeWeeks": [
+            "Week 2"
+          ],
+          "seededQuestionIds": null,
+          "timeLimitSeconds": 360,
+          "startedAt": "2026-11-14T02:55:52.383Z",
+          "finishedAt": "2026-11-14T02:55:52.401Z",
+          "score": {
+            "points": 1,
+            "answered": 1,
+            "maxPoints": 4,
+            "fullyRight": 1,
+            "minutesUsed": 1,
+            "reviewCount": 0,
+            "questionCount": 4
+          },
+          "endReason": "finished",
           "deletedAt": null
         }
       ],
@@ -437,7 +445,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.490Z"
+          "answeredAt": "2026-11-14T02:55:52.310Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000028",
@@ -464,7 +472,7 @@
           "points": 0,
           "maxPoints": 3,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.497Z"
+          "answeredAt": "2026-11-14T02:55:52.317Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000029",
@@ -487,7 +495,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": true,
-          "answeredAt": "2026-11-12T22:58:43.503Z"
+          "answeredAt": "2026-11-14T02:55:52.323Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000030",
@@ -508,7 +516,7 @@
           "points": 2,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.509Z"
+          "answeredAt": "2026-11-14T02:55:52.328Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000031",
@@ -535,7 +543,7 @@
           "points": 1,
           "maxPoints": 3,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.515Z"
+          "answeredAt": "2026-11-14T02:55:52.334Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000032",
@@ -561,7 +569,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.521Z"
+          "answeredAt": "2026-11-14T02:55:52.339Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000033",
@@ -582,7 +590,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.527Z"
+          "answeredAt": "2026-11-14T02:55:52.345Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000034",
@@ -614,7 +622,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.535Z"
+          "answeredAt": "2026-11-14T02:55:52.351Z"
         },
         {
           "id": "00000000-0000-4000-8010-000000000035",
@@ -637,45 +645,33 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-12T22:58:43.586Z"
+          "answeredAt": "2026-11-14T02:55:52.393Z"
         }
       ],
       "questionProgress": [
         {
-          "questionLineageId": "00000000-0000-4000-8010-000000000019",
+          "questionLineageId": "00000000-0000-4000-8010-000000000020",
           "attempts": 1,
           "correctAttempts": 0,
           "lastStatus": "partial",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.521Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.345Z",
           "lastPoints": 1,
           "lastMaxPoints": 2,
           "inReview": true,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000032"
+          "lastAttemptId": "00000000-0000-4000-8010-000000000033"
         },
         {
-          "questionLineageId": "00000000-0000-4000-8010-000000000017",
+          "questionLineageId": "00000000-0000-4000-8010-000000000018",
           "attempts": 1,
-          "correctAttempts": 1,
-          "lastStatus": "correct",
+          "correctAttempts": 0,
+          "lastStatus": "partial",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.509Z",
-          "lastPoints": 2,
-          "lastMaxPoints": 2,
-          "inReview": false,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000030"
-        },
-        {
-          "questionLineageId": "00000000-0000-4000-8010-000000000015",
-          "attempts": 1,
-          "correctAttempts": 1,
-          "lastStatus": "correct",
-          "lastGuessed": true,
-          "lastAnsweredAt": "2026-11-12T22:58:43.503Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.334Z",
           "lastPoints": 1,
-          "lastMaxPoints": 1,
+          "lastMaxPoints": 3,
           "inReview": true,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000029"
+          "lastAttemptId": "00000000-0000-4000-8010-000000000031"
         },
         {
           "questionLineageId": "00000000-0000-4000-8010-000000000016",
@@ -683,23 +679,23 @@
           "correctAttempts": 0,
           "lastStatus": "incorrect",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.497Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.317Z",
           "lastPoints": 0,
           "lastMaxPoints": 3,
           "inReview": true,
           "lastAttemptId": "00000000-0000-4000-8010-000000000028"
         },
         {
-          "questionLineageId": "00000000-0000-4000-8010-000000000024",
+          "questionLineageId": "00000000-0000-4000-8010-000000000015",
           "attempts": 1,
           "correctAttempts": 1,
           "lastStatus": "correct",
-          "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.586Z",
+          "lastGuessed": true,
+          "lastAnsweredAt": "2026-11-14T02:55:52.323Z",
           "lastPoints": 1,
           "lastMaxPoints": 1,
-          "inReview": false,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000035"
+          "inReview": true,
+          "lastAttemptId": "00000000-0000-4000-8010-000000000029"
         },
         {
           "questionLineageId": "00000000-0000-4000-8010-000000000021",
@@ -707,7 +703,7 @@
           "correctAttempts": 0,
           "lastStatus": "partial",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.535Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.351Z",
           "lastPoints": 1,
           "lastMaxPoints": 2,
           "inReview": true,
@@ -719,35 +715,47 @@
           "correctAttempts": 0,
           "lastStatus": "incorrect",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.490Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.310Z",
           "lastPoints": 0,
           "lastMaxPoints": 1,
           "inReview": true,
           "lastAttemptId": "00000000-0000-4000-8010-000000000027"
         },
         {
-          "questionLineageId": "00000000-0000-4000-8010-000000000018",
+          "questionLineageId": "00000000-0000-4000-8010-000000000017",
           "attempts": 1,
-          "correctAttempts": 0,
-          "lastStatus": "partial",
+          "correctAttempts": 1,
+          "lastStatus": "correct",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.515Z",
-          "lastPoints": 1,
-          "lastMaxPoints": 3,
-          "inReview": true,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000031"
+          "lastAnsweredAt": "2026-11-14T02:55:52.328Z",
+          "lastPoints": 2,
+          "lastMaxPoints": 2,
+          "inReview": false,
+          "lastAttemptId": "00000000-0000-4000-8010-000000000030"
         },
         {
-          "questionLineageId": "00000000-0000-4000-8010-000000000020",
+          "questionLineageId": "00000000-0000-4000-8010-000000000019",
           "attempts": 1,
           "correctAttempts": 0,
           "lastStatus": "partial",
           "lastGuessed": false,
-          "lastAnsweredAt": "2026-11-12T22:58:43.527Z",
+          "lastAnsweredAt": "2026-11-14T02:55:52.339Z",
           "lastPoints": 1,
           "lastMaxPoints": 2,
           "inReview": true,
-          "lastAttemptId": "00000000-0000-4000-8010-000000000033"
+          "lastAttemptId": "00000000-0000-4000-8010-000000000032"
+        },
+        {
+          "questionLineageId": "00000000-0000-4000-8010-000000000024",
+          "attempts": 1,
+          "correctAttempts": 1,
+          "lastStatus": "correct",
+          "lastGuessed": false,
+          "lastAnsweredAt": "2026-11-14T02:55:52.393Z",
+          "lastPoints": 1,
+          "lastMaxPoints": 1,
+          "inReview": false,
+          "lastAttemptId": "00000000-0000-4000-8010-000000000035"
         }
       ],
       "reviewClears": []

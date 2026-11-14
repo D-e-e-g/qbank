@@ -433,7 +433,8 @@ nonisolated final class FakeDeletions: Sendable {
     private static let inProgress = "This exam is still going. Finish or leave it, then delete it."
 
     private func examPlan(_ id: String) -> Result<FakeStudy.Exam, Refusal> {
-        if let exam = study.exam(id) { return .success(exam) }
+        // As every reader is shown it: one whose time is up has ended.
+        if let exam = study.exam(id) { return .success(exam.asRead(at: .now)) }
         let isDeleted = deleted.withLock { list in
             list.contains { entry in
                 if case .exam(let exam, _) = entry.kind { return exam.id == id }
@@ -459,7 +460,7 @@ nonisolated final class FakeDeletions: Sendable {
                 "answeredCount": answered, "changedCount": changed, "unansweredCount": answered - changed,
                 "progress": standing(courseID: exam.courseID, answered: 0, review: 0),
                 "message": warning.message, "warning": warning.json,
-                "refusal": exam.finishedAt == nil ? Self.inProgress : NSNull(),
+                "refusal": exam.isOpen(at: .now) ? Self.inProgress : NSNull(),
                 "confirm": Self.examToken(exam), "undoDays": Self.undoDays,
             ]
         }
@@ -471,7 +472,7 @@ nonisolated final class FakeDeletions: Sendable {
         case .success(let found): exam = found
         case .failure(let refusal): return refusal.reply
         }
-        if exam.finishedAt == nil { return Self.failure(409, "exam_in_progress", Self.inProgress) }
+        if exam.isOpen(at: .now) { return Self.failure(409, "exam_in_progress", Self.inProgress) }
         guard let confirm else {
             return Self.failure(409, "confirmation_required", "Look at what deleting this exam changes and confirm it first.")
         }
