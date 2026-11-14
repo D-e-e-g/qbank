@@ -51,6 +51,17 @@ final class PracticeModel {
         case finished
     }
 
+    /// What the runner has on its way to QBank: one value, so a check and a start over never
+    /// overlap, and a score lands only on the attempt it was sent for.
+    enum Activity: Equatable {
+        /// Nothing on its way: the question takes an answer, Check answer, Next and Start over.
+        case idle
+        /// Check answer is sending the attempt with this id.
+        case checking(attemptID: String)
+        /// Start over is asking QBank.
+        case startingOver
+    }
+
     let source: PracticeRoute.Source
     let courseID: String
     /// The set's title from the Course screen, or "Review", shown while it loads.
@@ -68,10 +79,8 @@ final class PracticeModel {
     private(set) var pickedUp: PickedUp?
     /// True on question 1 when this opening is a new run of a set she already finished.
     private(set) var showsNewRunNotice = false
-    /// True while Check answer is sending.
-    private(set) var isChecking = false
-    /// True while Start over is asking QBank.
-    private(set) var isStartingOver = false
+    /// What is on its way to QBank, if anything.
+    private(set) var activity: Activity = .idle
     /// Why the last Check answer did not go through.
     private(set) var problem: String?
     private(set) var startedAt: Date?
@@ -124,6 +133,14 @@ final class PracticeModel {
     var isRevealed: Bool { attempt?.score != nil }
     var isLast: Bool { nextIndex == nil }
 
+    /// An answer or a start over on its way: the question waits.
+    var isBusy: Bool { activity != .idle }
+
+    /// Whether the current question still takes an answer: open, with nothing on its way.
+    private var isEditable: Bool {
+        activity == .idle && attempts.indices.contains(index) && attempts[index].score == nil
+    }
+
     /// The next question she has not answered, after the current one.
     private var nextIndex: Int? {
         questions.indices.first { $0 > index && !answeredEarlier.contains(questions[$0].id) }
@@ -166,9 +183,9 @@ final class PracticeModel {
         }
     }
 
-    /// Whether Check answer can be pressed: every required part is filled in and nothing is sending.
+    /// Whether Check answer can be pressed: every required part is filled in and nothing is on its way.
     var canCheck: Bool {
-        guard let attempt, attempt.score == nil, !isChecking else { return false }
+        guard isEditable, let attempt else { return false }
         return attempt.draft.response != nil
     }
 
@@ -289,7 +306,7 @@ final class PracticeModel {
     /// Replaces her answer to the current question while it is still open. A struck choice
     /// cannot be picked until she restores it.
     func update(_ draft: AnswerDraft) {
-        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         guard attempts[index].struck.isDisjoint(with: draft.picked) else { return }
         attempts[index].draft = draft
     }
@@ -297,12 +314,12 @@ final class PracticeModel {
     /// Strikes out a choice of the current question she has ruled out, or restores a struck one,
     /// while it is still open. Strikes stay with the question until the run ends and are never sent.
     func toggleStrike(_ option: Int) {
-        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         attempts[index].draft = attempts[index].draft.striking(option, in: &attempts[index].struck)
     }
 
     func setGuessed(_ guessed: Bool) {
-        guard !app.frozen.refuses(), attempts.indices.contains(index), attempts[index].score == nil, !isChecking else { return }
+        guard !app.frozen.refuses(), isEditable else { return }
         attempts[index].guessed = guessed
     }
 
@@ -328,7 +345,8 @@ final class PracticeModel {
     /// Sends the answer and shows the score and words the server gave it. Without a connection, or
     /// when QBank cannot be reached, the answer is kept on the phone and sent later with the same id,
     /// so it is never counted twice; she sees the phone's score and words, which follow the server's
-    /// rules. A refusal is said in her words.
+    /// rules. A refusal is said in her words. The question waits until the answer is back, and the
+    /// score lands only on the attempt that was sent.
     func check() async {
         guard !app.frozen.refuses(), canCheck, let question, let attempt, let response = attempt.draft.response else { return }
         problem = nil
@@ -345,9 +363,10 @@ final class PracticeModel {
             attempts[index].feedback = phoneFeedback
             return
         }
-        let checking = index
-        isChecking = true
-        defer { isChecking = false }
+        let sent = index
+        let checking = Activity.checking(attemptID: attempt.clientAttemptID)
+        activity = checking
+        defer { finish(checking) }
         let submission = AttemptSubmission(
             clientAttemptID: attempt.clientAttemptID,
             questionID: question.id,
@@ -377,9 +396,20 @@ final class PracticeModel {
             }
             return
         }
-        guard attempts.indices.contains(checking), attempts[checking].score == nil else { return }
-        attempts[checking].feedback = feedback
-        await keepPlace(question: question, attempt: attempts[checking])
+        // A late score is dropped unless the runner still waits on this attempt and still holds it
+        // where it was sent from.
+        guard activity == checking, attempts.indices.contains(sent),
+              attempts[sent].clientAttemptID == submission.clientAttemptID, attempts[sent].score == nil
+        else { return }
+        attempts[sent].feedback = feedback
+        await keepPlace(question: question, attempt: attempts[sent])
+    }
+
+    /// Ends an activity, unless the runner has gone on to another.
+    private func finish(_ ended: Activity) {
+        if activity == ended {
+            activity = .idle
+        }
     }
 
     /// Keeps a checked answer in the set's copy on the phone, so the set opens past it even when QBank
@@ -396,12 +426,13 @@ final class PracticeModel {
 
     /// Ends the sitting and opens the set again at question 1. Every answer stays saved and still
     /// counts. QBank must have what she answered first, or it would count in the new sitting, so this
-    /// needs a connection. A failure leaves her where she was, and says why.
+    /// needs a connection. A failure leaves her where she was, and says why. The question waits
+    /// while it asks, so no answer of the sitting it ends is sent after it.
     func startOver() async {
-        guard !app.frozen.refuses(), case .set(let id) = source, let practiceSet, !isChecking, !isStartingOver else { return }
+        guard !app.frozen.refuses(), activity == .idle, case .set(let id) = source, let practiceSet else { return }
         problem = nil
-        isStartingOver = true
-        defer { isStartingOver = false }
+        activity = .startingOver
+        defer { finish(.startingOver) }
         do throws(QBankError) {
             if let offline = app.offline, !offline.waiting.isEmpty {
                 let report = await offline.send()
@@ -433,7 +464,7 @@ final class PracticeModel {
 
     /// The next question she has not answered, or the set result after the last one.
     func next() {
-        guard isRevealed || attempt?.draft == .unsupported else { return }
+        guard activity == .idle, isRevealed || attempt?.draft == .unsupported else { return }
         showsNewRunNotice = false
         pickedUp = nil
         if let nextIndex {
