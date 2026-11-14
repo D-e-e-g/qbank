@@ -107,6 +107,18 @@ async function studying(): Promise<World> {
   const wrong = await world.record("exam-start-wrong", exams, 201, { method: "POST", json: { folderIds: [week1], pool: "wrong", replaces: null } });
   await world.record("exam-setup-after", exams, 200);
   await world.record("exam-start-in-progress", exams, 409, { method: "POST", json: { folderIds: [week1, week2], pool: "all", replaces: null } });
+  // The wrong-questions exam's time runs out. Moved back to 10 seconds past its end it is in its
+  // grace: no time left, and still open. Moved back to two minutes past, its time is up, and it reads
+  // as ended, a timeout at its end time with its score, before anything records that end.
+  const wrongId = wrong.str("id");
+  const endedAgo = (seconds: number) =>
+    world.sql("update study_session set started_at = now() - make_interval(secs => time_limit_seconds + $2) where id = $1", [wrongId, seconds]);
+  await endedAgo(10);
+  await world.record("exam-grace", `/api/exams/${wrongId}`, 200);
+  await world.record("exam-setup-grace", exams, 200);
+  await endedAgo(120);
+  await world.record("exam-time-up", `/api/exams/${wrongId}`, 200);
+  await world.record("exam-setup-time-up", exams, 200);
 
   await world.record("place-put", "/api/me/place", 200, { method: "PUT", json: { courseId } });
   await world.record("place", "/api/me/place", 200);

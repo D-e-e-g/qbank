@@ -57,12 +57,49 @@ nonisolated final class FakeStudy: Sendable {
         /// The questions in the order served, each with its folder and that folder's name then.
         let questions: [(id: String, folder: String, name: String)]
         let timeLimitSeconds: Int
-        let startedAt: Date
+        var startedAt: Date
         var finishedAt: Date?
         var endReason: ExamEndReason?
         var answers: [String: Answer] = [:]
 
         var endsAt: Date { startedAt.addingTimeInterval(TimeInterval(timeLimitSeconds)) }
+
+        /// Where it stands at `now`, as the server's `examStatus` tells it: one cut-off for every reader.
+        func status(at now: Date) -> Status {
+            if finishedAt != nil { return .ended }
+            if now < endsAt { return .running }
+            return now <= ExamStatus.timeUp(endsAt: endsAt) ? .grace : .expired
+        }
+
+        /// Running, or in its grace: it takes an answer, and a new exam or a delete waits for it.
+        func isOpen(at now: Date) -> Bool {
+            let status = status(at: now)
+            return status == .running || status == .grace
+        }
+
+        /// As every reader is shown it: one whose time is up reads as ended, a timeout at its end
+        /// time, whether or not its end is recorded yet.
+        func asRead(at now: Date) -> Exam {
+            guard status(at: now) == .expired else { return self }
+            var exam = self
+            exam.finishedAt = endsAt
+            exam.endReason = .timeout
+            return exam
+        }
+
+        /// What the wire's `status` says at `now`.
+        func readStatus(at now: Date) -> ExamStatus {
+            switch status(at: now) {
+            case .running: .running
+            case .grace: .grace
+            case .expired, .ended: .ended
+            }
+        }
+
+        /// The server's four states; `expired` reads as ended.
+        enum Status {
+            case running, grace, expired, ended
+        }
     }
 
     /// A question in her Review list, from a practice answer.
@@ -145,9 +182,13 @@ nonisolated final class FakeStudy: Sendable {
     /// - Parameters:
     ///   - examInProgress: She left an exam over Weeks 1-2 going, started five minutes ago.
     ///   - examLastQuestionOpen: That exam has every question but its last answered.
+    ///   - examEndsIn: That exam's time runs out this long after `now` instead.
     ///   - matrixMultiSet: Weeks 1-3 holds the one-question check-all table instead of the mixed set.
     ///   - sataAllCorrectSet: Weeks 1-3 holds one select-all question whose every option is correct.
-    init(now: Date, examInProgress: Bool = false, examLastQuestionOpen: Bool = false, matrixMultiSet: Bool = false, sataAllCorrectSet: Bool = false) {
+    init(
+        now: Date, examInProgress: Bool = false, examLastQuestionOpen: Bool = false, examEndsIn: TimeInterval? = nil,
+        matrixMultiSet: Bool = false, sataAllCorrectSet: Bool = false
+    ) {
         self.now = now
         let day: TimeInterval = 86_400
         let mentalHealth = FakeQBankServer.mentalHealthID, fundamentals = FakeQBankServer.fundamentalsID
@@ -190,8 +231,17 @@ nonisolated final class FakeStudy: Sendable {
         if examInProgress, case .success(let id) = begin(
             courseID: FakeQBankServer.mentalHealthID, folderIDs: [Self.week1, Self.week2], pool: .all,
             at: now.addingTimeInterval(-5 * 60), endingRunning: false
-        ), examLastQuestionOpen {
-            answerAllButLast(id)
+        ) {
+            if examLastQuestionOpen { answerAllButLast(id) }
+            if let examEndsIn { endExam(id, at: now.addingTimeInterval(examEndsIn)) }
+        }
+    }
+
+    /// Moves the exam's start so that its time runs out at `end`.
+    private func endExam(_ id: String, at end: Date) {
+        state.withLock { state in
+            guard let index = state.exams.firstIndex(where: { $0.id == id }) else { return }
+            state.exams[index].startedAt = end.addingTimeInterval(-TimeInterval(state.exams[index].timeLimitSeconds))
         }
     }
 
@@ -514,7 +564,7 @@ nonisolated final class FakeStudy: Sendable {
     /// The exams of hers still going in the course.
     func runningExams(courseID: String) -> [Exam] {
         settleExpired()
-        return state.withLock { state in state.exams.filter { $0.courseID == courseID && $0.finishedAt == nil } }
+        return state.withLock { state in state.exams.filter { $0.courseID == courseID && $0.isOpen(at: .now) } }
     }
 
     func exam(_ id: String) -> Exam? {
@@ -529,7 +579,7 @@ nonisolated final class FakeStudy: Sendable {
 
     /// Her ended exams in the course over a folder.
     func pastExams(over folderID: String, courseID: String) -> Int {
-        state.withLock { state in state.exams.count { $0.courseID == courseID && $0.finishedAt != nil && $0.folderIDs.contains(folderID) } }
+        state.withLock { state in state.exams.count { $0.courseID == courseID && !$0.isOpen(at: .now) && $0.folderIDs.contains(folderID) } }
     }
 
     /// Takes a practice set out of its folder, remembering its place.
@@ -622,9 +672,9 @@ nonisolated final class FakeStudy: Sendable {
     func pastExams(onPage id: String, folderIDs: [String]? = nil) -> Int {
         state.withLock { state in
             if let folderIDs {
-                return state.exams.count { $0.finishedAt != nil && !$0.folderIDs.isEmpty && $0.folderIDs.allSatisfy(folderIDs.contains) }
+                return state.exams.count { !$0.isOpen(at: .now) && !$0.folderIDs.isEmpty && $0.folderIDs.allSatisfy(folderIDs.contains) }
             }
-            return state.exams.count { $0.finishedAt != nil && Self.page(of: $0, in: state) == id }
+            return state.exams.count { !$0.isOpen(at: .now) && Self.page(of: $0, in: state) == id }
         }
     }
 

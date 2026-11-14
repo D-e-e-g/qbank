@@ -245,7 +245,7 @@ struct ExamPageView: View {
                             PastExamRow(exam: sitting)
                         }
                         .buttonStyle(.qbankRow)
-                        .deletable("exam", isEnabled: model.offersEditing && sitting.finishedAt != nil) {
+                        .deletable("exam", isEnabled: model.offersEditing && sitting.hasEnded) {
                             app.frozen.perform { deleting = DeleteRequest(target: .exam(id: sitting.id)) }
                         }
                         .accessibilityIdentifier("page.sitting.\(sitting.id)")

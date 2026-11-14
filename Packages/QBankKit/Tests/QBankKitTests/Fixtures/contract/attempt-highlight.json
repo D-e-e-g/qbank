@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "8e7eef46a434e1de1bb679021e51b6c40543455c",
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
   "request": {
     "method": "POST",
     "path": "/api/attempts",
@@ -32,7 +32,7 @@
       "points": 2,
       "maxPoints": 2,
       "guessed": false,
-      "answeredAt": "2026-11-12T22:58:43.509Z",
+      "answeredAt": "2026-11-14T02:55:52.328Z",
       "inReview": false,
       "label": "Correct",
       "pointsText": "2 of 2 points",

@@ -18,6 +18,56 @@ public enum ExamEndReason: String, Codable, Sendable {
     case timeout
 }
 
+/// Where an exam stands on the server's clock (`Exam.status`, `ExamSummary.status`). Read it in
+/// place of `finishedAt` being nil.
+public enum ExamStatus: String, Codable, Sendable, Comparable {
+    /// Before `endsAt`.
+    case running
+    /// Its time has run out, so no time is left. For `graceDuration` after `endsAt` an answer sent
+    /// before the end is still taken, and starting another exam still asks before ending it. It
+    /// ends when the app finishes it or once the grace is over.
+    case grace
+    /// It has ended, with `finishedAt`, `endReason` and its score. An exam whose time is up (past
+    /// `endsAt` and the grace) reads as ended, a timeout at `endsAt`, whether or not its end is
+    /// recorded yet.
+    case ended
+
+    /// How long after `endsAt` an exam stays in its grace, as the server's contract says.
+    public static let graceDuration: TimeInterval = 30
+
+    /// When an exam that ends at `endsAt` has its time up: past its end and its grace.
+    public static func timeUp(endsAt: Date) -> Date {
+        endsAt.addingTimeInterval(graceDuration)
+    }
+
+    /// Where an exam the server read as `status` stands at `date`, as time moves on from that read:
+    /// running before `endsAt`, in its grace until its time is up, then ended. Never earlier than
+    /// the server said, so a phone clock running behind does not reopen it.
+    public static func of(_ status: ExamStatus, endsAt: Date, at date: Date) -> ExamStatus {
+        let byClock: ExamStatus = date < endsAt ? .running : date <= timeUp(endsAt: endsAt) ? .grace : .ended
+        return max(status, byClock)
+    }
+
+    /// The status sent, or, from a server that sends none (or one this app does not know), the one
+    /// `finishedAt` implies.
+    static func decode<Key: CodingKey>(from container: KeyedDecodingContainer<Key>, forKey key: Key, finishedAt: Date?) -> ExamStatus {
+        let sent = (try? container.decodeIfPresent(ExamStatus.self, forKey: key)) ?? nil
+        return sent ?? (finishedAt == nil ? .running : .ended)
+    }
+
+    public static func < (lhs: ExamStatus, rhs: ExamStatus) -> Bool {
+        lhs.order < rhs.order
+    }
+
+    private var order: Int {
+        switch self {
+        case .running: 0
+        case .grace: 1
+        case .ended: 2
+        }
+    }
+}
+
 /// How the server sizes and times an exam (`ExamSetup.rules`), as its `planExam` uses them.
 public struct ExamRules: Codable, Sendable, Equatable {
     /// The most questions an exam draws.
@@ -169,6 +219,9 @@ public struct ExamSummary: Codable, Sendable, Equatable, Identifiable {
     public let timeLimitSeconds: Int
     public let startedAt: Date
     public let endsAt: Date
+    /// Where it stood when the server answered.
+    public let status: ExamStatus
+    /// When it ended; for one whose time ran out, `endsAt`. Nil while running or in its grace.
     public let finishedAt: Date?
     public let endReason: ExamEndReason?
     public let answeredCount: Int
@@ -177,12 +230,43 @@ public struct ExamSummary: Codable, Sendable, Equatable, Identifiable {
     public let maxPoints: Int?
     public let minutesUsed: Int?
 
+    /// It has ended, with its score.
+    public var hasEnded: Bool { status == .ended }
+
+    /// Where it stands at `date` on this phone's clock, moved on from where the server read it.
+    public func status(at date: Date) -> ExamStatus {
+        ExamStatus.of(status, endsAt: endsAt, at: date)
+    }
+
     enum CodingKeys: String, CodingKey {
-        case id, weeks, pool, practiceWeeks, questionCount, timeLimitSeconds, startedAt, endsAt
+        case id, weeks, pool, practiceWeeks, questionCount, timeLimitSeconds, startedAt, endsAt, status
         case finishedAt, endReason, answeredCount, fullyRight, points, maxPoints, minutesUsed
         case courseID = "courseId"
         case courseExamID = "courseExamId"
         case folderIDs = "folderIds"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        courseID = try container.decode(String.self, forKey: .courseID)
+        weeks = try container.decode([String].self, forKey: .weeks)
+        folderIDs = try container.decodeIfPresent([String].self, forKey: .folderIDs)
+        courseExamID = try container.decodeIfPresent(String.self, forKey: .courseExamID)
+        pool = try container.decode(ExamPool.self, forKey: .pool)
+        practiceWeeks = try container.decodeIfPresent([String].self, forKey: .practiceWeeks)
+        questionCount = try container.decode(Int.self, forKey: .questionCount)
+        timeLimitSeconds = try container.decode(Int.self, forKey: .timeLimitSeconds)
+        startedAt = try container.decode(Date.self, forKey: .startedAt)
+        endsAt = try container.decode(Date.self, forKey: .endsAt)
+        finishedAt = try container.decodeIfPresent(Date.self, forKey: .finishedAt)
+        status = ExamStatus.decode(from: container, forKey: .status, finishedAt: finishedAt)
+        endReason = try container.decodeIfPresent(ExamEndReason.self, forKey: .endReason)
+        answeredCount = try container.decode(Int.self, forKey: .answeredCount)
+        fullyRight = try container.decodeIfPresent(Int.self, forKey: .fullyRight)
+        points = try container.decodeIfPresent(Int.self, forKey: .points)
+        maxPoints = try container.decodeIfPresent(Int.self, forKey: .maxPoints)
+        minutesUsed = try container.decodeIfPresent(Int.self, forKey: .minutesUsed)
     }
 }
 
@@ -201,6 +285,9 @@ public struct Exam: Codable, Sendable, Equatable, Identifiable {
     public let timeLimitSeconds: Int
     public let startedAt: Date
     public let endsAt: Date
+    /// Where it stood at `serverNow`.
+    public let status: ExamStatus
+    /// When it ended; for one whose time ran out, `endsAt`. Nil while running or in its grace.
     public let finishedAt: Date?
     public let endReason: ExamEndReason?
     /// The server's clock when it answered. The timer counts down from `endsAt - serverNow`,
@@ -210,17 +297,42 @@ public struct Exam: Codable, Sendable, Equatable, Identifiable {
     public let answeredQuestionIDs: [String]
     public let result: ExamResult?
 
-    public var isRunning: Bool { finishedAt == nil }
+    /// Not ended: running, or in its grace with no time left, when the runner ends it as a timeout.
+    public var isRunning: Bool { status != .ended }
 
-    /// Seconds left when the server answered.
-    public var secondsLeftAtServerNow: TimeInterval { max(0, endsAt.timeIntervalSince(serverNow)) }
+    /// Seconds left when the server answered: none once its time has run out.
+    public var secondsLeftAtServerNow: TimeInterval {
+        status == .running ? max(0, endsAt.timeIntervalSince(serverNow)) : 0
+    }
 
     enum CodingKeys: String, CodingKey {
-        case id, courseCode, courseTitle, weeks, pool, practiceWeeks, timeLimitSeconds, startedAt, endsAt
+        case id, courseCode, courseTitle, weeks, pool, practiceWeeks, timeLimitSeconds, startedAt, endsAt, status
         case finishedAt, endReason, serverNow, questions, result
         case courseID = "courseId"
         case folderIDs = "folderIds"
         case answeredQuestionIDs = "answeredQuestionIds"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        courseID = try container.decode(String.self, forKey: .courseID)
+        courseCode = try container.decode(String.self, forKey: .courseCode)
+        courseTitle = try container.decode(String.self, forKey: .courseTitle)
+        weeks = try container.decode([String].self, forKey: .weeks)
+        folderIDs = try container.decodeIfPresent([String].self, forKey: .folderIDs)
+        pool = try container.decode(ExamPool.self, forKey: .pool)
+        practiceWeeks = try container.decodeIfPresent([String].self, forKey: .practiceWeeks)
+        timeLimitSeconds = try container.decode(Int.self, forKey: .timeLimitSeconds)
+        startedAt = try container.decode(Date.self, forKey: .startedAt)
+        endsAt = try container.decode(Date.self, forKey: .endsAt)
+        finishedAt = try container.decodeIfPresent(Date.self, forKey: .finishedAt)
+        status = ExamStatus.decode(from: container, forKey: .status, finishedAt: finishedAt)
+        endReason = try container.decodeIfPresent(ExamEndReason.self, forKey: .endReason)
+        serverNow = try container.decode(Date.self, forKey: .serverNow)
+        questions = try container.decode([Question].self, forKey: .questions)
+        answeredQuestionIDs = try container.decode([String].self, forKey: .answeredQuestionIDs)
+        result = try container.decodeIfPresent(ExamResult.self, forKey: .result)
     }
 }
 

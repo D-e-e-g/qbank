@@ -100,4 +100,41 @@ final class ExamLifecycleUITests: XCTestCase {
         reveal(pastWeeks12, in: app)
         XCTAssertTrue(pastWeeks12.exists, "the exam she agreed to end ended as left")
     }
+
+    /// Exam setup stays open while her exam's time runs out: its line counts down to 0 min left,
+    /// never 1, and once the grace is over it is among her past exams as a timeout with its score.
+    /// Start then opens a new exam without asking about it.
+    @MainActor
+    func testAnExamWhoseTimeRunsOutOnAnOpenSetupEndsWithItsScore() throws {
+        let app = launch("exam-time-running-out")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        app.buttons["course.tile.exam"].tap()
+        XCTAssertTrue(app.navigationBars["Exam"].appears(timeout: 5))
+        let resume = app.buttons["exam.resume"]
+        XCTAssertTrue(resume.appears(timeout: 10))
+        XCTAssertTrue(resume.label.contains(" min left"), resume.label)
+        XCTAssertFalse(resume.label.contains(" 0 min left"), "time is left: \(resume.label)")
+
+        // A minute after launch its time runs out: no time left while its grace lasts.
+        let timeUp = expectation(for: NSPredicate(format: "label CONTAINS ' 0 min left'"), evaluatedWith: resume)
+        XCTAssertEqual(XCTWaiter.wait(for: [timeUp], timeout: 70), .completed, resume.label)
+        attach(app, "exam setup, time run out, in its grace")
+
+        XCTAssertTrue(resume.disappears(timeout: 45), "its time is up")
+        let past = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'exam.past.' AND label CONTAINS 'Weeks 1-2' AND label CONTAINS 'Time ran out'")).firstMatch
+        XCTAssertTrue(past.appears(timeout: 10), "read again, it is a past exam with its score")
+        reveal(past, in: app)
+        attach(app, "exam setup, the timed-out exam among the past ones")
+
+        let week3 = app.buttons["exam.folder.Week 3"]
+        reveal(week3, in: app)
+        week3.tap()
+        let start = app.buttons["exam.start"]
+        reveal(start, in: app)
+        let enabled = NSPredicate(format: "isEnabled == true")
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: enabled, evaluatedWith: start)], timeout: 10), .completed)
+        start.tap()
+        XCTAssertTrue(app.buttons["exam.end"].appears(timeout: 10), "the new exam opens")
+        XCTAssertFalse(app.staticTexts["exam.replaceSheet.title"].exists, "nothing was asked about the timed-out exam")
+    }
 }

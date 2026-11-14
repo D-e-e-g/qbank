@@ -33,6 +33,7 @@ const IMAGES: Record<string, string> = {
   "30c52a4151b457b9134814352dc171c1200c4aef": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:8bf01f7ba14408bc5d8b22f39b63e8ba46416c437eede0dfe0c3952193dad87b",
   c76c09b863392d22575f230cad18cfeca8a4da52: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:4097b7801a1925966126834785c5b75e22ddd55d4e68a8b240da50e671a2d5ea",
   "8e7eef46a434e1de1bb679021e51b6c40543455c": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:bf1aeedcb4a4082006ef0554f0977515e24d030b3a25ccfc39349915bf9ec39e",
+  "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:6a50b3571d305bbd6696e1e26dbb7d07101d27b84c307f0f8d21e5df90654a5c",
 };
 
 const SCENARIOS: (() => Promise<World[]>)[] = [recordAdmin, recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];
