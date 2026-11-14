@@ -98,6 +98,58 @@ final class SetProgressUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["practice.pickedUp"].exists)
     }
 
+    /// The reproduction: on a slow connection an answer is picked, Start over is confirmed, and
+    /// Check answer is tapped while Start over is still asking QBank. The score used to arrive
+    /// after the set had begun again and land on the same question of the new run, shown answered
+    /// with nothing picked. Now Check answer waits, so nothing of the previous run is sent.
+    @MainActor
+    func testCheckAnswerWaitsWhileStartOverIsOnItsWay() throws {
+        let app = launch("slow-saves")
+        openSet(app, Self.set)
+        answer(app, option: 0)
+        next(app)
+        app.buttons["practice.close"].tap()
+        let row = app.buttons["course.set.\(Self.set)"]
+        XCTAssertTrue(row.appears(timeout: 10))
+        waitForLabel(row, containing: "1 of 8 answered · Continue")
+        tapVisible(row, in: app)
+        expectCount(app, "2 of 8")
+        tapVisible(app.buttons["practice.option.1"], in: app)
+        let check = app.buttons["practice.check"]
+        XCTAssertTrue(check.isEnabled)
+
+        let startOver = app.buttons["practice.startOver"]
+        startOver.tap()
+        let confirm = app.buttons["practice.startOverSheet.confirm"]
+        XCTAssertTrue(confirm.appears(timeout: 5))
+        confirm.tap()
+        // Start over is on its way for a few seconds: the question waits with it.
+        XCTAssertTrue(check.appears(timeout: 2))
+        XCTAssertFalse(check.isEnabled, "Check answer waits while Start over is asking QBank")
+        XCTAssertFalse(startOver.isEnabled)
+        // The tap that used to send the previous run's answer.
+        check.tap()
+        attach(app, "set progress: the question waits while Start over asks")
+
+        expectCount(app, "1 of 8", timeout: 10)
+        XCTAssertFalse(app.staticTexts["practice.pickedUp"].exists)
+        tapVisible(app.buttons["practice.option.0"], in: app)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: check)], timeout: 10), .completed,
+            "Check answer works again once the set has begun again"
+        )
+        check.tap()
+        XCTAssertTrue(app.buttons["practice.next"].appears(timeout: 10))
+        next(app)
+
+        // Question 2 of the new run, the one an answer was picked on, is open and untouched.
+        expectCount(app, "2 of 8")
+        XCTAssertTrue(check.appears(timeout: 5), "question 2 of the new run has no answer yet")
+        XCTAssertFalse(check.isEnabled, "nothing is picked on it")
+        XCTAssertFalse(app.descendants(matching: .any)["practice.feedback"].exists)
+        attach(app, "set progress: the new run's question 2 is untouched")
+    }
+
     /// A finished set still says how it went and opens fresh.
     @MainActor
     func testADoneSetOpensFreshAtQuestionOne() throws {
@@ -286,10 +338,10 @@ final class SetProgressUITests: XCTestCase {
     }
 
     @MainActor
-    private func expectCount(_ app: XCUIApplication, _ count: String) {
+    private func expectCount(_ app: XCUIApplication, _ count: String, timeout: TimeInterval = 5) {
         let counter = app.staticTexts["practice.count"]
         XCTAssertTrue(counter.appears(timeout: 5))
         let begins = NSPredicate(format: "label BEGINSWITH %@", count)
-        XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: begins, evaluatedWith: counter)], timeout: 5), .completed, "expected \(count), saw \(counter.label)")
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: begins, evaluatedWith: counter)], timeout: timeout), .completed, "expected \(count), saw \(counter.label)")
     }
 }

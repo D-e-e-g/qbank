@@ -123,6 +123,7 @@ struct PracticeView: View {
                 model.next()
             }
             .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+            .disabled(model.isBusy)
             .accessibilityIdentifier("practice.next")
         } else if model.attempt != nil {
             Button("Check answer") {
@@ -186,7 +187,7 @@ private struct QuestionPage: View {
                 layout: attempt.layout,
                 draft: attempt.draft,
                 revealed: revealed,
-                isLocked: revealed || model.isChecking,
+                isLocked: revealed || model.isBusy,
                 struck: attempt.struck,
                 onStrike: { model.toggleStrike($0) }
             ) { draft in
@@ -194,7 +195,7 @@ private struct QuestionPage: View {
             }
             if !revealed, attempt.draft != .unsupported {
                 GuessToggle(isOn: Binding(get: { attempt.guessed }, set: { model.setGuessed($0) }))
-                    .disabled(model.isChecking)
+                    .disabled(model.isBusy)
             }
             if revealed {
                 RationaleSections(question: question)
@@ -258,7 +259,7 @@ private struct PickedUpLine: View {
                 .qbankFont(.subheadline, weight: .bold)
                 .frame(minHeight: QBankSpacing.rowMin)
                 .contentShape(.rect)
-                .disabled(model.isChecking || model.isStartingOver)
+                .disabled(model.isBusy)
                 .accessibilityIdentifier("practice.startOver")
         }
         .foregroundStyle(.qbank(.tint))

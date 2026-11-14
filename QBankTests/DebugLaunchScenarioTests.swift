@@ -67,6 +67,23 @@ struct DebugLaunchScenarioTests {
         #expect(ended.result?.minutesUsed == 5)
     }
 
+    /// The server ends the sitting at once, and the reply to Start over takes its time to arrive.
+    @Test func slowSavesScenarioAnswersAStartOverLate() async throws {
+        let app = try #require(Self.launch("slow-saves"))
+        #expect(app.account?.email == FakeQBankServer.student.email)
+        let delay = DebugLaunchScenario.slowSaveReplyDelay
+        let clock = ContinuousClock()
+        let began = clock.now
+        let startingOver = Task { try await app.client.startPracticeSetOver(id: "communication-v1") }
+        // Reads are not slowed: one sees the sitting ended while the reply is still on its way.
+        while try await app.client.practiceSet(id: "communication-v1").run != .restarted, clock.now - began < delay {
+            await Task.yield()
+        }
+        #expect(clock.now - began < delay)
+        #expect(try await startingOver.value)
+        #expect(clock.now - began >= delay)
+    }
+
     /// Through the fake server: a wrong password deletes nothing, the right one deletes her account,
     /// and then it neither works on this phone nor signs in again.
     @Test func signedInScenarioDeletesHerAccountWithHerPassword() async throws {
