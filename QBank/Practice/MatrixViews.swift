@@ -208,14 +208,16 @@ private struct MatrixMultiGrid: View {
                 }
             }
             // The grid is answered, so its header takes the accent, as a choice's letter does.
-            // The band reaches a little past the columns, so a name never touches its edge and the
-            // names still line up with their checks.
+            // The band is exactly as wide as the column it labels, as on the web. Each column is a
+            // little wider than its longest word (see `column`), so a name never touches the edge
+            // and still lines up with its checks.
             .padding(.vertical, 9)
             .background {
                 RoundedRectangle(cornerRadius: QBankRadius.sm, style: .continuous)
                     .fill(.qbank(.tintSoft))
-                    .padding(.horizontal, -QBankSpacing.space3)
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("practice.matrixmulti.header")
             ForEach(rows.indices, id: \.self) { row in
                 let picks = selected.indices.contains(row) ? selected[row] : []
                 VStack(alignment: .leading, spacing: QBankSpacing.space2) {
@@ -258,7 +260,8 @@ private struct MatrixMultiGrid: View {
     }
 
     /// The column width a header needs to wrap only between words: its longest word in the header
-    /// font, at the user's text size, and never less than a check cell.
+    /// font, at the user's text size, with a little room on each side so the band never touches
+    /// a name, and never less than a check cell.
     private var column: CGFloat {
         let size = UIFontMetrics(forTextStyle: .subheadline).scaledValue(
             for: QBankTextStyle.subheadline.size,
@@ -269,7 +272,7 @@ private struct MatrixMultiGrid: View {
             .flatMap { $0.split(whereSeparator: \.isWhitespace) }
             .map { ceil((String($0) as NSString).size(withAttributes: [.font: font]).width) }
             .max() ?? 0
-        return max(QBankSpacing.rowMin, widest)
+        return max(QBankSpacing.rowMin, widest + 2 * QBankSpacing.space2)
     }
 }
 

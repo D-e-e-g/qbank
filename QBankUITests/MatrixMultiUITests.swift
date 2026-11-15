@@ -57,8 +57,13 @@ final class MatrixMultiUITests: XCTestCase {
         tapBox(app, row: 2, column: "Hypovolemia")
         tapBox(app, row: 0, column: Self.longColumn)
         XCTAssertTrue(app.buttons[box(0, Self.longColumn)].isSelected)
-        attach(app, wide ? "matrixmulti iPad, answering" : "matrixmulti iPhone, answering")
+        if wide {
+            attachLooks(app, "matrixmulti iPad, answering")
+        } else {
+            attach(app, "matrixmulti iPhone, answering")
+        }
         expectFits(app, wide: wide)
+        if wide { expectHeaderBandInColumn(app) }
 
         check.tap()
         let feedback = app.descendants(matching: .any)["practice.feedback"]
@@ -205,6 +210,17 @@ final class MatrixMultiUITests: XCTestCase {
         XCTAssertEqual(cell.frame.height, 44, accuracy: 1)
         XCTAssertEqual(header.frame.midX, app.buttons[box(0, Self.longColumn)].frame.midX, accuracy: 2)
         XCTAssertEqual(shortHeader.frame.midX, cell.frame.midX, accuracy: 2)
+    }
+
+    /// The header band is as wide as the column it labels, the same column the question and the
+    /// Check answer button sit in, not a few points wider on each side.
+    @MainActor
+    private func expectHeaderBandInColumn(_ app: XCUIApplication) {
+        let band = app.descendants(matching: .any)["practice.matrixmulti.header"]
+        let column = app.buttons["practice.check"].frame
+        XCTAssertTrue(band.exists)
+        XCTAssertEqual(band.frame.minX, column.minX, accuracy: 1, "the header band's left edge is in the column")
+        XCTAssertEqual(band.frame.maxX, column.maxX, accuracy: 1, "the header band's right edge is in the column")
     }
 
     @MainActor
