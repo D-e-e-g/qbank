@@ -25,6 +25,10 @@ It builds, creates one run-scoped simulator through `test/sim.sh`, runs the name
 
 `xcodebuild` reports `TEST SUCCEEDED` for a name that matches no test and for a test that skips itself on this device. The script fails in both cases, so run an iPad layout test with `--device ipad`.
 
+## The simulator slot
+
+This Mac has one simulator slot, shared by every app and every agent on it, because two runs that boot simulators at once peg its CPU. `test/sim.sh` takes the slot with `/usr/bin/lockf` on `~/.local/state/sim-slot.lock` before it creates a device, and holds it until the device is deleted. A second run waits and prints `waiting for the simulator slot` instead of piling on, so do not wrap `test/sim.sh` in `lockf` yourself. A run boots one device, and a build that boots no simulator, such as `generic/platform=iOS`, needs no slot. Runs on GitHub Actions skip the slot: mb14 is another machine that already runs one job at a time. `test/sim-slot-checks.sh` checks both.
+
 ## Run named tests on mb14
 
 For a failure that does not reproduce on this Mac, or when this Mac has no simulator free, give the fix a scratch branch. A branch with no pull request starts no Mac job until you ask for one:
