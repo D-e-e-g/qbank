@@ -360,21 +360,22 @@ final class ExamModel {
     var highlighter: HighlighterStore { app.highlighter }
 
     /// Marks words of the open question in a color. A skipped question keeps its marks; they end
-    /// with the exam and are never sent.
+    /// with the exam and are never sent. They change nothing on the account, so the frozen view
+    /// marks too, as the web's does.
     func highlight(_ range: Range<Int>, in part: MarkablePart, color: HighlightColor) {
-        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        guard items.indices.contains(index), !items[index].submitted else { return }
         items[index].highlights.paint(range, in: part, color: color)
     }
 
     /// Erases the mark under a character of the open question.
     func eraseHighlight(at offset: Int, in part: MarkablePart) {
-        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        guard items.indices.contains(index), !items[index].submitted else { return }
         items[index].highlights.erase(at: offset, in: part)
     }
 
     /// Clear highlights: every mark on the open question.
     func clearHighlights() {
-        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        guard items.indices.contains(index), !items[index].submitted else { return }
         items[index].highlights.clear()
     }
 

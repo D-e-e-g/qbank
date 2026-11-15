@@ -186,14 +186,24 @@ struct HighlightTests {
         #expect(model.attempts.allSatisfy { $0.highlights.isEmpty })
     }
 
-    @Test func theOwnersLookMarksNothing() async throws {
+    /// Marks change nothing on the account, so the frozen view marks words as the web's does, says
+    /// no note, and still sends nothing.
+    @Test func theFrozenViewMarksWordsAndSendsNothing() async throws {
         let server = StubServer(["GET /api/practice-sets/set1": .ok(PracticeModelTests.practiceSet())])
         let (model, app) = PracticeModelTests.model(server, account: .admin)
         await model.load()
         app.frozen.hideNote()
         model.highlight(0..<4, in: .stem, color: .yellow)
-        #expect(app.frozen.noteID != nil, "marking answers with the note")
+        model.highlight(0..<2, in: .ask, color: .blue)
+        #expect(model.attempt?.highlights[.stem] == [Highlight(range: 0..<4, color: .yellow)])
+        model.eraseHighlight(at: 1, in: .ask)
+        #expect(model.attempt?.highlights[.ask] == [])
+        model.clearHighlights()
         #expect(model.attempt?.highlights.isEmpty == true)
+        #expect(app.frozen.noteID == nil, "marking is not answered with the note")
+        model.toggleStrike(0)
+        #expect(app.frozen.noteID != nil, "a strike still answers with the note")
+        #expect(server.calls == ["GET /api/practice-sets/set1"])
     }
 
     // MARK: Exam
@@ -220,6 +230,20 @@ struct HighlightTests {
         await model.submit()
         let sent = String(decoding: try #require(server.requests.last?.httpBody), as: UTF8.self).lowercased()
         #expect(!sent.contains("highlight") && !sent.contains("mark"), "marks are never sent")
+    }
+
+    @Test func theFrozenViewMarksAnExamQuestionAndSendsNothing() async throws {
+        let server = StubServer(["GET /api/exams/e1": .ok(StudyBodies.exam())])
+        let (app, _) = TestApp.make(server, account: .admin)
+        let model = ExamModel(app: app, examID: "e1")
+        await model.load()
+        app.frozen.hideNote()
+        model.highlight(0..<3, in: .stem, color: .pink)
+        #expect(model.item?.highlights[.stem] == [Highlight(range: 0..<3, color: .pink)])
+        #expect(app.frozen.noteID == nil, "marking is not answered with the note")
+        model.eraseHighlight(at: 1, in: .stem)
+        #expect(model.item?.highlights.isEmpty == true)
+        #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
     }
 }
 

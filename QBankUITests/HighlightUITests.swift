@@ -157,7 +157,56 @@ final class HighlightUITests: XCTestCase {
         XCTAssertTrue((stem.value as? String ?? "").contains("Yellow highlight: "), "a skipped question keeps its marks")
     }
 
+    /// The owner's frozen view of a user account marks words as the web's does: marks change nothing
+    /// on the account and are never sent, so they show, with no note. A strike still answers with it.
+    @MainActor
+    func testTheFrozenViewMarksWordsInPracticeAndExams() throws {
+        var app = launch("owner")
+        XCTAssertTrue(app.buttons["home.course.NURS 310"].appears(timeout: 10))
+        open(app.buttons["home.course.NURS 310"], titled: "NURS 310", in: app)
+        openSet(app)
+        dismissNote(app)
+        let stem = app.staticTexts["practice.stem"]
+        XCTAssertTrue(stem.appears(timeout: 5))
+        markWords(stem, from: 30, to: 230)
+        waitForLabel(stem, valueContaining: "Yellow highlight: ")
+        XCTAssertFalse(app.staticTexts["frozen.note"].exists, "marking is not answered with the note")
+        let choice = app.buttons["practice.option.1"]
+        reveal(choice, in: app)
+        markWords(choice, from: 70, to: 230, line: 23)
+        waitForLabel(choice, valueContaining: "Yellow highlight: ")
+        XCTAssertFalse(choice.isSelected, "marking a choice's words does not pick it")
+        attachLooks(app, "highlight, frozen view")
+        wordPoint(choice, 80, line: 23).tap()
+        expectNoMarks(choice)
+        XCTAssertFalse(app.staticTexts["frozen.note"].exists, "erasing is not answered with the note")
+        app.buttons["practice.strike.1"].tap()
+        XCTAssertTrue(app.staticTexts["frozen.note"].appears(timeout: 5), "a strike still answers with the note")
+
+        app = launch("owner-exam-in-progress")
+        XCTAssertTrue(app.buttons["home.course.NURS 310"].appears(timeout: 10))
+        open(app.buttons["home.course.NURS 310"], titled: "NURS 310", in: app)
+        open(app.buttons["course.tile.exam"], titled: "Exam", in: app)
+        tapVisible(app.buttons["exam.resume"], in: app)
+        XCTAssertTrue(app.buttons["exam.end"].appears(timeout: 5))
+        dismissNote(app)
+        let examStem = app.staticTexts["practice.stem"]
+        XCTAssertTrue(examStem.appears(timeout: 5))
+        markWords(examStem, from: 30, to: 230)
+        waitForLabel(examStem, valueContaining: "Yellow highlight: ")
+        XCTAssertFalse(app.staticTexts["frozen.note"].exists, "marking is not answered with the note")
+    }
+
     // MARK: Helpers
+
+    /// Puts away the note a frozen runner opens with.
+    @MainActor
+    private func dismissNote(_ app: XCUIApplication) {
+        let note = app.staticTexts["frozen.note"]
+        XCTAssertTrue(note.appears(timeout: 5), "the frozen runner opened without its note")
+        note.tap()
+        XCTAssertTrue(note.disappears(timeout: 5))
+    }
 
     @MainActor
     private func openSet(_ app: XCUIApplication) {
