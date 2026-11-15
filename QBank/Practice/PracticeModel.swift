@@ -304,9 +304,10 @@ final class PracticeModel {
     // MARK: Answering
 
     /// Replaces her answer to the current question while it is still open. A struck choice
-    /// cannot be picked until she restores it.
+    /// cannot be picked until she restores it. Picking, striking and the guess flag change only the
+    /// screen until Check answer sends them, so the frozen view does them too, as the web's does.
     func update(_ draft: AnswerDraft) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         guard attempts[index].struck.isDisjoint(with: draft.picked) else { return }
         attempts[index].draft = draft
     }
@@ -314,12 +315,12 @@ final class PracticeModel {
     /// Strikes out a choice of the current question she has ruled out, or restores a struck one,
     /// while it is still open. Strikes stay with the question until the run ends and are never sent.
     func toggleStrike(_ option: Int) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         attempts[index].draft = attempts[index].draft.striking(option, in: &attempts[index].struck)
     }
 
     func setGuessed(_ guessed: Bool) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         attempts[index].guessed = guessed
     }
 

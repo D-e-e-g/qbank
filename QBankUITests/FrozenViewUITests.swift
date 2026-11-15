@@ -76,21 +76,34 @@ final class FrozenViewUITests: XCTestCase {
         expectNote(app, "Select")
         XCTAssertFalse(app.buttons["folder.pick.Rights, Law, and Ethics"].exists)
 
-        // A set opens where she left it, and the runner answers with the note.
         let set = app.buttons["course.set.Rights, Law, and Ethics"]
         set.press(forDuration: 1.2)
         chooseFromMenu(menuItem(app, "delete.Rights, Law, and Ethics", "Delete"))
         expectNote(app, "a held set's Delete")
-        tapVisible(set, in: app)
+    }
+
+    /// As on the web, a set opens where she left it, and the owner picks, strikes and guesses on
+    /// screen only; Check answer, which would save an answer, answers with the note.
+    @MainActor
+    func testThePracticeRunnerAnswersOnScreenButCheckAnswerIsRefused() throws {
+        let app = launch("owner")
+        XCTAssertTrue(app.buttons["home.course.NURS 310"].appears(timeout: 10))
+        open(app.buttons["home.course.NURS 310"], titled: "NURS 310", in: app)
+        open(app.buttons["course.page.Exam 1"], titled: "Exam 1", in: app)
+        open(app.buttons["folder.Week 1"], titled: "Week 1", in: app)
+        tapVisible(app.buttons["course.set.Rights, Law, and Ethics"], in: app)
         XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
         expectNote(app, "the runner opening")
         XCTAssertTrue(app.staticTexts["practice.stem"].exists, "she reads the question")
-        let option = app.buttons["practice.option.0"]
-        tapVisible(option, in: app)
-        expectNote(app, "a choice")
-        XCTAssertFalse(option.isSelected)
-        app.buttons["practice.check"].tap()
+
+        let check = app.buttons["practice.check"]
+        XCTAssertFalse(check.isEnabled, "nothing picked yet")
+        answerOnScreen(app)
+        XCTAssertTrue(check.isEnabled, "the picked answer could be checked")
+        attach(app, "frozen, practice answered on screen")
+        check.tap()
         expectNote(app, "Check answer")
+        XCTAssertFalse(app.descendants(matching: .any)["practice.feedback"].exists, "no score shows")
         app.buttons["practice.close"].tap()
         XCTAssertTrue(app.buttons["practice.close"].disappears(timeout: 5))
     }
@@ -115,16 +128,18 @@ final class FrozenViewUITests: XCTestCase {
         tapVisible(app.buttons["exam.start"], in: app)
         expectNote(app, "Start exam")
 
-        // Her running exam opens as she left it, and nothing in it answers.
+        // Her running exam opens as she left it. The owner answers on screen only; Submit and Skip
+        // answer with the note.
         tapVisible(app.buttons["exam.resume"], in: app)
         XCTAssertTrue(app.buttons["exam.end"].appears(timeout: 5))
         expectNote(app, "the exam opening")
-        tapVisible(app.buttons["practice.option.0"], in: app)
-        expectNote(app, "an exam choice")
+        answerOnScreen(app)
+        XCTAssertTrue(app.buttons["exam.submit"].isEnabled)
         app.buttons["exam.submit"].tap()
         expectNote(app, "Submit")
         app.buttons["exam.skip"].tap()
         expectNote(app, "Skip")
+        XCTAssertTrue(app.buttons["practice.option.0"].isSelected, "still on the same question")
 
         // Only End exam leaves a running exam: here it leaves, with the note, and ends nothing.
         app.buttons["exam.end"].tap()
@@ -146,6 +161,28 @@ final class FrozenViewUITests: XCTestCase {
         expectNote(app, "Choose a file")
         app.buttons["import.check"].tap()
         expectNote(app, "Check file")
+    }
+
+    /// Picks the first choice, strikes the second and restores it, and flags a guess, as the user
+    /// would: each changes the screen, and none answers with the note.
+    @MainActor
+    private func answerOnScreen(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let note = app.staticTexts["frozen.note"]
+        let option = app.buttons["practice.option.0"]
+        tapVisible(option, in: app)
+        XCTAssertTrue(option.isSelected, "the choice is picked", file: file, line: line)
+        let other = app.buttons["practice.option.1"]
+        let strike = app.buttons["practice.strike.1"]
+        tapVisible(strike, in: app)
+        waitForLabel(other, valueContaining: "Struck out")
+        XCTAssertTrue(strike.label.hasPrefix("Restore "), strike.label, file: file, line: line)
+        strike.tap()
+        waitForLabel(strike, containing: "Strike out ")
+        let guess = app.switches["practice.guess"]
+        tapVisible(guess, in: app)
+        XCTAssertEqual(guess.value as? String, "1", "I'm guessing is ticked", file: file, line: line)
+        XCTAssertTrue(option.isSelected, file: file, line: line)
+        XCTAssertFalse(note.exists, "picking, striking and guessing showed the note", file: file, line: line)
     }
 
     /// The note shows, in its words, and goes when tapped, so the next control's is its own.

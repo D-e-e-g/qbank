@@ -159,7 +159,8 @@ final class HighlightUITests: XCTestCase {
     }
 
     /// The owner's frozen view of a user account marks words as the web's does: marks change nothing
-    /// on the account and are never sent, so they show, with no note. A strike still answers with it.
+    /// on the account and are never sent, so they show, with no note, as a strike does. Check answer
+    /// still answers with it.
     @MainActor
     func testTheFrozenViewMarksWordsInPracticeAndExams() throws {
         var app = launch("owner")
@@ -182,7 +183,10 @@ final class HighlightUITests: XCTestCase {
         expectNoMarks(choice)
         XCTAssertFalse(app.staticTexts["frozen.note"].exists, "erasing is not answered with the note")
         app.buttons["practice.strike.1"].tap()
-        XCTAssertTrue(app.staticTexts["frozen.note"].appears(timeout: 5), "a strike still answers with the note")
+        waitForLabel(choice, valueContaining: "Struck out")
+        XCTAssertFalse(app.staticTexts["frozen.note"].exists, "a strike is not answered with the note")
+        app.buttons["practice.check"].tap()
+        XCTAssertTrue(app.staticTexts["frozen.note"].appears(timeout: 5), "Check answer still answers with the note")
 
         app = launch("owner-exam-in-progress")
         XCTAssertTrue(app.buttons["home.course.NURS 310"].appears(timeout: 10))
