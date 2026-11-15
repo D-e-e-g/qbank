@@ -209,7 +209,8 @@ private struct ExamQuestionPage: View {
         return Highlighting(
             highlights: item.highlights,
             color: pen.color,
-            paint: { model.highlight($0, in: $1, color: pen.color) },
+            isErasing: pen.isErasing,
+            swipe: { pen.isErasing ? model.eraseHighlights($0, in: $1) : model.highlight($0, in: $1, color: pen.color) },
             erase: { model.eraseHighlight(at: $0, in: $1) }
         )
     }

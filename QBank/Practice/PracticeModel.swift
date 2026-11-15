@@ -337,6 +337,12 @@ final class PracticeModel {
         attempts[index].highlights.erase(at: offset, in: part)
     }
 
+    /// Erases the marks on the words the eraser swiped over.
+    func eraseHighlights(_ range: Range<Int>, in part: MarkablePart) {
+        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        attempts[index].highlights.erase(range, in: part)
+    }
+
     /// Clear highlights: every mark on the current question.
     func clearHighlights() {
         guard attempts.indices.contains(index) else { return }

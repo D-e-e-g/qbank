@@ -7,7 +7,8 @@ extension XCTestCase {
     /// keeps what the fake server saved of her answers and sittings. `online: false`
     /// starts without a network. `deviceOwner` is how the device answers the Face ID lock, such as
     /// `face-id` (`QB_UITEST_DEVICE_OWNER`); every launch gets a fake, so the simulator's own
-    /// Face ID never plays a part.
+    /// Face ID never plays a part. `largestText` shows the app at the largest accessibility text
+    /// size, where a question runs well past the screen.
     @MainActor
     func launch(
         _ scenario: String,
@@ -15,9 +16,13 @@ extension XCTestCase {
         keepPhoneData: Bool = false,
         keepServerAnswers: Bool = false,
         online: Bool = true,
-        deviceOwner: String = "face-id"
+        deviceOwner: String = "face-id",
+        largestText: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
+        if largestText {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        }
         app.launchEnvironment["QB_UITEST_SCENARIO"] = scenario
         app.launchEnvironment["QB_UITEST_DEVICE_OWNER"] = deviceOwner
         if keepPhoneSettings {
