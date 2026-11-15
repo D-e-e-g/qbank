@@ -201,8 +201,8 @@ struct HighlightTests {
         model.clearHighlights()
         #expect(model.attempt?.highlights.isEmpty == true)
         #expect(app.frozen.noteID == nil, "marking is not answered with the note")
-        model.toggleStrike(0)
-        #expect(app.frozen.noteID != nil, "a strike still answers with the note")
+        await model.check()
+        #expect(app.frozen.noteID != nil, "Check answer still answers with the note")
         #expect(server.calls == ["GET /api/practice-sets/set1"])
     }
 
