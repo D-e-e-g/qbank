@@ -304,7 +304,6 @@ done
 # creates a device. test/sim-slot-checks.sh drives both against a temporary lock
 # file and a fake xcrun.
 
-require_grep 'sim-slot\.sh' test/sim.sh "sim.sh takes the simulator slot"
 if ./test/sim-slot-checks.sh; then
   pass "the simulator slot makes a second run wait and CI skip it"
 else

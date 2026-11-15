@@ -47,8 +47,10 @@ fi
 
 # lockf does not pass signals on to COMMAND, so a run stopped with kill would
 # carry on without the slot. Forward them to COMMAND, which sim.sh's own traps
-# then clean up after.
-"$lockf" -s "$lock" "$@" &
+# then clean up after. A background job starts with SIGINT ignored, which a
+# shell cannot undo, so perl restores the default before it execs COMMAND.
+# shellcheck disable=SC2016 # a perl program, not shell
+"$lockf" -s "$lock" /usr/bin/perl -e '$SIG{INT} = "DEFAULT"; exec @ARGV or exit 127' -- "$@" &
 holder=$!
 # shellcheck disable=SC2317,SC2329 # invoked by the signal traps
 forward() {

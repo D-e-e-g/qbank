@@ -69,6 +69,23 @@ else
     fail "sim-slot.sh creates the lock directory and keeps the command's exit status (got $status)"
   fi
 
+  # INT sent to sim-slot.sh must reach a command that traps it, as Ctrl-C
+  # reaches sim.sh's cleanup trap.
+  /usr/bin/perl -e '$SIG{INT} = "DEFAULT"; exec @ARGV' ./test/sim-slot.sh sh -c 'trap "touch \"$1\"; exit 0" INT; touch "$2"; while :; do sleep 0.1; done' sh "$work/got-int" "$work/int-ready" >/dev/null 2>&1 &
+  int_pid=$!
+  if wait_for "$work/int-ready"; then
+    kill -s INT "$int_pid" 2>/dev/null
+    if wait_for "$work/got-int"; then
+      pass "sim-slot.sh delivers INT to its command"
+    else
+      fail "sim-slot.sh delivers INT to its command"
+      kill -s KILL "$int_pid" 2>/dev/null
+    fi
+  else
+    fail "the INT check command starts"
+  fi
+  wait "$int_pid" 2>/dev/null
+
   # A first holder keeps the slot until released; a second run must wait.
   /usr/bin/lockf -s "$lock" sh -c 'touch "$1"; while [ ! -e "$2" ]; do sleep 0.1; done' sh "$work/held" "$work/release" &
   holder_pid=$!
