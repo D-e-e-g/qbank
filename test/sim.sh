@@ -18,12 +18,17 @@
 # was killed are reaped first.
 # COMMAND is stopped after --timeout seconds (default 3600).
 #
+# The run takes the shared simulator slot first (test/sim-slot.sh) and holds it
+# until the device is deleted, so two local runs never boot simulators at once.
+# One run boots one device. GitHub Actions runs skip the slot.
+#
 # Compatible with the bash 3.2 that ships with macOS.
 set -euo pipefail
 
 PREFIX="qbank-run"
 timeout_seconds=3600
 preferred=()
+original_args=("$@")
 
 usage() {
   sed -n '2,4p' "$0" | sed 's/^# \{0,1\}//' >&2
@@ -60,6 +65,12 @@ fi
 log() {
   echo "sim.sh: $*" >&2
 }
+
+# Take the slot before anything is created or booted: run this script again
+# under test/sim-slot.sh, which holds the lock until this process exits.
+if [ -z "${QB_SIM_SLOT_SETTLED:-}" ]; then
+  exec "$(dirname "$0")/sim-slot.sh" "$0" "${original_args[@]}"
+fi
 
 # Runs "$@" and kills it with SIGALRM after $1 seconds (exit status 142).
 run_with_timeout() {

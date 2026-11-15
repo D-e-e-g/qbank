@@ -298,6 +298,18 @@ for workflow in "${WORKFLOWS[@]}"; do
   fi
 done
 
+# --- Simulator slot ------------------------------------------------------------
+#
+# test/sim.sh takes the shared simulator slot through test/sim-slot.sh before it
+# creates a device. test/sim-slot-checks.sh drives both against a temporary lock
+# file and a fake xcrun.
+
+if ./test/sim-slot-checks.sh; then
+  pass "the simulator slot makes a second run wait and CI skip it"
+else
+  fail "the simulator slot makes a second run wait and CI skip it"
+fi
+
 # --- Xcode project ------------------------------------------------------------
 
 PBXPROJ=QBank.xcodeproj/project.pbxproj
