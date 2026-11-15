@@ -334,9 +334,11 @@ final class ExamModel {
         isAnswering && items.indices.contains(index) && !items[index].submitted
     }
 
-    /// Replaces her open answer. A struck choice cannot be picked until she restores it.
+    /// Replaces her open answer. A struck choice cannot be picked until she restores it. Picking,
+    /// striking and the guess flag change only the screen until Submit sends them, so the frozen
+    /// view does them too, as the web's does.
     func update(_ draft: AnswerDraft) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         guard items[index].struck.isDisjoint(with: draft.picked) else { return }
         items[index].draft = draft
     }
@@ -344,13 +346,13 @@ final class ExamModel {
     /// Strikes out a choice she has ruled out, or restores a struck one. Strikes stay with the
     /// question while she moves between questions, end with the exam, and are never sent.
     func toggleStrike(_ option: Int) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         items[index].draft = items[index].draft.striking(option, in: &items[index].struck)
     }
 
     /// The guess flag goes with her answer, so it cannot change once the answer is sent.
     func setGuessed(_ guessed: Bool) {
-        guard !app.frozen.refuses(), isEditable else { return }
+        guard isEditable else { return }
         items[index].guessed = guessed
     }
 

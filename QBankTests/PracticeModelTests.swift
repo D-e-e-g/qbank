@@ -120,21 +120,32 @@ struct PracticeModelTests {
         #expect(model.phase == .loading)
     }
 
-    @Test func theOwnerCanLookButNotAnswer() async throws {
+    /// As on the web, the frozen view picks, strikes and guesses on screen only; Check answer and
+    /// Start over, which would write to her account, answer with the note and send nothing.
+    @Test func theOwnerCanAnswerOnScreenButNotCheck() async throws {
         let server = StubServer(["GET /api/practice-sets/set1": .ok(Self.practiceSet())])
         let (model, app) = Self.model(server, account: .admin)
         await model.load()
         #expect(model.phase == .answering, "the runner opens as she sees it")
         #expect(app.frozen.noteID != nil, "and says what it is")
         app.frozen.hideNote()
-        let before = try #require(model.attempt)
         model.update(.sata([0]))
-        #expect(app.frozen.noteID != nil, "picking a choice answers with the note")
+        model.toggleStrike(2)
         model.setGuessed(true)
-        model.toggleStrike(0)
-        #expect(model.attempt == before, "nothing she does changes")
+        let attempt = try #require(model.attempt)
+        #expect(attempt.draft == .sata([0]))
+        #expect(attempt.struck == [2])
+        #expect(attempt.guessed)
+        #expect(app.frozen.noteID == nil, "none of it answers with the note")
+        model.toggleStrike(2)
+        #expect(model.attempt?.struck.isEmpty == true, "a struck choice comes back with the same tap")
+        #expect(model.canCheck)
         await model.check()
+        #expect(app.frozen.noteID != nil, "Check answer answers with the note")
+        #expect(model.attempt?.feedback == nil, "and shows no score")
+        app.frozen.hideNote()
         await model.startOver()
+        #expect(app.frozen.noteID != nil, "so does Start over")
         #expect(server.calls == ["GET /api/practice-sets/set1"])
     }
 

@@ -321,21 +321,33 @@ struct ExamModelTests {
         #expect(model.items.isEmpty)
     }
 
-    @Test func theOwnerSeesHerRunningExamAndNothingSheDoesIsSent() async throws {
+    /// As on the web, the frozen view picks, strikes and guesses on screen only; Submit, Skip and
+    /// End exam answer with the note and send nothing.
+    @Test func theOwnerAnswersHerRunningExamOnScreenAndNothingIsSent() async throws {
         let server = StubServer(["GET /api/exams/e1": .ok(StudyBodies.exam())])
         let (app, _) = TestApp.make(server, account: .admin)
         let model = ExamModel(app: app, examID: "e1")
         await model.load()
         #expect(model.isRunning)
         #expect(app.frozen.noteID != nil, "the runner opens with the note")
-        let draft = try #require(model.item?.draft)
+        app.frozen.hideNote()
+        model.update(.single(0))
+        model.toggleStrike(1)
         model.setGuessed(true)
-        #expect(model.item?.guessed == false)
-        await model.submit()
-        await model.skip()
-        await model.end(.left)
-        model.update(draft)
+        let item = try #require(model.item)
+        #expect(item.draft == .single(0))
+        #expect(item.struck == [1])
+        #expect(item.guessed)
+        #expect(app.frozen.noteID == nil, "none of it answers with the note")
+        #expect(model.canSubmit)
+        for write in [{ await model.submit() }, { await model.skip() }, { await model.end(.left) }] as [() async -> Void] {
+            await write()
+            #expect(app.frozen.noteID != nil, "each write answers with the note")
+            app.frozen.hideNote()
+        }
         #expect(model.running == .answering(problem: nil))
+        #expect(model.index == 0, "Skip does not move on")
+        #expect(model.item?.submitted == false)
         #expect(server.calls.allSatisfy { $0.hasPrefix("GET") })
     }
 
