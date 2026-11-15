@@ -1,11 +1,11 @@
 import XCTest
 
 /// Highlighting a question's words while answering it, against the in-process fake server of the
-/// Debug launch seam: touch and hold a word, drag, lift, and the words take the pen's color; a tap
-/// on a mark erases it; the pen at the top of the question picks yellow, blue or pink and holds
-/// Clear highlights. Marks last for the attempt on this device and are never sent.
-/// `HighlightSwipeUITests` walks the swipe that marks with no hold, and the eraser. Invented
-/// questions and accounts only.
+/// Debug launch seam: swipe along the words, lift, and they take the pen's color; a tap on a mark
+/// erases it; the pen at the top of the question picks yellow, blue or pink and holds Clear
+/// highlights. Marks last for the attempt on this device and are never sent.
+/// `HighlightSwipeUITests` walks which swipes mark and which scroll, on iPad too, and the eraser.
+/// Invented questions and accounts only.
 final class HighlightUITests: XCTestCase {
     @MainActor
     override func setUp() async throws {
@@ -23,7 +23,7 @@ final class HighlightUITests: XCTestCase {
         XCTAssertTrue(pen.appears(timeout: 5))
         XCTAssertEqual(pen.value as? String, "Yellow", "the pen starts yellow")
 
-        // Touch and hold a word, drag, lift: the words are marked in the pen's color.
+        // Swipe along the words, lift: they are marked in the pen's color.
         markWords(stem, from: 30, to: 230)
         waitForLabel(stem, valueContaining: "Yellow highlight: ")
         attachLooks(app, "highlight, stem marked")
@@ -176,10 +176,11 @@ final class HighlightUITests: XCTestCase {
         element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y))
     }
 
-    /// Touch and hold a word, drag along the line, lift.
+    /// Swipe along the line with no hold first, and lift.
     @MainActor
     private func markWords(_ element: XCUIElement, from: CGFloat, to: CGFloat, line y: CGFloat = 14) {
-        wordPoint(element, from, line: y).press(forDuration: 0.7, thenDragTo: wordPoint(element, to, line: y))
+        wordPoint(element, from, line: y)
+            .press(forDuration: 0.02, thenDragTo: wordPoint(element, to, line: y), withVelocity: 500, thenHoldForDuration: 0.1)
     }
 
     @MainActor

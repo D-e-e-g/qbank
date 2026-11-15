@@ -109,7 +109,7 @@ struct HighlightSwipeTests {
         page.view.endMark()
         #expect(swiped == [Page.range("cloudy and dark")], "whole words, from the one pressed")
 
-        // Down a line, which a finger's swipe cannot do without a hold.
+        // Down a line: the Pencil sets off in any direction.
         page.view.beginMark(at: page.point(30))
         page.view.extendMark(to: page.point(11, line: 1))
         page.view.endMark()

@@ -78,7 +78,7 @@ struct HighlightTests {
 
     // MARK: Which words a drag covers
 
-    @Test func aHoldMarksTheWholeWordUnderTheFinger() {
+    @Test func aSwipeWithinAWordMarksTheWholeWord() {
         let text = "The urine is cloudy and dark amber."
         #expect(WordSpan.covering(text, from: 15, to: 15) == 13..<19, "cloudy")
         #expect(WordSpan.covering(text, from: 13, to: 13) == 13..<19, "from its first letter")
@@ -89,8 +89,8 @@ struct HighlightTests {
         #expect(WordSpan.covering(text, from: 14, to: 31) == 13..<34, "cloudy and dark amber")
         #expect(WordSpan.covering(text, from: 31, to: 14) == 13..<34, "dragged backwards")
         #expect(WordSpan.covering(text, from: 12, to: 12) == nil, "a space between words marks nothing")
-        #expect(WordSpan.covering(text, from: 34, to: 34) == 29..<34, "a hold on the period takes the word it ends")
-        #expect(WordSpan.covering("“If you skip", from: 0, to: 0) == 1..<3, "a hold on an opening quote takes the word it opens")
+        #expect(WordSpan.covering(text, from: 34, to: 34) == 29..<34, "a swipe that stays on the period takes the word it ends")
+        #expect(WordSpan.covering("“If you skip", from: 0, to: 0) == 1..<3, "one that stays on an opening quote takes the word it opens")
         #expect(WordSpan.covering("Wait . here", from: 5, to: 5) == nil, "punctuation standing alone marks nothing")
     }
 

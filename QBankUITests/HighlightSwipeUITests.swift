@@ -162,6 +162,60 @@ final class HighlightSwipeUITests: XCTestCase {
         attach(app, "swipe, largest text, marked")
     }
 
+    /// A table wider than the screen scrolls sideways in its own box. A sideways swipe that starts
+    /// on a cell's words marks them; one that starts in the room around the words, in a cell's
+    /// padding or in the room a shorter reading leaves in its column, still scrolls the table.
+    /// On iPad the invented table fits the reading column at every text size, so this runs on iPhone.
+    @MainActor
+    func testAWideTableStillScrollsSidewaysFromBesideItsWords() throws {
+        try skipOnIPad()
+        let app = launch("signed-in", largestText: true)
+        openSet(app)
+        // The shortest choice: at this text size the longest is taller than the screen.
+        tapVisible(app.buttons["practice.option.3"], in: app)
+        waitForSelected(app.buttons["practice.option.3"])
+        app.buttons["practice.check"].tap()
+        XCTAssertTrue(app.buttons["practice.next"].appears(timeout: 10))
+        app.buttons["practice.next"].tap()
+        waitForLabel(app.staticTexts["practice.count"], containing: "2 of 8")
+
+        let reading = app.staticTexts["1315"]
+        reveal(reading, in: app)
+        waitUntilStill(reading)
+        XCTAssertGreaterThan(app.staticTexts["HR"].frame.maxX, app.windows.firstMatch.frame.maxX, "the table runs past the screen")
+        let left = reading.frame.minX
+        let top = reading.frame.minY
+
+        // In the padding over a cell's words, sideways: the table scrolls, and comes back from the
+        // padding of a cell further along the row, which is on screen by then.
+        let later = app.staticTexts["20/min"]
+        swipe(from: point(reading, 150, line: -5), to: point(reading, 10, line: -5))
+        waitUntilStill(later)
+        XCTAssertLessThan(reading.frame.minX, left - 60, "the table did not scroll sideways")
+        XCTAssertEqual(reading.frame.minY, top, accuracy: 1, "only the table moved")
+        swipe(from: point(later, 10, line: -5), to: point(later, 250, line: -5))
+        waitUntilStill(later)
+        XCTAssertEqual(reading.frame.minX, left, accuracy: 1)
+
+        // In the room a shorter reading leaves in its column, beside its words.
+        let short = app.staticTexts["96%"]
+        let room = short.frame.width + 12
+        swipe(from: point(short, room, line: short.frame.height / 2), to: point(short, room - 140, line: short.frame.height / 2))
+        waitUntilStill(later)
+        XCTAssertLessThan(reading.frame.minX, left - 60, "the table did not scroll sideways")
+        swipe(from: point(later, 10, line: -5), to: point(later, 250, line: -5))
+        waitUntilStill(later)
+        XCTAssertEqual(reading.frame.minX, left, accuracy: 1)
+        expectNoMarks(reading)
+        expectNoMarks(short)
+
+        // On a cell's words, sideways: the words are marked and the table stays.
+        swipe(from: point(reading, reading.frame.width - 8, line: reading.frame.height / 2), to: point(reading, 6, line: reading.frame.height / 2))
+        waitForLabel(reading, valueContaining: "Yellow highlight: 1315")
+        XCTAssertEqual(reading.frame.minX, left, accuracy: 1, "marking does not scroll the table")
+        attach(app, "swipe, wide table, cell marked")
+    }
+
     /// A timed exam's question takes the same swipe.
     @MainActor
     func testASwipeMarksAnExamQuestion() throws {

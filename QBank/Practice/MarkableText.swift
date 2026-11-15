@@ -22,9 +22,8 @@ extension EnvironmentValues {
 
 /// A question's words that the user can mark: swipe along them, lift, and the words take the pen's
 /// color, or lose their marks to the eraser; a tap on a mark erases it. `MarkSwipe` tells that swipe
-/// from one that scrolls, and touch and hold then drag marks in any direction. A plain tap passes
-/// through, so a choice under it is still picked. Without `highlighting` in the environment it is
-/// plain text in the same style.
+/// from one that scrolls. A plain tap passes through, so a choice under it is still picked. Without
+/// `highlighting` in the environment it is plain text in the same style.
 struct MarkableText: View {
     let text: String
     let part: MarkablePart
@@ -236,19 +235,12 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         layoutManager.addTextContainer(container)
         layoutManager.delegate = lineHeights
         storage.addLayoutManager(layoutManager)
-        let hold = UILongPressGestureRecognizer(target: self, action: #selector(held(_:)))
-        hold.minimumPressDuration = 0.35
-        hold.allowableMovement = 12
-        hold.delegate = self
-        addGestureRecognizer(hold)
         swipe.addTarget(self, action: #selector(swiped(_:)))
         swipe.isOnWords = { [unowned self] in isOnWords($0) }
         swipe.delegate = self
         addGestureRecognizer(swipe)
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         tap.delegate = self
-        // A hold that starts on a mark repaints it; only a quick tap erases.
-        tap.require(toFail: hold)
         addGestureRecognizer(tap)
         accessibilityTraits = .staticText
         restyle()
@@ -453,23 +445,6 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         restyle()
         if let covered, !cancelled {
             onSwipe?(covered)
-        }
-    }
-
-    @objc private func held(_ recognizer: UILongPressGestureRecognizer) {
-        let point = recognizer.location(in: self)
-        switch recognizer.state {
-        case .began:
-            beginMark(at: point)
-            if anchor != nil {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-        case .changed:
-            extendMark(to: point)
-        case .ended:
-            endMark()
-        default:
-            endMark(cancelled: true)
         }
     }
 
