@@ -2,12 +2,17 @@ import QBankDesign
 import SwiftUI
 import UIKit
 
-/// What marking needs from the question on screen: its marks, the pen's color, and where a new mark
-/// or an erase goes. Nil where text cannot be marked, as on a result, so the text is drawn plain.
+/// What marking needs from the question on screen: its marks, the pen's color or the eraser, and
+/// where a new mark or an erase goes. Nil where text cannot be marked, as on a result, so the text
+/// is drawn plain.
 struct Highlighting {
     let highlights: Highlights
     let color: HighlightColor
-    let paint: (Range<Int>, MarkablePart) -> Void
+    /// The eraser is in hand: a swipe takes marks off the words it covers.
+    let isErasing: Bool
+    /// The words a swipe covered, to mark in the pen's color or, with the eraser, to clean.
+    let swipe: (Range<Int>, MarkablePart) -> Void
+    /// A tap on a mark, which erases that mark whichever tool is in hand.
     let erase: (Int, MarkablePart) -> Void
 }
 
@@ -15,9 +20,9 @@ extension EnvironmentValues {
     @Entry var highlighting: Highlighting? = nil
 }
 
-/// A question's words that the user can mark: touch and hold a word, drag, lift, and the words take
-/// the pen's color; a tap on a mark erases it. A quick swipe still scrolls, because the hold comes
-/// first, and a plain tap passes through, so a choice under it is still picked. Without
+/// A question's words that the user can mark: swipe along them, lift, and the words take the pen's
+/// color, or lose their marks to the eraser; a tap on a mark erases it. `MarkSwipe` tells that swipe
+/// from one that scrolls. A plain tap passes through, so a choice under it is still picked. Without
 /// `highlighting` in the environment it is plain text in the same style.
 struct MarkableText: View {
     let text: String
@@ -58,6 +63,7 @@ struct MarkableText: View {
                     markInset: markInset,
                     marks: highlighting.highlights[part].map { paint(for: $0.color, range: $0.range) },
                     pen: paint(for: highlighting.color, range: 0..<0),
+                    isErasing: highlighting.isErasing,
                     liveRing: colorScheme == .dark ? UIColor(red: 247 / 255, green: 235 / 255, blue: 190 / 255, alpha: 0.55)
                         : UIColor(red: 28 / 255, green: 27 / 255, blue: 24 / 255, alpha: 0.4),
                     spokenMarks: Self.spoken(text, highlighting.highlights[part]),
@@ -65,7 +71,7 @@ struct MarkableText: View {
                     identifier: identifier,
                     isHeader: isHeader
                 ),
-                paint: { highlighting.paint($0, part) },
+                swipe: { highlighting.swipe($0, part) },
                 erase: { highlighting.erase($0, part) }
             )
         } else {
@@ -141,7 +147,7 @@ private struct MonospacedDigits: ViewModifier {
 
 private struct MarkableTextRepresentable: UIViewRepresentable {
     let content: MarkableTextView.Content
-    let paint: (Range<Int>) -> Void
+    let swipe: (Range<Int>) -> Void
     let erase: (Int) -> Void
 
     func makeUIView(context: Context) -> MarkableTextView {
@@ -156,7 +162,7 @@ private struct MarkableTextRepresentable: UIViewRepresentable {
 
     private func update(_ view: MarkableTextView) {
         view.content = content
-        view.onPaint = paint
+        view.onSwipe = swipe
         view.onErase = erase
     }
 
@@ -186,6 +192,8 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         var marks: [Mark] = []
         /// The pen's color, for the mark that follows the finger.
         var pen = Mark(range: 0..<0, fill: .clear, text: .label)
+        /// The eraser is in hand: the words under the finger show clean, as they will be on lifting.
+        var isErasing = false
         var liveRing = UIColor.clear
         var spokenMarks = ""
         var isAccessibilityElement = true
@@ -204,16 +212,19 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         }
     }
 
-    var onPaint: ((Range<Int>) -> Void)?
+    /// The words a swipe covered, on lifting.
+    var onSwipe: ((Range<Int>) -> Void)?
+    /// A character of the mark a tap landed on.
     var onErase: ((Int) -> Void)?
 
     private let storage = NSTextStorage()
     private let layoutManager = NSLayoutManager()
     private let container = NSTextContainer()
     private var lineHeights = LineHeights(lineHeight: 22, font: .systemFont(ofSize: 17))
-    /// The character the hold began on, and the words the finger covers now.
+    /// The character the swipe began on, and the words it covers now.
     private var anchor: Int?
     private var live: Range<Int>?
+    private let swipe = MarkSwipeRecognizer()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -224,15 +235,12 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         layoutManager.addTextContainer(container)
         layoutManager.delegate = lineHeights
         storage.addLayoutManager(layoutManager)
-        let hold = UILongPressGestureRecognizer(target: self, action: #selector(held(_:)))
-        hold.minimumPressDuration = 0.35
-        hold.allowableMovement = 12
-        hold.delegate = self
-        addGestureRecognizer(hold)
+        swipe.addTarget(self, action: #selector(swiped(_:)))
+        swipe.isOnWords = { [unowned self] in isOnWords($0) }
+        swipe.delegate = self
+        addGestureRecognizer(swipe)
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         tap.delegate = self
-        // A hold that starts on a mark repaints it; only a quick tap erases.
-        tap.require(toFail: hold)
         addGestureRecognizer(tap)
         accessibilityTraits = .staticText
         restyle()
@@ -300,7 +308,8 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         setNeedsDisplay()
     }
 
-    /// The saved marks with the one under the finger painted over them, as it will be on lifting.
+    /// The saved marks as they will be on lifting: the words under the finger painted over them in
+    /// the pen's color, or cut out of them by the eraser.
     private var shownMarks: [Mark] {
         guard let live else { return content.marks }
         var marks: [Mark] = []
@@ -312,7 +321,9 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
                 marks.append(Mark(range: max(mark.range.lowerBound, live.upperBound)..<mark.range.upperBound, fill: mark.fill, text: mark.text))
             }
         }
-        marks.append(Mark(range: live, fill: content.pen.fill, text: content.pen.text))
+        if !content.isErasing {
+            marks.append(Mark(range: live, fill: content.pen.fill, text: content.pen.text))
+        }
         return marks
     }
 
@@ -322,16 +333,18 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         layOut(width: content.singleLine ? .greatestFiniteMagnitude : bounds.width)
         let fade: CGFloat = content.isStruck ? 0.55 : 1
         for mark in shownMarks {
-            let isLive = live == mark.range
+            mark.fill.withAlphaComponent(fade).setFill()
             for band in bands(for: mark.range) {
+                UIBezierPath(roundedRect: band, cornerRadius: 3).fill()
+            }
+        }
+        // A ring around the words under the finger, whether they are being marked or cleaned.
+        if let live {
+            content.liveRing.setStroke()
+            for band in bands(for: live) {
                 let path = UIBezierPath(roundedRect: band, cornerRadius: 3)
-                mark.fill.withAlphaComponent(fade).setFill()
-                path.fill()
-                if isLive {
-                    content.liveRing.setStroke()
-                    path.lineWidth = 1.5
-                    path.stroke()
-                }
+                path.lineWidth = 1.5
+                path.stroke()
             }
         }
         let glyphs = layoutManager.glyphRange(for: container)
@@ -390,34 +403,67 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         }
     }
 
-    @objc private func held(_ recognizer: UILongPressGestureRecognizer) {
+    /// Whether a point is on the words: on a line, no further than a few points past its ends.
+    /// The room after a short last line is beside the text, where a swipe scrolls.
+    func isOnWords(_ point: CGPoint) -> Bool {
+        layOut(width: content.singleLine ? .greatestFiniteMagnitude : bounds.width)
+        let glyphs = layoutManager.glyphRange(for: container)
+        var onWords = false
+        layoutManager.enumerateLineFragments(forGlyphRange: glyphs) { line, used, _, _, stop in
+            guard point.y >= line.minY, point.y < line.maxY else { return }
+            onWords = point.x >= used.minX - 6 && point.x <= used.maxX + 6
+            stop.pointee = true
+        }
+        return onWords
+    }
+
+    // MARK: Marking
+
+    /// Starts a mark on the word under a press.
+    func beginMark(at point: CGPoint) {
+        guard let index = pressed(at: point) else { return }
+        anchor = index
+        live = WordSpan.covering(content.text, from: index, to: index)
+        restyle()
+    }
+
+    /// Stretches the mark to the word under the finger now, in either direction.
+    func extendMark(to point: CGPoint) {
+        guard let anchor, let index = character(at: point) else { return }
+        let covered = WordSpan.covering(content.text, from: anchor, to: index)
+        if covered != live {
+            live = covered
+            restyle()
+        }
+    }
+
+    /// Lifts: the covered words go to the pen or the eraser. A cancelled swipe leaves them alone.
+    func endMark(cancelled: Bool = false) {
+        let covered = live
+        anchor = nil
+        live = nil
+        restyle()
+        if let covered, !cancelled {
+            onSwipe?(covered)
+        }
+    }
+
+    @objc private func swiped(_ recognizer: MarkSwipeRecognizer) {
         let point = recognizer.location(in: self)
         switch recognizer.state {
         case .began:
-            guard let index = pressed(at: point) else { return }
-            anchor = index
-            live = WordSpan.covering(content.text, from: index, to: index)
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            restyle()
+            // From the word the swipe set off on, not the one it had reached when it was read.
+            beginMark(at: recognizer.start)
+            extendMark(to: point)
+            if anchor != nil {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
         case .changed:
-            guard let anchor, let index = character(at: point) else { return }
-            let covered = WordSpan.covering(content.text, from: anchor, to: index)
-            if covered != live {
-                live = covered
-                restyle()
-            }
+            extendMark(to: point)
         case .ended:
-            let covered = live
-            anchor = nil
-            live = nil
-            restyle()
-            if let covered {
-                onPaint?(covered)
-            }
+            endMark()
         default:
-            anchor = nil
-            live = nil
-            restyle()
+            endMark(cancelled: true)
         }
     }
 
@@ -433,6 +479,10 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         return mark(at: touch.location(in: self)) != nil
     }
 
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+        // A scroll view waits until the swipe is read: it scrolls only once the swipe is not marking.
+        gestureRecognizer === swipe && other is UIPanGestureRecognizer && other.view is UIScrollView
+    }
 }
 
 /// Gives every line the style's line height, with the extra leading split above and below the

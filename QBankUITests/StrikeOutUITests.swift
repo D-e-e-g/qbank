@@ -42,10 +42,11 @@ final class StrikeOutUITests: XCTestCase {
         XCTAssertTrue(option.isSelected)
         attach(app, "strike, practice, restored and picked")
 
-        // Touch and hold on a choice's words goes to the highlighter, not a strike menu; the X
+        // A swipe along a choice's words goes to the highlighter, not a strike menu; the X
         // still strikes.
         let other = app.buttons["practice.option.2"]
-        other.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 70, dy: 23)).press(forDuration: 1)
+        let words = other.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 70, dy: 23))
+        words.press(forDuration: 0.02, thenDragTo: words.withOffset(CGVector(dx: 120, dy: 0)), withVelocity: 500, thenHoldForDuration: 0.1)
         waitForLabel(other, valueContaining: "highlight: ")
         XCTAssertFalse(app.buttons["Strike out"].exists, "no strike menu")
         XCTAssertNotEqual(other.value as? String, "Struck out")

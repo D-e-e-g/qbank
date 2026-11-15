@@ -56,15 +56,7 @@ nonisolated struct Highlights: Equatable, Sendable {
     /// or overlap join into one.
     mutating func paint(_ range: Range<Int>, in part: MarkablePart, color: HighlightColor) {
         guard !range.isEmpty else { return }
-        var kept: [Highlight] = []
-        for mark in self[part] {
-            if mark.range.lowerBound < range.lowerBound {
-                kept.append(Highlight(range: mark.range.lowerBound..<min(mark.range.upperBound, range.lowerBound), color: mark.color))
-            }
-            if mark.range.upperBound > range.upperBound {
-                kept.append(Highlight(range: max(mark.range.lowerBound, range.upperBound)..<mark.range.upperBound, color: mark.color))
-            }
-        }
+        var kept = Self.cutting(range, from: self[part])
         kept.append(Highlight(range: range, color: color))
         kept.sort { $0.range.lowerBound < $1.range.lowerBound }
         var joined: [Highlight] = []
@@ -89,12 +81,36 @@ nonisolated struct Highlights: Equatable, Sendable {
         return true
     }
 
+    /// Erases what a run covers, as the eraser's swipe does: a mark it crosses keeps the words on
+    /// either side of the run. False when the run covers no mark.
+    @discardableResult
+    mutating func erase(_ range: Range<Int>, in part: MarkablePart) -> Bool {
+        guard !range.isEmpty, self[part].contains(where: { $0.range.overlaps(range) }) else { return false }
+        let kept = Self.cutting(range, from: self[part])
+        marks[part] = kept.isEmpty ? nil : kept
+        return true
+    }
+
+    /// The marks with a run cut out of them, in text order.
+    static func cutting(_ range: Range<Int>, from marks: [Highlight]) -> [Highlight] {
+        var kept: [Highlight] = []
+        for mark in marks {
+            if mark.range.lowerBound < range.lowerBound {
+                kept.append(Highlight(range: mark.range.lowerBound..<min(mark.range.upperBound, range.lowerBound), color: mark.color))
+            }
+            if mark.range.upperBound > range.upperBound {
+                kept.append(Highlight(range: max(mark.range.lowerBound, range.upperBound)..<mark.range.upperBound, color: mark.color))
+            }
+        }
+        return kept
+    }
+
     mutating func clear() {
         marks = [:]
     }
 }
 
-/// Which words a press-and-drag covers.
+/// Which words a swipe covers.
 nonisolated enum WordSpan {
     /// Sentence punctuation a word sheds at its ends. What stays is part of the reading: "93%",
     /// "86/48", "38.9", "°C".
@@ -114,7 +130,7 @@ nonisolated enum WordSpan {
             last = word.upperBound
         }
         guard let first, let last else {
-            // A hold on a quote or a comma right beside a word takes that word.
+            // A swipe that stays on a quote or a comma right beside a word takes that word.
             let string = text as NSString
             guard anchor == current, anchor >= 0, anchor < string.length,
                   let held = Unicode.Scalar(string.character(at: anchor)), trimmed.contains(Character(held)) else { return nil }
@@ -157,13 +173,20 @@ nonisolated enum WordSpan {
     }
 }
 
-/// The pen's color, kept on this device like the Look, and never sent.
+/// The pen's tool, kept on this device like the Look, and never sent: its color, and whether the
+/// eraser is in hand instead. The color stays while the eraser is used, so the pen comes back to it.
 @Observable
 final class HighlighterStore {
     static let key = "qbank-highlighter"
+    static let eraserKey = "qbank-highlighter-eraser"
 
     var color: HighlightColor {
         didSet { defaults.set(color.rawValue, forKey: Self.key) }
+    }
+
+    /// The eraser is the tool: a swipe across marked words takes their marks off.
+    var isErasing: Bool {
+        didSet { defaults.set(isErasing, forKey: Self.eraserKey) }
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -171,5 +194,15 @@ final class HighlighterStore {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         color = defaults.string(forKey: Self.key).flatMap(HighlightColor.init(rawValue:)) ?? .yellow
+        isErasing = defaults.bool(forKey: Self.eraserKey)
     }
+
+    /// Choosing a color puts the pen back in hand.
+    func pick(_ color: HighlightColor) {
+        self.color = color
+        isErasing = false
+    }
+
+    /// "Yellow", or "Eraser" while the eraser is in hand, for VoiceOver.
+    var toolName: String { isErasing ? "Eraser" : color.name }
 }

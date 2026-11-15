@@ -373,6 +373,12 @@ final class ExamModel {
         items[index].highlights.erase(at: offset, in: part)
     }
 
+    /// Erases the marks on the words the eraser swiped over.
+    func eraseHighlights(_ range: Range<Int>, in part: MarkablePart) {
+        guard !app.frozen.refuses(), items.indices.contains(index), !items[index].submitted else { return }
+        items[index].highlights.erase(range, in: part)
+    }
+
     /// Clear highlights: every mark on the open question.
     func clearHighlights() {
         guard items.indices.contains(index), !items[index].submitted else { return }
