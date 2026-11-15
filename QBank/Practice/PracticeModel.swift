@@ -324,21 +324,22 @@ final class PracticeModel {
     }
 
     /// Marks words of the current question in a color. Marks stay with the question after Check
-    /// answer, beside the rationale, until the run ends, and are never sent.
+    /// answer, beside the rationale, until the run ends, and are never sent. They change nothing on
+    /// the account, so the frozen view marks too, as the web's does.
     func highlight(_ range: Range<Int>, in part: MarkablePart, color: HighlightColor) {
-        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        guard attempts.indices.contains(index) else { return }
         attempts[index].highlights.paint(range, in: part, color: color)
     }
 
     /// Erases the mark under a character of the current question.
     func eraseHighlight(at offset: Int, in part: MarkablePart) {
-        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        guard attempts.indices.contains(index) else { return }
         attempts[index].highlights.erase(at: offset, in: part)
     }
 
     /// Clear highlights: every mark on the current question.
     func clearHighlights() {
-        guard !app.frozen.refuses(), attempts.indices.contains(index) else { return }
+        guard attempts.indices.contains(index) else { return }
         attempts[index].highlights.clear()
     }
 
