@@ -21,9 +21,9 @@ extension HighlightColor {
     }
 }
 
-/// The pen at the right of the format line. It shows the current color; a tap opens the colors
-/// beside it, so the question's words stay in view, with Clear highlights once the question has a
-/// mark. The color it keeps is this device's.
+/// The pen at the right of the format line. It shows the tool in hand, the pen in its color or the
+/// eraser; a tap opens the colors and the eraser beside it, so the question's words stay in view,
+/// with Clear highlights once the question has a mark. The tool it keeps is this device's.
 struct HighlighterPen: View {
     let store: HighlighterStore
     @Binding var isOpen: Bool
@@ -32,18 +32,24 @@ struct HighlighterPen: View {
         Button {
             isOpen.toggle()
         } label: {
-            Image(systemName: "highlighter")
+            Image(systemName: store.isErasing ? "eraser" : "highlighter")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.qbank(.text1))
                 .frame(width: 34, height: 34)
-                .background(.qbank(store.color.fill), in: .rect(cornerRadius: 9, style: .continuous))
+                .background(.qbank(store.isErasing ? .surfaceSunken : store.color.fill), in: .rect(cornerRadius: 9, style: .continuous))
+                .overlay {
+                    if store.isErasing {
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .strokeBorder(.qbank(.separatorStrong), lineWidth: QBankBorder.hairline)
+                    }
+                }
                 .frame(width: QBankSpacing.rowMin, height: QBankSpacing.rowMin)
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Highlighter")
-        .accessibilityValue(store.color.name)
-        .accessibilityHint(isOpen ? "Hides the colors." : "Shows the colors and Clear highlights.")
+        .accessibilityValue(store.toolName)
+        .accessibilityHint(isOpen ? "Hides the colors and the eraser." : "Shows the colors, the eraser and Clear highlights.")
         .accessibilityIdentifier("practice.pen")
         .anchorPreference(key: PenAnchorKey.self, value: .bounds) { $0 }
     }
@@ -68,7 +74,7 @@ extension View {
     ) -> some View {
         environment(\.highlighting, highlighting)
             .overlayPreferenceValue(PenAnchorKey.self) { anchor in
-                if isOpen.wrappedValue, let anchor {
+                if let anchor {
                     GeometryReader { proxy in
                         let pen = proxy[anchor]
                         let room = max(0, pen.minX - 2)
@@ -77,8 +83,11 @@ extension View {
                                 .contentShape(.rect)
                                 .onTapGesture { isOpen.wrappedValue = false }
                                 .accessibilityHidden(true)
-                            PenMenu(current: store.color, hasMarks: !highlighting.highlights.isEmpty) { color in
-                                store.color = color
+                            PenMenu(current: store.isErasing ? nil : store.color, hasMarks: !highlighting.highlights.isEmpty) { color in
+                                store.pick(color)
+                                isOpen.wrappedValue = false
+                            } erase: {
+                                store.isErasing = true
                                 isOpen.wrappedValue = false
                             } clear: {
                                 clear()
@@ -88,17 +97,23 @@ extension View {
                             .position(x: room / 2, y: pen.midY)
                         }
                     }
-                    .transition(.opacity)
+                    // Hidden while closed, not taken away: a menu taken away by its own button's
+                    // tap leaves the next quick tap on the question unanswered.
+                    .opacity(isOpen.wrappedValue ? 1 : 0)
+                    .allowsHitTesting(isOpen.wrappedValue)
+                    .accessibilityHidden(!isOpen.wrappedValue)
                 }
             }
     }
 }
 
-/// The colors, the current one ringed, and Clear when the question has a mark.
+/// The colors, then the eraser, the tool in hand ringed, and Clear when the question has a mark.
 private struct PenMenu: View {
-    let current: HighlightColor
+    /// The pen's color, or nil while the eraser is in hand.
+    let current: HighlightColor?
     let hasMarks: Bool
     let pick: (HighlightColor) -> Void
+    let erase: () -> Void
     let clear: () -> Void
 
     var body: some View {
@@ -107,23 +122,25 @@ private struct PenMenu: View {
                 Button {
                     pick(color)
                 } label: {
-                    Circle()
-                        .fill(.qbank(color.fill))
-                        .overlay { Circle().strokeBorder(Color(red: 28 / 255, green: 27 / 255, blue: 24 / 255, opacity: 0.14), lineWidth: 1) }
-                        .overlay {
-                            if color == current {
-                                Circle().strokeBorder(.qbank(.text1), lineWidth: 2).padding(-4)
-                            }
-                        }
-                        .frame(width: 34, height: 34)
-                        .padding(4)
-                        .contentShape(.rect)
+                    Swatch(fill: color.fill, isCurrent: color == current)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(color.name)
                 .accessibilityAddTraits(color == current ? .isSelected : [])
                 .accessibilityIdentifier("practice.pen.\(color.rawValue)")
             }
+            Button(action: erase) {
+                Swatch(fill: .surfaceSunken, isCurrent: current == nil)
+                    .overlay {
+                        Image(systemName: "eraser")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.qbank(.text1))
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Eraser")
+            .accessibilityAddTraits(current == nil ? .isSelected : [])
+            .accessibilityIdentifier("practice.pen.eraser")
             if hasMarks {
                 Rectangle()
                     .fill(.qbank(.separatorStrong))
@@ -154,5 +171,25 @@ private struct PenMenu: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("practice.penMenu")
+    }
+}
+
+/// One round tool in the pen's menu, ringed while it is the one in hand.
+private struct Swatch: View {
+    let fill: QBankColorToken
+    let isCurrent: Bool
+
+    var body: some View {
+        Circle()
+            .fill(.qbank(fill))
+            .overlay { Circle().strokeBorder(Color(red: 28 / 255, green: 27 / 255, blue: 24 / 255, opacity: 0.14), lineWidth: 1) }
+            .overlay {
+                if isCurrent {
+                    Circle().strokeBorder(.qbank(.text1), lineWidth: 2).padding(-4)
+                }
+            }
+            .frame(width: 34, height: 34)
+            .padding(4)
+            .contentShape(.rect)
     }
 }

@@ -3,7 +3,8 @@ import XCTest
 /// Highlighting a question's words while answering it, against the in-process fake server of the
 /// Debug launch seam: touch and hold a word, drag, lift, and the words take the pen's color; a tap
 /// on a mark erases it; the pen at the top of the question picks yellow, blue or pink and holds
-/// Clear highlights. Marks last for the attempt on this device and are never sent. Invented
+/// Clear highlights. Marks last for the attempt on this device and are never sent.
+/// `HighlightSwipeUITests` walks the swipe that marks with no hold, and the eraser. Invented
 /// questions and accounts only.
 final class HighlightUITests: XCTestCase {
     @MainActor

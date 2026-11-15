@@ -7,7 +7,7 @@ import SwiftUI
 /// One full-width row per option, lettered A, B, C in the order she sees them, in round marks
 /// for one answer and square ones for select-all, as the web letters them. While she answers, each
 /// row has a control to strike out a choice she has ruled out, and the same control restores it.
-/// Touch and hold on a choice's words marks them with the highlighter; a plain tap picks it.
+/// A swipe along a choice's words marks them with the highlighter; a plain tap picks it.
 struct OptionList: View {
     let options: [QuestionOption]
     let order: [Int]

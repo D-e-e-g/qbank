@@ -3,7 +3,7 @@ import QBankKit
 import Testing
 @testable import QBank
 
-/// Marks the user makes on a question's words while working on it: press and drag to mark, tap a
+/// Marks the user makes on a question's words while working on it: swipe to mark, tap a
 /// mark to erase it, Clear highlights for the whole question, in yellow, blue or pink. They last
 /// for the attempt on this device, as strikes do, and are never sent. Invented questions only.
 @MainActor
