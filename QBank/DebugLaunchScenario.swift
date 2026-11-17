@@ -127,7 +127,10 @@ nonisolated enum DebugLaunchScenario {
                 MainActor.assumeIsolated { restoreSpeed(of: scrollView) }
             }
         }
-        method_setImplementation(original, imp_implementationWithBlock(replacement))
+        let implementation = imp_implementationWithBlock(replacement)
+        if !class_addMethod(UIScrollView.self, #selector(UIView.didMoveToWindow), implementation, method_getTypeEncoding(original)) {
+            method_setImplementation(original, implementation)
+        }
     }
 
     /// Speeds every window the app shows after launch, such as the edit menu's, which does not
