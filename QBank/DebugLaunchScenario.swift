@@ -71,6 +71,17 @@ nonisolated enum DebugLaunchScenario {
     @MainActor
     static func prepareForUITest() {
         guard ProcessInfo.processInfo.environment[scenarioKey] != nil else { return }
+        speedUpWindows()
+        guard windowObserver == nil else { return }
+        windowObserver = NotificationCenter.default.addObserver(
+            forName: UIWindow.didBecomeVisibleNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { speedUpWindows() }
+        }
+    }
+
+    @MainActor
+    private static func speedUpWindows() {
         for scene in UIApplication.shared.connectedScenes {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {
@@ -78,6 +89,10 @@ nonisolated enum DebugLaunchScenario {
             }
         }
     }
+
+    /// Speeds every window the app shows after launch, such as the edit menu's, which does not
+    /// host the SwiftUI root.
+    @MainActor private static var windowObserver: NSObjectProtocol?
 
     /// How many times faster a UI test plays a window animation. High enough that a one-shot
     /// animation finishes inside an XCTest idle check, low enough that the frames still land.
