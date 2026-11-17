@@ -62,8 +62,6 @@ Only someone with write access can start a manual run. The workflow still treats
 
 A new UI test says why a unit test cannot do the job. A unit test can check a model, the fake server, and what a screen is told. A UI test is for something only the running app can show, such as a control on screen, a gesture, or a system sheet.
 
-A UI test launches the app through the Debug seam, and that launch turns the app's animations off, so the suite does not wait out each move. A normal Debug launch and every Release build leave them on.
-
 ## What each run holds
 
 [ci.md](ci.md) describes the jobs and the rules for who may run them.

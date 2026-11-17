@@ -43,23 +43,6 @@ struct RootView: View {
                 model.offline?.sendIfWaiting()
             }
         }
-        .modifier(UITestMotion())
-    }
-}
-
-/// A UI-test launch turns animations off. The modifier is outside the other
-/// modifiers, so their moves are off too. Release keeps the view as it is.
-private struct UITestMotion: ViewModifier {
-    func body(content: Content) -> some View {
-        #if DEBUG
-        content.transaction { transaction in
-            if DebugMotion.animationsAreOff {
-                transaction.disablesAnimations = true
-            }
-        }
-        #else
-        content
-        #endif
     }
 }
 
