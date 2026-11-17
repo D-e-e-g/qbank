@@ -301,6 +301,12 @@ extension XCTestCase {
     }
 
     /// Puts text in the Paste JSON field the way she does: from the pasteboard, with Paste.
+    ///
+    /// The pasteboard is another process, and on a busy Mac it can still be empty when Paste
+    /// is tapped, so the text is read back before the menu is used. The first tap on the field
+    /// only focuses it; Paste is in the menu the next tap opens. That menu tap is sometimes
+    /// dropped and the field stays empty, the same way a menu choice is, so Paste is tapped until
+    /// the field holds the text.
     @MainActor
     func paste(_ text: String, in app: XCUIApplication) {
         if !app.textViews["import.paste"].exists {
@@ -309,15 +315,26 @@ extension XCTestCase {
         let editor = app.textViews["import.paste"]
         XCTAssertTrue(editor.appears(timeout: 5))
         UIPasteboard.general.string = text
+        // The pasteboard server is another process. Read the text back before Paste, and keep
+        // looking only until it is there: the wait returns as soon as the string matches.
+        if UIPasteboard.general.string != text {
+            let posted = NSPredicate(format: "string == %@", text)
+            _ = XCTWaiter.wait(for: [expectation(for: posted, evaluatedWith: UIPasteboard.general)], timeout: 2)
+        }
         reveal(editor, in: app)
         editor.tap()
-        let paste = app.menuItems["Paste"]
-        if !paste.appears(timeout: 2) {
-            editor.tap()
+        let marker = "\"questions\""
+        for _ in 0..<3 {
+            if fieldHolds(editor, marker) { break }
+            let item = app.menuItems["Paste"]
+            if !item.exists {
+                editor.tap()
+            }
+            guard item.appears(timeout: 2) else { continue }
+            item.tap()
+            if fieldHolds(editor, marker, timeout: 5) { break }
         }
-        XCTAssertTrue(paste.appears(timeout: 5))
-        paste.tap()
-        waitForLabel(editor, valueContaining: "\"questions\"")
+        waitForLabel(editor, valueContaining: marker)
         // The keyboard covers the buttons below. An iPad's has a key that hides it, and there a
         // swipe down would close the sheet the field can be in.
         let hide = app.keyboards.buttons["Hide keyboard"]
@@ -326,6 +343,16 @@ extension XCTestCase {
         } else {
             app.swipeDown(velocity: .fast)
         }
+    }
+
+    /// Whether the field's value contains `text` now, or within `timeout` seconds.
+    @MainActor
+    private func fieldHolds(_ element: XCUIElement, _ text: String, timeout: TimeInterval = 0) -> Bool {
+        if (element.value as? String)?.contains(text) == true { return true }
+        guard timeout > 0 else { return false }
+        let predicate = NSPredicate(format: "value CONTAINS %@", text)
+        let result = XCTWaiter.wait(for: [expectation(for: predicate, evaluatedWith: element)], timeout: timeout)
+        return result == .completed
     }
 
     @MainActor

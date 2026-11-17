@@ -1,6 +1,7 @@
 #if DEBUG
 import Foundation
 import QBankKit
+import UIKit
 
 /// Launch-environment seam for UI tests and local simulator review. Compiled
 /// only into Debug builds; Release binaries contain none of it. Every scenario
@@ -60,6 +61,16 @@ nonisolated enum DebugLaunchScenario {
     /// `.light`, or `.auto` for Match device.
     static func lookNotification(_ look: Look) -> String {
         "com.dimitrygallego.qbank.uitest.look.\(look.rawValue)"
+    }
+
+    /// UI tests run with UIKit animations off. On a busy Mac the iPad software keyboard's
+    /// edit menu never finishes its animation, and XCTest then waits a minute before every later
+    /// action in that test. The screens still land on their final layout. A launch with no
+    /// scenario, and every Release build, keeps animations on.
+    @MainActor
+    static func prepareForUITest() {
+        guard ProcessInfo.processInfo.environment[scenarioKey] != nil else { return }
+        UIView.setAnimationsEnabled(false)
     }
 
     /// The network and the Look listener of the app's scenario, kept while the app runs.
