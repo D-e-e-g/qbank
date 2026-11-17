@@ -323,7 +323,7 @@ extension XCTestCase {
         editor.tap()
         let marker = "\"questions\""
         let item = app.menuItems["Paste"]
-        if !item.exists {
+        if !item.appears(timeout: 2) {
             editor.tap()
         }
         XCTAssertTrue(item.appears(timeout: 5), "the Paste menu never opened")
