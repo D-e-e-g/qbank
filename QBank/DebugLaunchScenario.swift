@@ -1,6 +1,8 @@
 #if DEBUG
 import Foundation
+import ObjectiveC
 import QBankKit
+import UIKit
 
 /// Launch-environment seam for UI tests and local simulator review. Compiled
 /// only into Debug builds; Release binaries contain none of it. Every scenario
@@ -61,6 +63,83 @@ nonisolated enum DebugLaunchScenario {
     static func lookNotification(_ look: Look) -> String {
         "com.dimitrygallego.qbank.uitest.look.\(look.rawValue)"
     }
+
+    /// UI tests play the window's animations quickly. On a busy Mac an animation that never
+    /// finishes, such as the iPad software keyboard's edit menu, makes XCTest wait a minute
+    /// before every later action in that test. A fast animation still ends on the final layout,
+    /// and XCTest gets the finished notification. A launch with no scenario, and every Release
+    /// build, keeps normal speed.
+    @MainActor
+    static func prepareForUITest() {
+        guard ProcessInfo.processInfo.environment[scenarioKey] != nil else { return }
+        speedUpWindows()
+        guard windowObserver == nil else { return }
+        keepScrollViewsAtNormalSpeed()
+        windowObserver = NotificationCenter.default.addObserver(
+            forName: UIWindow.didBecomeVisibleNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { speedUpWindows() }
+        }
+    }
+
+    @MainActor
+    private static func speedUpWindows() {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.layer.speed = uiTestAnimationSpeed
+                restoreScrollViewSpeeds(in: window)
+            }
+        }
+    }
+
+    /// A layer's speed multiplies by its ancestors', so a scroll view under a sped-up window would
+    /// settle its deceleration and bounce 100 times too fast and rest off where a drag left it.
+    /// Each scroll view takes the inverse of its ancestors' product, which also leaves a scroll view
+    /// nested in a corrected one at 1.
+    @MainActor
+    private static func restoreScrollViewSpeeds(in view: UIView) {
+        if let scrollView = view as? UIScrollView { restoreSpeed(of: scrollView) }
+        for subview in view.subviews { restoreScrollViewSpeeds(in: subview) }
+    }
+
+    @MainActor
+    fileprivate static func restoreSpeed(of scrollView: UIScrollView) {
+        var product: Float = 1
+        var layer = scrollView.layer.superlayer
+        while let current = layer {
+            product *= current.speed
+            layer = current.superlayer
+        }
+        scrollView.layer.speed = 1 / product
+    }
+
+    /// Corrects a scroll view the moment it joins a window, such as the practice page's, which is
+    /// made after its window is visible.
+    @MainActor
+    private static func keepScrollViewsAtNormalSpeed() {
+        let original = class_getInstanceMethod(UIScrollView.self, #selector(UIView.didMoveToWindow))!
+        typealias Implementation = @convention(c) (UIScrollView, Selector) -> Void
+        let previous = unsafeBitCast(method_getImplementation(original), to: Implementation.self)
+        let replacement: @convention(block) (UIScrollView) -> Void = { scrollView in
+            previous(scrollView, #selector(UIView.didMoveToWindow))
+            if scrollView.window != nil {
+                MainActor.assumeIsolated { restoreSpeed(of: scrollView) }
+            }
+        }
+        let implementation = imp_implementationWithBlock(replacement)
+        if !class_addMethod(UIScrollView.self, #selector(UIView.didMoveToWindow), implementation, method_getTypeEncoding(original)) {
+            method_setImplementation(original, implementation)
+        }
+    }
+
+    /// Speeds every window the app shows after launch, such as the edit menu's, which does not
+    /// host the SwiftUI root.
+    @MainActor private static var windowObserver: NSObjectProtocol?
+
+    /// How many times faster a UI test plays a window animation. High enough that a one-shot
+    /// animation finishes inside an XCTest idle check, low enough that the frames still land.
+    static let uiTestAnimationSpeed: Float = 100
 
     /// The network and the Look listener of the app's scenario, kept while the app runs.
     @MainActor private static var network: DebugNetwork?

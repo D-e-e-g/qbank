@@ -132,6 +132,7 @@ final class HighlightSwipeUITests: XCTestCase {
         let app = launch("signed-in", largestText: true)
         openSet(app)
         let stem = app.staticTexts["practice.stem"]
+        waitUntilStill(stem)
         let top = stem.frame.minY
         let margin = stem.frame.minX / 2
 
@@ -305,7 +306,7 @@ final class HighlightSwipeUITests: XCTestCase {
         XCTAssertLessThan(element.frame.minY, top + distance, "the page did not scroll")
     }
 
-    /// Waits until the page has come to rest with the element back where it was.
+    /// The element has come to rest at `top`.
     @MainActor
     private func expectAt(_ element: XCUIElement, _ top: CGFloat) {
         waitUntilStill(element)

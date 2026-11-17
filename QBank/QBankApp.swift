@@ -16,6 +16,9 @@ struct QBankApp: App {
             // the way back. Another window opening or closing on an iPad changes nothing.
             switch phase {
             case .active:
+                #if DEBUG
+                DebugLaunchScenario.prepareForUITest()
+                #endif
                 Task { await model.becameActive() }
             case .background:
                 model.lock.enteredBackground()
