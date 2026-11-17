@@ -132,6 +132,7 @@ final class HighlightSwipeUITests: XCTestCase {
         let app = launch("signed-in", largestText: true)
         openSet(app)
         let stem = app.staticTexts["practice.stem"]
+        waitUntilStill(stem)
         let top = stem.frame.minY
         let margin = stem.frame.minX / 2
 
