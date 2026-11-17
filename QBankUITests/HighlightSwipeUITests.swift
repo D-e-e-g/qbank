@@ -306,13 +306,9 @@ final class HighlightSwipeUITests: XCTestCase {
         XCTAssertLessThan(element.frame.minY, top + distance, "the page did not scroll")
     }
 
-    /// Waits until the page has come to rest with the element back where it was. A drag down from
-    /// the top stretches the page past it and the page springs back, so rest alone is not enough:
-    /// the element has to be at `top`.
+    /// The element has come to rest at `top`.
     @MainActor
     private func expectAt(_ element: XCUIElement, _ top: CGFloat) {
-        let back = NSPredicate { _, _ in abs(element.frame.minY - top) <= 1 }
-        _ = XCTWaiter.wait(for: [expectation(for: back, evaluatedWith: nil)], timeout: 5)
         waitUntilStill(element)
         XCTAssertEqual(element.frame.minY, top, accuracy: 1, "the page moved")
     }
