@@ -63,15 +63,25 @@ nonisolated enum DebugLaunchScenario {
         "com.dimitrygallego.qbank.uitest.look.\(look.rawValue)"
     }
 
-    /// UI tests run with UIKit animations off. On a busy Mac the iPad software keyboard's
-    /// edit menu never finishes its animation, and XCTest then waits a minute before every later
-    /// action in that test. The screens still land on their final layout. A launch with no
-    /// scenario, and every Release build, keeps animations on.
+    /// UI tests play the window's animations quickly. On a busy Mac an animation that never
+    /// finishes, such as the iPad software keyboard's edit menu, makes XCTest wait a minute
+    /// before every later action in that test. A fast animation still ends on the final layout,
+    /// and XCTest gets the finished notification. A launch with no scenario, and every Release
+    /// build, keeps normal speed.
     @MainActor
     static func prepareForUITest() {
         guard ProcessInfo.processInfo.environment[scenarioKey] != nil else { return }
-        UIView.setAnimationsEnabled(false)
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.layer.speed = uiTestAnimationSpeed
+            }
+        }
     }
+
+    /// How many times faster a UI test plays a window animation. High enough that a one-shot
+    /// animation finishes inside an XCTest idle check, low enough that the frames still land.
+    static let uiTestAnimationSpeed: Float = 100
 
     /// The network and the Look listener of the app's scenario, kept while the app runs.
     @MainActor private static var network: DebugNetwork?
