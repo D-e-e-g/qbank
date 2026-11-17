@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import ObjectiveC
 import QBankKit
 import UIKit
 
@@ -73,6 +74,7 @@ nonisolated enum DebugLaunchScenario {
         guard ProcessInfo.processInfo.environment[scenarioKey] != nil else { return }
         speedUpWindows()
         guard windowObserver == nil else { return }
+        keepScrollViewsAtNormalSpeed()
         windowObserver = NotificationCenter.default.addObserver(
             forName: UIWindow.didBecomeVisibleNotification, object: nil, queue: .main
         ) { _ in
@@ -86,8 +88,46 @@ nonisolated enum DebugLaunchScenario {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {
                 window.layer.speed = uiTestAnimationSpeed
+                restoreScrollViewSpeeds(in: window)
             }
         }
+    }
+
+    /// A layer's speed multiplies by its ancestors', so a scroll view under a sped-up window would
+    /// settle its deceleration and bounce 100 times too fast and rest off where a drag left it.
+    /// Each scroll view takes the inverse of its ancestors' product, which also leaves a scroll view
+    /// nested in a corrected one at 1.
+    @MainActor
+    private static func restoreScrollViewSpeeds(in view: UIView) {
+        if let scrollView = view as? UIScrollView { restoreSpeed(of: scrollView) }
+        for subview in view.subviews { restoreScrollViewSpeeds(in: subview) }
+    }
+
+    @MainActor
+    fileprivate static func restoreSpeed(of scrollView: UIScrollView) {
+        var product: Float = 1
+        var layer = scrollView.layer.superlayer
+        while let current = layer {
+            product *= current.speed
+            layer = current.superlayer
+        }
+        scrollView.layer.speed = 1 / product
+    }
+
+    /// Corrects a scroll view the moment it joins a window, such as the practice page's, which is
+    /// made after its window is visible.
+    @MainActor
+    private static func keepScrollViewsAtNormalSpeed() {
+        let original = class_getInstanceMethod(UIScrollView.self, #selector(UIView.didMoveToWindow))!
+        typealias Implementation = @convention(c) (UIScrollView, Selector) -> Void
+        let previous = unsafeBitCast(method_getImplementation(original), to: Implementation.self)
+        let replacement: @convention(block) (UIScrollView) -> Void = { scrollView in
+            previous(scrollView, #selector(UIView.didMoveToWindow))
+            if scrollView.window != nil {
+                MainActor.assumeIsolated { restoreSpeed(of: scrollView) }
+            }
+        }
+        method_setImplementation(original, imp_implementationWithBlock(replacement))
     }
 
     /// Speeds every window the app shows after launch, such as the edit menu's, which does not

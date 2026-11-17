@@ -1,8 +1,5 @@
 import QBankDesign
 import SwiftUI
-#if DEBUG
-import UIKit
-#endif
 
 struct RootView: View {
     let model: AppModel
@@ -30,13 +27,6 @@ struct RootView: View {
         // Her account's color scheme, on every screen and sheet; Dusk on the sign-in screen.
         .qbankPalette(model.palette.design)
         .background(WindowLook(look: model.look.look))
-        #if DEBUG
-        .background {
-            if ProcessInfo.processInfo.environment[DebugLaunchScenario.scenarioKey] != nil {
-                UITestWindowSpeed()
-            }
-        }
-        #endif
         .background(
             LockWindow(
                 lock: model.lock, look: model.look.look, palette: model.palette.design, hasAccount: model.account != nil,
@@ -55,29 +45,6 @@ struct RootView: View {
         }
     }
 }
-
-#if DEBUG
-/// A hidden view that speeds its window's animations while a UI test is running. New windows,
-/// including a sheet's, pick this up when they appear; `prepareForUITest` covers the ones already up.
-struct UITestWindowSpeed: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView { SpeedView() }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        uiView.window?.layer.speed = DebugLaunchScenario.uiTestAnimationSpeed
-    }
-
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIView, context: Context) -> CGSize? {
-        .zero
-    }
-
-    private final class SpeedView: UIView {
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            window?.layer.speed = DebugLaunchScenario.uiTestAnimationSpeed
-        }
-    }
-}
-#endif
 
 /// The three tabs: Home, Add (make or import questions), and Settings.
 struct SignedInView: View {
