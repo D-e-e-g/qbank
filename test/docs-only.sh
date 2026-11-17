@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Says whether a change is one that cannot affect the Mac build, from the list
-# of changed paths on stdin, one per line. Exits 0 only when every path is on
-# this allowlist and at least one path was given; anything else, including a
-# path it has never heard of, exits 1 so the full build runs.
+# Says whether a change is documentation, from the list of changed paths on
+# stdin, one per line. Exits 0 only when every path is on this allowlist and at
+# least one path was given; anything else, including a path it has never heard
+# of, exits 1. test/pr-suite.sh uses this allowlist when it decides whether a
+# pull request skips the Mac.
 #
 # usage: git diff --name-only --no-renames BASE HEAD | test/docs-only.sh
 set -euo pipefail
 
 if [ $# -gt 0 ]; then
-  sed -n '7p' "$0" | sed 's/^# //' >&2
+  sed -n '8p' "$0" | sed 's/^# //' >&2
   exit 64
 fi
 

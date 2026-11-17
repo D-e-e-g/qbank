@@ -27,11 +27,23 @@ Pull requests from this repository's own branches, pushes to `main`, `qbank-v*` 
 
 1. `test/package-tests.sh`: `swift test` in every package under `Packages/` on the Mac host
 2. a Release build for `generic/platform=iOS` without signing, which proves Debug-only code stays out of Release
-3. `xcodebuild test` of the `QBank` scheme (unit and UI tests) on a run-scoped iPhone simulator through `test/sim.sh`, then again on a run-scoped iPad simulator, where the iPad layout's UI tests run and the iPhone layout's skip themselves. Both steps run their tests one after another
+3. `xcodebuild test` of the `QBank` scheme on a run-scoped iPhone simulator through `test/sim.sh`, then on a run-scoped iPad simulator when that device has something to run. Tests run one after another
 
-A pull request from a fork never runs the Mac job; its `Mac build skipped` job says why (see below).
+A `Change scope` job on GitHub's Linux runs first and `test/pr-suite.sh` reads the changed paths. When that script is unsure, it runs more, never less. A pull request from a fork never runs the Mac job; its `Mac build skipped` job says why (see below).
 
-A `Change scope` job on GitHub's Linux runs first. It takes a same-repository pull request off the Mac only when every changed path is on the allowlist in `test/docs-only.sh` (`docs/` and the top-level Markdown files), so anything else, a path it does not know included, builds. `Build and test` then reports skipped, which never blocks a merge, and `Mac build skipped` says why. A push to `main`, a tag, or a manual run is never taken off the Mac this way, so `main` still runs the complete suite ahead of any TestFlight build.
+A push to `main`, a `qbank-v*` tag, or a manual run runs the full suite: every unit test and every UI test, on iPhone and again on iPad, where the iPad layout's UI tests run and the iPhone layout's skip themselves. That is unchanged for `main`: a running build is never cancelled, one newer merge waits, and a still newer one replaces the waiting one, so `main` still runs the complete suite ahead of any TestFlight build. A manual run is how to ask for the full suite on a branch. `suite` defaults to `full`:
+
+```sh
+gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>
+```
+
+Pass `-f suite=quick` to run the pull request's check on that branch instead, including when the branch changes shared test machinery, so the quick check can be timed. Do not combine it with `only_testing`: that input runs the named-tests job and nothing else. [testing.md](testing.md) has both.
+
+A pull request runs the quick check: the package tests, the Release compile, every unit test, the UI tests in any UI test file the pull request added or changed, and a smoke walk of six tests. The six are chosen by hand in `test/pr-suite.sh`: sign in and Home, the course screen, one practice question, starting an exam, an import, and a folder. The iPad simulator starts only when a changed UI test class runs on iPad. The quick check is meant to take about 10 minutes of work on mb14, watched as a weekly median, not as a limit that fails the job. A pull request that changes several UI test files runs all of them and may take longer.
+
+A pull request that changes shared test machinery runs the full suite instead. That machinery is the shared UI test helpers (`QBankUITests/UITestSupport.swift`), the Debug launch seam (`QBank/DebugLaunchScenario.swift`), the Xcode project file (`QBank.xcodeproj/project.pbxproj`), this workflow, `test/sim.sh`, and `test/pr-suite.sh` itself. The built-in fake server under `QBank/Debug/` is app code, so a pull request that changes it runs the quick check, and `main` runs the full suite.
+
+A pull request that changes only documentation, or only CI files and scripts, skips the Mac job. Documentation is the allowlist in `test/docs-only.sh` (`docs/` and the top-level Markdown files). CI files and scripts are `.github/` other than this workflow, `.gitleaks.toml`, `scripts/`, and `test/` other than `test/sim.sh` and `test/pr-suite.sh`. `Build and test` then reports skipped, which never blocks a merge, and `Mac build skipped` says why. Merging still runs the full suite on `main`. A path the script does not know runs the full suite, including when it is mixed with documentation or CI files.
 
 UI tests stay serial. Parallel testing was measured on the MacBook Pro 14: serial took 6 runs with 0 failures, two workers 4 runs with 1 failure, three workers 1 run with 1 failure, every failure on `StudyUITests.testDayOneCourseMakesAndRemovesAnExamPage`. The cause is unproven, and a flake costs more than the minutes parallel workers save, so do not add `-parallel-testing-enabled` back without a cause found and fixed.
 

@@ -1,6 +1,6 @@
 # Testing and retrying
 
-A full run of `xcode.yml` holds the MacBook Pro 14 (mb14) for about an hour, and the runner serves one job at a time. So a failed test is retried on its own first, and the full suite runs only after that test passes.
+A pull request's Mac check is the quick check in [ci.md](ci.md), about 10 minutes of work on the MacBook Pro 14 (mb14), unless the change touches shared test machinery, in which case that pull request runs the full suite. The full suite on `main` holds mb14 for about an hour and a half, and the runner serves one job at a time. So a failed test is retried on its own first, and the pull request's check runs only after that test passes.
 
 ## The retry rule
 
@@ -8,9 +8,9 @@ When a check fails on one test or a few:
 
 1. Read the failing names from the run: `gh run view <run id> -R D-e-e-g/qbank --log-failed`.
 2. Fix what failed, and commit.
-3. Run only those tests. Run them here if the failure reproduces here, otherwise on mb14. Do not push to the pull request's branch yet, because that push starts the full suite.
+3. Run only those tests. Run them here if the failure reproduces here, otherwise on mb14. Do not push to the pull request's branch yet, because that push starts the pull request's check.
 4. If they fail, go back to step 2. Each try costs minutes, not an hour.
-5. When they pass, push to the pull request's branch. The full suite runs on that push, and it is what counts: a named-tests run never stands in for it.
+5. When they pass, push to the pull request's branch. That check runs on the push: the quick check, or the full suite when the change touches shared test machinery. It is what counts. The full suite also runs on `main` after the merge. A named-tests run never stands in for either.
 
 If a retry shows that many tests fail for one cause, fix the cause and go back to step 3 with one of them. Rerun a whole check without a code change only for a run that was cancelled or broke before any test ran.
 
@@ -28,6 +28,16 @@ It builds, creates one run-scoped simulator through `test/sim.sh`, runs the name
 ## The simulator slot
 
 This Mac has one simulator slot, shared by every app and every agent on it, because two runs that boot simulators at once peg its CPU. `test/sim.sh` takes the slot with `/usr/bin/lockf` on `~/.local/state/sim-slot.lock` before it creates a device, and holds it until the device is deleted. A second run waits and prints `waiting for the simulator slot` instead of piling on, so do not wrap `test/sim.sh` in `lockf` yourself. A run boots one device, and a build that boots no simulator, such as `generic/platform=iOS`, needs no slot. Runs on GitHub Actions skip the slot: mb14 is another machine that already runs one job at a time. `test/sim-slot-checks.sh` checks both.
+
+## Run the full suite on a branch
+
+A manual run runs the full suite on the branch you name. `suite` defaults to `full`:
+
+```sh
+gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>
+```
+
+`-f suite=quick` runs the pull request's check on that branch instead, so the quick check can be timed. A pull request has no such choice: `test/pr-suite.sh` decides, and shared test machinery runs the full suite.
 
 ## Run named tests on mb14
 

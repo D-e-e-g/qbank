@@ -222,6 +222,7 @@ ruby_check "xcode.yml keeps the only_testing input out of shell lines" "$XCODE" 
   inputs = (wf[true] || wf["on"])["workflow_dispatch"]["inputs"]
   abort "only_testing must be a string input defaulting to empty" unless inputs["only_testing"]["type"] == "string" && inputs["only_testing"]["default"] == ""
   abort "device must be a choice of iphone and ipad" unless inputs["device"]["type"] == "choice" && inputs["device"]["options"] == %w[iphone ipad]
+  abort "suite must be a choice of full and quick, defaulting to full" unless inputs["suite"]["type"] == "choice" && inputs["suite"]["options"] == %w[full quick] && inputs["suite"]["default"] == "full"
   wf["jobs"].each do |name, job|
     (job["steps"] || []).each do |step|
       abort "job #{name} step #{step["name"]} puts an expression in its run: line" if step["run"].to_s.include?("${{")
@@ -267,8 +268,8 @@ if [ "$(ONLY_TESTING='QBankUITests/A/b  QBankTests/C/d()' ./test/only-testing.sh
 else
   fail "only-testing.sh reads whitespace-separated names from ONLY_TESTING"
 fi
-# Only an allowlisted path may take a pull request off the Mac, and anything
-# unknown runs the full build.
+# docs-only.sh is the documentation allowlist. An unknown path is not
+# documentation. test/pr-suite.sh decides which suite a pull request runs.
 for paths in 'docs/ci.md' 'README.md' $'docs/a/b.png\nSECURITY.md'; do
   if printf '%s\n' "$paths" | ./test/docs-only.sh; then
     pass "docs-only.sh skips the Mac for: $paths"
@@ -285,6 +286,114 @@ for paths in '' 'QBank/App.swift' '.github/workflows/xcode.yml' 'test/sim.sh' 'N
 done
 require_grep 'run: \./test/package-tests\.sh$' "$XCODE" "xcode.yml tests the Swift packages on the Mac"
 forbid_grep '^[^#]*sudo[[:space:]]' "$XCODE" "xcode.yml needs no sudo (the self-hosted runner has none)"
+require_grep 'chosen by hand' test/pr-suite.sh "the smoke walk is chosen by hand in one place"
+# A changed UI test file selects that class and the smoke walk. Shared test
+# machinery and an unknown path run the full suite. Documentation and CI-only
+# changes skip the Mac. An app or fake-server change stays on the quick check.
+expect_mode() {
+  local want="$1" got
+  shift
+  got="$(printf '%s\n' "$@" | ./test/pr-suite.sh | head -n 1)"
+  if [ "$got" = "mode=$want" ]; then
+    pass "pr-suite.sh $want: $*"
+  else
+    fail "pr-suite.sh $want: $* (got ${got:-nothing})"
+  fi
+}
+expect_mode quick QBankUITests/SataAllCorrectUITests.swift
+expect_mode quick QBank/QBankApp.swift
+expect_mode quick QBank/Debug/FakeQBankServer.swift
+expect_mode quick docs/ci.md QBank/QBankApp.swift
+expect_mode quick Packages/QBankKit/Package.swift
+expect_mode full QBankUITests/UITestSupport.swift
+expect_mode full QBank/DebugLaunchScenario.swift
+expect_mode full QBank.xcodeproj/project.pbxproj
+expect_mode full .github/workflows/xcode.yml
+expect_mode full test/sim.sh
+expect_mode full test/pr-suite.sh
+expect_mode full NEW-FILE
+expect_mode full QBank.xcodeproj/xcshareddata/xcschemes/QBank.xcscheme
+expect_mode full docs/../QBank/App.swift
+expect_mode full ""
+expect_mode full docs/ci.md .github/workflows/xcode.yml
+expect_mode skip docs/ci.md
+expect_mode skip README.md
+expect_mode skip .github/workflows/ci.yml
+expect_mode skip scripts/testflight-upload.sh
+expect_mode skip test/release-checks.sh
+expect_mode skip test/only-testing.sh
+expect_mode skip .gitleaks.toml
+expect_mode skip docs/ci.md .github/workflows/ci.yml scripts/testflight-upload.sh
+sata="$(printf '%s\n' QBankUITests/SataAllCorrectUITests.swift | ./test/pr-suite.sh)"
+add="$(printf '%s\n' QBankUITests/AddUITests.swift | ./test/pr-suite.sh)"
+here="$(printf '%s\n' QBankUITests/AddHereUITests.swift | ./test/pr-suite.sh)"
+section_has() {
+  local plan="$1" section="$2" id="$3" current="" line
+  while IFS= read -r line; do
+    case "$line" in
+      iphone | ipad) current=$line ;;
+      *) [ "$current" = "$section" ] && [ "$line" = "$id" ] && return 0 ;;
+    esac
+  done <<EOF
+$plan
+EOF
+  return 1
+}
+if printf '%s\n' "$sata" | head -n 2 | grep -qx ipad=false &&
+  section_has "$sata" iphone QBankTests &&
+  section_has "$sata" iphone QBankUITests/SataAllCorrectUITests &&
+  section_has "$sata" iphone QBankUITests/QBankUITests/testSignInLandsOnHerLastCourseAndSignsOut &&
+  section_has "$sata" iphone QBankUITests/QBankUITests/testTilesOpenExamReviewAndTerms &&
+  section_has "$sata" iphone QBankUITests/ExamLifecycleUITests/testStartingOverARunningExamAsksAndEndsThatOne &&
+  section_has "$sata" iphone QBankUITests/AddUITests/testImportIntoUnsortedThenReplace &&
+  section_has "$sata" iphone QBankUITests/AddHereUITests/testAFoldersPlusOpensImportAtOnceAndMoreHoldsTheRest &&
+  ! section_has "$sata" iphone QBankUITests/SataAllCorrectUITests/testPickingEveryOptionIsFullyCorrect &&
+  ! section_has "$sata" ipad QBankUITests/SataAllCorrectUITests; then
+  pass "a changed UI test file selects its class and the smoke walk"
+else
+  fail "a changed UI test file selects its class and the smoke walk"
+fi
+if printf '%s\n' "$add" | head -n 2 | grep -qx ipad=true &&
+  section_has "$add" ipad QBankUITests/AddUITests &&
+  section_has "$here" iphone QBankUITests/AddHereUITests &&
+  ! section_has "$here" ipad QBankUITests/AddHereUITests; then
+  pass "the iPad simulator starts only for a changed class that runs there"
+else
+  fail "the iPad simulator starts only for a changed class that runs there"
+fi
+if [ "$(printf '%s\n' .github/workflows/xcode.yml test/pr-suite.sh | ./test/pr-suite.sh --as-quick | head -n 1)" = mode=quick ]; then
+  pass "a manual quick run can time the check on a machinery change"
+else
+  fail "a manual quick run can time the check on a machinery change"
+fi
+app_flags="$(printf '%s\n' QBank/QBankApp.swift | ./test/pr-suite.sh | ./test/pr-suite.sh --flags iphone)"
+case "$app_flags" in
+  *"-only-testing:QBankTests"*"-only-testing:QBankUITests/AddHereUITests/testAFoldersPlusOpensImportAtOnceAndMoreHoldsTheRest"*)
+    pass "quick flags name the unit tests and the smoke walk"
+    ;;
+  *) fail "quick flags name the unit tests and the smoke walk" ;;
+esac
+if printf '%s\n' QBank/QBankApp.swift | ./test/pr-suite.sh | ./test/pr-suite.sh --flags ipad | grep -qx none; then
+  pass "a quick check with no iPad class asks for no iPad run"
+else
+  fail "a quick check with no iPad class asks for no iPad run"
+fi
+if printf '%s\n' 'mode=quick' 'ipad=false' 'iphone' 'QBankUITests/$(id)' 'ipad' | ./test/pr-suite.sh --flags iphone >/dev/null 2>&1; then
+  fail "pr-suite.sh refuses a test name that is not a test name"
+else
+  pass "pr-suite.sh refuses a test name that is not a test name"
+fi
+ruby_check "a pull request cannot force the quick check, and a manual run can" "$XCODE" '
+  jobs = YAML.load_file(ARGV[0])["jobs"] || {}
+  step = (jobs["scope"]["steps"] || []).find { |s| s["name"] == "Decide whether the Mac is needed" }
+  abort "no scope decision step" unless step
+  parts = step["run"].to_s.split("elif", 2)
+  abort "the pull request path must not pass --as-quick" if parts[0].include?("--as-quick")
+  abort "only a manual quick run may pass --as-quick" unless parts[1].to_s.include?("workflow_dispatch") && parts[1].include?("--as-quick")
+  runs = jobs["build-and-test"]["steps"].map { |s| s["run"].to_s }
+  abort "the iPhone step does not ask pr-suite.sh for its flags" unless runs.any? { |r| r.include?("pr-suite.sh --flags iphone") }
+  abort "the iPad step does not ask pr-suite.sh for its flags" unless runs.any? { |r| r.include?("pr-suite.sh --flags ipad") }
+'
 
 # --- Simulators only through test/sim.sh -------------------------------------
 

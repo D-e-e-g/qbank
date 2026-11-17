@@ -3,8 +3,12 @@ name: Xcode
 # Builds and tests the app on a Mac. Runs only for trusted code: pull requests
 # from this repository's own branches, pushes to main, qbank-v* tags, and
 # manual runs. A fork's pull request never reaches the Mac (see docs/ci.md).
-# After a test fails, retry only that test with the only_testing input before
-# spending the full suite again (see docs/testing.md).
+# A pull request runs the quick check unless it changes shared test machinery
+# or a path test/pr-suite.sh does not know, in which case it runs the full
+# suite. Pushes to main, tags, and manual runs run the full suite. A manual
+# run can ask for the quick check with suite=quick. After a test fails, retry
+# only that test with the only_testing input before spending the suite again
+# (see docs/testing.md).
 on:
   pull_request:
   push:
@@ -26,21 +30,34 @@ on:
           - iphone
           - ipad
         default: iphone
+      suite:
+        description: 'Manual runs only. full (the default) runs the whole suite. quick runs the pull request check, so it can be timed on a branch.'
+        type: choice
+        options:
+          - full
+          - quick
+        default: full
 
 permissions:
   contents: read
 
 jobs:
-  # Decides on GitHub's Linux, before any Mac is asked for, what a run needs. A
-  # pull request that changes only allowlisted documentation skips the Mac; a
-  # push to main, a tag, or a manual run always builds. A named-tests run's
-  # names are checked here too, so a bad one fails without waiting for the Mac.
+  # Decides on GitHub's Linux, before any Mac is asked for, what a run needs.
+  # A pull request that changes only documentation or CI files skips the Mac.
+  # Any other pull request builds: the quick check, or the full suite when
+  # test/pr-suite.sh is unsure or the change touches shared test machinery.
+  # A push to main, a tag, or a manual run always runs the full suite. A manual
+  # run with suite=quick runs the quick check instead, so it can be timed.
+  # A named-tests run's names are checked here too, so a bad one fails without
+  # waiting for the Mac.
   scope:
     name: Change scope
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       mac: ${{ steps.scope.outputs.mac }}
+      ipad: ${{ steps.scope.outputs.ipad }}
+      plan: ${{ steps.scope.outputs.plan }}
 
     steps:
       - name: Checkout
@@ -56,22 +73,58 @@ jobs:
         run: ./test/only-testing.sh --check
 
       # A pull request's checkout is its merge commit, so the first parent is
-      # the base. If the diff cannot be read, the full build runs.
+      # the base. If the diff cannot be read, the full suite runs.
       - name: Decide whether the Mac is needed
         id: scope
+        env:
+          SUITE: ${{ inputs.suite }}
         run: |
           mac=true
-          if [ "$GITHUB_EVENT_NAME" = pull_request ] &&
-            files="$(git diff --name-only --no-renames HEAD^1 HEAD)" &&
-            printf '%s\n' "$files" | ./test/docs-only.sh; then
-            mac=false
+          ipad=true
+          plan="$(printf '%s\n' mode=full ipad=true)"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            if files="$(git diff --name-only --no-renames HEAD^1 HEAD)"; then
+              plan="$(printf '%s\n' "$files" | ./test/pr-suite.sh)"
+            fi
+          elif [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "$SUITE" = quick ]; then
+            if git fetch --no-tags --depth=1 origin main &&
+              files="$(git diff --name-only --no-renames FETCH_HEAD HEAD)"; then
+              plan="$(printf '%s\n' "$files" | ./test/pr-suite.sh --as-quick)"
+            fi
+          fi
+          # First two lines, without a pipe: pipefail would turn head's early exit into a failure.
+          mode="${plan%%$'\n'*}"
+          ipad_line="${plan#*$'\n'}"
+          ipad_line="${ipad_line%%$'\n'*}"
+          case "$mode" in
+            mode=skip) mac=false ;;
+            mode=quick | mode=full) mac=true ;;
+            *)
+              mac=true
+              plan="$(printf '%s\n' mode=full ipad=true)"
+              ipad_line="ipad=true"
+              ;;
+          esac
+          case "$ipad_line" in
+            ipad=true) ipad=true ;;
+            ipad=false) ipad=false ;;
+            *) ipad=true ;;
+          esac
+          if [ "$mac" = false ]; then
+            ipad=false
           fi
           echo "mac=$mac" >> "$GITHUB_OUTPUT"
+          echo "ipad=$ipad" >> "$GITHUB_OUTPUT"
+          {
+            echo "plan<<END_PR_SUITE"
+            printf '%s\n' "$plan"
+            echo "END_PR_SUITE"
+          } >> "$GITHUB_OUTPUT"
 
   # A pull request or a push to main builds only on the self-hosted MAC_RUNNER.
   # With no MAC_RUNNER the build would fall back to a GitHub-hosted Mac on every
   # merge, so it is skipped and this job says why. It also says why a fork's
-  # pull request or a documentation-only pull request skips the build.
+  # pull request, or a documentation-only or CI-only pull request, skips the build.
   mac-build-skipped:
     name: Mac build skipped
     needs: scope
@@ -91,7 +144,7 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
             message="This pull request comes from a fork, so it skips the Mac build: the self-hosted Mac builds only this repository's own branches (see docs/ci.md)."
           elif [ "$NEEDS_MAC" = false ]; then
-            message="This pull request changes only documentation, so it skips the Mac build: test/docs-only.sh names the paths that cannot affect it. Merging it still runs the full build on main."
+            message="This pull request changes only documentation or CI files and scripts, so it skips the Mac build. test/pr-suite.sh names those paths. Shared test machinery still builds, and merging still runs the full suite on main."
           else
             message="MAC_RUNNER is not set, so this run skips the Mac build. Set it to the self-hosted runner's label (see docs/ci.md)."
           fi
@@ -149,7 +202,7 @@ jobs:
       # The Debug-only launch seam can compile in Debug yet break a Release
       # build. This compiles Release for a device with no signing, which is the
       # same compiler boundary a TestFlight archive crosses. It takes under a
-      # minute, so it goes before the UI tests' hour.
+      # minute, so it goes before the tests.
       - name: Build Release configuration (compile only)
         run: |
           xcodebuild build \
@@ -165,13 +218,45 @@ jobs:
       # it, and deletes it on every exit path. Never target a simulator here
       # directly. After a failure xcodebuild would gather simulator diagnostics,
       # which can wait without end; the result bundle is uploaded instead.
-      # The iPhone runs every UI test one after another (see docs/ci.md).
+      # The full suite runs every test. A quick check runs the unit tests, the
+      # smoke walk, and the UI test classes the change touched (see docs/ci.md).
+      # The names come from the scope job through env, and test/pr-suite.sh
+      # refuses anything but a test name before they reach xcodebuild.
       # The serial iPhone suite took 55 to 57 minutes before the highlight
-      # tests and about 4 minutes more with them, so it gets 90 minutes
-      # instead of sim.sh's 60-minute default. The iPad step took 16 to 29
-      # minutes and gets 45. Both still stop hangs.
+      # tests and about 4 minutes more with them, so the full suite gets 90
+      # minutes instead of sim.sh's 60-minute default. The iPad step took 16 to
+      # 29 minutes and gets 45. Both still stop hangs.
       - name: Build and run unit and UI tests
+        env:
+          PR_SUITE: ${{ needs.scope.outputs.plan }}
         run: |
+          args="$(printf '%s\n' "$PR_SUITE" | ./test/pr-suite.sh --flags iphone)"
+          only=()
+          case "$args" in
+            full)
+              echo "Running the full suite."
+              ;;
+            -only-testing:*)
+              echo "Running the quick check."
+              set -f
+              # shellcheck disable=SC2086 # flags are validated words with no spaces
+              only=($args)
+              set +f
+              for flag in "${only[@]}"; do
+                case "$flag" in
+                  -only-testing:QBankTests | -only-testing:QBankTests/* | -only-testing:QBankUITests/*) ;;
+                  *)
+                    printf 'not a test flag: %q\n' "$flag" >&2
+                    exit 1
+                    ;;
+                esac
+              done
+              ;;
+            *)
+              printf 'bad suite plan: %q\n' "$args" >&2
+              exit 1
+              ;;
+          esac
           ./test/sim.sh --timeout 5400 --device "iPhone 17 Pro" --device "iPhone 17" -- \
             xcodebuild test \
               -project "$PROJECT_PATH" \
@@ -180,14 +265,48 @@ jobs:
               -destination "platform=iOS Simulator,id={{UDID}}" \
               -derivedDataPath "$DERIVED_DATA_PATH" \
               -collect-test-diagnostics never \
-              -resultBundlePath TestResults.xcresult
+              -resultBundlePath TestResults.xcresult \
+              "${only[@]}"
 
-      # The same tests on an iPad: the iPad layout's UI tests run there, and the
-      # iPhone layout's skip themselves. One class holds most of them, so a second
-      # worker here made this step slower, not faster.
+      # The full suite runs the same tests on an iPad: the iPad layout's UI
+      # tests run there, and the iPhone layout's skip themselves. A quick check
+      # starts this simulator only when a changed UI test class runs on iPad.
+      # One class holds most of the iPad tests, so a second worker here made
+      # this step slower, not faster.
       - name: Build and run unit and UI tests on iPad
         id: ipad-tests
+        if: needs.scope.outputs.ipad != 'false'
+        env:
+          PR_SUITE: ${{ needs.scope.outputs.plan }}
         run: |
+          args="$(printf '%s\n' "$PR_SUITE" | ./test/pr-suite.sh --flags ipad)"
+          only=()
+          case "$args" in
+            none)
+              echo "No changed UI test runs on iPad."
+              exit 0
+              ;;
+            full) ;;
+            -only-testing:*)
+              set -f
+              # shellcheck disable=SC2086 # flags are validated words with no spaces
+              only=($args)
+              set +f
+              for flag in "${only[@]}"; do
+                case "$flag" in
+                  -only-testing:QBankUITests/*) ;;
+                  *)
+                    printf 'not a test flag: %q\n' "$flag" >&2
+                    exit 1
+                    ;;
+                esac
+              done
+              ;;
+            *)
+              printf 'bad suite plan: %q\n' "$args" >&2
+              exit 1
+              ;;
+          esac
           ./test/sim.sh --timeout 2700 --device "iPad Pro 13-inch (M5)" --device "iPad Pro 13-inch (M4)" -- \
             xcodebuild test \
               -project "$PROJECT_PATH" \
@@ -196,7 +315,8 @@ jobs:
               -destination "platform=iOS Simulator,id={{UDID}}" \
               -derivedDataPath "$DERIVED_DATA_PATH" \
               -collect-test-diagnostics never \
-              -resultBundlePath TestResults-iPad.xcresult
+              -resultBundlePath TestResults-iPad.xcresult \
+              "${only[@]}"
 
       # The Mac uploads at about 1 MB/s, and the largest bundle so far (224 MB)
       # took under 5 minutes. When an upload stalls, the action reports it after 5
