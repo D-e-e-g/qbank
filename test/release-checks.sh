@@ -311,6 +311,7 @@ expect_mode full QBank.xcodeproj/project.pbxproj
 expect_mode full .github/workflows/xcode.yml
 expect_mode full test/sim.sh
 expect_mode full test/pr-suite.sh
+expect_mode full test/docs-only.sh
 expect_mode full NEW-FILE
 expect_mode full QBank.xcodeproj/xcshareddata/xcschemes/QBank.xcscheme
 expect_mode full docs/../QBank/App.swift

@@ -211,7 +211,7 @@ while IFS= read -r path || [ -n "$path" ]; do
       ;;
     # Shared test machinery. A change here can make any test lie, so the
     # pull request runs the full suite. The selection script is one of them.
-    QBankUITests/UITestSupport.swift | QBank/DebugLaunchScenario.swift | QBank.xcodeproj/project.pbxproj | .github/workflows/xcode.yml | test/sim.sh | test/pr-suite.sh)
+    QBankUITests/UITestSupport.swift | QBank/DebugLaunchScenario.swift | QBank.xcodeproj/project.pbxproj | .github/workflows/xcode.yml | test/sim.sh | test/pr-suite.sh | test/docs-only.sh)
       saw_full=1
       continue
       ;;
