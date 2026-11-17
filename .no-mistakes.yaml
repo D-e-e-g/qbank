@@ -11,3 +11,4 @@ test:
   instructions: |
     Run named tests with test/only-testing.sh rather than the full suite, and never rerun the full
     suite to check one fix. docs/testing.md has the rule. Every simulator goes through test/sim.sh.
+    A new UI test says why a unit test cannot do the job.

@@ -980,6 +980,14 @@ if [ -f "$SEAM" ] && [ "$(head -n 1 "$SEAM")" = "#if DEBUG" ] && [ "$(tail -n 1 
 else
   fail "the launch seam is wrapped in #if DEBUG ($SEAM must start with #if DEBUG and end with #endif)"
 fi
+# Animations go off only on a UI-test launch. The file that does it is Debug-only,
+# the same way as the seam, so a Release build contains none of it.
+MOTION=QBank/Debug/DebugMotion.swift
+if [ -f "$MOTION" ] && [ "$(head -n 1 "$MOTION")" = "#if DEBUG" ] && [ "$(tail -n 1 "$MOTION")" = "#endif" ]; then
+  pass "UI-test motion stays inside #if DEBUG"
+else
+  fail "UI-test motion stays inside #if DEBUG ($MOTION must start with #if DEBUG and end with #endif)"
+fi
 
 # --- Frontend only ----------------------------------------------------------------
 

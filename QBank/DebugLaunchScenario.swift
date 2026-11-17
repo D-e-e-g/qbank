@@ -11,7 +11,8 @@ import UIKit
 /// in memory, so the Keychain is never touched. Settings kept on the phone, such
 /// as Look and the lock, live in their own defaults suite, and saved courses and
 /// unsent answers in their own folder, `Application Support/QBankUITest`; both
-/// are emptied at launch.
+/// are emptied at launch. The app's own launch of a scenario turns animations
+/// off (`DebugMotion`); a unit test that builds a model in this process does not.
 ///
 /// Supported environment variables:
 /// - `QB_UITEST_SCENARIO`: the scenario to start in, one of `Scenario`'s raw
@@ -231,6 +232,11 @@ nonisolated enum DebugLaunchScenario {
             fatalError(error.description)
         }
         guard let scenario else { return nil }
+        // The app's launch uses the scenario folder. A unit test passes its own folder and stays
+        // in this process, so it must not turn animations off for the tests that follow.
+        if phoneFolder == nil {
+            DebugMotion.turnOff()
+        }
         let defaults = phoneSettings(keep: environment[keepPhoneSettingsKey] == "1")
         let folder = phoneFolder ?? defaultPhoneFolder
         let storage = phoneData(in: folder, keep: environment[keepPhoneDataKey] == "1")

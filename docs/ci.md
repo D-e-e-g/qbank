@@ -31,7 +31,7 @@ Pull requests from this repository's own branches, pushes to `main`, `qbank-v*` 
 
 A `Change scope` job on GitHub's Linux runs first and `test/pr-suite.sh` reads the changed paths. When that script is unsure, it runs more, never less. A pull request from a fork never runs the Mac job; its `Mac build skipped` job says why (see below).
 
-A push to `main`, a `qbank-v*` tag, or a manual run runs the full suite: every unit test and every UI test, on iPhone and again on iPad, where the iPad layout's UI tests run and the iPhone layout's skip themselves. That is unchanged for `main`: a running build is never cancelled, one newer merge waits, and a still newer one replaces the waiting one, so `main` still runs the complete suite ahead of any TestFlight build. A manual run is how to ask for the full suite on a branch. `suite` defaults to `full`:
+A push to `main`, a `qbank-v*` tag, or a manual run runs the full suite: every unit test and every UI test, on iPhone and again on iPad, where the iPad layout's UI tests run and the iPhone layout's skip themselves. That is unchanged for `main`: a running build is never cancelled, one newer merge waits, and a still newer one replaces the waiting one, so `main` still runs the complete suite ahead of any TestFlight build. The full suite on `main` is meant to take about 80 minutes of work on mb14, about the length of a run today, watched as a weekly median, not as a limit that fails the job. The step limits further down stop a hung run; they are not that budget. A manual run is how to ask for the full suite on a branch. `suite` defaults to `full`:
 
 ```sh
 gh workflow run xcode.yml -R D-e-e-g/qbank --ref <branch>

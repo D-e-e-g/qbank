@@ -1,6 +1,6 @@
 # Testing and retrying
 
-A pull request's Mac check is the quick check in [ci.md](ci.md), about 10 minutes of work on the MacBook Pro 14 (mb14), unless the change touches shared test machinery, in which case that pull request runs the full suite. The full suite on `main` holds mb14 for about an hour and a half, and the runner serves one job at a time. So a failed test is retried on its own first, and the pull request's check runs only after that test passes.
+A pull request's Mac check is the quick check in [ci.md](ci.md), about 10 minutes of work on the MacBook Pro 14 (mb14), unless the change touches shared test machinery, in which case that pull request runs the full suite. The full suite on `main` is meant to take about 80 minutes of work on mb14, watched as a weekly median, not as a limit that fails the job, and the runner serves one job at a time. So a failed test is retried on its own first, and the pull request's check runs only after that test passes.
 
 ## The retry rule
 
@@ -57,6 +57,12 @@ git push origin --delete retry/<your branch>
 ```
 
 Only someone with write access can start a manual run. The workflow still treats the names as hostile, because they reach a self-hosted Mac: they pass through `env`, never into a shell line, and `test/only-testing.sh` refuses anything but a test name before it runs anything. `test/release-checks.sh` checks both.
+
+## A new UI test
+
+A new UI test says why a unit test cannot do the job. A unit test can check a model, the fake server, and what a screen is told. A UI test is for something only the running app can show, such as a control on screen, a gesture, or a system sheet.
+
+A UI test launches the app through the Debug seam, and that launch turns the app's animations off, so the suite does not wait out each move. A normal Debug launch and every Release build leave them on.
 
 ## What each run holds
 
