@@ -5,10 +5,12 @@ name: Xcode
 # manual runs. A fork's pull request never reaches the Mac (see docs/ci.md).
 # A pull request runs the quick check unless it changes shared test machinery
 # or a path test/pr-suite.sh does not know, in which case it runs the full
-# suite. Pushes to main, tags, and manual runs run the full suite. A manual
-# run can ask for the quick check with suite=quick. After a test fails, retry
-# only that test with the only_testing input before spending the suite again
-# (see docs/testing.md).
+# suite. Pushes to main, tags, and manual runs run the full suite. The full
+# suite on main is meant to take about 80 minutes of work, watched as a weekly
+# median, not as a limit that fails the job (see docs/ci.md). A manual run can
+# ask for the quick check with suite=quick. After a test fails, retry only that
+# test with the only_testing input before spending the suite again (see
+# docs/testing.md).
 on:
   pull_request:
   push:
@@ -222,10 +224,12 @@ jobs:
       # smoke walk, and the UI test classes the change touched (see docs/ci.md).
       # The names come from the scope job through env, and test/pr-suite.sh
       # refuses anything but a test name before they reach xcodebuild.
-      # The serial iPhone suite took 55 to 57 minutes before the highlight
-      # tests and about 4 minutes more with them, so the full suite gets 90
-      # minutes instead of sim.sh's 60-minute default. The iPad step took 16 to
-      # 29 minutes and gets 45. Both still stop hangs.
+      # The 80-minute figure in docs/ci.md is the watched length of the whole
+      # run, not this step's limit. The serial iPhone suite took 55 to 57
+      # minutes before the highlight tests and about 4 minutes more with them,
+      # so the full suite gets 90 minutes instead of sim.sh's 60-minute
+      # default. The iPad step took 16 to 29 minutes and gets 45. Both still
+      # stop hangs.
       - name: Build and run unit and UI tests
         env:
           PR_SUITE: ${{ needs.scope.outputs.plan }}
