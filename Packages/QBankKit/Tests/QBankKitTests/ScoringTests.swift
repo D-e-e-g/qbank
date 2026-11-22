@@ -154,20 +154,25 @@ struct ScoringTests {
                 MatrixMultiRow(text: "Weight", answers: ["Hypovolemia", "Hypervolemia"]),
             ]
         )
-        let mixed = try Scoring.score(findings, response: .matrixmulti(choices: [
-            ["Hypovolemia", "Both volume problems written out so the header wraps"],
-            ["Hypervolemia"],
-            ["Hypovolemia"],
-        ]))
+        let mixed = try Scoring.score(
+            findings,
+            response: .matrixmulti(choices: [
+                ["Hypovolemia", "Both volume problems written out so the header wraps"],
+                ["Hypervolemia"],
+                ["Hypovolemia"],
+            ]))
         #expect(mixed == Score(points: 2, maxPoints: 4, status: .partial, answered: true))
         #expect(mixed.pointsText(for: .matrixmulti) == "2 of 4 points")
     }
 
     @Test func cloze() throws {
-        let body = QuestionBody.cloze(Cloze(text: "{0} and {1}", blanks: [
-            ClozeBlank(options: ["a", "b"], answer: 0),
-            ClozeBlank(options: ["c", "d", "e"], answer: 2),
-        ]))
+        let body = QuestionBody.cloze(
+            Cloze(
+                text: "{0} and {1}",
+                blanks: [
+                    ClozeBlank(options: ["a", "b"], answer: 0),
+                    ClozeBlank(options: ["c", "d", "e"], answer: 2),
+                ]))
         try expectScore(body, .cloze(choices: [0, 2]), 2, .correct)
         try expectScore(body, .cloze(choices: [0, 0]), 1, .partial)
         try expectScore(body, .cloze(choices: [1, 1]), 0, .incorrect)
@@ -246,10 +251,13 @@ struct ScoringTests {
     }
 
     @Test func savedAttemptGivesTheServersScore() throws {
-        let saved = try QBankJSON.decoder.decode(SavedAttempt.self, from: Data("""
-        {"clientAttemptId":"a","questionId":"q","courseId":"c","status":"partial","points":1,"maxPoints":3,
-         "guessed":false,"answeredAt":"2026-10-13T00:02:35.438Z","inReview":true,"label":"Partly correct","replayed":false}
-        """.utf8))
+        let saved = try QBankJSON.decoder.decode(
+            SavedAttempt.self,
+            from: Data(
+                """
+                {"clientAttemptId":"a","questionId":"q","courseId":"c","status":"partial","points":1,"maxPoints":3,
+                 "guessed":false,"answeredAt":"2026-10-13T00:02:35.438Z","inReview":true,"label":"Partly correct","replayed":false}
+                """.utf8))
         let score = Score(saved)
         #expect(score == Score(points: 1, maxPoints: 3, status: .partial, answered: true))
         #expect(score.label == saved.label)
@@ -257,11 +265,14 @@ struct ScoringTests {
 
     @Test func feedbackShowsTheServersWords() throws {
         // Words the phone would never write, so only the server's can pass.
-        let saved = try QBankJSON.decoder.decode(SavedAttempt.self, from: Data("""
-        {"clientAttemptId":"a","questionId":"q","courseId":"c","status":"partial","points":1,"maxPoints":3,
-         "guessed":false,"answeredAt":"2026-10-13T00:02:35.438Z","inReview":true,"label":"Partly right",
-         "pointsText":"1 point of 3","ruleText":"A new rule","replayed":false}
-        """.utf8))
+        let saved = try QBankJSON.decoder.decode(
+            SavedAttempt.self,
+            from: Data(
+                """
+                {"clientAttemptId":"a","questionId":"q","courseId":"c","status":"partial","points":1,"maxPoints":3,
+                 "guessed":false,"answeredAt":"2026-10-13T00:02:35.438Z","inReview":true,"label":"Partly right",
+                 "pointsText":"1 point of 3","ruleText":"A new rule","replayed":false}
+                """.utf8))
         let feedback = Feedback(saved)
         #expect(feedback.score == Score(points: 1, maxPoints: 3, status: .partial, answered: true))
         #expect(feedback.label == "Partly right")

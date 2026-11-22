@@ -252,10 +252,13 @@ private func responseSchema(_ spec: JSONValue, method: String, path: String, sta
     guard case .object(let paths)? = spec["paths"] else { return nil }
     let template = paths.keys.first { $0 == path } ?? paths.keys.first { matches(template: $0, path: path) }
     guard let operation = template.flatMap({ paths[$0]?[method.lowercased()] }),
-          let response = operation["responses"]?[String(status)] else { return nil }
+        let response = operation["responses"]?[String(status)]
+    else { return nil }
     let documented = dereference(response, spec: spec)
-    guard let schema = documented["content"]?["application/json"]?["schema"]
-        ?? documented["content"]?["application/problem+json"]?["schema"] else { return nil }
+    guard
+        let schema = documented["content"]?["application/json"]?["schema"]
+            ?? documented["content"]?["application/problem+json"]?["schema"]
+    else { return nil }
     return DocSchema(schema, spec: spec)
 }
 

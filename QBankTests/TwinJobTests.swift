@@ -187,10 +187,11 @@ struct TwinJobTests {
         #expect(job.steps.allSatisfy { $0.state == .done })
         #expect(job.sets.map(\.title) == ["Therapeutic Communication and the Relationship exam", "Psychosocial Assessment and Safety Screening exam"])
         #expect(job.sets.map(\.questionCount) == [5, 2])
-        #expect(job.sets.map(Twins.filed) == [
-            "Week 2 · 5 questions · Twins of Therapeutic Communication and the Relationship",
-            "Week 2 · 2 questions · Twins of Psychosocial Assessment and Safety Screening",
-        ])
+        #expect(
+            job.sets.map(Twins.filed) == [
+                "Week 2 · 5 questions · Twins of Therapeutic Communication and the Relationship",
+                "Week 2 · 2 questions · Twins of Psychosocial Assessment and Safety Screening",
+            ])
         #expect(job.exam?.folderIDs == [FakeStudy.week2])
         #expect(model.running == .none)
         #expect(model.canStart)
@@ -385,9 +386,11 @@ struct TwinJobTests {
         #expect(await model.start()?.id == "e1")
         let body = try #require(server.requests.last?.httpBody)
         let sent = try JSONDecoder().decode(JSONValue.self, from: body)
-        #expect(sent == .object([
-            "folderIds": .array([.string("f2"), .string("f1")]), "pool": .string("wrong"), "later": .bool(true), "replaces": .null,
-        ]))
+        #expect(
+            sent
+                == .object([
+                    "folderIds": .array([.string("f2"), .string("f1")]), "pool": .string("wrong"), "later": .bool(true), "replaces": .null,
+                ]))
     }
 
     // MARK: Bodies
@@ -404,16 +407,16 @@ struct TwinJobTests {
         let state = status == "done" ? "done" : status == "running" ? "current" : status
         let exam = exam ?? (status == "done" ? #"{"folderIds":["f1"],"pool":"wrong"}"# : "null")
         return """
-        {"id":"j1","status":"\(status)","step":"twins","steps":[\
-        {"key":"read","label":"Read your questions","state":"done","done":null,"total":null},\
-        {"key":"twins","label":"Exam twins","state":"\(state)","done":null,"total":null},\
-        {"key":"file","label":"File the twins","state":"\(status == "done" ? "done" : "todo")","done":null,"total":null}],\
-        "course":{"id":"c1","code":"NURS 101","title":"Invented Basics"},"level":"exam","pool":"wrong",\
-        "folders":[{"id":"f1","name":"Week 1","questionCount":2,"twinCount":2,"alreadyTwinned":0}],"twinCount":2,\
-        "note":"QBank writes exam twins of 2 wrong questions in Week 1.","sets":[],"exam":\(exam),\
-        "createdAt":"2026-10-18 17:00:00.000+00","updatedAt":"2026-10-18 17:00:01.000+00","finishedAt":null,\
-        "failure":\(failure.map { "\"\($0)\"" } ?? "null"),"warnings":[],\
-        "usage":{"calls":0,"inputTokens":0,"outputTokens":0,"cacheReadTokens":0,"cacheWriteTokens":0}}
-        """
+            {"id":"j1","status":"\(status)","step":"twins","steps":[\
+            {"key":"read","label":"Read your questions","state":"done","done":null,"total":null},\
+            {"key":"twins","label":"Exam twins","state":"\(state)","done":null,"total":null},\
+            {"key":"file","label":"File the twins","state":"\(status == "done" ? "done" : "todo")","done":null,"total":null}],\
+            "course":{"id":"c1","code":"NURS 101","title":"Invented Basics"},"level":"exam","pool":"wrong",\
+            "folders":[{"id":"f1","name":"Week 1","questionCount":2,"twinCount":2,"alreadyTwinned":0}],"twinCount":2,\
+            "note":"QBank writes exam twins of 2 wrong questions in Week 1.","sets":[],"exam":\(exam),\
+            "createdAt":"2026-10-18 17:00:00.000+00","updatedAt":"2026-10-18 17:00:01.000+00","finishedAt":null,\
+            "failure":\(failure.map { "\"\($0)\"" } ?? "null"),"warnings":[],\
+            "usage":{"calls":0,"inputTokens":0,"outputTokens":0,"cacheReadTokens":0,"cacheWriteTokens":0}}
+            """
     }
 }

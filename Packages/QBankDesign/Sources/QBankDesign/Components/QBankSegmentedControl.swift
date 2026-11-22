@@ -92,11 +92,14 @@ private struct QBankSegmentButtonStyle: ButtonStyle {
     @Previewable @State var look = "auto"
     VStack(alignment: .leading, spacing: QBankSpacing.gapSection) {
         QBankListGroup(header: "Look", footer: "Match device follows this device's light or dark setting.") {
-            QBankSegmentedControl("Look", selection: $look, options: [
-                .init("auto", "Match device"),
-                .init("light", "Light"),
-                .init("dark", "Dark"),
-            ])
+            QBankSegmentedControl(
+                "Look", selection: $look,
+                options: [
+                    .init("auto", "Match device"),
+                    .init("light", "Light"),
+                    .init("dark", "Dark"),
+                ]
+            )
             .padding(QBankSpacing.space3)
         }
     }

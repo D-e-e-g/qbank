@@ -92,33 +92,36 @@ struct FolderView: View {
                 dismiss()
             }
         }
-        .sheet(item: $sheet, onDismiss: { Task { await model.load() } }, content: { sheet in
-            if let folder = model.folder(id) {
-                switch sheet {
-                case .rename:
-                    RenameFolderSheet(model: model, folder: folder)
-                case .page:
-                    ExamPageSheet(model: model, folder: folder)
-                case .move(let sets):
-                    MoveSetsSheet(model: model, folder: folder, sets: sets) {
-                        selection = nil
-                    }
-                case .deleteSets(let sets):
-                    DeleteSetsSheet(app: app, sets: sets) {
-                        selection = nil
-                    }
-                case .importHere:
-                    ImportHereSheet(app: app, courseID: model.id, folderID: folder.id) { set in
-                        self.sheet = nil
-                        Task { await model.load() }
-                        // A replaced set stays in its own folder, which may be another one.
-                        if set.folderID != id {
-                            tabs?.openFolder(courseID: set.courseID, name: model.course.map(Wording.name), folderID: set.folderID)
+        .sheet(
+            item: $sheet, onDismiss: { Task { await model.load() } },
+            content: { sheet in
+                if let folder = model.folder(id) {
+                    switch sheet {
+                    case .rename:
+                        RenameFolderSheet(model: model, folder: folder)
+                    case .page:
+                        ExamPageSheet(model: model, folder: folder)
+                    case .move(let sets):
+                        MoveSetsSheet(model: model, folder: folder, sets: sets) {
+                            selection = nil
+                        }
+                    case .deleteSets(let sets):
+                        DeleteSetsSheet(app: app, sets: sets) {
+                            selection = nil
+                        }
+                    case .importHere:
+                        ImportHereSheet(app: app, courseID: model.id, folderID: folder.id) { set in
+                            self.sheet = nil
+                            Task { await model.load() }
+                            // A replaced set stays in its own folder, which may be another one.
+                            if set.folderID != id {
+                                tabs?.openFolder(courseID: set.courseID, name: model.course.map(Wording.name), folderID: set.folderID)
+                            }
                         }
                     }
                 }
             }
-        })
+        )
         .onChange(of: model.folder(id)?.sets.map(\.id)) { _, sets in
             // Sets that left the folder leave the selection, and with none left, selecting ends.
             guard let sets, let current = selection else { return }

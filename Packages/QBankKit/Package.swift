@@ -8,7 +8,7 @@ let package = Package(
         .macOS(.v15),
     ],
     products: [
-        .library(name: "QBankKit", targets: ["QBankKit"]),
+        .library(name: "QBankKit", targets: ["QBankKit"])
     ],
     targets: [
         .target(

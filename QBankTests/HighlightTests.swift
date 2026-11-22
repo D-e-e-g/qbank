@@ -33,11 +33,12 @@ struct HighlightTests {
         var highlights = Highlights()
         highlights.paint(0..<20, in: .stem, color: .yellow)
         highlights.paint(5..<10, in: .stem, color: .pink)
-        #expect(highlights[.stem] == [
-            Highlight(range: 0..<5, color: .yellow),
-            Highlight(range: 5..<10, color: .pink),
-            Highlight(range: 10..<20, color: .yellow),
-        ])
+        #expect(
+            highlights[.stem] == [
+                Highlight(range: 0..<5, color: .yellow),
+                Highlight(range: 5..<10, color: .pink),
+                Highlight(range: 10..<20, color: .yellow),
+            ])
         highlights.paint(0..<20, in: .stem, color: .blue)
         #expect(highlights[.stem] == [Highlight(range: 0..<20, color: .blue)], "a wider drag repaints all of it")
         highlights.paint(15..<25, in: .stem, color: .pink)

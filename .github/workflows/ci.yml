@@ -66,6 +66,28 @@ jobs:
         run: |
           "$RUNNER_TEMP/swiftlint" lint
 
+      # Swift 6.4.3's swift-format, pinned like gitleaks. The Ubuntu image's
+      # Swift moves, and a different build can format the same file
+      # differently, so this check uses the release tarball. Its formatter
+      # matches the reformat. The image's swift is left for SwiftLint.
+      - name: Install Swift 6.4.3
+        run: |
+          version=6.4.3
+          sha256=0e408a922a6f00955cbc61ef7a1c40cee3bdbbecb7d50b98ad9aa3b943045613
+          archive=swift-6.4.3-RELEASE-ubuntu26.04.tar.gz
+          curl --fail --silent --show-error --location --retry 3 -o "$RUNNER_TEMP/$archive" \
+            "https://download.swift.org/swift-${version}-release/ubuntu2604/swift-${version}-RELEASE/${archive}"
+          echo "$sha256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          tool="$RUNNER_TEMP/swift-${version}-RELEASE-ubuntu26.04/usr/bin/swift"
+          test -x "$tool"
+          "$tool" format --version
+          echo "SWIFT_BIN=$tool" >> "$GITHUB_ENV"
+
+      - name: Swift format
+        run: |
+          "$SWIFT_BIN" format lint --strict -r -p .
+
   # A change must not add a secret; see test/leak-check.sh.
   secrets:
     name: Secrets

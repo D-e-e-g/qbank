@@ -85,42 +85,48 @@ struct CourseView: View {
             case .recentlyDeleted: RecentlyDeletedView(app: app, courseID: model.id)
             }
         }
-        .sheet(isPresented: $renamesCourse, onDismiss: {
-            Task { await model.load() }
-        }) {
+        .sheet(
+            isPresented: $renamesCourse,
+            onDismiss: {
+                Task { await model.load() }
+            }
+        ) {
             if let course = model.course {
                 RenameCourseView(app: app, detail: course)
             }
         }
-        .sheet(item: $sheet, onDismiss: {
-            // A new page, or the folder a set went into, opens once the sheet is down.
-            guard let next = opensNext else { return }
-            opensNext = nil
-            navigator?.open(next)
-        }, content: { sheet in
-            if let course = model.course {
-                switch sheet {
-                case .importFile:
-                    ImportHereSheet(app: app, courseID: course.id) { set in
-                        self.sheet = nil
-                        Task { await model.load() }
-                        if set.courseID == course.id {
-                            opensNext = .folder(set.folderID)
-                        } else {
-                            // She picked another course in the sheet.
-                            tabs?.openFolder(courseID: set.courseID, name: nil, folderID: set.folderID)
+        .sheet(
+            item: $sheet,
+            onDismiss: {
+                // A new page, or the folder a set went into, opens once the sheet is down.
+                guard let next = opensNext else { return }
+                opensNext = nil
+                navigator?.open(next)
+            },
+            content: { sheet in
+                if let course = model.course {
+                    switch sheet {
+                    case .importFile:
+                        ImportHereSheet(app: app, courseID: course.id) { set in
+                            self.sheet = nil
+                            Task { await model.load() }
+                            if set.courseID == course.id {
+                                opensNext = .folder(set.folderID)
+                            } else {
+                                // She picked another course in the sheet.
+                                tabs?.openFolder(courseID: set.courseID, name: nil, folderID: set.folderID)
+                            }
+                        }
+                    case .newFolder:
+                        NewFolderSheet(model: model)
+                    case .newPage:
+                        EditExamPageView(app: app, course: course, pageID: nil) { outcome in
+                            Task { await model.load() }
+                            if case .saved(let id) = outcome { opensNext = .examPage(id) }
                         }
                     }
-                case .newFolder:
-                    NewFolderSheet(model: model)
-                case .newPage:
-                    EditExamPageView(app: app, course: course, pageID: nil) { outcome in
-                        Task { await model.load() }
-                        if case .saved(let id) = outcome { opensNext = .examPage(id) }
-                    }
                 }
-            }
-        })
+            })
     }
 
     /// The + at the top: "Add to NURS 310", then Import a question file, Make questions when the
@@ -339,11 +345,14 @@ extension View {
     /// Practice over the tabs, from a set of the course. Her answers change the set's line and the
     /// course's score, so the course is read again when it closes.
     func practiceCover(app: AppModel, model: CourseModel, route: Binding<PracticeRoute?>) -> some View {
-        fullScreenCover(item: route, onDismiss: {
-            Task { await model.load() }
-        }, content: { route in
-            PracticeView(app: app, route: route)
-        })
+        fullScreenCover(
+            item: route,
+            onDismiss: {
+                Task { await model.load() }
+            },
+            content: { route in
+                PracticeView(app: app, route: route)
+            })
     }
 
     /// A past or running exam over the tabs. Open Review goes to the course's Review list; Back to

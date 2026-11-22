@@ -93,11 +93,13 @@ struct ContentContractTests {
         let single = set.questions[0]
         #expect(single.clinicalJudgmentStep == "Analyze cues")
         #expect(single.terms == [QuestionTerm(key: "tachy", term: "Tachycardia", meaning: "An invented definition of a fast heart rate.")])
-        #expect(single.body == .single(options: [
-            QuestionOption(text: "The useful action", isCorrect: true, why: "It addresses the finding."),
-            QuestionOption(text: "A distractor", isCorrect: false, why: "It does not change the finding."),
-            QuestionOption(text: "Another distractor", isCorrect: false, why: "Neither does this."),
-        ]))
+        #expect(
+            single.body
+                == .single(options: [
+                    QuestionOption(text: "The useful action", isCorrect: true, why: "It addresses the finding."),
+                    QuestionOption(text: "A distractor", isCorrect: false, why: "It does not change the finding."),
+                    QuestionOption(text: "Another distractor", isCorrect: false, why: "Neither does this."),
+                ]))
         #expect(single.table == QuestionTable(caption: "Invented readings", head: ["Time", "HR", ""], rows: [["0900", "82", ""], ["0915", "94", "extra"]]))
         #expect(single.images.isEmpty)
 
@@ -113,25 +115,34 @@ struct ContentContractTests {
             Issue.record("Expected SVG markup")
         }
 
-        #expect(set.questions[3].body == .highlight(segments: [
-            QuestionOption(text: "The client is alert.", isCorrect: false, why: "Expected."),
-            QuestionOption(text: "Heart rate 128.", isCorrect: true, why: "Too fast."),
-            QuestionOption(text: "Skin is cool and clammy.", isCorrect: true, why: "Poor perfusion."),
-            QuestionOption(text: "Ate breakfast.", isCorrect: false, why: "Expected."),
-        ]))
+        #expect(
+            set.questions[3].body
+                == .highlight(segments: [
+                    QuestionOption(text: "The client is alert.", isCorrect: false, why: "Expected."),
+                    QuestionOption(text: "Heart rate 128.", isCorrect: true, why: "Too fast."),
+                    QuestionOption(text: "Skin is cool and clammy.", isCorrect: true, why: "Poor perfusion."),
+                    QuestionOption(text: "Ate breakfast.", isCorrect: false, why: "Expected."),
+                ]))
         #expect(set.questions[4].body == .order(items: [OrderItem(text: "Step one", why: "First."), OrderItem(text: "Step two"), OrderItem(text: "Step three")]))
-        #expect(set.questions[5].body == .match(
-            pairs: [MatchPair(left: "Drug A", right: "Class A", why: "A goes with A."), MatchPair(left: "Drug B", right: "Class B")],
-            extra: [MatchExtra(right: "Class C", why: "Matches nothing.")]
-        ))
-        #expect(set.questions[6].body == .matrix(
-            columns: ["Indicated", "Not indicated"],
-            rows: [MatrixRow(text: "Order one", answer: "Indicated", why: "Helps."), MatrixRow(text: "Order two", answer: "Not indicated")]
-        ))
-        #expect(set.questions[7].body == .cloze(Cloze(
-            text: "The client is most at risk for {0} because of {1}.",
-            blanks: [ClozeBlank(options: ["bleeding", "infection", "falls"], answer: 1, why: "Invented reason."), ClozeBlank(options: ["the wound", "the diet"], answer: 0)]
-        )))
+        #expect(
+            set.questions[5].body
+                == .match(
+                    pairs: [MatchPair(left: "Drug A", right: "Class A", why: "A goes with A."), MatchPair(left: "Drug B", right: "Class B")],
+                    extra: [MatchExtra(right: "Class C", why: "Matches nothing.")]
+                ))
+        #expect(
+            set.questions[6].body
+                == .matrix(
+                    columns: ["Indicated", "Not indicated"],
+                    rows: [MatrixRow(text: "Order one", answer: "Indicated", why: "Helps."), MatrixRow(text: "Order two", answer: "Not indicated")]
+                ))
+        #expect(
+            set.questions[7].body
+                == .cloze(
+                    Cloze(
+                        text: "The client is most at risk for {0} because of {1}.",
+                        blanks: [ClozeBlank(options: ["bleeding", "infection", "falls"], answer: 1, why: "Invented reason."), ClozeBlank(options: ["the wound", "the diet"], answer: 0)]
+                    )))
     }
 
     @Test func restoreBringsBackThePreviousVersion() async throws {

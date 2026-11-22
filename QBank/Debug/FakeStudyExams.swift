@@ -175,12 +175,13 @@ nonisolated extension FakeStudy {
         let empty = ticked.filter { draw($0).isEmpty }.map(\.name)
         if !empty.isEmpty {
             let one = empty.count == 1
-            return .failure(Refusal(
-                code: pool == .wrong ? "no_wrong_questions" : "no_questions",
-                message: pool == .wrong
-                    ? "\(Self.listText(empty)) \(one ? "has" : "have") no wrong questions. Untick \(one ? "it" : "them"), or turn off Wrong questions only."
-                    : "\(Self.listText(empty)) \(one ? "has" : "have") no questions."
-            ))
+            return .failure(
+                Refusal(
+                    code: pool == .wrong ? "no_wrong_questions" : "no_questions",
+                    message: pool == .wrong
+                        ? "\(Self.listText(empty)) \(one ? "has" : "have") no wrong questions. Untick \(one ? "it" : "them"), or turn off Wrong questions only."
+                        : "\(Self.listText(empty)) \(one ? "has" : "have") no questions."
+                ))
         }
         let plan = ExamPlan(ticked.map { ExamPlan.Pool(id: $0.id, name: $0.name, questionCount: draw($0).count) })
         let questions = zip(ticked, plan.draws).flatMap { folder, row in
@@ -190,13 +191,16 @@ nonisolated extension FakeStudy {
         // An open exam of hers (running, or in its grace) she did not agree to end refuses the start,
         // and nothing changes. One whose time is up is not open: it ends as a timeout whatever
         // `replaces` says.
-        if case .exam(let agreed) = replaces, let unconfirmed = state.withLock({ state in
-            state.exams.filter { $0.isOpen(at: startedAt) && $0.id != agreed }.max { $0.startedAt < $1.startedAt }
-        }) {
-            return .failure(Refusal(
-                code: "exam_in_progress", message: "An exam is still running. Starting a new one ends it, so confirm that first.",
-                runningID: unconfirmed.id
-            ))
+        if case .exam(let agreed) = replaces,
+            let unconfirmed = state.withLock({ state in
+                state.exams.filter { $0.isOpen(at: startedAt) && $0.id != agreed }.max { $0.startedAt < $1.startedAt }
+            })
+        {
+            return .failure(
+                Refusal(
+                    code: "exam_in_progress", message: "An exam is still running. Starting a new one ends it, so confirm that first.",
+                    runningID: unconfirmed.id
+                ))
         }
         // A running exam of hers ends first, as if she had left it.
         if endingRunning {
@@ -207,10 +211,11 @@ nonisolated extension FakeStudy {
         return state.withLock { state in
             state.examCount += 1
             let id = String(format: "e0000000-0000-4000-8000-%012d", state.examCount)
-            state.exams.append(Exam(
-                id: id, courseID: courseID, folderIDs: ticked.map(\.id), names: ticked.map(\.name), pool: pool,
-                practiceWeeks: practiceWeeks, questions: questions, timeLimitSeconds: plan.timeLimitSeconds, startedAt: startedAt
-            ))
+            state.exams.append(
+                Exam(
+                    id: id, courseID: courseID, folderIDs: ticked.map(\.id), names: ticked.map(\.name), pool: pool,
+                    practiceWeeks: practiceWeeks, questions: questions, timeLimitSeconds: plan.timeLimitSeconds, startedAt: startedAt
+                ))
             return .success(id)
         }
     }
@@ -225,18 +230,21 @@ nonisolated extension FakeStudy {
         }
         let course = exam.courseID == FakeQBankServer.mentalHealthID ? ("NURS 310", "Mental Health") : ("NURS 220", "Fundamentals")
         let result = exam.finishedAt == nil ? nil : state.withLock { score(exam, in: $0) }
-        return (status, [
-            "id": exam.id, "courseId": exam.courseID, "courseCode": course.0, "courseTitle": course.1,
-            "weeks": exam.names, "folderIds": exam.folderIDs,
-            "pool": exam.pool.rawValue, "practiceWeeks": exam.practiceWeeks.map { $0 as Any } ?? NSNull(),
-            "timeLimitSeconds": exam.timeLimitSeconds, "startedAt": QBankJSON.formatDate(exam.startedAt),
-            "endsAt": QBankJSON.formatDate(exam.endsAt), "status": exam.readStatus(at: now).rawValue,
-            "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)),
-            "endReason": Self.json(exam.endReason?.rawValue), "serverNow": QBankJSON.formatDate(now),
-            "questions": exam.questions.enumerated().map { Self.questionJSON($1.id, position: $0 + 1, week: $1.name) },
-            "answeredQuestionIds": exam.questions.map(\.id).filter { exam.answers[$0] != nil },
-            "result": result.map { $0 as Any } ?? NSNull(),
-        ])
+        return (
+            status,
+            [
+                "id": exam.id, "courseId": exam.courseID, "courseCode": course.0, "courseTitle": course.1,
+                "weeks": exam.names, "folderIds": exam.folderIDs,
+                "pool": exam.pool.rawValue, "practiceWeeks": exam.practiceWeeks.map { $0 as Any } ?? NSNull(),
+                "timeLimitSeconds": exam.timeLimitSeconds, "startedAt": QBankJSON.formatDate(exam.startedAt),
+                "endsAt": QBankJSON.formatDate(exam.endsAt), "status": exam.readStatus(at: now).rawValue,
+                "finishedAt": Self.json(exam.finishedAt.map(QBankJSON.formatDate)),
+                "endReason": Self.json(exam.endReason?.rawValue), "serverNow": QBankJSON.formatDate(now),
+                "questions": exam.questions.enumerated().map { Self.questionJSON($1.id, position: $0 + 1, week: $1.name) },
+                "answeredQuestionIds": exam.questions.map(\.id).filter { exam.answers[$0] != nil },
+                "result": result.map { $0 as Any } ?? NSNull(),
+            ]
+        )
     }
 
     func finish(_ id: String, reason: ExamEndReason) -> Reply {
@@ -303,13 +311,16 @@ nonisolated extension FakeStudy {
                 }
                 state.review[exam.courseID] = entries
             }
-            return (201, [
-                "clientAttemptId": clientAttemptID, "questionId": questionID, "courseId": exam.courseID,
-                "status": score.status.rawValue, "points": score.points, "maxPoints": score.maxPoints,
-                "guessed": guessed, "answeredAt": QBankJSON.formatDate(.now), "inReview": inReview,
-                "label": score.label, "pointsText": question.type.flatMap(score.pointsText(for:)) ?? NSNull(),
-                "ruleText": question.type?.scoringRule ?? NSNull(), "replayed": false,
-            ])
+            return (
+                201,
+                [
+                    "clientAttemptId": clientAttemptID, "questionId": questionID, "courseId": exam.courseID,
+                    "status": score.status.rawValue, "points": score.points, "maxPoints": score.maxPoints,
+                    "guessed": guessed, "answeredAt": QBankJSON.formatDate(.now), "inReview": inReview,
+                    "label": score.label, "pointsText": question.type.flatMap(score.pointsText(for:)) ?? NSNull(),
+                    "ruleText": question.type?.scoringRule ?? NSNull(), "replayed": false,
+                ]
+            )
         }
     }
 

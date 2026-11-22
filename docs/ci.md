@@ -11,6 +11,7 @@ Every pull request and every push to `main` runs two Linux jobs on GitHub-hosted
 - `shellcheck` over `test/*.sh` and `scripts/*.sh`
 - `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git), and the 1,000 code-line limit (`test/max-lines.conf`)
 - SwiftLint 0.65.1 over shipping code. A hit fails the job. See [SwiftLint](#swiftlint).
+- `swift format lint` over the whole tree, using the pinned Swift 6.4.3 toolchain. A hit fails the job. See [Swift format](#swift-format).
 
 `Secrets`: `test/leak-check.sh` runs [gitleaks](https://github.com/gitleaks/gitleaks), a pinned release whose checksum the job checks, over the commits the change adds and over every tracked file at HEAD, and fails on any finding. It uses gitleaks' own rules with no exceptions (`.gitleaks.toml` only extends the defaults). Findings print redacted. To run it on a Mac with gitleaks installed: `test/leak-check.sh origin/main HEAD`.
 
@@ -39,6 +40,20 @@ Prefer a real fix: `guard` or `if let`, a non-optional value, or `preconditionFa
 `Packages/QBankKit` and `Packages/QBankDesign` treat every warning as an error, as the app target already does.
 
 On a Mac with SwiftLint 0.65.1 installed, run `swiftlint lint` from the repository root.
+
+### Swift format
+
+`.swift-format` is the formatter configuration. Indentation is 4 spaces, and the body of `#if` is not indented, which is how the source is already written. `lineLength` is 10000, so the formatter does not wrap lines. A limit of 120 reformats 221 files (+6,628 / -2,853). Leaving wrapping off reformats 94 files (+1,556 / -1,135), and any limit at or above the longest line in the tree (1,221) matches that smaller result. Every swift-format rule is off. SwiftLint owns the rules.
+
+The checks job downloads the Swift 6.4.3 release toolchain for Ubuntu 26.04, checks its checksum, and runs that copy's `swift format lint --strict -r -p .`. The Ubuntu image's preinstalled Swift is a moving build and is not used for this check: a different swift-format can rewrite the same file. The Mac job does not run the check. Its Xcode is not the pinned formatter, and a GitHub-hosted Mac never runs it.
+
+The pinned toolchain's formatter is the one that matches the reformat. Replacing the pin means formatting the tree again with the new toolchain and checking that the bytes still match.
+
+From the repository root, before pushing:
+
+```sh
+swift format format -i -r -p .
+```
 
 ## Trusted code: `xcode.yml`
 

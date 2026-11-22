@@ -68,4 +68,4 @@ A new UI test says why a unit test cannot do the job. A unit test can check a mo
 
 ## Lint
 
-`Linux checks` lints shipping Swift. [ci.md](ci.md) names the rules and how to add or drop one. A per-line disable names its reason and is only for a fixed invariant.
+`Linux checks` lints shipping Swift and checks Swift formatting. [ci.md](ci.md) names the rules, how to add or drop one, and the format command to run before pushing. A per-line disable names its reason and is only for a fixed invariant.

@@ -337,8 +337,9 @@ struct NewFolderSheet: View {
             if let problem {
                 ProblemText(text: problem)
             }
-            SheetHint(text: page.map { "It goes on \($0.name). Import a question file into it from its page." }
-                ?? "It goes under Folders. Import a question file into it from its page.")
+            SheetHint(
+                text: page.map { "It goes on \($0.name). Import a question file into it from its page." }
+                    ?? "It goes under Folders. Import a question file into it from its page.")
         }
         .onAppear { focused = true }
         .presentationDetents([.medium, .large])

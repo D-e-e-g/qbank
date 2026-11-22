@@ -24,11 +24,12 @@ struct FlowLayout: Layout {
         for row in arrange(width: bounds.width, subviews: subviews) {
             var x = bounds.minX
             for item in row.items {
-                let offset: CGFloat = switch rowAlignment {
-                case .top: 0
-                case .bottom: row.height - item.size.height
-                default: (row.height - item.size.height) / 2
-                }
+                let offset: CGFloat =
+                    switch rowAlignment {
+                    case .top: 0
+                    case .bottom: row.height - item.size.height
+                    default: (row.height - item.size.height) / 2
+                    }
                 subviews[item.index].place(
                     at: CGPoint(x: x, y: y + offset),
                     proposal: ProposedViewSize(width: item.size.width, height: item.size.height)

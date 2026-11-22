@@ -195,7 +195,8 @@ struct TwinJobContractTests {
     /// never breaks the screen that follows a job.
     @Test func wordsAndFieldsAddedLaterStillDecode() throws {
         guard case .object(var body) = try Fixture.load("twin-job-twins").response.body,
-              case .array(var steps) = body["steps"], case .object(var step) = steps[1] else {
+            case .array(var steps) = body["steps"], case .object(var step) = steps[1]
+        else {
             Issue.record("not a job body")
             return
         }

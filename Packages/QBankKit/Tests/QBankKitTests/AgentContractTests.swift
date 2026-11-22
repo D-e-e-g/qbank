@@ -50,7 +50,8 @@ struct AgentContractTests {
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
         let code = try #require(fixture.request.body?["userCode"]?.stringValue)
-        let pairing = status == .approved
+        let pairing =
+            status == .approved
             ? try await client.approveAgentPairing(code: code)
             : try await client.denyAgentPairing(code: code)
         try expectRequest(transport.requests.first, matches: fixture)

@@ -189,9 +189,11 @@ public struct ExamSetup: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         courseID = try container.decode(String.self, forKey: .courseID)
         weeks = try container.decode([Week].self, forKey: .weeks)
-        folders = try container.decodeIfPresent([Folder].self, forKey: .folders) ?? weeks.map { week in
-            Folder(id: week.label, name: week.label, examPageID: nil, questionCount: week.questionCount, wrongCount: week.wrongCount, source: week.source)
-        }
+        folders =
+            try container.decodeIfPresent([Folder].self, forKey: .folders)
+            ?? weeks.map { week in
+                Folder(id: week.label, name: week.label, examPageID: nil, questionCount: week.questionCount, wrongCount: week.wrongCount, source: week.source)
+            }
         inProgress = try container.decodeIfPresent(ExamSummary.self, forKey: .inProgress)
         exams = try container.decode([ExamSummary].self, forKey: .exams)
         rules = try container.decode(ExamRules.self, forKey: .rules)

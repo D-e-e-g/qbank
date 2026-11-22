@@ -105,7 +105,8 @@ final class ConnectAgentModel {
         problem = nil
         defer { isBusy = false }
         do {
-            let pairing = approve
+            let pairing =
+                approve
                 ? try await app.client.approveAgentPairing(code: userCode)
                 : try await app.client.denyAgentPairing(code: userCode)
             code = ""

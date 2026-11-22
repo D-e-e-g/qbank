@@ -30,7 +30,8 @@ struct ExamContractTests {
     /// With folders, the setup is read for the server's plan over them, from the pool asked for.
     @Test func setupAsksForThePlanOverTheTickedFolders() async throws {
         guard case .object(var body) = try Fixture.load("exam-setup-course-exams").response.body,
-              case .array(let pages)? = body["courseExams"], case .object(let page)? = pages.first else {
+            case .array(let pages)? = body["courseExams"], case .object(let page)? = pages.first
+        else {
             Issue.record("The exam setup fixture has no exam page plans")
             return
         }

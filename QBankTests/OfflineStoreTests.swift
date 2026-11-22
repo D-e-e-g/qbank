@@ -131,9 +131,11 @@ struct OfflineStoreTests {
             _ = try await store.submit(Self.answer(id), courseID: "c1")
         }
         connection.update(isOnline: true)
-        server.script("POST /api/attempts", [
-            Self.saved("a1"), .error(404, "question_not_found", "That question is not in the app."), Self.saved("a3"),
-        ])
+        server.script(
+            "POST /api/attempts",
+            [
+                Self.saved("a1"), .error(404, "question_not_found", "That question is not in the app."), Self.saved("a3"),
+            ])
         await store.send()
         #expect(server.sentAttemptIDs == ["a1", "a2", "a3"])
         #expect(store.waiting.isEmpty)
@@ -144,10 +146,12 @@ struct OfflineStoreTests {
     @Test func whileOnlineItTriesAgainWaitingLongerEachTime() async throws {
         let server = StubServer(["POST /api/attempts": .error(503, "auth_unavailable", "Sign-in is not available right now.")])
         var delays: [Duration] = []
-        let store = Self.store(server, storage: PhoneStorage.memory().open("a1"), sleep: { delay in
-            delays.append(delay)
-            if delays.count > 3 { throw CancellationError() }
-        })
+        let store = Self.store(
+            server, storage: PhoneStorage.memory().open("a1"),
+            sleep: { delay in
+                delays.append(delay)
+                if delays.count > 3 { throw CancellationError() }
+            })
         let delivery = try await store.submit(Self.answer("a1"), courseID: "c1")
         #expect(delivery == .waiting(reason: .server(ServerError(status: 503, code: .authUnavailable, message: "Sign-in is not available right now."))))
         try await waitUntil { delays.count == 4 }
@@ -160,10 +164,12 @@ struct OfflineStoreTests {
         let server = StubServer(["POST /api/attempts": .offline])
         var retried = false
         let connection = Connection()
-        let store = Self.store(server, storage: PhoneStorage.memory().open("a1"), connection: connection, sleep: { _ in
-            retried = true
-            throw CancellationError()
-        })
+        let store = Self.store(
+            server, storage: PhoneStorage.memory().open("a1"), connection: connection,
+            sleep: { _ in
+                retried = true
+                throw CancellationError()
+            })
         connection.update(isOnline: false)
         _ = try await store.submit(Self.answer("a1"), courseID: "c1")
         try await Task.sleep(for: .milliseconds(50))
@@ -194,9 +200,11 @@ struct OfflineStoreTests {
             _ = try await store.submit(Self.answer(id), courseID: "c1")
         }
         connection.update(isOnline: true)
-        server.script("POST /api/attempts", [
-            StubServer.Reply(status: 200, body: "not json"), .error(400, "invalid_response", "That answer does not fit the question."),
-        ])
+        server.script(
+            "POST /api/attempts",
+            [
+                StubServer.Reply(status: 200, body: "not json"), .error(400, "invalid_response", "That answer does not fit the question."),
+            ])
         await store.send()
         #expect(store.notSaved.map(\.attempt.id) == ["a2"], "a 2xx it cannot read is not a refusal")
         #expect(store.deliveries == 1)
@@ -275,10 +283,11 @@ struct OfflineStoreTests {
             "GET /api/practice-sets/set2": .ok(PracticeModelTests.practiceSet()),
             "GET /api/practice-sets/set3": .ok(PracticeModelTests.practiceSet()),
         ])
-        let semesters = try Bodies.decodeCatalog(Bodies.semesters([
-            Bodies.course(id: "c1", code: "NURS 101"),
-            Bodies.course(id: "c9", code: "NURS 900", archived: true),
-        ]))
+        let semesters = try Bodies.decodeCatalog(
+            Bodies.semesters([
+                Bodies.course(id: "c1", code: "NURS 101"),
+                Bodies.course(id: "c9", code: "NURS 900", archived: true),
+            ]))
         let store = Self.store(server, storage: PhoneStorage.memory().open("a1"))
 
         store.saveCourses(in: semesters)
@@ -369,10 +378,12 @@ private final class LosesFirstReply: HTTPTransport {
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let reply = try await server.send(request)
-        let losesThis = request.url?.path() == "/api/attempts" && lost.withLock { lost in
-            defer { lost = true }
-            return !lost
-        }
+        let losesThis =
+            request.url?.path() == "/api/attempts"
+            && lost.withLock { lost in
+                defer { lost = true }
+                return !lost
+            }
         if losesThis { throw URLError(.networkConnectionLost) }
         return reply
     }

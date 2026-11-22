@@ -12,13 +12,16 @@ nonisolated extension FakeQBankServer {
         guard let (courseID, folder) = find(set: id), let entry = summary(of: id) else {
             return failure(404, "request_refused", "That set is not in the app.")
         }
-        return (200, [
-            "id": id, "courseId": courseID, "title": entry.title, "weekLabel": folder.name, "folderId": folder.id,
-            "kind": "practice",
-            "questions": (0..<entry.questions).map { FakePracticeQuestions.question(setID: id, index: $0) },
-            "sitting": sittingJSON(id, questionCount: entry.questions),
-            "run": state.withLock { Self.run(setID: id, questionIDs: (0..<entry.questions).map { "\(id)-q\($0)" }, state: $0) },
-        ])
+        return (
+            200,
+            [
+                "id": id, "courseId": courseID, "title": entry.title, "weekLabel": folder.name, "folderId": folder.id,
+                "kind": "practice",
+                "questions": (0..<entry.questions).map { FakePracticeQuestions.question(setID: id, index: $0) },
+                "sitting": sittingJSON(id, questionCount: entry.questions),
+                "run": state.withLock { Self.run(setID: id, questionIDs: (0..<entry.questions).map { "\(id)-q\($0)" }, state: $0) },
+            ]
+        )
     }
 
     // MARK: Sittings, with the rules of the server's `progress/sittings.ts`
@@ -114,7 +117,8 @@ nonisolated extension FakeQBankServer {
     /// Reads what an earlier launch wrote.
     func readKeptAnswers() {
         guard let answersFile, let data = try? Data(contentsOf: answersFile),
-              let kept = try? JSONDecoder().decode(KeptAnswers.self, from: data) else { return }
+            let kept = try? JSONDecoder().decode(KeptAnswers.self, from: data)
+        else { return }
         state.withLock { state in
             state.attempts = kept.attempts
             state.latest = kept.latest.mapValues { (status: $0.status, at: $0.at) }
@@ -140,7 +144,8 @@ nonisolated extension FakeQBankServer {
             return failure(400, "invalid_request", "That answer could not be read.")
         }
         if let data = state.withLock({ $0.attempts[submission.clientAttemptId] }),
-           var saved = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            var saved = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        {
             saved["replayed"] = true
             return (200, saved)
         }
@@ -155,9 +160,11 @@ nonisolated extension FakeQBankServer {
             return (status, saved)
         }
         guard let template = FakePracticeQuestions.template(forQuestionID: submission.questionId),
-              let data = try? JSONSerialization.data(withJSONObject: template.merging(
-                  ["id": submission.questionId, "publicId": "Q", "position": 1], uniquingKeysWith: { $1 })),
-              let question = try? QBankJSON.decoder.decode(Question.self, from: data) else {
+            let data = try? JSONSerialization.data(
+                withJSONObject: template.merging(
+                    ["id": submission.questionId, "publicId": "Q", "position": 1], uniquingKeysWith: { $1 })),
+            let question = try? QBankJSON.decoder.decode(Question.self, from: data)
+        else {
             return failure(404, "request_refused", "That question is not in the app.")
         }
         let score: Score

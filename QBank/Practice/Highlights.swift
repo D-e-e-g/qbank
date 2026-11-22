@@ -133,7 +133,8 @@ nonisolated enum WordSpan {
             // A swipe that stays on a quote or a comma right beside a word takes that word.
             let string = text as NSString
             guard anchor == current, anchor >= 0, anchor < string.length,
-                  let held = Unicode.Scalar(string.character(at: anchor)), trimmed.contains(Character(held)) else { return nil }
+                let held = Unicode.Scalar(string.character(at: anchor)), trimmed.contains(Character(held))
+            else { return nil }
             return all.first { $0.lowerBound == anchor + 1 || $0.upperBound == anchor }
         }
         return first..<last

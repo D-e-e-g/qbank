@@ -64,7 +64,8 @@ struct MarkableText: View {
                     marks: highlighting.highlights[part].map { paint(for: $0.color, range: $0.range) },
                     pen: paint(for: highlighting.color, range: 0..<0),
                     isErasing: highlighting.isErasing,
-                    liveRing: colorScheme == .dark ? UIColor(red: 247 / 255, green: 235 / 255, blue: 190 / 255, alpha: 0.55)
+                    liveRing: colorScheme == .dark
+                        ? UIColor(red: 247 / 255, green: 235 / 255, blue: 190 / 255, alpha: 0.55)
                         : UIColor(red: 28 / 255, green: 27 / 255, blue: 24 / 255, alpha: 0.4),
                     spokenMarks: Self.spoken(text, highlighting.highlights[part]),
                     isAccessibilityElement: isAccessibilityElement,
@@ -205,7 +206,8 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         didSet {
             guard content != oldValue else { return }
             if content.text != oldValue.text || content.font != oldValue.font || content.lineHeight != oldValue.lineHeight
-                || content.singleLine != oldValue.singleLine {
+                || content.singleLine != oldValue.singleLine
+            {
                 invalidateIntrinsicContentSize()
             }
             restyle()
@@ -361,12 +363,13 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         layoutManager.enumerateEnclosingRects(
             forGlyphRange: glyphs, withinSelectedGlyphRange: NSRange(location: NSNotFound, length: 0), in: container
         ) { rect, _ in
-            rects.append(CGRect(
-                x: rect.minX - self.content.markInset.width,
-                y: rect.midY - fontHeight / 2 - self.content.markInset.height,
-                width: rect.width + 2 * self.content.markInset.width,
-                height: fontHeight + 2 * self.content.markInset.height
-            ))
+            rects.append(
+                CGRect(
+                    x: rect.minX - self.content.markInset.width,
+                    y: rect.midY - fontHeight / 2 - self.content.markInset.height,
+                    width: rect.width + 2 * self.content.markInset.width,
+                    height: fontHeight + 2 * self.content.markInset.height
+                ))
         }
         return rects
     }
@@ -391,7 +394,8 @@ final class MarkableTextView: UIView, UIGestureRecognizerDelegate {
         let index = layoutManager.characterIndexForGlyph(at: glyph)
         let text = storage.string as NSString
         guard index < text.length, let held = Unicode.Scalar(text.character(at: index)),
-              CharacterSet.whitespaces.contains(held) else { return index }
+            CharacterSet.whitespaces.contains(held)
+        else { return index }
         return fraction < 0.5 ? max(0, index - 1) : min(text.length - 1, index + 1)
     }
 

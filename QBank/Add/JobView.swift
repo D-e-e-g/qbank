@@ -710,12 +710,14 @@ private struct StoppedView: View {
     var body: some View {
         JobColumn {
             let container = Wording.words(Wording.kind(code: job.course.code)).container
-            Text(job.status == .cancelled
-                 ? "You stopped this set. Nothing was added to your \(container)."
-                 : job.failure ?? "QBank could not finish this set. Nothing was added to your \(container).")
-                .qbankFont(.body)
-                .foregroundStyle(.qbank(.text1))
-                .accessibilityIdentifier("make.stopped")
+            Text(
+                job.status == .cancelled
+                    ? "You stopped this set. Nothing was added to your \(container)."
+                    : job.failure ?? "QBank could not finish this set. Nothing was added to your \(container)."
+            )
+            .qbankFont(.body)
+            .foregroundStyle(.qbank(.text1))
+            .accessibilityIdentifier("make.stopped")
             QBankListGroup {
                 ForEach(job.steps, id: \.key) { step in
                     StepRow(step: step)

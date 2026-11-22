@@ -10,7 +10,7 @@ let package = Package(
         .macOS(.v15),
     ],
     products: [
-        .library(name: "QBankDesign", targets: ["QBankDesign"]),
+        .library(name: "QBankDesign", targets: ["QBankDesign"])
     ],
     targets: [
         .target(

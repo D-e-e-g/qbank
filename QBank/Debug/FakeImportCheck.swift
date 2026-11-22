@@ -138,7 +138,8 @@ nonisolated struct FakeImportCheck {
     /// A small question file for UI tests and review: three invented questions in two formats.
     static func sampleFile(title: String = "Invented Sleep and Rest", questions: Int = 3) -> String {
         let items = (0..<questions).map { index -> [String: Any] in
-            let options: [[String: Any]] = index % 3 == 1
+            let options: [[String: Any]] =
+                index % 3 == 1
                 ? [["t": "Dim the lights", "ok": true], ["t": "Limit caffeine", "ok": true], ["t": "Nap at noon"], ["t": "Keep a screen on"]]
                 : [["t": "Keep a regular bedtime", "ok": true], ["t": "Nap in the evening"], ["t": "Drink coffee at night"], ["t": "Exercise at midnight"]]
             return [

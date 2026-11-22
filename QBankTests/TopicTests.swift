@@ -220,13 +220,14 @@ struct TopicTests {
     // MARK: Import
 
     private static func importing(place: String?, extra: [String: StubServer.Reply] = [:]) async -> (StubServer, ImportModel) {
-        let server = StubServer([
-            "GET /api/semesters": .ok(Self.catalog),
-            "GET /api/me/place": .ok(Bodies.place(place)),
-            "GET /api/courses/c1": .ok(StudyBodies.course()),
-            "GET /api/courses/t1": .ok(StudyBodies.topicDetail()),
-            "GET /api/courses/t2": .ok(StudyBodies.topicDetail(id: "t2", title: "Invented Spanish Verbs")),
-        ].merging(extra) { _, new in new })
+        let server = StubServer(
+            [
+                "GET /api/semesters": .ok(Self.catalog),
+                "GET /api/me/place": .ok(Bodies.place(place)),
+                "GET /api/courses/c1": .ok(StudyBodies.course()),
+                "GET /api/courses/t1": .ok(StudyBodies.topicDetail()),
+                "GET /api/courses/t2": .ok(StudyBodies.topicDetail(id: "t2", title: "Invented Spanish Verbs")),
+            ].merging(extra) { _, new in new })
         let (app, _) = TestApp.make(server, account: .student())
         let model = ImportModel(app: app)
         await model.load()
@@ -243,10 +244,12 @@ struct TopicTests {
     }
 
     @Test func importIntoANewTopicSendsItsName() async throws {
-        let (server, model) = await Self.importing(place: "c1", extra: [
-            "POST /api/imports/check": .ok(ImportModelTests.report()),
-            "POST /api/imports": StubServer.Reply(status: 201, body: ImportModelTests.imported().replacingOccurrences(of: #""courseId":"c1","courseCode":"NURS 101""#, with: #""courseId":"t9","courseCode":"""#)),
-        ])
+        let (server, model) = await Self.importing(
+            place: "c1",
+            extra: [
+                "POST /api/imports/check": .ok(ImportModelTests.report()),
+                "POST /api/imports": StubServer.Reply(status: 201, body: ImportModelTests.imported().replacingOccurrences(of: #""courseId":"c1","courseCode":"NURS 101""#, with: #""courseId":"t9","courseCode":"""#)),
+            ])
         model.setSource(ImportModelTests.file)
         await model.check()
         await model.destination.chooseCourse(.newTopic)

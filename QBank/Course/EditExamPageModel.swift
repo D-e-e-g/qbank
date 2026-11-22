@@ -60,7 +60,8 @@ final class EditExamPageModel {
         let layout = CourseLayout(course: course, sittings: [])
         let own = layout.page(page?.id ?? "")?.folders ?? []
         let others = layout.pages.filter { $0.id != page?.id }
-        chips = own.map { Chip(folder: $0, heldBy: nil) }
+        chips =
+            own.map { Chip(folder: $0, heldBy: nil) }
             + layout.looseFolders.map { Chip(folder: $0, heldBy: nil) }
             + others.flatMap { other in other.folders.map { Chip(folder: $0, heldBy: other.exam.name) } }
         savedName = page?.name ?? Wording.nextPageName(after: course.exams.map(\.name))

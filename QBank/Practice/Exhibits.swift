@@ -71,7 +71,11 @@ private struct ExhibitTable: View {
                 .frame(minWidth: width, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.width
+            } action: {
+                width = $0
+            }
             .background(.qbank(.surface))
             .clipShape(.rect(cornerRadius: QBankRadius.md, style: .continuous))
             .overlay {
@@ -381,18 +385,20 @@ private struct SVGWebView: UIViewRepresentable {
 
     private var html: String {
         let source = "data:image/svg+xml;base64,\(Data(markup.utf8).base64EncodedString())"
-        let viewport = isZoomable
+        let viewport =
+            isZoomable
             ? "width=device-width, initial-scale=1, maximum-scale=5"
             : "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
         // Inline, the view already has the picture's shape, so the image fills it exactly.
-        let fit = isZoomable
+        let fit =
+            isZoomable
             ? "html,body{height:100%;display:flex;align-items:center;justify-content:center}img{max-width:100%;max-height:100%}"
             : "img{width:100%}"
         return """
-        <!doctype html><html><head><meta name="viewport" content="\(viewport)">
-        <style>html,body{margin:0;padding:0;background:transparent}img{display:block;height:auto;background:#fff}\(fit)</style>
-        </head><body><img src="\(source)" alt=""></body></html>
-        """
+            <!doctype html><html><head><meta name="viewport" content="\(viewport)">
+            <style>html,body{margin:0;padding:0;background:transparent}img{display:block;height:auto;background:#fff}\(fit)</style>
+            </head><body><img src="\(source)" alt=""></body></html>
+            """
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {

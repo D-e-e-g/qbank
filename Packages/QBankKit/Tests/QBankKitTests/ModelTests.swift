@@ -16,9 +16,9 @@ struct SeededGenerator: RandomNumberGenerator {
 struct ModelTests {
     static func question(type: String, body: String, extra: String = "") throws -> Question {
         let json = """
-        {"id": "q1", "publicId": "Q1", "position": 1, "type": "\(type)", "topic": "T", "cj": null,
-         "stem": "S", "ask": "A", "rationale": "R", "takeaway": "K", "body": \(body), "terms": []\(extra)}
-        """
+            {"id": "q1", "publicId": "Q1", "position": 1, "type": "\(type)", "topic": "T", "cj": null,
+             "stem": "S", "ask": "A", "rationale": "R", "takeaway": "K", "body": \(body), "terms": []\(extra)}
+            """
         return try QBankJSON.decoder.decode(Question.self, from: Data(json.utf8))
     }
 
@@ -41,10 +41,12 @@ struct ModelTests {
             type: "matrixmulti",
             body: #"{"columns":["Column A","Column B"],"rows":[{"t":"Finding","ans":["Column A","Column B"],"why":"Both"}]}"#
         )
-        #expect(question.body == .matrixmulti(
-            columns: ["Column A", "Column B"],
-            rows: [MatrixMultiRow(text: "Finding", answers: ["Column A", "Column B"], why: "Both")]
-        ))
+        #expect(
+            question.body
+                == .matrixmulti(
+                    columns: ["Column A", "Column B"],
+                    rows: [MatrixMultiRow(text: "Finding", answers: ["Column A", "Column B"], why: "Both")]
+                ))
         var generator = SeededGenerator(state: 1)
         #expect(Layout.make(for: question.body, using: &generator) == .plain)
         #expect(throws: DecodingError.self) {

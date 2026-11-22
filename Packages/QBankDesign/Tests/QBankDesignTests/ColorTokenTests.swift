@@ -132,20 +132,25 @@ struct ColorTokenTests {
         }
         #expect(QBankPalette.slate.displayName == "Slate")
         // Everything outside the accent and the guess is Dusk's.
-        let accentTokens: Set<QBankColorToken> = [.tint, .tintPressed, .tintSoft, .tintSoftBorder, .focusRing, .textOnTint,
-                                                   .guess, .guessSoft, .guessBorder, .progressFill]
+        let accentTokens: Set<QBankColorToken> = [
+            .tint, .tintPressed, .tintSoft, .tintSoftBorder, .focusRing, .textOnTint,
+            .guess, .guessSoft, .guessBorder, .progressFill,
+        ]
         for appearance in QBankAppearance.allCases {
             for token in QBankColorToken.allCases where !accentTokens.contains(token) {
-                #expect(token.value(palette: .slate, appearance: appearance) == token.value(palette: .dusk, appearance: appearance),
-                        "\(token.cssName) \(appearance.rawValue)")
+                #expect(
+                    token.value(palette: .slate, appearance: appearance) == token.value(palette: .dusk, appearance: appearance),
+                    "\(token.cssName) \(appearance.rawValue)")
             }
         }
     }
 
     @Test("Answer states are shared; only guessed follows the palette")
     func statesAreShared() {
-        let shared: [QBankColorToken] = [.correct, .correctSoft, .correctBorder, .partial, .partialSoft,
-                                         .partialBorder, .wrong, .wrongSoft, .wrongBorder]
+        let shared: [QBankColorToken] = [
+            .correct, .correctSoft, .correctBorder, .partial, .partialSoft,
+            .partialBorder, .wrong, .wrongSoft, .wrongBorder,
+        ]
         for appearance in QBankAppearance.allCases {
             for token in shared {
                 let values = Set(QBankPalette.allCases.map { token.value(palette: $0, appearance: appearance) })
@@ -156,8 +161,9 @@ struct ColorTokenTests {
             #expect(guesses.count == Set(QBankPalette.allCases.map(\.guess)).count)
             #expect(guesses.count > 1)
             for palette in QBankPalette.allCases {
-                #expect(QBankColorToken.guess.value(palette: palette, appearance: appearance)
-                    != QBankColorToken.tint.value(palette: palette, appearance: appearance))
+                #expect(
+                    QBankColorToken.guess.value(palette: palette, appearance: appearance)
+                        != QBankColorToken.tint.value(palette: palette, appearance: appearance))
             }
         }
     }

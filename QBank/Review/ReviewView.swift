@@ -58,12 +58,15 @@ struct ReviewView: View {
         ) {
             Task { await model.clear() }
         }
-        .fullScreenCover(item: $practicing, onDismiss: {
-            // Answers she got fully right without guessing left the list.
-            Task { await model.load() }
-        }, content: { route in
-            PracticeView(app: app, route: route)
-        })
+        .fullScreenCover(
+            item: $practicing,
+            onDismiss: {
+                // Answers she got fully right without guessing left the list.
+                Task { await model.load() }
+            },
+            content: { route in
+                PracticeView(app: app, route: route)
+            })
     }
 
     private var filters: some View {
@@ -77,12 +80,13 @@ struct ReviewView: View {
 
     /// "All 12", "Missed 6", "Partly 3", "Guessed 3". Partly right is shortened to fit four.
     private func label(for filter: ReviewFilter) -> String {
-        let word = switch filter {
-        case .all: "All"
-        case .missed: "Missed"
-        case .partial: "Partly"
-        case .guessed: "Guessed"
-        }
+        let word =
+            switch filter {
+            case .all: "All"
+            case .missed: "Missed"
+            case .partial: "Partly"
+            case .guessed: "Guessed"
+            }
         guard let counts = model.list?.counts else { return word }
         return "\(word) \(ReviewModel.count(of: filter, in: counts))"
     }

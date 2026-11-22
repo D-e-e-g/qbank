@@ -26,10 +26,11 @@ public struct QBankRGBA: Hashable, Sendable, CustomStringConvertible {
 
     /// `#RRGGBB`, uppercase, without the alpha.
     public var hex: String {
-        "#" + [red, green, blue].map { byte in
-            let digits = String(byte, radix: 16, uppercase: true)
-            return digits.count == 1 ? "0" + digits : digits
-        }.joined()
+        "#"
+            + [red, green, blue].map { byte in
+                let digits = String(byte, radix: 16, uppercase: true)
+                return digits.count == 1 ? "0" + digits : digits
+            }.joined()
     }
 
     /// `#RRGGBB` when opaque, otherwise `rgba(r, g, b, a)` as in the CSS.

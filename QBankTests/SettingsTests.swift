@@ -320,11 +320,13 @@ struct DeleteAccountModelTests {
 @MainActor
 struct CatalogModelTests {
     static let twoSemesters = Bodies.catalog([
-        Bodies.semester(id: "s1", number: 1, courses: [
-            Bodies.course(id: "c2", code: "NURS 402", order: 2),
-            Bodies.course(id: "c1", code: "NURS 406", order: 1),
-            Bodies.course(id: "c3", code: "NURS 300", order: 3, archived: true),
-        ]),
+        Bodies.semester(
+            id: "s1", number: 1,
+            courses: [
+                Bodies.course(id: "c2", code: "NURS 402", order: 2),
+                Bodies.course(id: "c1", code: "NURS 406", order: 1),
+                Bodies.course(id: "c3", code: "NURS 300", order: 3, archived: true),
+            ]),
         Bodies.semester(id: "s2", number: 2),
     ])
 

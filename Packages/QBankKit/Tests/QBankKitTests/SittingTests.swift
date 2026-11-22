@@ -109,10 +109,11 @@ struct SittingTests {
             let request = try #require(fixture.request.body)
             let id = try #require(request["clientAttemptId"]?.stringValue)
             let question = try #require(request["questionId"]?.stringValue)
-            _ = try await client.recordAttempt(AttemptSubmission(
-                clientAttemptID: id, questionID: question, response: .single(choice: 0),
-                shuffle: .options(order: [1, 0, 2]), fromReview: fromReview
-            ))
+            _ = try await client.recordAttempt(
+                AttemptSubmission(
+                    clientAttemptID: id, questionID: question, response: .single(choice: 0),
+                    shuffle: .options(order: [1, 0, 2]), fromReview: fromReview
+                ))
         }
         try expectRequest(transport.requests.first, matches: review)
         try expectRequest(transport.requests.last, matches: practice)
@@ -173,11 +174,12 @@ struct SittingTests {
     @Test func anAnswerFromBeforeTheSittingBeganStaysOutOfIt() throws {
         let set = try Self.set("practice-set-after-start-over")
         let earlier = Self.pending(set.questions[2].id, at: 0)
-        let begun = set.counting(SittingAnswer(
-            clientAttemptID: "a1", questionID: set.questions[0].id,
-            feedback: Feedback(phone: Score(points: 1, maxPoints: 1, status: .correct, answered: true), type: .single),
-            guessed: true, answeredAt: Date(timeIntervalSince1970: 1_800_000_100)
-        ))
+        let begun = set.counting(
+            SittingAnswer(
+                clientAttemptID: "a1", questionID: set.questions[0].id,
+                feedback: Feedback(phone: Score(points: 1, maxPoints: 1, status: .correct, answered: true), type: .single),
+                guessed: true, answeredAt: Date(timeIntervalSince1970: 1_800_000_100)
+            ))
         #expect(begun.sitting?.answers.first?.guessed == true)
         #expect(begun.counting(waiting: [earlier]).sitting?.answeredQuestionIDs == [set.questions[0].id])
         let later = Self.pending(set.questions[2].id, at: 200)
@@ -283,9 +285,11 @@ struct SittingTests {
     }
 
     private static func waiting(_ count: Int, from start: Int = 0, joins: Bool = true) -> WaitingProgress {
-        WaitingProgress(answers: Dictionary(uniqueKeysWithValues: (start..<(start + count)).map {
-            ("s-q\($0)", .init(status: .correct, answeredAt: WaitingProgressTests.day, joinsASitting: joins))
-        }))
+        WaitingProgress(
+            answers: Dictionary(
+                uniqueKeysWithValues: (start..<(start + count)).map {
+                    ("s-q\($0)", .init(status: .correct, answeredAt: WaitingProgressTests.day, joinsASitting: joins))
+                }))
     }
 
     @Test func aRowsSittingCountsItsWaitingAnswers() {

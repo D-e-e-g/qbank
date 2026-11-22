@@ -37,9 +37,11 @@ struct WaitingProgressTests {
     }
 
     static func waiting(_ answers: [(String, ScoreStatus?, Double)]) -> WaitingProgress {
-        WaitingProgress(answers: Dictionary(uniqueKeysWithValues: answers.map {
-            ($0.0, WaitingProgress.Answer(status: $0.1, answeredAt: day.addingTimeInterval($0.2)))
-        }))
+        WaitingProgress(
+            answers: Dictionary(
+                uniqueKeysWithValues: answers.map {
+                    ($0.0, WaitingProgress.Answer(status: $0.1, answeredAt: day.addingTimeInterval($0.2)))
+                }))
     }
 
     @Test func aSetSheHadNotAnsweredCountsEveryWaitingAnswer() {
@@ -95,10 +97,11 @@ struct WaitingProgressTests {
     }
 
     @Test func theCourseAddsWhatItsSetsGained() {
-        let course = Self.course([
-            Self.set("a", questions: 4),
-            Self.set("b", questions: 2, answered: 2, right: 2, lastAnsweredAt: Self.day),
-        ], answered: 30, right: 20)
+        let course = Self.course(
+            [
+                Self.set("a", questions: 4),
+                Self.set("b", questions: 2, answered: 2, right: 2, lastAnsweredAt: Self.day),
+            ], answered: 30, right: 20)
         let progress = Self.waiting([("a-q0", .correct, 1), ("a-q1", .correct, 2), ("b-q0", .incorrect, 3), ("b-q1", .incorrect, 4)])
         let counted = progress.counting(course)
         #expect(counted.weeks[0].sets.map(\.answeredCount) == [2, 2])

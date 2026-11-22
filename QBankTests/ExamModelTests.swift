@@ -182,13 +182,15 @@ struct ExamModelTests {
         var waits: [Duration] = []
         var model: ExamModel?
         var sawWaiting = false
-        model = Self.model(server, sleep: { delay in
-            waits.append(delay)
-            sawWaiting = sawWaiting || model?.isWaiting == true
-            if waits.count == 3 {
-                server["POST /api/attempts"] = StubServer.Reply(status: 201, body: StudyBodies.saved(question: "e1-q0", attempt: "attempt-1"))
-            }
-        })
+        model = Self.model(
+            server,
+            sleep: { delay in
+                waits.append(delay)
+                sawWaiting = sawWaiting || model?.isWaiting == true
+                if waits.count == 3 {
+                    server["POST /api/attempts"] = StubServer.Reply(status: 201, body: StudyBodies.saved(question: "e1-q0", attempt: "attempt-1"))
+                }
+            })
         let exam = try #require(model)
         await exam.load()
         exam.update(.single(0))
@@ -260,14 +262,16 @@ struct ExamModelTests {
         ])
         var model: ExamModel?
         var retries = 0
-        model = Self.model(server, sleep: { _ in
-            retries += 1
-            if retries == 1 {
-                // She comes back to the app: the server has ended the exam meanwhile.
-                server["GET /api/exams/e1"] = .ok(StudyBodies.exam(ended: "timeout", result: StudyBodies.result()))
-                await model?.resync()
-            }
-        })
+        model = Self.model(
+            server,
+            sleep: { _ in
+                retries += 1
+                if retries == 1 {
+                    // She comes back to the app: the server has ended the exam meanwhile.
+                    server["GET /api/exams/e1"] = .ok(StudyBodies.exam(ended: "timeout", result: StudyBodies.result()))
+                    await model?.resync()
+                }
+            })
         let exam = try #require(model)
         await exam.load()
         exam.update(.single(0))
@@ -517,13 +521,15 @@ struct ExamModelTests {
         ])
         var model: ExamModel?
         var ended = false
-        model = Self.model(server, sleep: { _ in
-            guard !ended, let exam = model else { return }
-            ended = true
-            #expect(exam.isWaiting)
-            #expect(exam.canEnd, "End exam stays offered while an answer waits")
-            await exam.end(.left)
-        })
+        model = Self.model(
+            server,
+            sleep: { _ in
+                guard !ended, let exam = model else { return }
+                ended = true
+                #expect(exam.isWaiting)
+                #expect(exam.canEnd, "End exam stays offered while an answer waits")
+                await exam.end(.left)
+            })
         let exam = try #require(model)
         await exam.load()
         exam.update(.single(0))

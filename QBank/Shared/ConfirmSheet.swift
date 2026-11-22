@@ -69,7 +69,11 @@ struct ConfirmSheet: View {
             } else if let messageMaxHeight {
                 ScrollView {
                     messageText
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { messageHeight = $0 }
+                        .onGeometryChange(for: CGFloat.self) {
+                            $0.size.height
+                        } action: {
+                            messageHeight = $0
+                        }
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .frame(height: min(messageHeight, messageMaxHeight))
@@ -107,7 +111,11 @@ struct ConfirmSheet: View {
         .padding(.top, 28)
         .padding(.bottom, QBankSpacing.space4)
         .frame(maxWidth: QBankLayout.contentMax)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.height
+        } action: {
+            height = $0
+        }
         .presentationDetents([.height(height)])
         .presentationBackground(.qbank(.surface))
         .accessibilityElement(children: .contain)

@@ -34,7 +34,8 @@ struct FixtureTests {
         }
         for fixture in try Fixture.all() {
             // A literal path such as /api/passkeys/options wins over a template beside it, /api/passkeys/{id}.
-            let template = paths.keys.first { $0 == fixture.request.path }
+            let template =
+                paths.keys.first { $0 == fixture.request.path }
                 ?? paths.keys.first { matches(template: $0, path: fixture.request.path) }
             let operation = template.flatMap { paths[$0]?[fixture.request.method.lowercased()] }
             #expect(operation != nil, "\(fixture.name): \(fixture.request.method) \(fixture.request.path) is not in openapi.json")

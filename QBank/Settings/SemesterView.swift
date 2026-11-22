@@ -70,9 +70,10 @@ struct SemesterView: View {
     /// By hand only: nothing archives a semester when it ends.
     private var archive: some View {
         VStack(alignment: .leading, spacing: QBankSpacing.space3) {
-            QBankListGroup(footer: model.isArchived
-                ? "Unarchiving brings the semester and its courses back to Home."
-                : "An archived semester moves to Archived, at the bottom of Home, with its courses. Your answers in them stay."
+            QBankListGroup(
+                footer: model.isArchived
+                    ? "Unarchiving brings the semester and its courses back to Home."
+                    : "An archived semester moves to Archived, at the bottom of Home, with its courses. Your answers in them stay."
             ) {
                 Button {
                     focus = nil

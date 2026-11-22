@@ -309,9 +309,14 @@ struct CourseMenu: View {
         VStack(alignment: .leading, spacing: 6) {
             FieldTitle("Course")
             Menu {
-                Picker("Course", selection: Binding(get: { destination.menuChoice }, set: { next in
-                    Task { await destination.chooseCourse(next) }
-                })) {
+                Picker(
+                    "Course",
+                    selection: Binding(
+                        get: { destination.menuChoice },
+                        set: { next in
+                            Task { await destination.chooseCourse(next) }
+                        })
+                ) {
                     let courses = destination.courses ?? []
                     if destination.topics.isEmpty {
                         options(courses)
@@ -523,7 +528,11 @@ private struct ReplaceSheet: View {
         .padding(.top, 28)
         .padding(.bottom, QBankSpacing.space4)
         .frame(maxWidth: QBankLayout.contentMax)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.height
+        } action: {
+            height = $0
+        }
         .presentationDetents([.height(height)])
         .presentationBackground(.qbank(.surface))
         .accessibilityElement(children: .contain)

@@ -9,7 +9,8 @@ struct QBankGallery: View {
             VStack(alignment: .leading, spacing: QBankSpacing.space3) {
                 Text("Home").qbankFont(.largeTitle).foregroundStyle(.qbank(.text1))
                 QBankSectionHeader("Semester 1").padding(.horizontal, QBankSpacing.space5)
-                Button {} label: {
+                Button {
+                } label: {
                     VStack(alignment: .leading, spacing: QBankSpacing.space4) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("NURS 406").qbankFont(.footnote, weight: .semibold).foregroundStyle(.qbank(.tint))
@@ -29,7 +30,8 @@ struct QBankGallery: View {
                 QBankSectionHeader("Week 2").padding(.horizontal, QBankSpacing.space5)
                 QBankTintedLabel("Exam bank · 17 questions", tone: .neutral, style: .outline, size: .small)
                 QBankListGroup {
-                    Button {} label: {
+                    Button {
+                    } label: {
                         QBankListRow(
                             "Therapeutic Communication and the Relationship",
                             detail: "9 of 14 answered",
@@ -42,8 +44,11 @@ struct QBankGallery: View {
                         detail: "Replaced Oct 6 · 12 questions",
                         accessibilityChildren: .contain
                     ) {
-                        Button {} label: { Label("Restore", systemImage: "arrow.counterclockwise") }
-                            .buttonStyle(.qbank(.secondary, size: .small))
+                        Button {
+                        } label: {
+                            Label("Restore", systemImage: "arrow.counterclockwise")
+                        }
+                        .buttonStyle(.qbank(.secondary, size: .small))
                     }
                 }
             }
@@ -61,11 +66,14 @@ struct QBankGallery: View {
             }
 
             QBankListGroup(header: "Look", footer: "Match device follows this device's light or dark setting.") {
-                QBankSegmentedControl("Look", selection: .constant("auto"), options: [
-                    .init("auto", "Match device"),
-                    .init("light", "Light"),
-                    .init("dark", "Dark"),
-                ])
+                QBankSegmentedControl(
+                    "Look", selection: .constant("auto"),
+                    options: [
+                        .init("auto", "Match device"),
+                        .init("light", "Light"),
+                        .init("dark", "Dark"),
+                    ]
+                )
                 .padding(QBankSpacing.space3)
             }
 

@@ -207,14 +207,15 @@ final class PracticeModel {
         // Read before asking QBank: an answer may reach it after its reply was written.
         let waitingBefore = app.offline?.waiting ?? []
         do {
-            var loaded = switch source {
-            case .set(let id):
-                try await app.load(.practiceSet(id)) { () async throws(QBankError) in try await app.client.practiceSet(id: id) }.value
-            case .review(let filter, let questionID):
-                try await app.client.reviewPractice(courseID: courseID, filter: filter, questionID: questionID)
-            case .sample(let jobID, let sampleID):
-                try await sample(jobID: jobID, sampleID: sampleID)
-            }
+            var loaded =
+                switch source {
+                case .set(let id):
+                    try await app.load(.practiceSet(id)) { () async throws(QBankError) in try await app.client.practiceSet(id: id) }.value
+                case .review(let filter, let questionID):
+                    try await app.client.reviewPractice(courseID: courseID, filter: filter, questionID: questionID)
+                case .sample(let jobID, let sampleID):
+                    try await sample(jobID: jobID, sampleID: sampleID)
+                }
             if loaded.kind == .exam {
                 phase = .failed("This set’s questions are asked only on exams.")
                 return
@@ -407,7 +408,7 @@ final class PracticeModel {
         // A late score is dropped unless the runner still waits on this attempt and still holds it
         // where it was sent from.
         guard activity == checking, attempts.indices.contains(sent),
-              attempts[sent].clientAttemptID == submission.clientAttemptID, attempts[sent].score == nil
+            attempts[sent].clientAttemptID == submission.clientAttemptID, attempts[sent].score == nil
         else { return }
         attempts[sent].feedback = feedback
         await keepPlace(question: question, attempt: attempts[sent])
@@ -424,10 +425,11 @@ final class PracticeModel {
     /// cannot be reached next time.
     private func keepPlace(question: Question, attempt: Attempt) async {
         guard case .set = source, let practiceSet, let feedback = attempt.feedback, let offline = app.offline else { return }
-        let counted = practiceSet.counting(SittingAnswer(
-            clientAttemptID: attempt.clientAttemptID, questionID: question.id, feedback: feedback,
-            guessed: attempt.guessed, answeredAt: now()
-        ))
+        let counted = practiceSet.counting(
+            SittingAnswer(
+                clientAttemptID: attempt.clientAttemptID, questionID: question.id, feedback: feedback,
+                guessed: attempt.guessed, answeredAt: now()
+            ))
         self.practiceSet = counted
         await offline.keep(counted)
     }

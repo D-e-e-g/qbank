@@ -39,27 +39,31 @@ struct HomeView: View {
             }
         }
         .environment(navigator)
-        .sheet(item: $sheet, onDismiss: {
-            guard let route = made else {
-                Task { await model.load() }
-                return
-            }
-            made = nil
-            navigator.open(route)
-        }, content: { sheet in
-            switch sheet {
-            case .newCourse(let semester):
-                NewCourseView(app: app, catalog: model.catalog, semester: semester) { course in
-                    made = await model.made(course)
+        .sheet(
+            item: $sheet,
+            onDismiss: {
+                guard let route = made else {
+                    Task { await model.load() }
+                    return
                 }
-            case .newTopic:
-                NewTopicView(app: app) { topic in
-                    made = await model.made(topic)
+                made = nil
+                navigator.open(route)
+            },
+            content: { sheet in
+                switch sheet {
+                case .newCourse(let semester):
+                    NewCourseView(app: app, catalog: model.catalog, semester: semester) { course in
+                        made = await model.made(course)
+                    }
+                case .newTopic:
+                    NewTopicView(app: app) { topic in
+                        made = await model.made(topic)
+                    }
+                case .rename(let course):
+                    RenameCourseView(app: app, catalog: model.catalog, course: course)
                 }
-            case .rename(let course):
-                RenameCourseView(app: app, catalog: model.catalog, course: course)
             }
-        })
+        )
         .deleteSheet(app: app, request: $deleting) { target in
             if case .course(let id, _) = target {
                 navigator.closeDeleted(courseID: id)
@@ -492,12 +496,14 @@ private struct NoCourseChosen: View {
                 Text(hasCourses ? "Choose a course" : "No courses yet")
                     .qbankFont(.title3)
                     .foregroundStyle(.qbank(.text1))
-                Text(hasCourses
-                    ? "Its pages, folders, Review and Terms open here."
-                    : "Tap + to add one, or import its first question file.")
-                    .qbankFont(.subheadline)
-                    .foregroundStyle(.qbank(.text2))
-                    .multilineTextAlignment(.center)
+                Text(
+                    hasCourses
+                        ? "Its pages, folders, Review and Terms open here."
+                        : "Tap + to add one, or import its first question file."
+                )
+                .qbankFont(.subheadline)
+                .foregroundStyle(.qbank(.text2))
+                .multilineTextAlignment(.center)
             }
         }
         .padding(QBankSpacing.gutterTablet)
@@ -528,7 +534,8 @@ struct CourseCard: View {
                 .qbankFont(.headline)
                 .foregroundStyle(.qbank(.text1))
                 .multilineTextAlignment(.leading)
-            let line = isNarrow
+            let line =
+                isNarrow
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: QBankSpacing.space3))
                 : AnyLayout(HStackLayout(alignment: .center, spacing: QBankSpacing.space3))
             line {

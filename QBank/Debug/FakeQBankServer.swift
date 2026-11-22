@@ -175,26 +175,29 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
         agents = FakeAgents(studentEmail: Self.student.email, now: now)
         deletions = FakeDeletions(study: study)
-        state = Mutex(State(
-            accounts: [
-                Account(id: "fake-student", email: Self.student.email, name: "Sam Student", password: Self.student.password, mustChangePassword: false),
-                Account(id: "fake-reset", email: Self.resetStudent.email, name: "Robin Reset", password: Self.resetStudent.password, mustChangePassword: true),
-                Account(id: "fake-maker", email: Self.maker.email, name: "Max Maker", password: Self.maker.password, mustChangePassword: false),
-                Account(id: "fake-owner", email: Self.owner.email, name: "Olive Owner", password: Self.owner.password, mustChangePassword: false, role: "admin"),
-            ],
-            semesters: [
-                FakeSemester(id: Self.semester1ID, number: 1, name: "Semester 1"),
-                FakeSemester(id: Self.semester2ID, number: 2, name: "Semester 2"),
-            ],
-            courses: [
-                FakeCourse(id: Self.mentalHealthID, semesterID: Self.semester1ID, code: "NURS 310", title: "Mental Health", sortOrder: 1,
-                           questions: 86, folders: 4, review: 12, answered: 35, right: 24, points: 61, maxPoints: 92),
-                FakeCourse(id: Self.fundamentalsID, semesterID: Self.semester1ID, code: "NURS 220", title: "Fundamentals", sortOrder: 2,
-                           questions: 146, folders: 3, review: 5, answered: 92, right: 70, points: 131, maxPoints: 170),
-            ],
-            sessions: signedIn ? [Self.sessionToken: account.email] : [:],
-            place: place
-        ))
+        state = Mutex(
+            State(
+                accounts: [
+                    Account(id: "fake-student", email: Self.student.email, name: "Sam Student", password: Self.student.password, mustChangePassword: false),
+                    Account(id: "fake-reset", email: Self.resetStudent.email, name: "Robin Reset", password: Self.resetStudent.password, mustChangePassword: true),
+                    Account(id: "fake-maker", email: Self.maker.email, name: "Max Maker", password: Self.maker.password, mustChangePassword: false),
+                    Account(id: "fake-owner", email: Self.owner.email, name: "Olive Owner", password: Self.owner.password, mustChangePassword: false, role: "admin"),
+                ],
+                semesters: [
+                    FakeSemester(id: Self.semester1ID, number: 1, name: "Semester 1"),
+                    FakeSemester(id: Self.semester2ID, number: 2, name: "Semester 2"),
+                ],
+                courses: [
+                    FakeCourse(
+                        id: Self.mentalHealthID, semesterID: Self.semester1ID, code: "NURS 310", title: "Mental Health", sortOrder: 1,
+                        questions: 86, folders: 4, review: 12, answered: 35, right: 24, points: 61, maxPoints: 92),
+                    FakeCourse(
+                        id: Self.fundamentalsID, semesterID: Self.semester1ID, code: "NURS 220", title: "Fundamentals", sortOrder: 2,
+                        questions: 146, folders: 3, review: 5, answered: 92, right: 70, points: 131, maxPoints: 170),
+                ],
+                sessions: signedIn ? [Self.sessionToken: account.email] : [:],
+                place: place
+            ))
         readKeptAnswers()
     }
 
@@ -229,11 +232,12 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         if isOffline { throw URLError(.notConnectedToInternet) }
         let url = request.url ?? URL(string: "https://fake.invalid")!
         if request.httpMethod == "POST", url.path().hasPrefix("/api/exams/"), url.path().hasSuffix("/finish"),
-           finishesToDrop.withLock({ left in
-               guard left > 0 else { return false }
-               left -= 1
-               return true
-           }) {
+            finishesToDrop.withLock({ left in
+                guard left > 0 else { return false }
+                left -= 1
+                return true
+            })
+        {
             throw URLError(.networkConnectionLost)
         }
         // A repeated parameter, such as exam setup's folderIds, keeps every value, joined by commas:
