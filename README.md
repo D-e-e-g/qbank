@@ -31,6 +31,7 @@ test/sim.sh -- xcodebuild test \
 - `scripts/` - the TestFlight build-and-upload script, run on the owner's Mac
 - `docs/ci.md` - how CI runs
 - `docs/release.md` - how a build reaches TestFlight
+- `docs/on-phone-bank.md` and `docs/cloud.md` - the design record for the bank on the phone, accounts and Cloud, not built yet
 
 ## Security and support
 
