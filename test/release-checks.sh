@@ -198,6 +198,31 @@ ruby_check ".swiftlint.yml enables only the crash and leak rules" .swiftlint.yml
   extra = config.keys - %w[swiftlint_version strict included only_rules custom_rules]
   abort "unexpected SwiftLint config keys #{extra.inspect}" unless extra.empty?
 '
+# swift-format is pinned to the Swift 6.4.3 Ubuntu 26.04 toolchain. The image
+# Swift moves, and a different build can rewrite a file the reformat left
+# alone. Every rule stays off: SwiftLint owns the rules.
+ruby_check "ci.yml installs Swift 6.4.3 with a checksum and runs swift format lint" "$CI" '
+  jobs = YAML.load_file(ARGV[0])["jobs"] || {}
+  job = jobs.values.find { |j| j["name"] == "Linux checks" } or abort "no job is named Linux checks"
+  steps = job["steps"] || []
+  install = steps.map { |s| s["run"].to_s }.find { |r| r.include?("swift-6.4.3-RELEASE-ubuntu26.04.tar.gz") && r.include?("sha256sum --check") }
+  abort "the checks job does not install Swift 6.4.3 with a checksum check" unless install
+  abort "the checks job does not pin Swift 6.4.3" unless install =~ /^version=6\.4\.3$/
+  abort "the checks job does not pin the Swift 6.4.3 sha256" unless install =~ /^sha256=0e408a922a6f00955cbc61ef7a1c40cee3bdbbecb7d50b98ad9aa3b943045613$/
+  abort "the checks job does not run the pinned swift format lint" unless steps.any? { |s| s["run"].to_s.match?(/"\$SWIFT_BIN" format lint --strict -r -p \.$/) }
+'
+ruby_check ".swift-format is 4-space indentation with every rule off" .swift-format '
+  require "json"
+  config = JSON.parse(File.read(ARGV[0]))
+  abort "version is #{config["version"].inspect}" unless config["version"] == 1
+  abort "indentation is #{config["indentation"].inspect}" unless config["indentation"] == { "spaces" => 4 }
+  abort "conditional compilation blocks are indented" unless config["indentConditionalCompilationBlocks"] == false
+  abort "lineLength is #{config["lineLength"].inspect}" unless config["lineLength"] == 10000
+  rules = config["rules"] or abort "rules are missing"
+  abort "rules are empty" if rules.empty?
+  on = rules.select { |_name, enabled| enabled }
+  abort "swift-format rules are on: #{on.keys.inspect}" unless on.empty?
+'
 
 # --- xcode.yml: trusted code only, pull requests on the MacBook Pro 14 -------
 
