@@ -29,6 +29,10 @@ final class SQLiteConnection {
         handle = nil
     }
 
+    /// Whether a transaction is open. SQLite ends one on its own when a statement fails with an
+    /// error such as a full disk or an I/O error, rolling all of it back.
+    var inTransaction: Bool { handle.map { sqlite3_get_autocommit($0) == 0 } ?? false }
+
     var changes: Int { handle.map { Int(sqlite3_changes($0)) } ?? 0 }
 
     var lastInsertRowID: Int64 { handle.map { sqlite3_last_insert_rowid($0) } ?? 0 }

@@ -59,8 +59,8 @@ struct LocalStoreTests {
     @Test func aStoreOfAKeyLivesInItsOwnFolderUnderBanks() throws {
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let store = try LocalStore.open(key: "001234.abcdef0123456789.4321", in: root) // gitleaks:allow
-        #expect(store.fileURL == root.appendingPathComponent("Banks/001234.abcdef0123456789.4321/bank.sqlite"))
+        let store = try LocalStore.open(key: "000001.synthetic.0001", in: root)
+        #expect(store.fileURL == root.appendingPathComponent("Banks/000001.synthetic.0001/bank.sqlite"))
         // Sign-out erases Accounts/<id>, never Banks.
         #expect(store.fileURL?.path.contains("/Accounts/") == false)
     }
@@ -123,6 +123,63 @@ struct LocalStoreTests {
         #expect(try after.schemaVersion == good.count)
         #expect(try Fixtures.shape(after) == shapeBefore)
         #expect(try Fixtures.count(after, "course") == 1)
+    }
+
+    /// The page and folder of `aStepCanRebuildAParentTableWithoutTouchingItsChildren`.
+    static func insertFolderOnAPage(_ transaction: StoreTransaction) throws {
+        try Fixtures.insertSemester(transaction)
+        try Fixtures.insertCourse(transaction, 10, semester: 1)
+        try transaction.execute("INSERT INTO course_exam (id, course_id, name, sort_order, created_at) VALUES (?, ?, 'Exam 1', 1, ?)", [Fixtures.id(50), Fixtures.id(10), .text(Fixtures.time)])
+        try transaction.execute("INSERT INTO folder (id, course_id, name, course_exam_id, sort_order, created_at) VALUES (?, ?, 'Week 1', ?, 1, ?)", [Fixtures.id(60), Fixtures.id(10), Fixtures.id(50), .text(Fixtures.time)])
+    }
+
+    @Test func aStepCanRebuildAParentTableWithoutTouchingItsChildren() throws {
+        let directory = Fixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let before = try LocalStore.open(directory: directory)
+        try before.transaction { try Self.insertFolderOnAPage($0) }
+        before.close()
+
+        // SQLite's documented way to change a table: make the new one, copy, drop the old, rename.
+        let columns = "id, course_id, name, sort_order, link_url, badge, created_at, deleted_at, deletion_id"
+        let rebuild = SchemaStep(
+            number: SchemaSteps.all.count + 1, name: "rebuild course_exam",
+            statements: [
+                SchemaStep.table(
+                    "course_exam_new",
+                    [
+                        Column.id("id", key: true), Column.id("course_id", references: "course (id)"), Column.text("name"), Column.int("sort_order"),
+                        Column.text("link_url", null: true), Column.text("badge", null: true, oneOf: ["exam", "concept", "study"]), Column.time("created_at"), Column.text("note", null: true),
+                    ] + Column.deletion),
+                "INSERT INTO course_exam_new (\(columns)) SELECT \(columns) FROM course_exam",
+                "DROP TABLE course_exam",
+                "ALTER TABLE course_exam_new RENAME TO course_exam",
+            ])
+        let after = try LocalStore.open(directory: directory, steps: SchemaSteps.all + [rebuild])
+        #expect(try after.schemaVersion == SchemaSteps.all.count + 1)
+        // The folder is still on its page: dropping the old table did not set its reference to null.
+        #expect(try after.run("SELECT course_exam_id FROM folder").first?["course_exam_id"] == Fixtures.id(50))
+        #expect(try Fixtures.count(after, "course_exam") == 1)
+        // Foreign keys are on again, and they still name the rebuilt table.
+        #expect(try after.run("PRAGMA foreign_keys").first?.int("foreign_keys") == 1)
+        #expect(throws: StoreError.self) { try after.run("UPDATE folder SET course_exam_id = ?", [Fixtures.id(99)]) }
+    }
+
+    @Test func aStepThatLeavesABrokenReferenceIsUndone() throws {
+        let directory = Fixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let before = try LocalStore.open(directory: directory)
+        try before.transaction { try Self.insertFolderOnAPage($0) }
+        before.close()
+
+        let broken = SchemaStep(number: SchemaSteps.all.count + 1, name: "orphans a folder", statements: ["DELETE FROM course_exam"])
+        #expect(throws: StoreError.foreignKeyCheckFailed(step: SchemaSteps.all.count + 1)) {
+            try LocalStore.open(directory: directory, steps: SchemaSteps.all + [broken])
+        }
+        let after = try LocalStore.open(directory: directory)
+        #expect(try after.schemaVersion == SchemaSteps.all.count)
+        #expect(try Fixtures.count(after, "course_exam") == 1)
+        #expect(try after.run("PRAGMA foreign_keys").first?.int("foreign_keys") == 1)
     }
 
     @Test func refusesAFileFromANewerStepAndLeavesItAlone() throws {
@@ -199,6 +256,56 @@ struct LocalStoreTests {
         let reopened = try LocalStore.open(directory: directory)
         #expect(try Fixtures.count(reopened, "attempt") == 1)
         #expect(try reopened.run("SELECT title FROM course").first?.text("title") == "Course 10")
+    }
+
+    /// A store whose file can grow by only two more pages, so a large row fills the disk.
+    static func nearlyFullStore(_ directory: URL) throws -> LocalStore {
+        let store = try LocalStore.open(directory: directory)
+        let pages = try store.run("PRAGMA page_count").first?.int("page_count") ?? 0
+        try store.run("PRAGMA max_page_count = \(pages + 2)")
+        return store
+    }
+
+    static func insertLargeSemester(_ transaction: StoreTransaction) throws {
+        try transaction.execute(
+            "INSERT INTO semester (id, number, name, created_at) VALUES (?, 2, ?, ?)",
+            [Fixtures.id(2), .text(String(repeating: "x", count: 200_000)), .text(Fixtures.time)])
+    }
+
+    @Test func aFullDiskInsideASavepointKeepsNothingOfTheTransaction() throws {
+        let directory = Fixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try Self.nearlyFullStore(directory)
+        var afterFull: StoreError?
+        #expect(throws: StoreError.rolledBack) {
+            try store.transaction { transaction in
+                try Fixtures.insertSemester(transaction, 1)
+                // A caller may catch a failed savepoint and go on, as its contract allows.
+                do { try transaction.savepoint { try Self.insertLargeSemester(transaction) } } catch {}
+                do { try Fixtures.insertSemester(transaction, 3) } catch let error as StoreError { afterFull = error }
+            }
+        }
+        // SQLite ended the transaction at the full disk; the next statement did not run on its own.
+        #expect(afterFull == .rolledBack)
+        store.close()
+        #expect(try Fixtures.count(LocalStore.open(directory: directory), "semester") == 0)
+    }
+
+    @Test func aFullDiskCaughtByTheBodyStillFailsTheTransaction() throws {
+        let directory = Fixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try Self.nearlyFullStore(directory)
+        #expect(throws: StoreError.rolledBack) {
+            try store.transaction { transaction in
+                try Fixtures.insertSemester(transaction, 1)
+                do { try Self.insertLargeSemester(transaction) } catch {}
+            }
+        }
+        #expect(try Fixtures.count(store, "semester") == 0)
+        // The store goes on working once there is room again.
+        try store.run("PRAGMA max_page_count = 1000000")
+        try store.transaction { try Fixtures.insertSemester($0, 1) }
+        #expect(try Fixtures.count(store, "semester") == 1)
     }
 
     @Test func aSavepointUndoesOnlyItsOwnChanges() throws {

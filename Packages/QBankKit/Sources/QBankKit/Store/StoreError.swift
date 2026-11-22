@@ -18,6 +18,11 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
     case unsupportedValue(column: String)
     /// The transaction this was called on has ended.
     case transactionEnded
+    /// SQLite rolled the whole transaction back after an error such as a full disk, so nothing of
+    /// it was kept and no later statement of it runs.
+    case rolledBack
+    /// A schema step left a row naming a row that is not there.
+    case foreignKeyCheckFailed(step: Int)
 
     public var description: String {
         switch self {
@@ -29,6 +34,8 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
         case .closed: "the bank is closed"
         case .unsupportedValue(let column): "column \(column) holds a value of a kind the store does not read"
         case .transactionEnded: "the transaction has ended"
+        case .rolledBack: "the transaction was rolled back after an error, and nothing of it was kept"
+        case .foreignKeyCheckFailed(let step): "schema step \(step) left a row naming a row that is not there"
         }
     }
 }

@@ -7,6 +7,8 @@ import Synchronization
 /// the file has not seen yet (`SchemaSteps`), each in its own transaction, so a file made by any
 /// earlier step is brought up to date and a failure leaves the file at the last step that finished.
 /// Foreign keys are on. Everything runs under one lock, so a store can be shared across tasks.
+/// The store is not re-entrant: inside a `transaction` or `read` body, use the `StoreTransaction`
+/// it hands you, never the store itself, which would wait on its own lock forever.
 /// Nothing in the app uses it yet.
 public final class LocalStore: Sendable {
     /// The file, or nil for an in-memory store.
@@ -65,11 +67,13 @@ public final class LocalStore: Sendable {
     private func configure(steps: [SchemaStep]) throws(StoreError) {
         try SchemaSteps.validate(steps)
         try connection.withLock { (connection) throws(StoreError) in
-            try connection.run("PRAGMA foreign_keys = ON")
+            // A file from a newer app is refused before anything about it is changed.
+            try SchemaSteps.refuseNewer(connection, steps: steps)
             // One file with no side files to lose, and each commit on disk before it returns.
             try connection.run("PRAGMA journal_mode = DELETE")
             try connection.run("PRAGMA synchronous = FULL")
             try SchemaSteps.upgrade(connection, steps: steps)
+            try connection.run("PRAGMA foreign_keys = ON")
         }
     }
 
@@ -88,7 +92,9 @@ public final class LocalStore: Sendable {
     }
 
     /// Runs `body` in one transaction: its changes all happen or, when it throws, none do. The
-    /// error `body` threw is rethrown after the rollback.
+    /// error `body` threw is rethrown after the rollback. When SQLite has already rolled the
+    /// transaction back on its own (a full disk, an I/O error), every later statement of the body
+    /// and the commit throw `StoreError.rolledBack`, so nothing runs outside the transaction.
     public func transaction<Result: Sendable>(_ body: (StoreTransaction) throws -> Result) throws -> Result {
         try connection.withLock { connection in
             guard connection.isOpen else { throw StoreError.closed }
@@ -97,11 +103,12 @@ public final class LocalStore: Sendable {
             defer { transaction.end() }
             do {
                 let result = try body(transaction)
+                guard connection.inTransaction else { throw StoreError.rolledBack }
                 try connection.run("COMMIT")
                 return result
             } catch {
-                // A failed COMMIT can leave the transaction open; a finished one has nothing to undo.
-                _ = try? connection.run("ROLLBACK")
+                // A failed COMMIT can leave the transaction open; one SQLite ended has nothing to undo.
+                if connection.inTransaction { _ = try? connection.run("ROLLBACK") }
                 throw error
             }
         }
@@ -116,7 +123,7 @@ public final class LocalStore: Sendable {
             let transaction = StoreTransaction(connection)
             defer {
                 transaction.end()
-                _ = try? connection.run("ROLLBACK")
+                if connection.inTransaction { _ = try? connection.run("ROLLBACK") }
                 _ = try? connection.run("PRAGMA query_only = OFF")
             }
             return try body(transaction)
@@ -142,10 +149,15 @@ public final class StoreTransaction {
 
     func end() { active = false }
 
+    private func checkOpen() throws(StoreError) {
+        guard active else { throw .transactionEnded }
+        guard connection.inTransaction else { throw .rolledBack }
+    }
+
     /// Runs one statement and returns its rows, none for a write.
     @discardableResult
     public func rows(_ sql: String, _ bindings: [StoreValue] = []) throws(StoreError) -> [StoreRow] {
-        guard active else { throw .transactionEnded }
+        try checkOpen()
         return try connection.run(sql, bindings)
     }
 
@@ -165,7 +177,7 @@ public final class StoreTransaction {
     /// Runs `body` as a step that can fail alone: when it throws, only its changes are undone, the
     /// error is rethrown, and the transaction goes on.
     public func savepoint<Result>(_ body: () throws -> Result) throws -> Result {
-        guard active else { throw StoreError.transactionEnded }
+        try checkOpen()
         savepoints += 1
         let name = "sp\(savepoints)"
         try connection.run("SAVEPOINT \(name)")
@@ -174,8 +186,11 @@ public final class StoreTransaction {
             try connection.run("RELEASE \(name)")
             return result
         } catch {
-            _ = try? connection.run("ROLLBACK TO \(name)")
-            _ = try? connection.run("RELEASE \(name)")
+            // When SQLite has rolled the whole transaction back, there is no savepoint left to undo.
+            if connection.inTransaction {
+                _ = try? connection.run("ROLLBACK TO \(name)")
+                _ = try? connection.run("RELEASE \(name)")
+            }
             throw error
         }
     }

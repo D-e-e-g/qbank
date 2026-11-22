@@ -21,18 +21,34 @@ enum SchemaSteps {
         try connection.run("PRAGMA user_version").first?.int("user_version") ?? 0
     }
 
-    /// Applies the steps the file has not had, or refuses a file that is ahead of them.
-    static func upgrade(_ connection: SQLiteConnection, steps: [SchemaStep]) throws(StoreError) {
+    /// Refuses a file that is ahead of the steps this app knows.
+    static func refuseNewer(_ connection: SQLiteConnection, steps: [SchemaStep]) throws(StoreError) {
         let current = try version(of: connection)
         guard current <= steps.count else { throw .newerSchema(found: current, supported: steps.count) }
+    }
+
+    /// Applies the steps the file has not had, or refuses a file that is ahead of them.
+    ///
+    /// Each step runs with foreign keys off, as SQLite's table rebuild needs
+    /// (https://www.sqlite.org/lang_altertable.html#otheralter): with them on, dropping a parent
+    /// table deletes through `ON DELETE SET NULL` (taking every folder off its page) or fails on a
+    /// reference. Before the step commits, `foreign_key_check` must find no row naming a row that
+    /// is not there. Foreign keys are on again after every step, whether it finished or not.
+    static func upgrade(_ connection: SQLiteConnection, steps: [SchemaStep]) throws(StoreError) {
+        try refuseNewer(connection, steps: steps)
+        let current = try version(of: connection)
         for step in steps where step.number > current {
+            // The pragma is a no-op inside a transaction, so it is set before the step begins.
+            try connection.run("PRAGMA foreign_keys = OFF")
+            defer { _ = try? connection.run("PRAGMA foreign_keys = ON") }
             try connection.run("BEGIN IMMEDIATE")
-            do {
+            do throws(StoreError) {
                 for statement in step.statements { try connection.run(statement) }
+                guard try connection.run("PRAGMA foreign_key_check").isEmpty else { throw .foreignKeyCheckFailed(step: step.number) }
                 try connection.run("PRAGMA user_version = \(step.number)")
                 try connection.run("COMMIT")
             } catch {
-                _ = try? connection.run("ROLLBACK")
+                if connection.inTransaction { _ = try? connection.run("ROLLBACK") }
                 throw error
             }
         }
