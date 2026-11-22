@@ -362,6 +362,8 @@ expect_mode() {
 expect_mode quick QBankUITests/SataAllCorrectUITests.swift
 expect_mode quick QBank/QBankApp.swift
 expect_mode quick QBank/Debug/FakeQBankServer.swift
+expect_mode quick QBank/Debug/DebugScenarioCatalog.swift
+expect_mode quick QBank/Debug/Scenarios/StudentScenarios.swift
 expect_mode quick docs/ci.md QBank/QBankApp.swift
 expect_mode quick Packages/QBankKit/Package.swift
 expect_mode full QBankUITests/UITestSupport.swift
@@ -1038,6 +1040,20 @@ if [ -f "$SEAM" ] && [ "$(head -n 1 "$SEAM")" = "#if DEBUG" ] && [ "$(tail -n 1 
   pass "the launch seam is wrapped in #if DEBUG"
 else
   fail "the launch seam is wrapped in #if DEBUG ($SEAM must start with #if DEBUG and end with #endif)"
+fi
+
+# The scenarios, the scripted Sign in with Apple and the fake store are files under QBank/Debug/,
+# and none of them may reach a Release build.
+unwrapped=""
+while IFS= read -r file; do
+  if [ "$(head -n 1 "$file")" != "#if DEBUG" ] || [ "$(tail -n 1 "$file")" != "#endif" ]; then
+    unwrapped="$unwrapped $file"
+  fi
+done < <(find QBank/Debug -name '*.swift' | sort)
+if [ -n "$unwrapped" ]; then
+  fail "every file under QBank/Debug/ is wrapped in #if DEBUG:$unwrapped"
+else
+  pass "every file under QBank/Debug/ is wrapped in #if DEBUG"
 fi
 
 # --- Frontend only ----------------------------------------------------------------

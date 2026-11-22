@@ -14,8 +14,8 @@ import UIKit
 /// are emptied at launch.
 ///
 /// Supported environment variables:
-/// - `QB_UITEST_SCENARIO`: the scenario to start in, one of `Scenario`'s raw
-///   values. Absent means a normal launch.
+/// - `QB_UITEST_SCENARIO`: the scenario to start in, the name of one `DebugScenarioCatalog`
+///   lists. Absent means a normal launch.
 /// - `QB_UITEST_KEEP_PHONE_SETTINGS`: `1` keeps the suite from the previous
 ///   launch, to check that a setting survives a relaunch.
 /// - `QB_UITEST_AI_CONSENT`: `allowed` starts with her permission to share her material with
@@ -32,6 +32,10 @@ import UIKit
 /// - `QB_UITEST_DEVICE_OWNER`: how the device answers the Face ID lock, one of
 ///   `DebugDeviceOwner.Kind`'s raw values, such as `face-id`. Absent means the
 ///   simulator's own Face ID or passcode, for a look by hand.
+///
+/// A scenario, the scripted Sign in with Apple and the fake store are not written here: each is a
+/// file under `QBank/Debug/` (see `DebugScenario`, `DebugScriptedAppleSignIn` and `DebugFakeStore`),
+/// so a pull request that adds one leaves this file and the UI test helpers alone.
 ///
 /// While the app runs, a test turns the network off and on by posting the
 /// Darwin notifications `networkOfflineNotification` and
@@ -153,43 +157,7 @@ nonisolated enum DebugLaunchScenario {
     /// The device owner of the app's scenario, kept while the app runs.
     @MainActor private static var deviceOwner: DebugDeviceOwner?
 
-    enum Scenario: String, CaseIterable {
-        /// No session on the phone: the sign-in screen. `FakeQBankServer.student`
-        /// signs in normally; `FakeQBankServer.resetStudent` must choose a new password;
-        /// `FakeQBankServer.signUpEmail` is on the owner's sign-up list and signs up.
-        case signedOut = "signed-out"
-        /// `FakeQBankServer.student` is signed in from an earlier launch and last
-        /// used the Mental Health course. The server does not let her make questions.
-        case signedIn = "signed-in"
-        /// As `signedIn`, with an exam over Mental Health's Weeks 1-2 left in progress, so deleting
-        /// what it asks is refused for now.
-        case examInProgress = "exam-in-progress"
-        /// As `examInProgress`, with every question of the exam but its last answered, and the
-        /// connection lost for the first six requests to end it: her last answer lands, and the
-        /// finish after it does not, for a while.
-        case examFinishDrops = "exam-finish-drops"
-        /// As `examInProgress`, with that exam's time running out a minute after launch.
-        case examTimeRunningOut = "exam-time-running-out"
-        /// As `signedIn`, on a slow connection: the reply to each practice answer and to Start over
-        /// takes `slowSaveReplyDelay` to arrive, so a test can act while one is on its way.
-        case slowSaves = "slow-saves"
-        /// `FakeQBankServer.maker` is signed in: the server lets her make questions, with one set
-        /// being written and the questions copied from two photos waiting for her check.
-        case maker = "maker"
-        /// `FakeQBankServer.maker` is signed in, but the server has no Claude key, so making
-        /// questions is not set up yet.
-        case makerNotSetUp = "maker-not-set-up"
-        /// `FakeQBankServer.owner` is signed in, on Home, in the frozen view of `FakeQBankServer.student`.
-        case owner = "owner"
-        /// As `owner`, with the exam of `examInProgress` running on the account it looks at.
-        case ownerExamInProgress = "owner-exam-in-progress"
-        /// Signed in, with Weeks 1-3 holding one matrixmulti question instead of the mixed set.
-        case matrixMulti = "matrix-multi"
-        /// Signed in, with Weeks 1-3 holding one select-all question whose every option is correct.
-        case sataAllCorrect = "sata-all-correct"
-    }
-
-    /// How long a reply to a save takes in `Scenario.slowSaves`: long enough for a UI test to look
+    /// How long a reply to a save takes in `DebugScenario.slowSaves`: long enough for a UI test to look
     /// at the screen and tap while it waits.
     static let slowSaveReplyDelay = Duration.seconds(4)
 
@@ -197,7 +165,7 @@ nonisolated enum DebugLaunchScenario {
         let name: String
 
         var description: String {
-            let known = Scenario.allCases.map(\.rawValue).joined(separator: ", ")
+            let known = DebugScenarioCatalog.all.map(\.name).joined(separator: ", ")
             return "Unknown \(DebugLaunchScenario.scenarioKey) \"\(name)\"; known scenarios: \(known)"
         }
     }
@@ -213,9 +181,9 @@ nonisolated enum DebugLaunchScenario {
     }
 
     /// The scenario the environment asks for, or nil for a normal launch.
-    static func scenario(in environment: [String: String]) throws(UnknownScenario) -> Scenario? {
+    static func scenario(in environment: [String: String]) throws(UnknownScenario) -> DebugScenario? {
         guard let name = environment[scenarioKey] else { return nil }
-        guard let scenario = Scenario(rawValue: name) else { throw UnknownScenario(name: name) }
+        guard let scenario = DebugScenarioCatalog.scenario(named: name) else { throw UnknownScenario(name: name) }
         return scenario
     }
 
@@ -230,7 +198,7 @@ nonisolated enum DebugLaunchScenario {
         environment: [String: String] = ProcessInfo.processInfo.environment,
         phoneFolder: URL? = nil
     ) -> AppModel? {
-        let scenario: Scenario?
+        let scenario: DebugScenario?
         do {
             scenario = try self.scenario(in: environment)
         } catch {
@@ -244,60 +212,11 @@ nonisolated enum DebugLaunchScenario {
         let folder = phoneFolder ?? defaultPhoneFolder
         let storage = phoneData(in: folder, keep: environment[keepPhoneDataKey] == "1")
         let answersFile = serverAnswers(beside: folder, keep: environment[keepServerAnswersKey] == "1")
-        let isOnline = environment[networkKey] != "offline"
-        let owner: DeviceOwner = deviceOwner(deviceOwnerKind(in: environment))
-        switch scenario {
-        case .signedOut:
-            return model(server: FakeQBankServer(signedIn: false), session: nil, defaults: defaults, storage: storage, isOnline: isOnline, owner: owner)
-        case .signedIn, .examInProgress:
-            return model(
-                server: FakeQBankServer(signedIn: true, examInProgress: scenario == .examInProgress, answersFile: answersFile),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .examTimeRunningOut:
-            return model(
-                server: FakeQBankServer(signedIn: true, examInProgress: true, examEndsIn: 60, answersFile: answersFile),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .examFinishDrops:
-            return model(
-                server: FakeQBankServer(
-                    signedIn: true, examInProgress: true, examLastQuestionOpen: true, droppedFinishes: 6, answersFile: answersFile
-                ),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .slowSaves:
-            return model(
-                server: FakeQBankServer(signedIn: true, saveReplyDelay: slowSaveReplyDelay, answersFile: answersFile),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .maker, .makerNotSetUp:
-            return model(
-                server: FakeQBankServer(signedIn: true, as: FakeQBankServer.maker, makerIsSetUp: scenario == .maker),
-                session: FakeQBankServer.storedMakerSession(), defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .owner, .ownerExamInProgress:
-            return model(
-                server: FakeQBankServer(signedIn: true, as: FakeQBankServer.owner, examInProgress: scenario == .ownerExamInProgress),
-                session: FakeQBankServer.storedOwnerSession(), defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .matrixMulti:
-            return model(
-                server: FakeQBankServer(signedIn: true, matrixMultiSet: true, answersFile: answersFile),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        case .sataAllCorrect:
-            return model(
-                server: FakeQBankServer(signedIn: true, sataAllCorrectSet: true, answersFile: answersFile),
-                session: FakeQBankServer.storedStudentSession(),
-                defaults: defaults, storage: storage, isOnline: isOnline, owner: owner
-            )
-        }
+        let context = DebugScenarioContext(
+            defaults: defaults, storage: storage, answersFile: answersFile, isOnline: environment[networkKey] != "offline",
+            owner: deviceOwner(deviceOwnerKind(in: environment)), appleSignIn: DebugScriptedAppleSignIn(), store: DebugFakeStore()
+        )
+        return scenario.make(context)
     }
 
     static var defaultPhoneFolder: URL {
@@ -345,16 +264,15 @@ nonisolated enum DebugLaunchScenario {
         return owner
     }
 
+    /// The model a scenario's fake server and session make, wired to the launch's network, Look,
+    /// lock and phone storage. Scenarios reach it through `DebugScenarioContext.model(server:session:)`.
     @MainActor
-    private static func model(
-        server: FakeQBankServer, session: StoredSession?, defaults: UserDefaults, storage: PhoneStorage, isOnline: Bool,
-        owner: DeviceOwner
-    ) -> AppModel {
-        let connection = Connection(isOnline: isOnline)
-        let network = DebugNetwork(server: server, connection: connection, isOnline: isOnline)
+    static func assemble(server: FakeQBankServer, session: StoredSession?, context: DebugScenarioContext) -> AppModel {
+        let connection = Connection(isOnline: context.isOnline)
+        let network = DebugNetwork(server: server, connection: connection, isOnline: context.isOnline)
         network.listen()
         self.network = network
-        let lookStore = LookStore(defaults: defaults)
+        let lookStore = LookStore(defaults: context.defaults)
         let look = DebugLook(store: lookStore)
         look.listen()
         self.look = look
@@ -366,10 +284,10 @@ nonisolated enum DebugLaunchScenario {
                 sessionStore: InMemorySessionStore(session)
             ),
             look: lookStore,
-            lock: AppLock(defaults: defaults, owner: owner),
-            highlighter: HighlighterStore(defaults: defaults),
-            aiConsent: AIConsentStore(defaults: defaults),
-            storage: storage,
+            lock: AppLock(defaults: context.defaults, owner: context.owner),
+            highlighter: HighlighterStore(defaults: context.defaults),
+            aiConsent: AIConsentStore(defaults: context.defaults),
+            storage: context.storage,
             connection: connection
         )
     }
