@@ -201,7 +201,7 @@ struct ImportView: View {
         @Bindable var destination = model.destination
         return VStack(alignment: .leading, spacing: QBankSpacing.space5) {
             LabeledField(label: "Course code") {
-                TextField("NURS 406", text: $destination.newCode)
+                TextField("BIO 101", text: $destination.newCode)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .focused($focus, equals: .code)
@@ -209,7 +209,7 @@ struct ImportView: View {
                     .accessibilityIdentifier("import.newCode")
             }
             LabeledField(label: "Course name") {
-                TextField("Mental Health", text: $destination.newTitle)
+                TextField("Cell Biology", text: $destination.newTitle)
                     .textInputAutocapitalization(.words)
                     .focused($focus, equals: .courseName)
                     .accessibilityLabel("Course name")

@@ -35,7 +35,7 @@ struct NewCourseView: View {
             save: save
         ) {
             LabeledField(label: "Course code") {
-                TextField("Course code", text: $model.newCode, prompt: Text("NURS 406").foregroundStyle(.qbank(.text4)))
+                TextField("Course code", text: $model.newCode, prompt: Text("BIO 101").foregroundStyle(.qbank(.text4)))
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .submitLabel(.next)
@@ -44,7 +44,7 @@ struct NewCourseView: View {
                     .accessibilityIdentifier("newCourse.code")
             }
             LabeledField(label: "Course name") {
-                TextField("Course name", text: $model.newTitle, prompt: Text("Mental Health").foregroundStyle(.qbank(.text4)))
+                TextField("Course name", text: $model.newTitle, prompt: Text("Cell Biology").foregroundStyle(.qbank(.text4)))
                     .textInputAutocapitalization(.words)
                     .submitLabel(.done)
                     .focused($focus, equals: .title)
