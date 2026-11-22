@@ -76,11 +76,12 @@ struct MakeQuestionsContractTests {
         let fixture = try Fixture.load("question-job-start")
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
-        let job = try await client.startQuestionJob(NewQuestionJob(
-            courseID: Self.course, folderID: Self.week4, materialKind: .notes,
-            text: "Invented lecture notes for week 4.\nSlide 1: invented topics for a test.",
-            level: .exam, count: 10, referenceSetID: Self.reference, examTwins: true
-        ))
+        let job = try await client.startQuestionJob(
+            NewQuestionJob(
+                courseID: Self.course, folderID: Self.week4, materialKind: .notes,
+                text: "Invented lecture notes for week 4.\nSlide 1: invented topics for a test.",
+                level: .exam, count: 10, referenceSetID: Self.reference, examTwins: true
+            ))
         try expectRequest(transport.requests.first, matches: fixture)
         #expect(job.id == Self.notesJob)
         #expect(job.status == .running)
@@ -93,11 +94,12 @@ struct MakeQuestionsContractTests {
         let fixture = try Fixture.load("question-job-file-start")
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
-        let job = try await client.startQuestionJob(NewQuestionJob(
-            courseID: Self.course, folderName: "Week 5", materialKind: .notes,
-            file: .init(name: "Week 5 notes.md", mediaType: "text/markdown", data: Data("# Invented week 5 notes\n\n- Invented topic for a test.\n".utf8)),
-            level: .course, count: 12, examTwins: false
-        ))
+        let job = try await client.startQuestionJob(
+            NewQuestionJob(
+                courseID: Self.course, folderName: "Week 5", materialKind: .notes,
+                file: .init(name: "Week 5 notes.md", mediaType: "text/markdown", data: Data("# Invented week 5 notes\n\n- Invented topic for a test.\n".utf8)),
+                level: .course, count: 12, examTwins: false
+            ))
         try expectRequest(transport.requests.first, matches: fixture)
         #expect(job.folder == .init(id: nil, name: "Week 5"))
         #expect(job.level == .course)
@@ -114,9 +116,10 @@ struct MakeQuestionsContractTests {
             NewQuestionJob.Image(mediaType: "image/jpeg", data: $0)
         }
         #expect(images.count == 2)
-        let job = try await client.startQuestionJob(NewQuestionJob(
-            courseID: Self.course, folderID: Self.week4, materialKind: .questions, images: images, examTwins: true
-        ))
+        let job = try await client.startQuestionJob(
+            NewQuestionJob(
+                courseID: Self.course, folderID: Self.week4, materialKind: .questions, images: images, examTwins: true
+            ))
         try expectRequest(transport.requests.first, matches: fixture)
         #expect(job.id == Self.copyJob)
         #expect(job.materialKind == .questions)
@@ -129,11 +132,12 @@ struct MakeQuestionsContractTests {
         let transport = try FixtureTransport([fixture])
         let (client, _) = TestClient.make(transport)
         let error = await #expect(throws: QBankError.self) {
-            try await client.startQuestionJob(NewQuestionJob(
-                courseID: Self.course, materialKind: .notes,
-                text: "Invented lecture notes for week 4.\nSlide 1: invented topics for a test.",
-                level: .exam, count: 15, examTwins: true
-            ))
+            try await client.startQuestionJob(
+                NewQuestionJob(
+                    courseID: Self.course, materialKind: .notes,
+                    text: "Invented lecture notes for week 4.\nSlide 1: invented topics for a test.",
+                    level: .exam, count: 15, examTwins: true
+                ))
         }
         try expectRequest(transport.requests.first, matches: fixture)
         try Self.expect(error, is: fixture, code: .dailyLimit)

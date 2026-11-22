@@ -124,7 +124,8 @@ nonisolated enum FolderWording {
         guard !folders.isEmpty else { return nil }
         let total = folders.reduce(0) { $0 + $1.questionCount }
         let place = folders.count == 1 ? "this folder" : "these \(folders.count) folders"
-        let draw = plan.questionCount < total
+        let draw =
+            plan.questionCount < total
             ? "\(Wording.count(plan.questionCount, "question")) from the \(total) in \(place)"
             : total == 1 ? "The 1 question in \(place)" : "All \(total) questions in \(place)"
         return "\(draw), or wrong questions only."

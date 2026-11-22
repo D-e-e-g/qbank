@@ -212,7 +212,8 @@ struct FolderContractTests {
         #expect(detail.examTimeLimitSeconds == nil, "as in a copy saved before the app read it")
 
         guard case .object(var setup) = try Fixture.load("exam-setup-in-progress").response.body,
-              case .object(var running)? = setup["inProgress"] else {
+            case .object(var running)? = setup["inProgress"]
+        else {
             Issue.record("The exam setup fixture has no running exam")
             return
         }
@@ -227,17 +228,19 @@ struct FolderContractTests {
     /// named and identified by its label, on the exam page listing that label.
     @Test func olderServerReadsWeeksAsFolders() throws {
         guard case .object(var course) = try Fixture.load("course-with-exams").response.body,
-              case .array(let exams)? = course["exams"] else {
+            case .array(let exams)? = course["exams"]
+        else {
             Issue.record("The course fixture is not an object with exams")
             return
         }
         course["folders"] = nil
         course["folderCount"] = nil
-        course["exams"] = .array(exams.map { exam in
-            guard case .object(var page) = exam else { return exam }
-            page["folderIds"] = nil
-            return .object(page)
-        })
+        course["exams"] = .array(
+            exams.map { exam in
+                guard case .object(var page) = exam else { return exam }
+                page["folderIds"] = nil
+                return .object(page)
+            })
         let detail = try JSONValue.object(course).decode(CourseDetail.self)
         #expect(detail.folders.map(\.id) == ["Week 1", "Week 2", "Week 3", "Second Pass"])
         #expect(detail.folders.map(\.examPageID) == [Self.examOne, Self.examOne, Self.examTwo, nil])

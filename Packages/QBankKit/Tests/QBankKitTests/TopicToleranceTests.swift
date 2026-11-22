@@ -128,7 +128,7 @@ struct TopicToleranceTests {
     @Test func waitingAnswersKeepATopicATopic() throws {
         let topic = try QBankJSON.decoder.decode(CourseDetail.self, from: Self.body("topic"))
         let progress = WaitingProgress(answers: [
-            "9e000000-0000-4000-8000-000000070003": .init(status: .correct, answeredAt: Date(timeIntervalSince1970: 1_790_000_000)),
+            "9e000000-0000-4000-8000-000000070003": .init(status: .correct, answeredAt: Date(timeIntervalSince1970: 1_790_000_000))
         ])
         let counted = progress.counting(topic)
         #expect(counted.kind == .topic)

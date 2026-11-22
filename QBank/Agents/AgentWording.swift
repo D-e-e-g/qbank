@@ -124,7 +124,8 @@ nonisolated enum AgentWording {
     /// what it deletes goes.
     static func scopesLine(_ scopes: [AgentScope]) -> String {
         let manage = scopes.contains(.manage)
-        let verbs = scopes
+        let verbs =
+            scopes
             .filter { $0 != .manage && !(manage && $0 == .import) }
             .map { scope in scope == .import ? "import sets" : scope == .read ? "read progress" : scope.rawValue }
         if manage {
@@ -156,7 +157,8 @@ nonisolated enum AgentWording {
     /// What revoking a key leaves behind: what it imported, and for a key that manages, what it
     /// changed and deleted.
     static func revokeMessage(_ scopes: [AgentScope]) -> String {
-        let left = scopes.contains(.manage)
+        let left =
+            scopes.contains(.manage)
             ? "What it imported or changed stays as it is, and what it deleted stays in Recently deleted."
             : "The sets it imported stay where they are."
         return "Its key stops working at once and for good. \(left) To connect this agent again, approve a new code from it."

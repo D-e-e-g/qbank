@@ -332,7 +332,8 @@ private struct OrderList: View {
         }
         .dropDestination(for: String.self) { dropped, _ in
             guard !isLocked, let value = dropped.first, let dragged = Int(value),
-                  let source = positions.firstIndex(of: dragged) else { return false }
+                let source = positions.firstIndex(of: dragged)
+            else { return false }
             move(source, position)
             return true
         } isTargeted: { over in

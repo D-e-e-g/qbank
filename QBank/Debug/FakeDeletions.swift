@@ -92,17 +92,19 @@ nonisolated final class FakeDeletions: Sendable {
     private func setPlan(_ id: String, _ library: some FakeDeletionLibrary) -> Result<SetPlan, Refusal> {
         if let folder = study.folder(holding: id), let set = library.deletionSet(id) {
             let questionIDs = FakeStudy.ids(id, set.questionCount)
-            return .success(SetPlan(
-                id: id, title: set.title, isExam: false, folder: folder, questionIDs: questionIDs, answeredCount: set.answeredCount,
-                versionCount: set.versionCount, confirm: Self.token(["set", id, set.title, folder.id])
-            ))
+            return .success(
+                SetPlan(
+                    id: id, title: set.title, isExam: false, folder: folder, questionIDs: questionIDs, answeredCount: set.answeredCount,
+                    versionCount: set.versionCount, confirm: Self.token(["set", id, set.title, folder.id])
+                ))
         }
         if let (folder, questionIDs) = study.folder(holdingExamSet: id) {
             let title = library.examSetTitle(id)
-            return .success(SetPlan(
-                id: id, title: title, isExam: true, folder: folder, questionIDs: questionIDs, answeredCount: 0,
-                versionCount: 1, confirm: Self.token(["set", id, title, folder.id, String(questionIDs.count)])
-            ))
+            return .success(
+                SetPlan(
+                    id: id, title: title, isExam: true, folder: folder, questionIDs: questionIDs, answeredCount: 0,
+                    versionCount: 1, confirm: Self.token(["set", id, title, folder.id, String(questionIDs.count)])
+                ))
         }
         if isDeleted(set: id) { return .failure(Refusal(404, "request_refused", "That set was deleted.")) }
         return .failure(Refusal(404, "request_refused", "That set is not in the app."))
@@ -239,10 +241,11 @@ nonisolated final class FakeDeletions: Sendable {
         let pageName = folder.examPageID.flatMap { page in
             study.courseExamsJSON(folder.courseID).first { $0["id"] as? String == page }?["name"] as? String
         }
-        return .success(FolderPlan(
-            folder: folder, pageName: pageName, sets: sets, questionIDs: questionIDs,
-            confirm: Self.token(["folder", folder.id, folder.name, folder.examPageID ?? ""] + sets.map { "\($0.id):\($0.title):\($0.questionCount)" }.sorted())
-        ))
+        return .success(
+            FolderPlan(
+                folder: folder, pageName: pageName, sets: sets, questionIDs: questionIDs,
+                confirm: Self.token(["folder", folder.id, folder.name, folder.examPageID ?? ""] + sets.map { "\($0.id):\($0.title):\($0.questionCount)" }.sorted())
+            ))
     }
 
     private func folderPreview(_ id: String, _ library: some FakeDeletionLibrary) -> Result<[String: Any], Refusal> {
@@ -341,10 +344,11 @@ nonisolated final class FakeDeletions: Sendable {
         guard let (page, folders) = study.page(id) else {
             return .failure(deletedPage(id) != nil ? Refusal(404, "request_refused", "That exam page was deleted.") : Refusal(404, "request_refused", "That exam is not in the app."))
         }
-        return .success(PagePlan(
-            page: page, folders: folders, refusal: study.pageDeleteRefusal(id),
-            confirm: Self.token(["exam-page", page.id, page.name] + folders.map { "\($0.id):\($0.name)" })
-        ))
+        return .success(
+            PagePlan(
+                page: page, folders: folders, refusal: study.pageDeleteRefusal(id),
+                confirm: Self.token(["exam-page", page.id, page.name] + folders.map { "\($0.id):\($0.name)" })
+            ))
     }
 
     private func pagePreview(_ id: String, _ library: some FakeDeletionLibrary) -> Result<[String: Any], Refusal> {
@@ -480,7 +484,8 @@ nonisolated final class FakeDeletions: Sendable {
             return Self.failure(409, "deletion_changed", "This exam changed since you were warned. Look again before deleting it.")
         }
         guard let summary = study.summaryJSON(examID: id).flatMap({ try? JSONSerialization.data(withJSONObject: $0) }),
-              let taken = study.take(exam: id) else {
+            let taken = study.take(exam: id)
+        else {
             return Self.failure(404, "exam_not_found", "That exam is not in the app.")
         }
         deleted.withLock { $0.append(Deleted(kind: .exam(taken, summary: summary), courseID: taken.courseID, at: now())) }
@@ -523,31 +528,36 @@ nonisolated final class FakeDeletions: Sendable {
             switch entry.kind {
             case .examPage(let page, let remembered):
                 let back = study.foldersBack(remembered)
-                examPages.append([
-                    "id": page.id, "name": page.name, "folders": back.map { ["id": $0.id, "name": $0.name] },
-                    "pastExamCount": study.pastExams(onPage: page.id, folderIDs: back.map(\.id)),
-                    "undoRefusal": Self.json(pageUndoRefusal(page, undoUntil: entry.undoUntil)?.message),
-                ].merging(window) { _, new in new })
+                examPages.append(
+                    [
+                        "id": page.id, "name": page.name, "folders": back.map { ["id": $0.id, "name": $0.name] },
+                        "pastExamCount": study.pastExams(onPage: page.id, folderIDs: back.map(\.id)),
+                        "undoRefusal": Self.json(pageUndoRefusal(page, undoUntil: entry.undoUntil)?.message),
+                    ].merging(window) { _, new in new })
             case .folder(let folder, let held):
                 let clash = study.folders(courseID).first { $0.examPageID == folder.examPageID && $0.name.lowercased() == folder.name.lowercased() }
-                let label = folder.examPageID.flatMap { page in
-                    study.courseExamsJSON(courseID).first { $0["id"] as? String == page }?["name"] as? String
-                } ?? FakeStudy.codes[courseID] ?? "This course"
-                folders.append([
-                    "id": folder.id, "name": folder.name, "examPageId": Self.json(folder.examPageID),
-                    "sets": held.map { ["id": $0.id, "title": $0.title, "kind": $0.kind, "questionCount": $0.questionCount] },
-                    "undoRefusal": Self.json(clash.map { "\(label) already has a folder named \($0.name). Rename one of them, then bring this one back." }),
-                ].merging(window) { _, new in new })
+                let label =
+                    folder.examPageID.flatMap { page in
+                        study.courseExamsJSON(courseID).first { $0["id"] as? String == page }?["name"] as? String
+                    } ?? FakeStudy.codes[courseID] ?? "This course"
+                folders.append(
+                    [
+                        "id": folder.id, "name": folder.name, "examPageId": Self.json(folder.examPageID),
+                        "sets": held.map { ["id": $0.id, "title": $0.title, "kind": $0.kind, "questionCount": $0.questionCount] },
+                        "undoRefusal": Self.json(clash.map { "\(label) already has a folder named \($0.name). Rename one of them, then bring this one back." }),
+                    ].merging(window) { _, new in new })
             case .set(let id, let title, let folderID, let folderName, _, let questionCount):
-                sets.append([
-                    "id": id, "title": title, "kind": "practice", "folderId": folderID, "folderName": folderName, "questionCount": questionCount,
-                    "undoRefusal": Self.json(setUndoRefusal(entry)?.message),
-                ].merging(window) { _, new in new })
+                sets.append(
+                    [
+                        "id": id, "title": title, "kind": "practice", "folderId": folderID, "folderName": folderName, "questionCount": questionCount,
+                        "undoRefusal": Self.json(setUndoRefusal(entry)?.message),
+                    ].merging(window) { _, new in new })
             case .examSet(let id, let title, let folderID, let folderName, let questionIDs):
-                sets.append([
-                    "id": id, "title": title, "kind": "exam", "folderId": folderID, "folderName": folderName, "questionCount": questionIDs.count,
-                    "undoRefusal": Self.json(setUndoRefusal(entry)?.message),
-                ].merging(window) { _, new in new })
+                sets.append(
+                    [
+                        "id": id, "title": title, "kind": "exam", "folderId": folderID, "folderName": folderName, "questionCount": questionIDs.count,
+                        "undoRefusal": Self.json(setUndoRefusal(entry)?.message),
+                    ].merging(window) { _, new in new })
             case .exam(_, let summary):
                 let listed = (try? JSONSerialization.jsonObject(with: summary)) as? [String: Any] ?? [:]
                 exams.append(listed.merging(window) { _, new in new })
@@ -635,9 +645,10 @@ nonisolated final class FakeDeletions: Sendable {
         var sentences: [String] = []
         if isExam {
             sentences.append("Delete \(title) from \(folder)'s exam bank?")
-            sentences.append(lastBank
-                ? "Its \(Wording.count(questionCount, "question")) \(go) with it, and exams over \(folder) go back to asking its practice questions."
-                : "Its \(Wording.count(questionCount, "question")) \(go) with it, and exams over \(folder) stop asking \(questionCount == 1 ? "it" : "them").")
+            sentences.append(
+                lastBank
+                    ? "Its \(Wording.count(questionCount, "question")) \(go) with it, and exams over \(folder) go back to asking its practice questions."
+                    : "Its \(Wording.count(questionCount, "question")) \(go) with it, and exams over \(folder) stop asking \(questionCount == 1 ? "it" : "them").")
             if answeredCount > 0 {
                 sentences.append("You have answered \(answeredCount) of them on exams: those answers stop counting toward Wrong questions.")
             }

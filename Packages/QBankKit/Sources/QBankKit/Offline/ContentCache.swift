@@ -126,7 +126,7 @@ public struct FileContentCache: ContentCache {
         var entries: [CacheEntry] = []
         for file in files where file.pathExtension == "json" {
             guard let data = try FileLocations.read(file, operation: "read \(file.lastPathComponent)"),
-                  let header = try? QBankJSON.decoder.decode(Header.self, from: data)
+                let header = try? QBankJSON.decoder.decode(Header.self, from: data)
             else { continue }
             entries.append(CacheEntry(name: header.name, savedAt: header.savedAt, byteCount: data.count))
         }
@@ -145,9 +145,10 @@ public struct FileContentCache: ContentCache {
 
     /// Names are built from server ids; anything outside a safe file name is replaced.
     private func fileURL(for name: String) -> URL {
-        let safe = String(name.unicodeScalars.map { scalar in
-            CharacterSet.alphanumerics.contains(scalar) && scalar.isASCII || scalar == "-" || scalar == "_" ? Character(scalar) : "_"
-        })
+        let safe = String(
+            name.unicodeScalars.map { scalar in
+                CharacterSet.alphanumerics.contains(scalar) && scalar.isASCII || scalar == "-" || scalar == "_" ? Character(scalar) : "_"
+            })
         return directory.appendingPathComponent("\(safe).json")
     }
 

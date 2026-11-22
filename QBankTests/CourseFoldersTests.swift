@@ -184,9 +184,12 @@ struct CourseFoldersTests {
     // MARK: From a server before folders
 
     @Test func aCourseFromBeforeFoldersReadsEachWeekAsAFolder() throws {
-        let course = try QBankJSON.decoder.decode(CourseDetail.self, from: Data(StudyBodies.legacyCourse(exams: [
-            StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: ["Week 1", "Week 2"]),
-        ]).utf8))
+        let course = try QBankJSON.decoder.decode(
+            CourseDetail.self,
+            from: Data(
+                StudyBodies.legacyCourse(exams: [
+                    StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: ["Week 1", "Week 2"])
+                ]).utf8))
         #expect(course.folders.map(\.id) == ["Week 1", "Week 2", "Week 3"])
         #expect(course.folders.map(\.examPageID) == ["x1", "x1", nil])
         #expect(course.folders.last?.examBankCount == 20)
@@ -366,23 +369,26 @@ struct CourseFoldersTests {
 
     @Test func anExamPagesStartButtonTicksItsFolders() async throws {
         let server = StubServer([
-            "GET /api/courses/c1": .ok(StudyBodies.course(pages: [("x1", "Exam 1", ["f2", "f1"])])),
+            "GET /api/courses/c1": .ok(StudyBodies.course(pages: [("x1", "Exam 1", ["f2", "f1"])]))
         ])
         let model = await loaded(server)
         let page = try #require(model.layout?.page("x1"))
-        #expect(model.examSetup(for: page) == ExamSetupRoute(
-            course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), folderIDs: ["f2", "f1"], examName: "Exam 1"
-        ))
+        #expect(
+            model.examSetup(for: page)
+                == ExamSetupRoute(
+                    course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), folderIDs: ["f2", "f1"], examName: "Exam 1"
+                ))
     }
 
     @Test func coursePageAndExamsLoadTogether() async throws {
         let server = StubServer([
             "GET /api/courses/c1": .ok(StudyBodies.course(pages: [("x1", "Exam 1", ["f1"])])),
-            "GET /api/courses/c1/exams": .ok(StudyBodies.setup(
-                folders: StudyBodies.threePools,
-                inProgress: StudyBodies.summary("run", weeks: ["Week 1"], folders: ["f1"], courseExam: "x1", finished: false),
-                exams: [StudyBodies.summary("s1", weeks: ["Week 1"], folders: ["f1"], courseExam: "x1")]
-            )),
+            "GET /api/courses/c1/exams": .ok(
+                StudyBodies.setup(
+                    folders: StudyBodies.threePools,
+                    inProgress: StudyBodies.summary("run", weeks: ["Week 1"], folders: ["f1"], courseExam: "x1", finished: false),
+                    exams: [StudyBodies.summary("s1", weeks: ["Week 1"], folders: ["f1"], courseExam: "x1")]
+                )),
         ])
         let model = await loaded(server)
         #expect(model.sittings.map(\.id) == ["run", "s1"], "the running exam first")
@@ -421,7 +427,7 @@ struct CourseFoldersTests {
 
     @Test func aNewPageIsNamedAndMadeWithItsFolders() async throws {
         let server = StubServer([
-            "POST /api/courses/c1/course-exams": StubServer.Reply(status: 201, body: StudyBodies.courseExam("x9", "Exam 2", order: 2, weeks: ["Week 3"], folders: ["f3"])),
+            "POST /api/courses/c1/course-exams": StubServer.Reply(status: 201, body: StudyBodies.courseExam("x9", "Exam 2", order: 2, weeks: ["Week 3"], folders: ["f3"]))
         ])
         let model = try editor(server, pages: [("x1", "Exam 1", ["f1"])], page: nil)
         #expect(model.isNew)
@@ -435,7 +441,7 @@ struct CourseFoldersTests {
 
     @Test func theEditorSavesOnlyAChangeAndSaysARefusal() async throws {
         let server = StubServer([
-            "PUT /api/course-exams/x1": .error(409, "request_refused", "This course already has an exam named final."),
+            "PUT /api/course-exams/x1": .error(409, "request_refused", "This course already has an exam named final.")
         ])
         let model = try editor(server, pages: [("x1", "Exam 1", ["f1"]), ("x2", "Final", [])], page: "x1")
         #expect(await model.save() == .cancelled, "nothing changed")
@@ -452,7 +458,7 @@ struct CourseFoldersTests {
     /// at the end.
     @Test func theEditorKeepsThePagesOrder() async throws {
         let server = StubServer([
-            "PUT /api/course-exams/x1": .ok(StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: [], folders: ["f2", "f1", "f3"])),
+            "PUT /api/course-exams/x1": .ok(StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: [], folders: ["f2", "f1", "f3"]))
         ])
         let model = try editor(server, pages: [("x1", "Exam 1", ["f2", "f1"])], page: "x1")
         let week2 = try #require(model.chips.first { $0.folder.id == "f2" })
@@ -470,7 +476,7 @@ struct CourseFoldersTests {
     /// None, and leaves the badge out when she did not change it.
     @Test func theEditorSetsAndClearsThePagesBadge() async throws {
         let server = StubServer([
-            "PUT /api/course-exams/x1": .ok(StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: [], folders: ["f1"], badge: "concept")),
+            "PUT /api/course-exams/x1": .ok(StudyBodies.courseExam("x1", "Exam 1", order: 1, weeks: [], folders: ["f1"], badge: "concept"))
         ])
         let model = try editor(server, pages: [("x1", "Exam 1", ["f1"])], page: "x1", badges: ["x1": "exam"])
         #expect(model.offersBadge)
@@ -486,11 +492,12 @@ struct CourseFoldersTests {
         model.name = "Midterm"
         #expect(await model.save() == .saved("x1"))
         let bodies = server.requests.map { String(decoding: $0.httpBody ?? Data(), as: UTF8.self) }
-        #expect(bodies == [
-            #"{"badge":"concept","folderIds":["f1"],"name":"Exam 1"}"#,
-            #"{"badge":null,"folderIds":["f1"],"name":"Exam 1"}"#,
-            #"{"folderIds":["f1"],"name":"Midterm"}"#,
-        ])
+        #expect(
+            bodies == [
+                #"{"badge":"concept","folderIds":["f1"],"name":"Exam 1"}"#,
+                #"{"badge":null,"folderIds":["f1"],"name":"Exam 1"}"#,
+                #"{"folderIds":["f1"],"name":"Midterm"}"#,
+            ])
     }
 
     @Test func aPageWithNoBadgeShowsNone() throws {

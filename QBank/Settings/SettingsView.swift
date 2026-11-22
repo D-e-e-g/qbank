@@ -229,13 +229,14 @@ struct SettingsView: View {
                 lock.turnOff()
             }
         }
-        let footer = if let method {
-            method == .passcode
-                ? "QBank asks for your passcode when it opens and each time you come back to it."
-                : "QBank asks for \(method.name) when it opens and each time you come back to it. Your passcode works too."
-        } else {
-            "Set a passcode for this \(Device.model) in the Settings app to lock QBank."
-        }
+        let footer =
+            if let method {
+                method == .passcode
+                    ? "QBank asks for your passcode when it opens and each time you come back to it."
+                    : "QBank asks for \(method.name) when it opens and each time you come back to it. Your passcode works too."
+            } else {
+                "Set a passcode for this \(Device.model) in the Settings app to lock QBank."
+            }
         return QBankListGroup(header: "Lock", footer: footer) {
             Toggle(isOn: isOn) {
                 Text("Lock with \(method?.name ?? "Face ID")")

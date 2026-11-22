@@ -185,7 +185,8 @@ final class ExamSetupModel {
     /// "27 questions", or "7 wrong of 20" with Wrong questions only on, and "· exam bank" when the
     /// folder has one.
     func meta(_ folder: ExamSetup.Folder) -> String {
-        let count = wrongOnly
+        let count =
+            wrongOnly
             ? "\(folder.wrongCount) wrong of \(folder.questionCount)"
             : Wording.count(folder.questionCount, "question")
         return folder.source == .exam ? "\(count) · exam bank" : count

@@ -16,10 +16,12 @@ struct CourseModelTests {
 
     @Test func anOlderLoadAnsweredLateLeavesTheNewerCourse() async throws {
         let server = StubServer()
-        server.script("GET /api/courses/c1", [
-            .ok(Bodies.courseDetail(sets: [Bodies.set(id: "before")])),
-            .ok(Bodies.courseDetail(sets: [Bodies.set(id: "after")])),
-        ])
+        server.script(
+            "GET /api/courses/c1",
+            [
+                .ok(Bodies.courseDetail(sets: [Bodies.set(id: "before")])),
+                .ok(Bodies.courseDetail(sets: [Bodies.set(id: "after")])),
+            ])
         server.hold("GET /api/courses/c1")
         let (app, _) = TestApp.make(server, account: .student())
         let model = CourseModel(app: app, id: "c1")

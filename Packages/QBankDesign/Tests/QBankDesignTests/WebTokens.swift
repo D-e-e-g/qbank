@@ -98,7 +98,8 @@ struct WebTokens {
                 $0.trimmingCharacters(in: .whitespaces)
             }
             if parts.count == 4, let r = UInt8(parts[0]), let g = UInt8(parts[1]), let b = UInt8(parts[2]),
-               let a = Double(parts[3]) {
+                let a = Double(parts[3])
+            {
                 return QBankRGBA(red: r, green: g, blue: b, alpha: a)
             }
         }

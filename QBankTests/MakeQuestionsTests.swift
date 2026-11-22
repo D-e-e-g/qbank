@@ -212,14 +212,16 @@ struct MakeQuestionsTests {
             ]),
         ])
         let fixed = JobModel.file(file, answering: [2])
-        #expect(fixed == .object([
-            "id": .string("P01"),
-            "options": .array([
-                .object(["t": .string("A")]),
-                .object(["t": .string("B")]),
-                .object(["t": .string("C"), "why": .string("Because."), "ok": .bool(true)]),
-            ]),
-        ]))
+        #expect(
+            fixed
+                == .object([
+                    "id": .string("P01"),
+                    "options": .array([
+                        .object(["t": .string("A")]),
+                        .object(["t": .string("B")]),
+                        .object(["t": .string("C"), "why": .string("Because."), "ok": .bool(true)]),
+                    ]),
+                ]))
     }
 
     // MARK: What she picks
@@ -375,13 +377,13 @@ struct MakeQuestionsTests {
     }
 
     static let samples = #"""
-    {"round":1,"note":null,"canRevise":true,"questions":[
-     {"id":"A01","type":"single","topic":"Invented one","cj":"Take action","need":null,"difficulty":null,"stem":"Stem.","ask":"Which?",
-      "rationale":"Because.","takeaway":"Remember.","body":{"options":[{"t":"Right","ok":true},{"t":"Wrong"}]},"table":null,"images":[],
-      "terms":[],"source":null,"twinOf":null},
-     {"id":"A02","type":"single","topic":"Invented two","cj":null,"need":null,"difficulty":2,"stem":"Stem two.","ask":"Which?",
-      "rationale":"Because.","takeaway":"Remember.","body":{"options":[{"t":"Right","ok":true},{"t":"Wrong"}]},"table":null,"images":[],
-      "terms":[{"key":"anc","term":"ANC","meaning":"Absolute neutrophil count."}],"source":"Slide 4","twinOf":null}
-    ]}
-    """#
+        {"round":1,"note":null,"canRevise":true,"questions":[
+         {"id":"A01","type":"single","topic":"Invented one","cj":"Take action","need":null,"difficulty":null,"stem":"Stem.","ask":"Which?",
+          "rationale":"Because.","takeaway":"Remember.","body":{"options":[{"t":"Right","ok":true},{"t":"Wrong"}]},"table":null,"images":[],
+          "terms":[],"source":null,"twinOf":null},
+         {"id":"A02","type":"single","topic":"Invented two","cj":null,"need":null,"difficulty":2,"stem":"Stem two.","ask":"Which?",
+          "rationale":"Because.","takeaway":"Remember.","body":{"options":[{"t":"Right","ok":true},{"t":"Wrong"}]},"table":null,"images":[],
+          "terms":[{"key":"anc","term":"ANC","meaning":"Absolute neutrophil count."}],"source":"Slide 4","twinOf":null}
+        ]}
+        """#
 }

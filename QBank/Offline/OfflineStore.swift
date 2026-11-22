@@ -153,7 +153,7 @@ final class OfflineStore {
             try? await cache.store(value, for: key, savedAt: now())
             sendIfWaiting()
             return Loaded(value: value, savedAt: nil)
-        } catch where Self.fallsBackToSaved(error) {
+        } catch  where Self.fallsBackToSaved(error) {
             guard let saved = try? await cache.value(for: key) else { throw error }
             return Loaded(value: saved.value, savedAt: saved.savedAt)
         }
@@ -217,7 +217,10 @@ final class OfflineStore {
                 guard !Task.isCancelled else { return false }
                 listedSets.insert(set.id)
                 if let saved = try? await cache.value(for: .practiceSet(set.id)), saved.savedAt >= set.importedAt,
-                   !waiting.isEmpty || Self.copy(saved.value, matches: set) { continue }
+                    !waiting.isEmpty || Self.copy(saved.value, matches: set)
+                {
+                    continue
+                }
                 do {
                     let practice = try await client.practiceSet(id: set.id)
                     guard !Task.isCancelled else { return false }
@@ -247,7 +250,8 @@ final class OfflineStore {
         let coursePrefix = CacheKey<CourseDetail>.course("").name
         let setPrefix = CacheKey<PracticeSet>.practiceSet("").name
         for entry in entries {
-            let stale = entry.name.hasPrefix(coursePrefix) && !courses.contains(String(entry.name.dropFirst(coursePrefix.count)))
+            let stale =
+                entry.name.hasPrefix(coursePrefix) && !courses.contains(String(entry.name.dropFirst(coursePrefix.count)))
                 || entry.name.hasPrefix(setPrefix) && !sets.contains(String(entry.name.dropFirst(setPrefix.count)))
             if stale {
                 try? await cache.remove(named: entry.name)
@@ -261,24 +265,26 @@ final class OfflineStore {
         let names = Set(entries.map(\.name))
         let coursePrefix = CacheKey<CourseDetail>.course("").name
         let catalog = await saved(.catalog)?.value
-        let homeOrder = (catalog?.semesters.flatMap { semester in
-            semester.courses.sorted { ($0.sortOrder, $0.code) < ($1.sortOrder, $1.code) }.map(\.id)
-        } ?? []) + (catalog?.topics.map(\.id) ?? [])
+        let homeOrder =
+            (catalog?.semesters.flatMap { semester in
+                semester.courses.sorted { ($0.sortOrder, $0.code) < ($1.sortOrder, $1.code) }.map(\.id)
+            } ?? []) + (catalog?.topics.map(\.id) ?? [])
         var courses: [SavedCourse] = []
         for entry in entries where entry.name.hasPrefix(coursePrefix) {
             guard let saved = try? await cache.value(for: .course(String(entry.name.dropFirst(coursePrefix.count)))) else { continue }
             let sets = saved.value.folders.flatMap(\.sets)
             let savedSets = sets.filter { names.contains(CacheKey<PracticeSet>.practiceSet($0.id).name) }
-            courses.append(SavedCourse(
-                id: saved.value.id,
-                kind: saved.value.kind,
-                code: saved.value.code,
-                title: saved.value.title,
-                questionCount: saved.value.questionCount,
-                savedQuestionCount: savedSets.reduce(0) { $0 + $1.questionCount },
-                isComplete: savedSets.count == sets.count,
-                savedAt: saved.savedAt
-            ))
+            courses.append(
+                SavedCourse(
+                    id: saved.value.id,
+                    kind: saved.value.kind,
+                    code: saved.value.code,
+                    title: saved.value.title,
+                    questionCount: saved.value.questionCount,
+                    savedQuestionCount: savedSets.reduce(0) { $0 + $1.questionCount },
+                    isComplete: savedSets.count == sets.count,
+                    savedAt: saved.savedAt
+                ))
         }
         let position = { (course: SavedCourse) in homeOrder.firstIndex(of: course.id) ?? homeOrder.count }
         return courses.sorted { (position($0), $0.code) < (position($1), $1.code) }

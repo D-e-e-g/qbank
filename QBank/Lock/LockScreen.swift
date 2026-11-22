@@ -144,11 +144,14 @@ struct LockWindow: UIViewRepresentable {
             self.lockWindow = nil
             hosting = nil
             window?.makeKey()
-            UIView.animate(withDuration: QBankMotion.standard, animations: {
-                lockWindow.alpha = 0
-            }, completion: { _ in
-                lockWindow.isHidden = true
-            })
+            UIView.animate(
+                withDuration: QBankMotion.standard,
+                animations: {
+                    lockWindow.alpha = 0
+                },
+                completion: { _ in
+                    lockWindow.isHidden = true
+                })
         }
 
         private func observe(_ scene: UIWindowScene?) {

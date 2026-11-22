@@ -72,39 +72,46 @@ struct ExamPageView: View {
                 dismiss()
             }
         }
-        .sheet(isPresented: $editsPage, onDismiss: {
-            order = nil
-        }, content: {
-            if let course = model.course {
-                EditExamPageView(app: app, course: course, pageID: id) { _ in
-                    Task { await model.load() }
-                }
-            }
-        })
-        .sheet(item: $adding, onDismiss: {
-            // The folder a set went into opens once the sheet is down.
-            guard let folder = opensFolder else { return }
-            opensFolder = nil
-            navigator?.open(CoursePage.folder(folder))
-        }, content: { sheet in
-            if let page = model.layout?.page(id) {
-                switch sheet {
-                case .importFile:
-                    ImportHereSheet(app: app, courseID: model.id, folderID: page.folders.first?.id, examPageID: page.id) { set in
-                        adding = nil
+        .sheet(
+            isPresented: $editsPage,
+            onDismiss: {
+                order = nil
+            },
+            content: {
+                if let course = model.course {
+                    EditExamPageView(app: app, course: course, pageID: id) { _ in
                         Task { await model.load() }
-                        if set.courseID == model.id {
-                            opensFolder = set.folderID
-                        } else {
-                            // She picked another course in the sheet.
-                            tabs?.openFolder(courseID: set.courseID, name: nil, folderID: set.folderID)
-                        }
                     }
-                case .newFolder:
-                    NewFolderSheet(model: model, page: page.exam)
                 }
             }
-        })
+        )
+        .sheet(
+            item: $adding,
+            onDismiss: {
+                // The folder a set went into opens once the sheet is down.
+                guard let folder = opensFolder else { return }
+                opensFolder = nil
+                navigator?.open(CoursePage.folder(folder))
+            },
+            content: { sheet in
+                if let page = model.layout?.page(id) {
+                    switch sheet {
+                    case .importFile:
+                        ImportHereSheet(app: app, courseID: model.id, folderID: page.folders.first?.id, examPageID: page.id) { set in
+                            adding = nil
+                            Task { await model.load() }
+                            if set.courseID == model.id {
+                                opensFolder = set.folderID
+                            } else {
+                                // She picked another course in the sheet.
+                                tabs?.openFolder(courseID: set.courseID, name: nil, folderID: set.folderID)
+                            }
+                        }
+                    case .newFolder:
+                        NewFolderSheet(model: model, page: page.exam)
+                    }
+                }
+            })
     }
 
     /// The + at the top: "Add to Exam 1", then Import a question file here, New folder on this

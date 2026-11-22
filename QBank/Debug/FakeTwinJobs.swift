@@ -122,9 +122,10 @@ nonisolated final class FakeTwinJobs: Sendable {
         guard let sources = study.twinSources(courseID: courseID, folderIDs: folderIDs, pool: pool) else {
             return Self.failure(400, "invalid_request", "That folder is not in this course.")
         }
-        let busy = Set(state.withLock { state in
-            state.jobs.filter { $0.courseID == courseID && $0.status == "running" }.flatMap { $0.folders.filter { $0.twinCount > 0 }.map(\.id) }
-        })
+        let busy = Set(
+            state.withLock { state in
+                state.jobs.filter { $0.courseID == courseID && $0.status == "running" }.flatMap { $0.folders.filter { $0.twinCount > 0 }.map(\.id) }
+            })
         let clash = sources.map(\.folder).filter { busy.contains($0.id) }.map(\.name)
         if !clash.isEmpty {
             return Self.failure(400, "invalid_request", "QBank is still writing exam twins in \(FakeStudy.listText(clash)). Try again once they are filed.")
@@ -166,17 +167,19 @@ nonisolated final class FakeTwinJobs: Sendable {
             for set in source.sets where !leftAsItIs {
                 let fresh = set.questionIDs.filter { !source.twinned.contains($0) }
                 if !fresh.isEmpty {
-                    sets.append(TwinSet(
-                        setID: set.setID, setTitle: library.makerSetTitle(set.setID) ?? "Invented set", folderID: source.folder.id,
-                        folderName: source.folder.name, questionIDs: fresh
-                    ))
+                    sets.append(
+                        TwinSet(
+                            setID: set.setID, setTitle: library.makerSetTitle(set.setID) ?? "Invented set", folderID: source.folder.id,
+                            folderName: source.folder.name, questionIDs: fresh
+                        ))
                 }
             }
             let fresh = leftAsItIs ? 0 : pooled.count { !source.twinned.contains($0) }
-            folders.append(ScopeFolder(
-                id: source.folder.id, name: source.folder.name, questionCount: pooled.count, twinCount: fresh,
-                alreadyTwinned: pooled.count { source.twinned.contains($0) }
-            ))
+            folders.append(
+                ScopeFolder(
+                    id: source.folder.id, name: source.folder.name, questionCount: pooled.count, twinCount: fresh,
+                    alreadyTwinned: pooled.count { source.twinned.contains($0) }
+                ))
             if leftAsItIs, !pooled.isEmpty { unmatched.append(source.folder.name) }
             let own = source.folder.sets.reduce(0) { $0 + (FakeStudy.setSizes[$1] ?? 0) }
             if source.folder.bank.isEmpty, fresh > 0, fresh < own { narrowed.append(source.folder.name) }
@@ -184,19 +187,25 @@ nonisolated final class FakeTwinJobs: Sendable {
         let which = pool == .wrong ? "wrong question" : "question"
         let empty = folders.filter { $0.questionCount == 0 }.map(\.name)
         let one = unmatched.count == 1
-        let leftAlone = unmatched.isEmpty ? [] : [
-            "\(FakeStudy.listText(unmatched)) already \(has(unmatched)) exam questions QBank can't match to \(one ? "its" : "their") practice questions, so QBank leaves \(one ? "it as it is" : "them as they are")."
-        ]
+        let leftAlone =
+            unmatched.isEmpty
+            ? []
+            : [
+                "\(FakeStudy.listText(unmatched)) already \(has(unmatched)) exam questions QBank can't match to \(one ? "its" : "their") practice questions, so QBank leaves \(one ? "it as it is" : "them as they are")."
+            ]
         let total = sets.reduce(0) { $0 + $1.questionIDs.count }
         if total == 0 {
             let withQuestions = folders.filter { $0.questionCount > 0 }
             if withQuestions.isEmpty {
-                return .failure(Refusal(message: pool == .wrong
-                    ? "\(FakeStudy.listText(empty)) \(has(empty)) no wrong questions, so there is nothing to twin."
-                    : "\(FakeStudy.listText(empty)) \(has(empty)) no practice questions to twin."))
+                return .failure(
+                    Refusal(
+                        message: pool == .wrong
+                            ? "\(FakeStudy.listText(empty)) \(has(empty)) no wrong questions, so there is nothing to twin."
+                            : "\(FakeStudy.listText(empty)) \(has(empty)) no practice questions to twin."))
             }
             let twinned = withQuestions.filter { folder in !unmatched.contains(folder.name) }.map(\.name)
-            let sentences = (twinned.isEmpty ? [] : ["Every \(which) in \(FakeStudy.listText(twinned)) already has an exam twin."])
+            let sentences =
+                (twinned.isEmpty ? [] : ["Every \(which) in \(FakeStudy.listText(twinned)) already has an exam twin."])
                 + leftAlone + ["Start the exam\(pool == .wrong ? " with Wrong questions only" : "") to take them."]
             return .failure(Refusal(message: sentences.joined(separator: " ")))
         }
@@ -299,11 +308,12 @@ nonisolated final class FakeTwinJobs: Sendable {
         let steps: [[String: Any]] = Self.steps.enumerated().map { index, key in
             var state = index < at ? "done" : "todo"
             if index == at {
-                state = switch job.status {
-                case "failed": "failed"
-                case "cancelled": "cancelled"
-                default: "current"
-                }
+                state =
+                    switch job.status {
+                    case "failed": "failed"
+                    case "cancelled": "cancelled"
+                    default: "current"
+                    }
             }
             let progress = state == "current" ? job.progress : nil
             return [

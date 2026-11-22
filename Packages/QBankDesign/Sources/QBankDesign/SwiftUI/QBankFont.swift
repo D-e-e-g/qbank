@@ -67,12 +67,13 @@ extension View {
         design: QBankTextStyle.Design? = nil,
         trackingEm: Double? = nil
     ) -> some View {
-        modifier(QBankFontModifier(
-            style: style,
-            weight: weight ?? style.weight,
-            design: design ?? style.design,
-            trackingEm: trackingEm
-        ))
+        modifier(
+            QBankFontModifier(
+                style: style,
+                weight: weight ?? style.weight,
+                design: design ?? style.design,
+                trackingEm: trackingEm
+            ))
     }
 }
 
@@ -105,12 +106,14 @@ private struct QBankFontModifier: ViewModifier {
     /// The system font's own line height at this size; line spacing adds the rest.
     private var naturalLineHeight: CGFloat {
         #if canImport(UIKit)
-        let font = design == .monospaced
+        let font =
+            design == .monospaced
             ? UIFont.monospacedSystemFont(ofSize: size, weight: weight.platformWeight)
             : UIFont.systemFont(ofSize: size, weight: weight.platformWeight)
         return font.lineHeight
         #elseif canImport(AppKit)
-        let font = design == .monospaced
+        let font =
+            design == .monospaced
             ? NSFont.monospacedSystemFont(ofSize: size, weight: weight.platformWeight)
             : NSFont.systemFont(ofSize: size, weight: weight.platformWeight)
         return font.ascender - font.descender + font.leading
@@ -152,11 +155,13 @@ private extension QBankTextStyle.Weight {
                     Text("\(style.rawValue) · \(Int(style.size))/\(Int(style.lineHeight))")
                         .qbankFont(.caption2)
                         .foregroundStyle(.qbank(.text3))
-                    Text(style.rawValue.hasPrefix("reading")
-                         ? "A 27-year-old client admitted involuntarily refuses his scheduled oral antipsychotic."
-                         : "Check answer")
-                        .qbankFont(style)
-                        .foregroundStyle(.qbank(.text1))
+                    Text(
+                        style.rawValue.hasPrefix("reading")
+                            ? "A 27-year-old client admitted involuntarily refuses his scheduled oral antipsychotic."
+                            : "Check answer"
+                    )
+                    .qbankFont(style)
+                    .foregroundStyle(.qbank(.text1))
                 }
             }
         }

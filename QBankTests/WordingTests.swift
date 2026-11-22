@@ -22,10 +22,11 @@ struct WordingTests {
 
     /// The Exam tile says the server's time for an exam over every folder, whatever the old rules
     /// would have made of the question count.
-    @Test(arguments: [
-        (0, 0, "Not ready"), (4, 360, "6 min"), (5, 450, "7.5 min"), (40, 3600, "60 min"), (134, 3600, "60 min"),
-        (134, 2700, "45 min"), (30, 1500, "25 min"), (30, nil, "Timed"),
-    ] as [(Int, Int?, String)])
+    @Test(
+        arguments: [
+            (0, 0, "Not ready"), (4, 360, "6 min"), (5, 450, "7.5 min"), (40, 3600, "60 min"), (134, 3600, "60 min"),
+            (134, 2700, "45 min"), (30, 1500, "25 min"), (30, nil, "Timed"),
+        ] as [(Int, Int?, String)])
     func examTime(questions: Int, seconds: Int?, expected: String) {
         let course = CourseDetail(
             id: "c1", code: "NURS 101", title: "Invented Basics", archivedAt: nil, semester: nil, questionCount: questions,
@@ -40,9 +41,12 @@ struct WordingTests {
     ) throws -> PracticeSetSummary {
         let sitting = sitting.map { #","sitting":{"answeredCount":\#($0)}"# } ?? ""
         let run = run.map { #","run":"\#($0)""# } ?? ""
-        return try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(#"""
-        {"id":"s","title":"t","description":"","questionCount":17,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"\#(status)","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":\#(right),"lastAnsweredAt":\#(last),"questionIds":[]\#(sitting)\#(run)}
-        """#.utf8))
+        return try QBankJSON.decoder.decode(
+            PracticeSetSummary.self,
+            from: Data(
+                #"""
+                {"id":"s","title":"t","description":"","questionCount":17,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"\#(status)","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":\#(right),"lastAnsweredAt":\#(last),"questionIds":[]\#(sitting)\#(run)}
+                """#.utf8))
     }
 
     /// A row from a server before `run` reads by the counts and the sitting, as it always did.
@@ -75,9 +79,12 @@ struct WordingTests {
 
     @Test func answeredPercentRoundsAndCaps() throws {
         func course(questions: Int, answered: Int) throws -> CourseSummary {
-            try QBankJSON.decoder.decode(CourseSummary.self, from: Data(#"""
-            {"id":"c","code":"N","title":"T","sortOrder":1,"archivedAt":null,"questionCount":\#(questions),"weekCount":1,"reviewCount":0,"answeredCount":\#(answered),"fullyRightCount":0,"points":0,"maxPoints":0}
-            """#.utf8))
+            try QBankJSON.decoder.decode(
+                CourseSummary.self,
+                from: Data(
+                    #"""
+                    {"id":"c","code":"N","title":"T","sortOrder":1,"archivedAt":null,"questionCount":\#(questions),"weekCount":1,"reviewCount":0,"answeredCount":\#(answered),"fullyRightCount":0,"points":0,"maxPoints":0}
+                    """#.utf8))
         }
         #expect(Wording.answeredPercent(try course(questions: 86, answered: 35)) == 41)
         #expect(Wording.answeredPercent(try course(questions: 10, answered: 12)) == 100)
@@ -253,29 +260,37 @@ struct WordingTests {
     }
 
     @Test func importIsSaidPlainlyAndNeverReplacesOrDeletesASet() {
-        #expect(AgentWording.scopeWords(.import, admin: false) == .init(
-            title: "Import question sets",
-            detail: "Into the courses and topics of your account, reading them to file each set. It never replaces, moves, renames, or deletes a set."
-        ))
+        #expect(
+            AgentWording.scopeWords(.import, admin: false)
+                == .init(
+                    title: "Import question sets",
+                    detail: "Into the courses and topics of your account, reading them to file each set. It never replaces, moves, renames, or deletes a set."
+                ))
         #expect(AgentWording.scopeWords(.import, admin: true).detail == "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none.")
     }
 
     @Test func readIsReadOnly() {
-        #expect(AgentWording.scopeWords(.read, admin: false) == .init(
-            title: "Read progress, read-only",
-            detail: "Where you stand by topic, your Review lists, your exams, and your progress export. It changes nothing."
-        ))
+        #expect(
+            AgentWording.scopeWords(.read, admin: false)
+                == .init(
+                    title: "Read progress, read-only",
+                    detail: "Where you stand by topic, your Review lists, your exams, and your progress export. It changes nothing."
+                ))
     }
 
     @Test func manageAddsChangesAndDeletesWithEveryDeleteInRecentlyDeleted() {
-        #expect(AgentWording.scopeWords(.manage, admin: false) == .init(
-            title: "Add, change, and delete your content",
-            detail: "The sets, questions, folders, courses, and topics of your account, as you can in QBank. Anything it deletes goes to Recently deleted, where Undo brings it back for 30 days."
-        ))
-        #expect(AgentWording.scopeWords(.manage, admin: true) == .init(
-            title: "Add, change, and delete content",
-            detail: "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none."
-        ))
+        #expect(
+            AgentWording.scopeWords(.manage, admin: false)
+                == .init(
+                    title: "Add, change, and delete your content",
+                    detail: "The sets, questions, folders, courses, and topics of your account, as you can in QBank. Anything it deletes goes to Recently deleted, where Undo brings it back for 30 days."
+                ))
+        #expect(
+            AgentWording.scopeWords(.manage, admin: true)
+                == .init(
+                    title: "Add, change, and delete content",
+                    detail: "It reaches nothing. An agent key reaches only its own account's content, and the admin account has none."
+                ))
         #expect(AgentWording.isStrongest(.manage))
         #expect(!AgentWording.isStrongest(.import))
         #expect(!AgentWording.isStrongest(.read))
@@ -286,13 +301,14 @@ struct WordingTests {
     }
 
     @Test func eachAskedScopeHasTheServersWordsInItsOrderUnderAShortTitle() {
-        #expect(AgentWording.pairingScopes(pairing(), admin: false) == [
-            .init(scope: .import, title: "Import question sets", detail: "Import question sets into your courses and topics.", isStrongest: false),
-            .init(
-                scope: .manage, title: "Add, change, and delete your content",
-                detail: "Add, change and delete your courses, topics, folders and sets. Anything it deletes goes to Recently deleted.", isStrongest: true
-            ),
-        ])
+        #expect(
+            AgentWording.pairingScopes(pairing(), admin: false) == [
+                .init(scope: .import, title: "Import question sets", detail: "Import question sets into your courses and topics.", isStrongest: false),
+                .init(
+                    scope: .manage, title: "Add, change, and delete your content",
+                    detail: "Add, change and delete your courses, topics, folders and sets. Anything it deletes goes to Recently deleted.", isStrongest: true
+                ),
+            ])
         let fallback = AgentWording.pairingScopes(pairing(scopes: [.import, .read], texts: [.init(scope: .import, text: "Server words.")]), admin: false)
         #expect(fallback.map(\.detail) == ["Server words.", AgentWording.scopeWords(.read, admin: false).detail], "its own words only where the server sent none")
     }

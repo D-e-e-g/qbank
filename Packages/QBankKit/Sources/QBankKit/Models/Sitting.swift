@@ -65,7 +65,8 @@ extension PracticeSet {
         for attempt in waiting.sorted(by: { $0.queuedAt < $1.queuedAt }) where attempt.submission.joinsASitting {
             if let startedAt = set.sitting?.startedAt, attempt.queuedAt < startedAt { continue }
             guard let question = questions.first(where: { $0.id == attempt.submission.questionID }),
-                  let answer = SittingAnswer(waiting: attempt, question: question) else { continue }
+                let answer = SittingAnswer(waiting: attempt, question: question)
+            else { continue }
             set = set.counting(answer)
         }
         return set

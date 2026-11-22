@@ -11,10 +11,13 @@ nonisolated extension FakeQBankServer {
         let source = body["source"] as? String ?? ""
         let check = FakeImportCheck(source: source)
         guard check.ok, let fileTitle = check.title else {
-            return (400, [
-                "error": "invalid_import", "message": check.errors.first ?? "This file can't be imported.",
-                "errors": check.errors, "warnings": check.warnings,
-            ])
+            return (
+                400,
+                [
+                    "error": "invalid_import", "message": check.errors.first ?? "This file can't be imported.",
+                    "errors": check.errors, "warnings": check.warnings,
+                ]
+            )
         }
         var title = fileTitle
         if let given = body["title"] as? String {
@@ -53,11 +56,14 @@ nonisolated extension FakeQBankServer {
         let decision = body["decision"] as? String ?? "import"
         let existing = currentSet(in: course.id, kind: check.kind, title: title)
         if let existing, decision == "import", let folder = existingFolder(of: existing) {
-            return (409, [
-                "conflict": true, "title": title, "courseId": course.id, "courseCode": course.code, "courseTitle": course.title,
-                "weekLabel": folder.name, "folderId": folder.id, "folderName": folder.name,
-                "existingQuestionCount": summary(of: existing)?.questions ?? 0, "incomingQuestionCount": check.questionCount, "setId": existing,
-            ])
+            return (
+                409,
+                [
+                    "conflict": true, "title": title, "courseId": course.id, "courseCode": course.code, "courseTitle": course.title,
+                    "weekLabel": folder.name, "folderId": folder.id, "folderName": folder.name,
+                    "existingQuestionCount": summary(of: existing)?.questions ?? 0, "incomingQuestionCount": check.questionCount, "setId": existing,
+                ]
+            )
         }
         let replace = decision == "replace" ? existing : nil
         let folder: FakeStudy.Folder
@@ -85,11 +91,14 @@ nonisolated extension FakeQBankServer {
             study.file(set: id, in: folder.id, replacing: replace, questionCount: check.questionCount)
         }
         let page = study.folders(course.id).first { $0.id == folder.id }?.examPageID
-        return (201, [
-            "kind": replace == nil ? "imported" : "replaced", "setKind": check.kind, "setId": id, "courseId": course.id,
-            "courseCode": course.code, "title": title, "weekLabel": folder.name, "folderId": folder.id, "folderName": folder.name,
-            "examPageId": json(page), "questionCount": check.questionCount, "termCount": check.termCount, "warnings": check.warnings,
-        ])
+        return (
+            201,
+            [
+                "kind": replace == nil ? "imported" : "replaced", "setKind": check.kind, "setId": id, "courseId": course.id,
+                "courseCode": course.code, "title": title, "weekLabel": folder.name, "folderId": folder.id, "folderName": folder.name,
+                "examPageId": json(page), "questionCount": check.questionCount, "termCount": check.termCount, "warnings": check.warnings,
+            ]
+        )
     }
 
     /// A course an import makes, in the semester of that number, made too when it is missing.

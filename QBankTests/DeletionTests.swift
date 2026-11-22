@@ -376,10 +376,12 @@ struct DeletionTests {
             StubServer.Reply.ok(#"{"folderId":"f1","name":"Week 1","examPageId":null,"examPageName":null,"sets":[],"setCount":\#(sets.isEmpty ? 0 : 1),"questionCount":2,"answeredCount":0,"reviewCount":0,"pastExamCount":0,"progress":\#(Self.standing),"message":"Delete Week 1? \#(sets)You can undo this for 30 days.","refusal":null,"confirm":"\#(confirm)","undoDays":30}"#)
         }
         server.script("GET /api/folders/f1/delete-preview", [preview("aaaa", ""), preview("bbbb", "Its set goes with it: Late, 2 questions in all. ")])
-        server.script("DELETE /api/folders/f1", [
-            .error(409, "deletion_changed", "Week 1 changed since you were warned. Look again before deleting it."),
-            StubServer.Reply(status: 204, body: ""),
-        ])
+        server.script(
+            "DELETE /api/folders/f1",
+            [
+                .error(409, "deletion_changed", "Week 1 changed since you were warned. Look again before deleting it."),
+                StubServer.Reply(status: 204, body: ""),
+            ])
         let (app, _) = TestApp.make(server, account: .student())
         let model = DeleteModel(app: app, target: .folder(id: "f1", name: "Week 1"))
         await model.load()
@@ -405,11 +407,13 @@ struct DeletionTests {
     /// The server splits its warning into the question and the rest: the confirmation shows them
     /// as sent, even where splitting `message` at its first question would stop inside the name.
     @Test func theServersWarningIsShownAsItSplitIt() async throws {
-        let server = StubServer(["GET /api/folders/f1/delete-preview": Self.folderPreview(
-            name: "Why? Because",
-            message: "Delete Why? Because? It has no sets. You can undo this for 30 days.",
-            warning: ("Delete Why? Because?", "It has no sets. You can undo this for 30 days.")
-        )])
+        let server = StubServer([
+            "GET /api/folders/f1/delete-preview": Self.folderPreview(
+                name: "Why? Because",
+                message: "Delete Why? Because? It has no sets. You can undo this for 30 days.",
+                warning: ("Delete Why? Because?", "It has no sets. You can undo this for 30 days.")
+            )
+        ])
         let (app, _) = TestApp.make(server, account: .student())
         let model = DeleteModel(app: app, target: .folder(id: "f1", name: "Why? Because"))
         await model.load()
@@ -421,10 +425,12 @@ struct DeletionTests {
     /// question, and shows it whole under the target's question when it has none.
     @Test func aWarningWithoutItsPartsIsSplitAtItsQuestion() async throws {
         let server = StubServer()
-        server.script("GET /api/folders/f1/delete-preview", [
-            Self.folderPreview(name: "Week 1", message: "Delete Week 1? It has no sets. You can undo this for 30 days.", warning: nil),
-            Self.folderPreview(name: "Week 1", message: "It has no sets.", warning: nil),
-        ])
+        server.script(
+            "GET /api/folders/f1/delete-preview",
+            [
+                Self.folderPreview(name: "Week 1", message: "Delete Week 1? It has no sets. You can undo this for 30 days.", warning: nil),
+                Self.folderPreview(name: "Week 1", message: "It has no sets.", warning: nil),
+            ])
         let (app, _) = TestApp.make(server, account: .student())
         let model = DeleteModel(app: app, target: .folder(id: "f1", name: "Week 1"))
         await model.load()

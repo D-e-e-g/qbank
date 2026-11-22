@@ -193,8 +193,11 @@ private struct QBankButtonLabelStyle: LabelStyle {
                 HStack(spacing: QBankSpacing.space3) {
                     Button(variant.rawValue.capitalized) {}
                         .buttonStyle(.qbank(variant))
-                    Button {} label: { Label("Restore", systemImage: "arrow.counterclockwise") }
-                        .buttonStyle(.qbank(variant, size: .small))
+                    Button {
+                    } label: {
+                        Label("Restore", systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.qbank(variant, size: .small))
                 }
             }
         }

@@ -70,7 +70,7 @@ struct ConnectAgentModelTests {
         let server = StubServer([
             "POST /api/agent-pairings/lookup": StubServer.Reply(
                 status: 429, body: #"{"error":"too_many_attempts","message":"Too many tries. Try again in 15 minutes.","retryAfterSeconds":900}"#
-            ),
+            )
         ])
         let clock = Locked(Date(timeIntervalSince1970: 1_800_000_000))
         let (model, _) = make(server, now: { clock.value })

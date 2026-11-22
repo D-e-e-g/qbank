@@ -182,10 +182,12 @@ struct PracticeModelTests {
         // Words the phone would never write, so only the server's can show.
         let server = StubServer([
             "GET /api/practice-sets/set1": .ok(Self.practiceSet()),
-            "POST /api/attempts": StubServer.Reply(status: 201, body: Self.saved(
-                id: "attempt-1", question: "q-sata", status: "partial", points: 1, max: 2,
-                label: "Partly right", pointsText: "1 point of 2", ruleText: "A rule the server changed"
-            )),
+            "POST /api/attempts": StubServer.Reply(
+                status: 201,
+                body: Self.saved(
+                    id: "attempt-1", question: "q-sata", status: "partial", points: 1, max: 2,
+                    label: "Partly right", pointsText: "1 point of 2", ruleText: "A rule the server changed"
+                )),
         ])
         let (model, _) = Self.model(server)
         await model.load()
@@ -313,10 +315,12 @@ struct PracticeModelTests {
         await model.check()
         model.next()
         model.update(.single(0))
-        server.script("POST /api/attempts", [
-            StubServer.Reply(status: 201, body: Self.saved(id: "attempt-1", question: "q-sata", status: "correct", points: 2, max: 2)),
-            StubServer.Reply(status: 201, body: Self.saved(id: "attempt-2", question: "q-single", status: "correct", points: 1, max: 1)),
-        ])
+        server.script(
+            "POST /api/attempts",
+            [
+                StubServer.Reply(status: 201, body: Self.saved(id: "attempt-1", question: "q-sata", status: "correct", points: 2, max: 2)),
+                StubServer.Reply(status: 201, body: Self.saved(id: "attempt-2", question: "q-single", status: "correct", points: 1, max: 1)),
+            ])
         connection.update(isOnline: true)
         // The answer she checks while the first is still on its way joins the same pass, behind it.
         await model.check()

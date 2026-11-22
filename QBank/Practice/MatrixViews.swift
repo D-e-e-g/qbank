@@ -268,7 +268,8 @@ private struct MatrixMultiGrid: View {
             compatibleWith: UITraitCollection(preferredContentSizeCategory: dynamicTypeSize.contentSizeCategory)
         )
         let font = UIFont.systemFont(ofSize: size, weight: .semibold)
-        let widest = columns
+        let widest =
+            columns
             .flatMap { $0.split(whereSeparator: \.isWhitespace) }
             .map { ceil((String($0) as NSString).size(withAttributes: [.font: font]).width) }
             .max() ?? 0

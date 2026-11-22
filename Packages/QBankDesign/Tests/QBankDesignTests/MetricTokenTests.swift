@@ -109,17 +109,21 @@ struct MetricTokenTests {
         let name = "--shadow-\(level.rawValue)"
         let light = try WebTokens.shadows(#require(spacing.blocks[":root"]?[name]))
         #expect(light.allSatisfy { $0.spread == 0 })
-        #expect(level.shadows(.light) == light.map {
-            QBankShadowLayer(color: $0.color, x: CGFloat($0.x), y: CGFloat($0.y), blur: CGFloat($0.blur))
-        })
+        #expect(
+            level.shadows(.light)
+                == light.map {
+                    QBankShadowLayer(color: $0.color, x: CGFloat($0.x), y: CGFloat($0.y), blur: CGFloat($0.blur))
+                })
         #expect(level.ring(.light) == nil)
 
         let dark = try WebTokens.shadows(#require(spacing.blocks["[data-theme=\"dark\"]"]?[name]))
         let rings = dark.filter { $0.spread > 0 }
         #expect(rings.allSatisfy { $0.spread == Double(QBankBorder.hairline) && $0.blur == 0 && $0.x == 0 && $0.y == 0 })
         #expect(level.ring(.dark) == rings.first?.color)
-        #expect(level.shadows(.dark) == dark.filter { $0.spread == 0 }.map {
-            QBankShadowLayer(color: $0.color, x: CGFloat($0.x), y: CGFloat($0.y), blur: CGFloat($0.blur))
-        })
+        #expect(
+            level.shadows(.dark)
+                == dark.filter { $0.spread == 0 }.map {
+                    QBankShadowLayer(color: $0.color, x: CGFloat($0.x), y: CGFloat($0.y), blur: CGFloat($0.blur))
+                })
     }
 }

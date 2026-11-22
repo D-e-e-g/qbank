@@ -395,9 +395,12 @@ struct SetProgressTests {
 
     @Test func theRowSaysContinueWhileThereIsASitting() throws {
         func row(answered: Int, sitting: String) throws -> PracticeSetSummary {
-            try QBankJSON.decoder.decode(PracticeSetSummary.self, from: Data(#"""
-            {"id":"s","title":"t","description":"","questionCount":12,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"imported","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":3,"lastAnsweredAt":"2026-10-12T10:00:00.000Z","questionIds":[],"sitting":\#(sitting)}
-            """#.utf8))
+            try QBankJSON.decoder.decode(
+                PracticeSetSummary.self,
+                from: Data(
+                    #"""
+                    {"id":"s","title":"t","description":"","questionCount":12,"importedAt":"2026-10-12T09:00:00.000Z","activeSince":"2026-10-12T09:00:00.000Z","status":"imported","canRestore":false,"answeredCount":\#(answered),"fullyRightCount":3,"lastAnsweredAt":"2026-10-12T10:00:00.000Z","questionIds":[],"sitting":\#(sitting)}
+                    """#.utf8))
         }
         let now = try #require(QBankJSON.parseDate("2026-10-12T12:00:00.000Z"))
         #expect(Wording.status(try row(answered: 7, sitting: #"{"answeredCount":7}"#), now: now) == "7 of 12 answered · Continue")
@@ -591,10 +594,11 @@ struct SetProgressTests {
     // MARK: The fake server
 
     @Test func theFakeServerKeepsSittingsByTheServersRules() async throws {
-        let app = try #require(DebugLaunchScenario.makeModel(
-            environment: [DebugLaunchScenario.scenarioKey: "signed-in"],
-            phoneFolder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        ))
+        let app = try #require(
+            DebugLaunchScenario.makeModel(
+                environment: [DebugLaunchScenario.scenarioKey: "signed-in"],
+                phoneFolder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            ))
         // Day one: answers from before, no row yet.
         let midway = try await app.client.practiceSet(id: "communication-v1")
         #expect(midway.sitting?.id == nil)
@@ -624,10 +628,11 @@ struct SetProgressTests {
 
     /// The fake server sends `run` by the server's rule, on the set and on its row.
     @Test func theFakeServerSendsEachSetsRun() async throws {
-        let app = try #require(DebugLaunchScenario.makeModel(
-            environment: [DebugLaunchScenario.scenarioKey: "signed-in"],
-            phoneFolder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        ))
+        let app = try #require(
+            DebugLaunchScenario.makeModel(
+                environment: [DebugLaunchScenario.scenarioKey: "signed-in"],
+                phoneFolder: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            ))
         #expect(try await app.client.practiceSet(id: "mixed-v1").run == .new)
         #expect(try await app.client.practiceSet(id: "communication-v1").run == .midway)
         #expect(try await app.client.practiceSet(id: "rights-v1").run == .done)

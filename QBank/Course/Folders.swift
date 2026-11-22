@@ -199,7 +199,8 @@ private struct ReorderDrop: DropDelegate {
     func dropEntered(info: DropInfo) {
         hovered.insert(target)
         guard let dragging, dragging != target, var current = order,
-              let from = current.firstIndex(of: dragging), let to = current.firstIndex(of: target) else { return }
+            let from = current.firstIndex(of: dragging), let to = current.firstIndex(of: target)
+        else { return }
         withAnimation(reduceMotion ? nil : QBankMotion.reveal) {
             current.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
             order = current

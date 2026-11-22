@@ -63,18 +63,19 @@ nonisolated final class FakeAgents: Sendable {
     private let state: Mutex<State>
 
     init(studentEmail: String, now: Date) {
-        state = Mutex(State(
-            pairings: [
-                Pairing(userCode: Self.normalized(Self.importCode), name: Self.importAgent, scopes: ["import", "read"]),
-                Pairing(userCode: Self.normalized(Self.manageCode), name: Self.manageAgent, scopes: ["import", "manage"]),
-            ],
-            keys: [
-                Key(
-                    id: Self.macKey.id, email: studentEmail, name: Self.macKey.name, scopes: ["import", "read"],
-                    createdAt: now.addingTimeInterval(-45 * 86_400), lastUsedAt: now.addingTimeInterval(-3600)
-                ),
-            ]
-        ))
+        state = Mutex(
+            State(
+                pairings: [
+                    Pairing(userCode: Self.normalized(Self.importCode), name: Self.importAgent, scopes: ["import", "read"]),
+                    Pairing(userCode: Self.normalized(Self.manageCode), name: Self.manageAgent, scopes: ["import", "manage"]),
+                ],
+                keys: [
+                    Key(
+                        id: Self.macKey.id, email: studentEmail, name: Self.macKey.name, scopes: ["import", "read"],
+                        createdAt: now.addingTimeInterval(-45 * 86_400), lastUsedAt: now.addingTimeInterval(-3600)
+                    )
+                ]
+            ))
     }
 
     static func handles(_ path: String) -> Bool {

@@ -45,11 +45,12 @@ struct PracticeResultTests {
         #expect(result.guessed == 1, "a guess she never checked does not count")
         #expect(result.points == 5)
         #expect(result.maxPoints == 8, "an unanswered question adds nothing to the maximum")
-        #expect(result.steps == [
-            .init(label: "Analyze cues", right: 1, total: 2),
-            .init(label: "Take action", right: 0, total: 1),
-            .init(label: "Not labeled", right: 1, total: 2),
-        ])
+        #expect(
+            result.steps == [
+                .init(label: "Analyze cues", right: 1, total: 2),
+                .init(label: "Take action", right: 0, total: 1),
+                .init(label: "Not labeled", right: 1, total: 2),
+            ])
         #expect(result.rows.map(\.mark) == ["Guessed - Correct", "Partly correct", "Not correct", "Correct", "Not answered"])
         #expect(result.rows.map(\.detail) == ["Single answer · 2 of 2", "Single answer · 1 of 3", "Single answer · 0 of 1", "Single answer · 2 of 2", "Single answer"])
         #expect(result.rows.last?.title == "P-5", "a question without a topic shows its id")

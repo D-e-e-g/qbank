@@ -79,7 +79,9 @@ struct PracticeView: View {
             RunnerCloseButton { dismiss() }
         } trailing: {
             if model.waitingCount > 0 {
-                Button { showsWaiting = true } label: {
+                Button {
+                    showsWaiting = true
+                } label: {
                     QBankTintedLabel("\(model.waitingCount) waiting", systemImage: "arrow.up.circle", tone: .tint, size: .small)
                         .frame(minHeight: 44)
                         .contentShape(.rect)

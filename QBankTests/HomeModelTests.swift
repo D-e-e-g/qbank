@@ -5,11 +5,14 @@ import Testing
 @MainActor
 struct HomeModelTests {
     @Test func loadsSemestersWithoutArchivedCoursesInTheOwnersOrder() async throws {
-        let server = StubServer(["GET /api/semesters": .ok(Bodies.semesters([
-            Bodies.course(id: "c2", code: "NURS 220", order: 2),
-            Bodies.course(id: "c3", code: "NURS 330", order: 3, archived: true),
-            Bodies.course(id: "c1", code: "NURS 101", order: 1),
-        ]))])
+        let server = StubServer([
+            "GET /api/semesters": .ok(
+                Bodies.semesters([
+                    Bodies.course(id: "c2", code: "NURS 220", order: 2),
+                    Bodies.course(id: "c3", code: "NURS 330", order: 3, archived: true),
+                    Bodies.course(id: "c1", code: "NURS 101", order: 1),
+                ]))
+        ])
         let (app, _) = TestApp.make(server, account: .student())
         let model = HomeModel(app: app)
         await model.load()

@@ -97,18 +97,20 @@ nonisolated final class FakeQuestionMaker: Sendable {
         self.isSetUp = isSetUp
         var jobs: [Job] = []
         if let owner {
-            jobs.append(Job(
-                id: "a0b10000-0000-4000-8000-000000000002", owner: owner, materialKind: "questions", status: "waiting", step: "review",
-                courseID: FakeQBankServer.mentalHealthID, folderID: nil, folderName: "Week 3", level: "exam", referenceID: nil, count: nil,
-                examTwins: true, title: nil, photoCount: 2, createdAt: now.addingTimeInterval(-600), updatedAt: now.addingTimeInterval(-300),
-                copies: Self.seededCopies, unreadable: [(2, "The bottom of photo 2 is blurry.")]
-            ))
-            jobs.append(Job(
-                id: "a0b10000-0000-4000-8000-000000000001", owner: owner, materialKind: "notes", status: "running", step: "write",
-                progress: (9, 15), courseID: FakeQBankServer.mentalHealthID, folderID: nil, folderName: "Week 4", level: "exam",
-                referenceID: nil, count: 15, examTwins: true, title: "Schizophrenia and Antipsychotics", photoCount: 4,
-                createdAt: now.addingTimeInterval(-1_200), updatedAt: now.addingTimeInterval(-60), round: 1
-            ))
+            jobs.append(
+                Job(
+                    id: "a0b10000-0000-4000-8000-000000000002", owner: owner, materialKind: "questions", status: "waiting", step: "review",
+                    courseID: FakeQBankServer.mentalHealthID, folderID: nil, folderName: "Week 3", level: "exam", referenceID: nil, count: nil,
+                    examTwins: true, title: nil, photoCount: 2, createdAt: now.addingTimeInterval(-600), updatedAt: now.addingTimeInterval(-300),
+                    copies: Self.seededCopies, unreadable: [(2, "The bottom of photo 2 is blurry.")]
+                ))
+            jobs.append(
+                Job(
+                    id: "a0b10000-0000-4000-8000-000000000001", owner: owner, materialKind: "notes", status: "running", step: "write",
+                    progress: (9, 15), courseID: FakeQBankServer.mentalHealthID, folderID: nil, folderName: "Week 4", level: "exam",
+                    referenceID: nil, count: 15, examTwins: true, title: "Schizophrenia and Antipsychotics", photoCount: 4,
+                    createdAt: now.addingTimeInterval(-1_200), updatedAt: now.addingTimeInterval(-60), round: 1
+                ))
         }
         state = Mutex(State(jobs: jobs))
     }
@@ -237,11 +239,14 @@ nonisolated final class FakeQuestionMaker: Sendable {
     private func dailyLimitRefusal(_ email: String) -> Reply? {
         let started = startedToday(email)
         guard started >= Self.dailyLimit else { return nil }
-        return (429, [
-            "error": "daily_limit",
-            "message": "You have started \(started) sets in the last 24 hours, the most for one day. You can start another in 3 hours.",
-            "availableAt": QBankJSON.formatDate(.now.addingTimeInterval(3 * 3_600)),
-        ])
+        return (
+            429,
+            [
+                "error": "daily_limit",
+                "message": "You have started \(started) sets in the last 24 hours, the most for one day. You can start another in 3 hours.",
+                "availableAt": QBankJSON.formatDate(.now.addingTimeInterval(3 * 3_600)),
+            ]
+        )
     }
 
     // MARK: Starting
@@ -393,10 +398,13 @@ nonisolated final class FakeQuestionMaker: Sendable {
         guard job.materialKind == "notes" else { return Self.failure(409, "wrong_step", "This set copies questions from photos; it has no samples.") }
         guard job.round > 0 else { return Self.failure(409, "wrong_step", "The samples are not written yet.") }
         let templates = [6, 1, 2, 0, 4]
-        return (200, [
-            "round": job.round, "note": json(job.sampleNote), "canRevise": job.round < Self.maxSampleRounds,
-            "questions": templates.enumerated().map { index, template in Self.draft(template: template, id: String(format: "A%02d", index + 1)) },
-        ])
+        return (
+            200,
+            [
+                "round": job.round, "note": json(job.sampleNote), "canRevise": job.round < Self.maxSampleRounds,
+                "questions": templates.enumerated().map { index, template in Self.draft(template: template, id: String(format: "A%02d", index + 1)) },
+            ]
+        )
     }
 
     private func waitingProblem(_ job: Job, for kind: String) -> Reply? {
@@ -441,17 +449,20 @@ nonisolated final class FakeQuestionMaker: Sendable {
         let job = requireJob(id)
         guard job.materialKind == "questions" else { return Self.failure(409, "wrong_step", "This set writes new questions; it has no copies to check.") }
         guard !job.copies.isEmpty else { return Self.failure(409, "wrong_step", "The questions are not copied yet.") }
-        return (200, [
-            "title": "Copied from photos", "photoCount": job.photoCount,
-            "questions": job.copies.map { copy in
-                [
-                    "id": copy.id, "photo": copy.photo.map { $0 as Any } ?? NSNull(), "answerFrom": copy.answerFrom,
-                    "explanationsFrom": copy.explanationsFrom, "question": Self.draft(template: copy.template, id: copy.id),
-                    "file": Self.file(template: copy.template, id: copy.id),
-                ] as [String: Any]
-            },
-            "unreadable": job.unreadable.map { ["photo": $0.photo.map { $0 as Any } ?? NSNull(), "reason": $0.reason] },
-        ])
+        return (
+            200,
+            [
+                "title": "Copied from photos", "photoCount": job.photoCount,
+                "questions": job.copies.map { copy in
+                    [
+                        "id": copy.id, "photo": copy.photo.map { $0 as Any } ?? NSNull(), "answerFrom": copy.answerFrom,
+                        "explanationsFrom": copy.explanationsFrom, "question": Self.draft(template: copy.template, id: copy.id),
+                        "file": Self.file(template: copy.template, id: copy.id),
+                    ] as [String: Any]
+                },
+                "unreadable": job.unreadable.map { ["photo": $0.photo.map { $0 as Any } ?? NSNull(), "reason": $0.reason] },
+            ]
+        )
     }
 
     private func acceptCopies(_ id: String, keep: [[String: Any]], library: some FakeQuestionLibrary) -> Reply {
@@ -505,18 +516,22 @@ nonisolated final class FakeQuestionMaker: Sendable {
         ]
         var exam: Any = NSNull()
         if let examID = filed.examSetID {
-            exam = [
-                "setId": examID, "title": "\(title) exam", "folderId": filed.folderID, "folderName": filed.folderName,
-                "examPageId": json(filed.examPageID), "questionCount": count, "termCount": 0,
-            ] as [String: Any]
+            exam =
+                [
+                    "setId": examID, "title": "\(title) exam", "folderId": filed.folderID, "folderName": filed.folderName,
+                    "examPageId": json(filed.examPageID), "questionCount": count, "termCount": 0,
+                ] as [String: Any]
         }
         let blindCheck: Any = job.materialKind == "notes" ? Self.blindCheck(count) : NSNull()
         let examBlindCheck: Any = filed.examSetID != nil && job.materialKind == "notes" ? Self.blindCheck(count) : NSNull()
-        return (200, [
-            "set": set, "examSet": exam, "blindCheck": blindCheck, "examBlindCheck": examBlindCheck,
-            "suggestedAnswers": job.copies.filter { $0.answerFrom == "suggested" && job.kept.contains($0.id) }.map(\.id),
-            "warnings": [String](),
-        ])
+        return (
+            200,
+            [
+                "set": set, "examSet": exam, "blindCheck": blindCheck, "examBlindCheck": examBlindCheck,
+                "suggestedAnswers": job.copies.filter { $0.answerFrom == "suggested" && job.kept.contains($0.id) }.map(\.id),
+                "warnings": [String](),
+            ]
+        )
     }
 
     private static func blindCheck(_ count: Int) -> [String: Any] {
@@ -563,12 +578,13 @@ nonisolated final class FakeQuestionMaker: Sendable {
         let steps: [[String: Any]] = keys.enumerated().map { index, key in
             var state = index < at ? "done" : "todo"
             if index == at {
-                state = switch job.status {
-                case "waiting": "waiting"
-                case "failed": "failed"
-                case "cancelled": "cancelled"
-                default: "current"
-                }
+                state =
+                    switch job.status {
+                    case "waiting": "waiting"
+                    case "failed": "failed"
+                    case "cancelled": "cancelled"
+                    default: "current"
+                    }
             }
             let progress = state == "current" ? job.progress : nil
             return [

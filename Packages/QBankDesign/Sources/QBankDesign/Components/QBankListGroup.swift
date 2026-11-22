@@ -112,13 +112,14 @@ public struct QBankListRow<Accessory: View>: View {
     public var body: some View {
         // At accessibility text sizes the value and accessory move under the title,
         // so long titles keep the row's width.
-        let content = dynamicTypeSize.isAccessibilitySize
+        let content =
+            dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: QBankSpacing.space3))
             : AnyLayout(HStackLayout(spacing: QBankSpacing.space4))
         HStack(spacing: QBankSpacing.space4) {
             if let systemImage {
                 Image(systemName: systemImage)
-                    .font(.title3) // 20pt at the default size, and scales
+                    .font(.title3)  // 20pt at the default size, and scales
                     .foregroundStyle(.qbank(isDestructive ? .wrong : .tint))
                     .frame(width: 24)
                     .accessibilityHidden(true)
@@ -222,7 +223,8 @@ extension ButtonStyle where Self == QBankRowButtonStyle {
     ScrollView {
         VStack(spacing: QBankSpacing.gapSection) {
             QBankListGroup(header: "Week 2") {
-                Button {} label: {
+                Button {
+                } label: {
                     QBankListRow(
                         "Therapeutic Communication and the Relationship",
                         detail: "9 of 14 answered",
@@ -235,8 +237,11 @@ extension ButtonStyle where Self == QBankRowButtonStyle {
                     detail: "Replaced Oct 6 · 12 questions",
                     accessibilityChildren: .contain
                 ) {
-                    Button {} label: { Label("Restore", systemImage: "arrow.counterclockwise") }
-                        .buttonStyle(.qbank(.secondary, size: .small))
+                    Button {
+                    } label: {
+                        Label("Restore", systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.qbank(.secondary, size: .small))
                 }
             }
             QBankListGroup(header: "Account", footer: "Signing out keeps your courses on QBank.") {

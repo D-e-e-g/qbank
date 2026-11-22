@@ -327,9 +327,11 @@ struct FakeServerRoutesTests {
 
     @Test func anImportMakesItsCourseWithItsSemesterOrItsTopic() async throws {
         let calls = Calls()
-        let course = try await calls.call("POST", "/api/imports", [
-            "source": Self.file(), "newCourse": ["code": "NURS 400", "title": "Leadership", "semesterNumber": 3],
-        ])
+        let course = try await calls.call(
+            "POST", "/api/imports",
+            [
+                "source": Self.file(), "newCourse": ["code": "NURS 400", "title": "Leadership", "semesterNumber": 3],
+            ])
         #expect(course.status == 201)
         #expect(course["courseCode"] as? String == "NURS 400")
         #expect(course["folderName"] as? String == "Unsorted")

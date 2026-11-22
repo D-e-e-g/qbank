@@ -41,7 +41,8 @@ nonisolated enum Wording {
     /// A saved course in Saved for offline: "86 questions · updated 7:40 AM", or
     /// "70 of 86 questions · updated 7:40 AM" while some of its sets are not saved yet.
     static func savedCourse(_ course: SavedCourse, now: Date = .now) -> String {
-        let questions = course.isComplete
+        let questions =
+            course.isComplete
             ? count(course.questionCount, "question")
             : "\(min(course.savedQuestionCount, course.questionCount)) of \(count(course.questionCount, "question"))"
         return "\(questions) · updated \(time(course.savedAt, now: now))"
@@ -145,11 +146,12 @@ nonisolated enum Wording {
         }
         switch set.run {
         case .new:
-            let word = switch set.status {
-            case .imported: "Imported"
-            case .replaced: "Replaced"
-            case .restored: "Restored"
-            }
+            let word =
+                switch set.status {
+                case .imported: "Imported"
+                case .replaced: "Replaced"
+                case .restored: "Restored"
+                }
             return "\(word) \(when(set.activeSince, now: now)) · \(count(set.questionCount, "question"))"
         case .done:
             let finished = set.lastAnsweredAt ?? set.activeSince

@@ -432,13 +432,14 @@ struct DeletionContractTests {
         let fixtures = try Fixture.all().filter { $0.request.method == "GET" && $0.request.path.hasSuffix("/delete-preview") && $0.response.status == 200 }
         #expect(fixtures.count == 13)
         for fixture in fixtures {
-            let preview: any DeletionPreview = switch fixture.request.path.split(separator: "/")[1] {
-            case "practice-sets": try fixture.decodeBody(SetDeletion.self)
-            case "folders": try fixture.decodeBody(FolderDeletion.self)
-            case "course-exams": try fixture.decodeBody(ExamPageDeletion.self)
-            case "exams": try fixture.decodeBody(ExamDeletion.self)
-            default: try fixture.decodeBody(CourseDeletion.self)
-            }
+            let preview: any DeletionPreview =
+                switch fixture.request.path.split(separator: "/")[1] {
+                case "practice-sets": try fixture.decodeBody(SetDeletion.self)
+                case "folders": try fixture.decodeBody(FolderDeletion.self)
+                case "course-exams": try fixture.decodeBody(ExamPageDeletion.self)
+                case "exams": try fixture.decodeBody(ExamDeletion.self)
+                default: try fixture.decodeBody(CourseDeletion.self)
+                }
             let warning = try #require(preview.warning, "\(fixture.name) sent no warning")
             #expect(warning.title.hasPrefix("Delete ") && warning.title.hasSuffix("?"), "\(fixture.name)")
             #expect(!warning.body.isEmpty, "\(fixture.name)")

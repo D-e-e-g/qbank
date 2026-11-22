@@ -87,11 +87,13 @@ final class FixtureTransport: HTTPTransport, @unchecked Sendable {
     private let state: Mutex<State>
 
     init(_ fixtures: [Fixture]) throws {
-        state = Mutex(State(queue: try fixtures.map { fixture in
-            let headers = fixture.response.headers.merging(["Content-Type": "application/json"]) { old, _ in old }
-            let response = HTTPURLResponse(url: URL(string: "https://qbank.invalid")!, statusCode: fixture.response.status, httpVersion: "HTTP/1.1", headerFields: headers)!
-            return .success((try fixture.responseData, response))
-        }))
+        state = Mutex(
+            State(
+                queue: try fixtures.map { fixture in
+                    let headers = fixture.response.headers.merging(["Content-Type": "application/json"]) { old, _ in old }
+                    let response = HTTPURLResponse(url: URL(string: "https://qbank.invalid")!, statusCode: fixture.response.status, httpVersion: "HTTP/1.1", headerFields: headers)!
+                    return .success((try fixture.responseData, response))
+                }))
     }
 
     convenience init(_ names: String...) throws {

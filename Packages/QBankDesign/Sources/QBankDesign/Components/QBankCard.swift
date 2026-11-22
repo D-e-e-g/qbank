@@ -73,7 +73,8 @@ extension ButtonStyle where Self == QBankCardButtonStyle {
 
 #Preview("Cards") {
     VStack(spacing: QBankSpacing.gapStack) {
-        Button {} label: {
+        Button {
+        } label: {
             VStack(alignment: .leading, spacing: QBankSpacing.space4) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("NURS 406").qbankFont(.footnote, weight: .semibold).foregroundStyle(.qbank(.tint))

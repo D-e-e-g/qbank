@@ -201,15 +201,16 @@ final class JobModel {
     /// `"ok": true` and the rest unmarked.
     static func file(_ file: JSONValue, answering picks: Set<Int>) -> JSONValue {
         guard case .object(var question) = file, case .array(let options)? = question["options"] else { return file }
-        question["options"] = .array(options.enumerated().map { index, option in
-            guard case .object(var choice) = option else { return option }
-            if picks.contains(index) {
-                choice["ok"] = .bool(true)
-            } else {
-                choice.removeValue(forKey: "ok")
-            }
-            return .object(choice)
-        })
+        question["options"] = .array(
+            options.enumerated().map { index, option in
+                guard case .object(var choice) = option else { return option }
+                if picks.contains(index) {
+                    choice["ok"] = .bool(true)
+                } else {
+                    choice.removeValue(forKey: "ok")
+                }
+                return .object(choice)
+            })
         return .object(question)
     }
 

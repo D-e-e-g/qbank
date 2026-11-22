@@ -70,8 +70,9 @@ nonisolated struct PhoneStorage: Sendable {
 
     /// Account ids come from the server; anything outside a safe folder name is replaced.
     private static func safeName(_ id: String) -> String {
-        String(id.unicodeScalars.map { scalar in
-            scalar.isASCII && (CharacterSet.alphanumerics.contains(scalar) || scalar == "-" || scalar == "_") ? Character(scalar) : "_"
-        })
+        String(
+            id.unicodeScalars.map { scalar in
+                scalar.isASCII && (CharacterSet.alphanumerics.contains(scalar) || scalar == "-" || scalar == "_") ? Character(scalar) : "_"
+            })
     }
 }

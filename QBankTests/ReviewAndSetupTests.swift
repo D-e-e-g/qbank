@@ -114,13 +114,16 @@ struct ReviewModelTests {
 @MainActor
 struct TermsModelTests {
     @Test func searchMatchesTheTermOrItsMeaningInAnyCase() async throws {
-        let server = StubServer(["GET /api/courses/c1/terms": .ok(#"""
-        {"terms":[
-         {"key":"autonomy","term":"Autonomy","meaning":"The right to make informed choices.","weekLabel":"Week 1","setTitle":"Ethics"},
-         {"key":"rapport","term":"Rapport","meaning":"Trust between nurse and client.","weekLabel":"Week 2","setTitle":"Talking"},
-         {"key":"naive","term":"Naïve","meaning":"Not yet exposed.","weekLabel":"Week 2","setTitle":"Talking"}
-        ]}
-        """#)])
+        let server = StubServer([
+            "GET /api/courses/c1/terms": .ok(
+                #"""
+                {"terms":[
+                 {"key":"autonomy","term":"Autonomy","meaning":"The right to make informed choices.","weekLabel":"Week 1","setTitle":"Ethics"},
+                 {"key":"rapport","term":"Rapport","meaning":"Trust between nurse and client.","weekLabel":"Week 2","setTitle":"Talking"},
+                 {"key":"naive","term":"Naïve","meaning":"Not yet exposed.","weekLabel":"Week 2","setTitle":"Talking"}
+                ]}
+                """#)
+        ])
         let (app, _) = TestApp.make(server, account: .student())
         let model = TermsModel(app: app, course: CourseRef(id: "c1", code: "NURS 101", title: "Invented"))
         await model.load()
@@ -217,9 +220,14 @@ struct ExamSetupModelTests {
         #expect(model.picked.map(\.name) == ["Week 1", "Week 3"])
         #expect(model.summaryCount == nil, "no plan until the server sends one")
         #expect(model.summarySplit == "Working out what the exam draws.")
-        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
-            [("f1", "Week 1", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")], seconds: 2700, practice: ["Week 1"]
-        ))])
+        server.script(
+            "GET /api/courses/c1/exams",
+            [
+                planned(
+                    StudyBodies.preview(
+                        [("f1", "Week 1", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")], seconds: 2700, practice: ["Week 1"]
+                    ))
+            ])
         await model.readPlan()
         #expect(setupQueries(server) == ["", "folderIds=f1&folderIds=f3&pool=all"])
         #expect(model.drawn(model.folders[0]) == 10)
@@ -233,10 +241,15 @@ struct ExamSetupModelTests {
         model.toggle(model.folders[1])
         #expect(model.isPlanUpdating, "the last plan stays until the new one arrives")
         #expect(model.summaryCount == "30 questions")
-        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
-            [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")],
-            seconds: 3600, practice: ["Week 1", "Week 2"]
-        ))])
+        server.script(
+            "GET /api/courses/c1/exams",
+            [
+                planned(
+                    StudyBodies.preview(
+                        [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice"), ("f3", "Week 3", 20, 20, "exam")],
+                        seconds: 3600, practice: ["Week 1", "Week 2"]
+                    ))
+            ])
         await model.readPlan()
         #expect(!model.isPlanUpdating)
         #expect(model.summaryCount == "40 questions")
@@ -259,9 +272,14 @@ struct ExamSetupModelTests {
         await model.load()
         model.toggle(model.folders[0])
         model.toggle(model.folders[1])
-        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
-            [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice")], seconds: 1200, practice: nil
-        ), rules: rules)])
+        server.script(
+            "GET /api/courses/c1/exams",
+            [
+                planned(
+                    StudyBodies.preview(
+                        [("f1", "Week 1", 10, 10, "practice"), ("f2", "Week 2", 10, 10, "practice")], seconds: 1200, practice: nil
+                    ), rules: rules)
+            ])
         await model.readPlan()
         #expect(model.summaryCount == "20 questions")
         #expect(model.summaryTime == "in 20 minutes")
@@ -269,9 +287,14 @@ struct ExamSetupModelTests {
         #expect(model.fallbackLine == nil, "the server said the course has no exam bank")
 
         model.toggle(model.folders[2])
-        server.script("GET /api/courses/c1/exams", [planned(StudyBodies.preview(
-            [("f1", "Week 1", 10, 6, "practice"), ("f2", "Week 2", 10, 6, "practice"), ("f3", "Week 3", 20, 13, "exam")], seconds: 1800
-        ), rules: rules)])
+        server.script(
+            "GET /api/courses/c1/exams",
+            [
+                planned(
+                    StudyBodies.preview(
+                        [("f1", "Week 1", 10, 6, "practice"), ("f2", "Week 2", 10, 6, "practice"), ("f3", "Week 3", 20, 13, "exam")], seconds: 1800
+                    ), rules: rules)
+            ])
         await model.readPlan()
         #expect(model.summaryCount == "25 questions")
         #expect(model.summaryTime == "in 30 minutes")
@@ -451,14 +474,17 @@ struct ExamSetupModelTests {
 
     @Test func theRunningExamAndPastOnesReadAsOnTheWeb() async throws {
         let running = StudyBodies.summary("run", weeks: ["Week 1", "Week 2"], pool: "wrong", finished: false, answered: 3, questions: 11, endsAt: "2026-10-12T00:17:01.000Z")
-        let server = StubServer(["GET /api/courses/c1/exams": .ok(StudyBodies.setup(
-            folders: StudyBodies.threePools,
-            inProgress: running,
-            exams: [
-                StudyBodies.summary("s1", weeks: ["Week 1"], pool: "wrong", reason: "timeout", questions: 22, right: 15),
-                StudyBodies.summary("s2", weeks: ["First Pass", "Second Pass"], folders: ["f8", "f9"]),
-            ]
-        ))])
+        let server = StubServer([
+            "GET /api/courses/c1/exams": .ok(
+                StudyBodies.setup(
+                    folders: StudyBodies.threePools,
+                    inProgress: running,
+                    exams: [
+                        StudyBodies.summary("s1", weeks: ["Week 1"], pool: "wrong", reason: "timeout", questions: 22, right: 15),
+                        StudyBodies.summary("s2", weeks: ["First Pass", "Second Pass"], folders: ["f8", "f9"]),
+                    ]
+                ))
+        ])
         let model = model(server)
         await model.load()
         let exam = try #require(model.setup?.inProgress)

@@ -22,9 +22,10 @@ struct RenameCourseView: View {
 
     init(app: AppModel, catalog: Catalog?, course: CourseSummary) {
         let catalog = CatalogModel(app: app, catalog: catalog)
-        _model = State(initialValue: course.kind == .topic
-            ? .topic(TopicEditModel(catalog: catalog, id: course.id))
-            : .course(CourseEditModel(catalog: catalog, id: course.id)))
+        _model = State(
+            initialValue: course.kind == .topic
+                ? .topic(TopicEditModel(catalog: catalog, id: course.id))
+                : .course(CourseEditModel(catalog: catalog, id: course.id)))
     }
 
     /// The same sheet, opened from the course or topic screen. The fields start from the course
@@ -73,7 +74,11 @@ struct RenameCourseView: View {
     private func courseSheet(_ course: CourseEditModel) -> some View {
         @Bindable var course = course
         return EditSheet(title: "Rename course", confirm: "Save", identifier: "renameCourse", isSaving: course.isSaving, hasChanges: course.hasChanges) {
-            save { await course.save() } succeeded: { course.problem == nil }
+            save {
+                await course.save()
+            } succeeded: {
+                course.problem == nil
+            }
         } content: {
             LabeledField(label: "Course code") {
                 TextField("Course code", text: $course.code)
@@ -101,7 +106,11 @@ struct RenameCourseView: View {
     private func topicSheet(_ topic: TopicEditModel) -> some View {
         @Bindable var topic = topic
         return EditSheet(title: "Rename topic", confirm: "Save", identifier: "renameCourse", isSaving: topic.isSaving, hasChanges: topic.hasChanges) {
-            save { await topic.save() } succeeded: { topic.problem == nil }
+            save {
+                await topic.save()
+            } succeeded: {
+                topic.problem == nil
+            }
         } content: {
             LabeledField(label: "Topic name") {
                 TextField("Topic name", text: $topic.title)

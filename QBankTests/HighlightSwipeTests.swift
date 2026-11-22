@@ -147,19 +147,21 @@ struct HighlightSwipeTests {
 
         let middle = highlights.erase(8..<12, in: .stem)
         #expect(middle)
-        #expect(highlights[.stem] == [
-            Highlight(range: 0..<8, color: .yellow),
-            Highlight(range: 12..<20, color: .yellow),
-            Highlight(range: 30..<40, color: .blue),
-        ], "a mark keeps the words on either side of the swipe")
+        #expect(
+            highlights[.stem] == [
+                Highlight(range: 0..<8, color: .yellow),
+                Highlight(range: 12..<20, color: .yellow),
+                Highlight(range: 30..<40, color: .blue),
+            ], "a mark keeps the words on either side of the swipe")
 
         let across = highlights.erase(15..<35, in: .stem)
         #expect(across)
-        #expect(highlights[.stem] == [
-            Highlight(range: 0..<8, color: .yellow),
-            Highlight(range: 12..<15, color: .yellow),
-            Highlight(range: 35..<40, color: .blue),
-        ], "one swipe cleans every mark it crosses")
+        #expect(
+            highlights[.stem] == [
+                Highlight(range: 0..<8, color: .yellow),
+                Highlight(range: 12..<15, color: .yellow),
+                Highlight(range: 35..<40, color: .blue),
+            ], "one swipe cleans every mark it crosses")
 
         let clean = highlights.erase(20..<30, in: .stem)
         #expect(!clean, "nothing to erase on clean words")

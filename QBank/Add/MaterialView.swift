@@ -140,13 +140,13 @@ struct MaterialView: View {
                     detail: "QBank writes new questions from them",
                     isPicked: model.holding == .notes
                 ) { model.holding = .notes }
-                    .accessibilityIdentifier("make.holding.notes")
+                .accessibilityIdentifier("make.holding.notes")
                 HoldingRow(
                     title: "Practice questions",
                     detail: "A quiz, a worksheet, a review book page: QBank copies them in as they are",
                     isPicked: model.holding == .questions
                 ) { model.holding = .questions }
-                    .accessibilityIdentifier("make.holding.questions")
+                .accessibilityIdentifier("make.holding.questions")
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: QBankSpacing.space2), count: 3), spacing: QBankSpacing.space2) {
                 ForEach(model.photos) { photo in

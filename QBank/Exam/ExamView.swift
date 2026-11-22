@@ -77,9 +77,9 @@ struct ExamView: View {
                         asksToEnd = true
                     }
                 }
-                    .buttonStyle(.qbank(.plain, size: .small))
-                    .disabled(!model.canEnd)
-                    .accessibilityIdentifier("exam.end")
+                .buttonStyle(.qbank(.plain, size: .small))
+                .disabled(!model.canEnd)
+                .accessibilityIdentifier("exam.end")
             } else {
                 RunnerCloseButton { close(.done) }
             }

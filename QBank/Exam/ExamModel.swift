@@ -422,7 +422,7 @@ final class ExamModel {
                 _ = try await app.client.recordAttempt(submission)
                 markSubmitted(position)
                 return
-            } catch where Self.isTransient(error) {
+            } catch  where Self.isTransient(error) {
                 guard isSaving else { return }
                 phase = .running(.saving(retrying: true))
             } catch {
