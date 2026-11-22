@@ -104,13 +104,15 @@ enum TestApp {
     ///   - connection: The phone's network path, online unless a test turns it off.
     ///   - lock: The Face ID lock, off on a device with Face ID unless a test gives another.
     ///   - defaults: Where the phone keeps its settings, empty and the test's own unless it gives one.
+    ///   - aiAllowed: Whether she already allowed her material to go to Anthropic; a new phone has not.
     static func make(
         _ server: StubServer,
         account: Account? = nil,
         storage: PhoneStorage = .memory(),
         connection: Connection = Connection(),
         lock: AppLock? = nil,
-        defaults: UserDefaults = TestApp.freshDefaults()
+        defaults: UserDefaults = TestApp.freshDefaults(),
+        aiAllowed: Bool = false
     ) -> (AppModel, InMemorySessionStore) {
         let store = InMemorySessionStore(account.map { StoredSession(token: token, expiresAt: nil, account: $0) })
         let client = QBankClient(
@@ -118,11 +120,13 @@ enum TestApp {
             transport: server,
             sessionStore: store
         )
+        defaults.set(aiAllowed, forKey: AIConsentStore.key)
         let app = AppModel(
             client: client,
             look: LookStore(defaults: defaults),
             lock: lock ?? AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
             highlighter: HighlighterStore(defaults: defaults),
+            aiConsent: AIConsentStore(defaults: defaults),
             storage: storage,
             connection: connection
         )

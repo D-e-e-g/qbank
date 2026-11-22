@@ -18,6 +18,9 @@ import UIKit
 ///   values. Absent means a normal launch.
 /// - `QB_UITEST_KEEP_PHONE_SETTINGS`: `1` keeps the suite from the previous
 ///   launch, to check that a setting survives a relaunch.
+/// - `QB_UITEST_AI_CONSENT`: `allowed` starts with her permission to share her material with
+///   Anthropic already given, so a test of Make questions or exam twins need not answer the
+///   permission screen first. Absent, she has not been asked.
 /// - `QB_UITEST_KEEP_PHONE_DATA`: `1` keeps the courses saved and the answers
 ///   left waiting by the previous launch, to check that they survive a relaunch.
 ///   The fake server starts afresh either way, unless:
@@ -42,6 +45,7 @@ nonisolated enum DebugLaunchScenario {
     static let scenarioKey = "QB_UITEST_SCENARIO"
     static let keepPhoneSettingsKey = "QB_UITEST_KEEP_PHONE_SETTINGS"
     static let keepPhoneDataKey = "QB_UITEST_KEEP_PHONE_DATA"
+    static let aiConsentKey = "QB_UITEST_AI_CONSENT"
     static let keepServerAnswersKey = "QB_UITEST_KEEP_SERVER_ANSWERS"
     static let networkKey = "QB_UITEST_NETWORK"
     static let deviceOwnerKey = "QB_UITEST_DEVICE_OWNER"
@@ -234,6 +238,9 @@ nonisolated enum DebugLaunchScenario {
         }
         guard let scenario else { return nil }
         let defaults = phoneSettings(keep: environment[keepPhoneSettingsKey] == "1")
+        if environment[aiConsentKey] == "allowed" {
+            defaults.set(true, forKey: AIConsentStore.key)
+        }
         let folder = phoneFolder ?? defaultPhoneFolder
         let storage = phoneData(in: folder, keep: environment[keepPhoneDataKey] == "1")
         let answersFile = serverAnswers(beside: folder, keep: environment[keepServerAnswersKey] == "1")
@@ -361,6 +368,7 @@ nonisolated enum DebugLaunchScenario {
             look: lookStore,
             lock: AppLock(defaults: defaults, owner: owner),
             highlighter: HighlighterStore(defaults: defaults),
+            aiConsent: AIConsentStore(defaults: defaults),
             storage: storage,
             connection: connection
         )

@@ -27,6 +27,8 @@ struct SettingsView: View {
     /// Said under Account when signing out everywhere did not work, so no device was signed out.
     @State private var signOutEverywhereProblem: String?
     @State private var savedCourses: [SavedCourse]?
+    /// Whether the server lets this account make questions, which is what Anthropic's row is for.
+    @State private var maker: QuestionMakerStatus?
 
     init(app: AppModel) {
         self.app = app
@@ -39,6 +41,9 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: QBankSpacing.space7) {
                     account
                     lock
+                    if app.aiConsent.isAllowed || Twins.listsJobs(maker) {
+                        anthropic
+                    }
                     if catalog.isEditable {
                         semesters
                     }
@@ -78,6 +83,10 @@ struct SettingsView: View {
         .task {
             guard catalog.isEditable else { return }
             await catalog.load()
+        }
+        .task {
+            guard app.connection.isOnline else { return }
+            maker = try? await app.client.questionMakerStatus()
         }
         .task(id: app.offline?.savedRevision) {
             savedCourses = await app.offline?.savedCourses()
@@ -250,6 +259,23 @@ struct SettingsView: View {
             .accessibilityIdentifier("settings.lock")
         }
         .onAppear { lock.refresh() }
+    }
+
+    /// Whether her material may go to Anthropic, which Make questions and exam twins ask for the
+    /// first time she uses either. Kept on this phone; off, they ask again.
+    private var anthropic: some View {
+        @Bindable var consent = app.aiConsent
+        return QBankListGroup(header: AIConsentWording.settingsHeader, footer: AIConsentWording.settingsFooter) {
+            Toggle(isOn: $consent.isAllowed) {
+                Text(AIConsentWording.settingsTitle)
+                    .qbankFont(.body)
+                    .foregroundStyle(.qbank(.text1))
+            }
+            .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
+            .padding(.vertical, 11)
+            .frame(minHeight: QBankSpacing.rowMin)
+            .accessibilityIdentifier("settings.anthropic")
+        }
     }
 
     private var semesters: some View {

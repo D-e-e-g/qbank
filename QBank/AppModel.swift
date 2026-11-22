@@ -42,6 +42,8 @@ final class AppModel {
     let lock: AppLock
     /// The highlighter pen's color, kept on this phone.
     let highlighter: HighlighterStore
+    /// Whether she allowed her material to go to Anthropic, kept on this phone.
+    let aiConsent: AIConsentStore
     /// Whether the phone has a network path.
     let connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
@@ -59,6 +61,7 @@ final class AppModel {
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
+        aiConsent: AIConsentStore = AIConsentStore(),
         storage: PhoneStorage,
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
@@ -67,6 +70,7 @@ final class AppModel {
         self.look = look
         self.lock = lock
         self.highlighter = highlighter
+        self.aiConsent = aiConsent
         self.storage = storage
         self.connection = connection
         self.networkWatcher = networkWatcher

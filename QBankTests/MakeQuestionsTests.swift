@@ -10,8 +10,9 @@ struct MakeQuestionsTests {
     static let writingJob = "a0b10000-0000-4000-8000-000000000001"
     static let copyJob = "a0b10000-0000-4000-8000-000000000002"
 
-    /// The app signed in on the fake server, as the maker or as a student it does not allow.
-    static func app(maker: Bool = true, setUp: Bool = true, online: Bool = true) -> AppModel {
+    /// The app signed in on the fake server, as the maker or as a student it does not allow, with
+    /// her permission to share her material with Anthropic already given unless `aiAllowed` is false.
+    static func app(maker: Bool = true, setUp: Bool = true, online: Bool = true, aiAllowed: Bool = true) -> AppModel {
         let server = FakeQBankServer(signedIn: true, as: maker ? FakeQBankServer.maker : FakeQBankServer.student, makerIsSetUp: setUp)
         let session = maker ? FakeQBankServer.storedMakerSession() : FakeQBankServer.storedStudentSession()
         let client = QBankClient(
@@ -20,10 +21,12 @@ struct MakeQuestionsTests {
             sessionStore: InMemorySessionStore(session)
         )
         let defaults = TestApp.freshDefaults()
+        defaults.set(aiAllowed, forKey: AIConsentStore.key)
         return AppModel(
             client: client,
             look: LookStore(defaults: defaults),
             lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
+            aiConsent: AIConsentStore(defaults: defaults),
             storage: .memory(),
             connection: Connection(isOnline: online)
         )
@@ -261,7 +264,7 @@ struct MakeQuestionsTests {
             "GET /api/courses/c1": .ok(StudyBodies.course(id: "c1")),
             "POST /api/question-jobs": StubServer.Reply(status: 202, body: Self.job()),
         ])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let make = MakeModel(app: app, status: nil)
         await make.load()
         make.source = .paste
@@ -289,7 +292,7 @@ struct MakeQuestionsTests {
             "GET /api/courses/c1": .ok(StudyBodies.course(id: "c1")),
             "POST /api/question-jobs": StubServer.Reply(status: 202, body: Self.job()),
         ])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let make = MakeModel(app: app, status: nil)
         await make.load()
         make.holding = .questions
@@ -313,7 +316,7 @@ struct MakeQuestionsTests {
             "POST /api/question-jobs/job1/samples/revise": StubServer.Reply(status: 202, body: Self.job()),
             "POST /api/question-jobs/job1/samples/accept": StubServer.Reply(status: 202, body: Self.job()),
         ])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = JobModel(app: app, id: "job1")
         await model.load()
         let question = try #require(model.samples?.questions.last)
@@ -331,7 +334,7 @@ struct MakeQuestionsTests {
 
     @Test func aSampleOpensInTheRunnerAndHerAnswerIsNeverSent() async throws {
         let server = StubServer(["GET /api/question-jobs/job1/samples": .ok(Self.samples)])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = PracticeModel(app: app, source: .sample(jobID: "job1", sampleID: "A02"), courseID: "c1", title: "Sample 2")
         await model.load()
         #expect(model.phase == .answering)

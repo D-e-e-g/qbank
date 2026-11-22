@@ -24,6 +24,10 @@ struct AddView: View {
     @State private var making: MakeModel?
     /// The set she just started, as the server answered, until the hub lists it.
     @State private var started: QuestionJob?
+    /// The one-time permission screen, shown before Make questions is first used, and what opens
+    /// once she allows it.
+    @State private var asksAIPermission = false
+    @State private var openAfterPermission: (() -> Void)?
     @Environment(TabNavigator.self) private var tabs
 
     init(app: AppModel) {
@@ -59,10 +63,11 @@ struct AddView: View {
         .onChange(of: tabs.makeRequest, initial: true) { _, request in
             guard let request else { return }
             tabs.makeRequest = nil
-            making = MakeModel(app: app, status: request.status ?? model.status, courseID: request.courseID)
-            var next = NavigationPath()
-            next.append(AddRoute.material)
-            path = next
+            afterAIPermission { openMaterial(MakeModel(app: app, status: request.status ?? model.status, courseID: request.courseID), fresh: true) }
+        }
+        .aiPermissionSheet(isPresented: $asksAIPermission, store: app.aiConsent) {
+            openAfterPermission?()
+            openAfterPermission = nil
         }
     }
 
@@ -102,6 +107,25 @@ struct AddView: View {
         }
     }
 
+    /// Runs `open` now once she has allowed her material to go to Anthropic, and otherwise asks first
+    /// and runs it only if she allows. Not now leaves Make questions unused.
+    private func afterAIPermission(_ open: @escaping () -> Void) {
+        if app.aiConsent.isAllowed {
+            open()
+        } else {
+            openAfterPermission = open
+            asksAIPermission = true
+        }
+    }
+
+    /// Opens Your material for `making`: on top of Add, or as its only page when a course's + asked.
+    private func openMaterial(_ making: MakeModel, fresh: Bool) {
+        self.making = making
+        var next = fresh ? NavigationPath() : path
+        next.append(AddRoute.material)
+        path = next
+    }
+
     /// Once the server has the set, its steps replace Your material and Level, so going back
     /// leads to Add and never starts it twice.
     private func follow(_ job: QuestionJob) {
@@ -115,8 +139,7 @@ struct AddView: View {
         QBankListGroup(footer: model.makeNote) {
             if model.canMake {
                 Button {
-                    making = MakeModel(app: app, status: model.status)
-                    path.append(AddRoute.material)
+                    afterAIPermission { openMaterial(MakeModel(app: app, status: model.status), fresh: false) }
                 } label: {
                     WayRow(
                         title: "Make questions from your material",

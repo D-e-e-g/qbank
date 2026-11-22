@@ -8,7 +8,9 @@ extension XCTestCase {
     /// starts without a network. `deviceOwner` is how the device answers the Face ID lock, such as
     /// `face-id` (`QB_UITEST_DEVICE_OWNER`); every launch gets a fake, so the simulator's own
     /// Face ID never plays a part. `largestText` shows the app at the largest accessibility text
-    /// size, where a question runs well past the screen.
+    /// size, where a question runs well past the screen. `aiAllowed` starts with her permission to
+    /// share her material with Anthropic already given (`QB_UITEST_AI_CONSENT`); a test of the
+    /// permission screen itself leaves it off.
     @MainActor
     func launch(
         _ scenario: String,
@@ -17,7 +19,8 @@ extension XCTestCase {
         keepServerAnswers: Bool = false,
         online: Bool = true,
         deviceOwner: String = "face-id",
-        largestText: Bool = false
+        largestText: Bool = false,
+        aiAllowed: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         if largestText {
@@ -25,6 +28,9 @@ extension XCTestCase {
         }
         app.launchEnvironment["QB_UITEST_SCENARIO"] = scenario
         app.launchEnvironment["QB_UITEST_DEVICE_OWNER"] = deviceOwner
+        if aiAllowed {
+            app.launchEnvironment["QB_UITEST_AI_CONSENT"] = "allowed"
+        }
         if keepPhoneSettings {
             app.launchEnvironment["QB_UITEST_KEEP_PHONE_SETTINGS"] = "1"
         }

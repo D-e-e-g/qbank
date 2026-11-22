@@ -23,7 +23,7 @@ final class TwinJobUITests: XCTestCase {
 
     @MainActor
     func testTwinsOfHerWrongQuestionsToTheExamOnThem() throws {
-        let app = launch("maker")
+        let app = launch("maker", aiAllowed: true)
         openExamSetup(app)
         flip(app.switches["exam.wrongOnly"])
         let week2 = app.buttons["exam.folder.Week 2"]
@@ -84,9 +84,39 @@ final class TwinJobUITests: XCTestCase {
         attachLooks(app, "twins-5 exam on the twins")
     }
 
+    // A sheet over Exam setup that must keep the job from starting until Allow: only the running app
+    // shows that no twin job opens first. The model's refusal to send without it is a unit test's.
+    @MainActor
+    func testTwinsAskBeforeAnythingIsSent() throws {
+        let app = launch("maker")
+        openExamSetup(app)
+        let week2 = app.buttons["exam.folder.Week 2"]
+        XCTAssertTrue(week2.appears(timeout: 5))
+        week2.tap()
+        let write = app.buttons["exam.twins.write"]
+        tapVisible(write, in: app)
+
+        let title = app.staticTexts["ai.permission.title"]
+        XCTAssertTrue(title.appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["ai.permission.message"].label.contains("the practice questions you pick for exam twins"))
+        XCTAssertFalse(app.navigationBars["Exam twins"].exists, "nothing started before Allow")
+        attachLooks(app, "twins-0 permission")
+
+        tapWhenStill(app.buttons["ai.permission.cancel"])
+        XCTAssertTrue(title.disappears(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Exam twins"].exists, "Not now starts nothing")
+        XCTAssertTrue(write.exists)
+        XCTAssertTrue(write.isEnabled)
+
+        tapVisible(write, in: app)
+        XCTAssertTrue(title.appears(timeout: 5), "asked again")
+        tapWhenStill(app.buttons["ai.permission.confirm"])
+        XCTAssertTrue(app.navigationBars["Exam twins"].appears(timeout: 10), "Allow starts what she asked for")
+    }
+
     @MainActor
     func testStopAsksFirst() throws {
-        let app = launch("maker")
+        let app = launch("maker", aiAllowed: true)
         openExamSetup(app)
         // Every question of Week 2: 26 twins, so the job is still writing while she is asked.
         let week2 = app.buttons["exam.folder.Week 2"]
@@ -116,7 +146,7 @@ final class TwinJobUITests: XCTestCase {
 
     @MainActor
     func testARefusalShowsUntilSheChangesThePick() throws {
-        let app = launch("maker")
+        let app = launch("maker", aiAllowed: true)
         openExamSetup(app)
         let week3 = app.buttons["exam.folder.Week 3"]
         XCTAssertTrue(week3.appears(timeout: 5))

@@ -218,7 +218,7 @@ final class AddHereUITests: XCTestCase {
     @MainActor
     func testMakeQuestionsFromACourseStartsWithItPicked() throws {
         try skipOnIPad()
-        let app = launch("maker")
+        let app = launch("maker", aiAllowed: true)
         openHome(app)
         open(app.buttons["home.course.NURS 220"], titled: "NURS 220", in: app)
         app.buttons["course.add"].tap()

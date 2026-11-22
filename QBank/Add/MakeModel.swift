@@ -204,6 +204,11 @@ final class MakeModel {
     /// at her level. A refusal is said in the server's words.
     func start() async -> QuestionJob? {
         guard let job else { return nil }
+        // Nothing of hers goes to Anthropic before she allows it, whatever screen got here.
+        guard app.aiConsent.isAllowed else {
+            problem = AIConsentWording.needed
+            return nil
+        }
         problem = nil
         isStarting = true
         defer { isStarting = false }
