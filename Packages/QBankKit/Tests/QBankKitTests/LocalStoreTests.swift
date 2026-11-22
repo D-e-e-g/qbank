@@ -59,7 +59,7 @@ struct LocalStoreTests {
     @Test func aStoreOfAKeyLivesInItsOwnFolderUnderBanks() throws {
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let store = try LocalStore.open(key: "001234.abcdef0123456789.4321", in: root)
+        let store = try LocalStore.open(key: "001234.abcdef0123456789.4321", in: root) // gitleaks:allow
         #expect(store.fileURL == root.appendingPathComponent("Banks/001234.abcdef0123456789.4321/bank.sqlite"))
         // Sign-out erases Accounts/<id>, never Banks.
         #expect(store.fileURL?.path.contains("/Accounts/") == false)
@@ -286,6 +286,10 @@ struct LocalStoreTests {
             var url = item
             try url.setResourceValues(values)
             try FileManager.default.setAttributes([.protectionKey: FileProtectionType.none], ofItemAtPath: item.path)
+            // macOS can land the flag a moment after the call returns, which would undo the store's
+            // write that follows; wait until it has, so the store really meets a left-out folder.
+            for _ in 0..<500 where try Self.isExcludedFromBackup(item) != true { Thread.sleep(forTimeInterval: 0.002) }
+            try #require(try Self.isExcludedFromBackup(item) == true)
         }
 
         let store = try LocalStore.open(directory: directory)
