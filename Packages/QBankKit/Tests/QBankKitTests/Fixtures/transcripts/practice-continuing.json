@@ -1,0 +1,1571 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "practice-continuing",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.628Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:33.690Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.691Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "5e000000-0000-4000-8000-000000000301",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.700Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "5e000000-0000-4000-8000-000000000301",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.710Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 1 - Set 1: Invented basics\",\"desc\":\"Invented practice questions.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Invented topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented stem.\",\"ask\":\"Which is right?\",\"options\":[{\"t\":\"Right\",\"ok\":true},{\"t\":\"Wrong\"},{\"t\":\"Also wrong\"}],\"rationale\":\"Invented rationale.\",\"takeaway\":\"Invented takeaway.\",\"terms\":[]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Invented topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented stem.\",\"ask\":\"Which is right?\",\"options\":[{\"t\":\"Right\",\"ok\":true},{\"t\":\"Wrong\"},{\"t\":\"Also wrong\"}],\"rationale\":\"Invented rationale.\",\"takeaway\":\"Invented takeaway.\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Invented topic 3\",\"cj\":\"Analyze cues\",\"stem\":\"An invented stem.\",\"ask\":\"Which is right?\",\"options\":[{\"t\":\"Right\",\"ok\":true},{\"t\":\"Wrong\"},{\"t\":\"Also wrong\"}],\"rationale\":\"Invented rationale.\",\"takeaway\":\"Invented takeaway.\",\"terms\":[]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderName": "Week 1",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): missing need",
+            "Question 1 (Q1): missing diff",
+            "Question 1 (Q1): missing src",
+            "Question 2 (Q2): missing need",
+            "Question 2 (Q2): missing diff",
+            "Question 2 (Q2): missing src",
+            "Question 3 (Q3): missing need",
+            "Question 3 (Q3): missing diff",
+            "Question 3 (Q3): missing src"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.720Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8018-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000004",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "single",
+              "topic": "Invented topic 3",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "new",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "attempt-from-review",
+      "at": "2026-11-22T20:05:33.731Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "aaaaaaaa-1111-4111-8111-111111111111",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          },
+          "fromReview": true
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "aaaaaaaa-1111-4111-8111-111111111111",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.740Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-sitting-day-one",
+      "at": "2026-11-22T20:05:33.747Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8018-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000004",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "single",
+              "topic": "Invented topic 3",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "midway",
+          "sitting": {
+            "id": null,
+            "startedAt": null,
+            "answeredQuestionIds": [
+              "00000000-0000-4000-8018-000000000002"
+            ],
+            "answers": [
+              {
+                "clientAttemptId": "aaaaaaaa-1111-4111-8111-111111111111",
+                "questionId": "00000000-0000-4000-8018-000000000002",
+                "status": "correct",
+                "points": 1,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:33.740Z",
+                "inReview": false,
+                "label": "Correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 0
+                },
+                "shuffle": {
+                  "kind": "options",
+                  "order": [
+                    1,
+                    0,
+                    2
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-sitting-day-one",
+      "at": "2026-11-22T20:05:33.759Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "archivedAt": null,
+          "semester": {
+            "id": "5e000000-0000-4000-8000-000000000301",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 3,
+          "examQuestionCount": 3,
+          "examTimeLimitSeconds": 270,
+          "weekCount": 1,
+          "folderCount": 1,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 1,
+          "fullyRightCount": 1,
+          "points": 1,
+          "maxPoints": 1,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 1,
+                  "fullyRightCount": 1,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.740Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 1
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "00000000-0000-4000-8018-000000000001",
+              "name": "Week 1",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 1,
+                  "fullyRightCount": 1,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.740Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 1
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "attempt-opens-sitting",
+      "at": "2026-11-22T20:05:33.775Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "bbbbbbbb-2222-4222-8222-222222222222",
+          "questionId": "00000000-0000-4000-8018-000000000003",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "bbbbbbbb-2222-4222-8222-222222222222",
+          "questionId": "00000000-0000-4000-8018-000000000003",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.782Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-sitting",
+      "at": "2026-11-22T20:05:33.787Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8018-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000004",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "single",
+              "topic": "Invented topic 3",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "midway",
+          "sitting": {
+            "id": "00000000-0000-4000-8018-000000000005",
+            "startedAt": "2026-11-22T20:05:33.782Z",
+            "answeredQuestionIds": [
+              "00000000-0000-4000-8018-000000000002",
+              "00000000-0000-4000-8018-000000000003"
+            ],
+            "answers": [
+              {
+                "clientAttemptId": "aaaaaaaa-1111-4111-8111-111111111111",
+                "questionId": "00000000-0000-4000-8018-000000000002",
+                "status": "correct",
+                "points": 1,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:33.740Z",
+                "inReview": false,
+                "label": "Correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 0
+                },
+                "shuffle": {
+                  "kind": "options",
+                  "order": [
+                    1,
+                    0,
+                    2
+                  ]
+                }
+              },
+              {
+                "clientAttemptId": "bbbbbbbb-2222-4222-8222-222222222222",
+                "questionId": "00000000-0000-4000-8018-000000000003",
+                "status": "correct",
+                "points": 1,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:33.782Z",
+                "inReview": false,
+                "label": "Correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 0
+                },
+                "shuffle": {
+                  "kind": "options",
+                  "order": [
+                    1,
+                    0,
+                    2
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-sitting",
+      "at": "2026-11-22T20:05:33.795Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "archivedAt": null,
+          "semester": {
+            "id": "5e000000-0000-4000-8000-000000000301",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 3,
+          "examQuestionCount": 3,
+          "examTimeLimitSeconds": 270,
+          "weekCount": 1,
+          "folderCount": 1,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 2,
+          "fullyRightCount": 2,
+          "points": 2,
+          "maxPoints": 2,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 2,
+                  "fullyRightCount": 2,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 2
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "00000000-0000-4000-8018-000000000001",
+              "name": "Week 1",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 2,
+                  "fullyRightCount": 2,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 2
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-start-over",
+      "at": "2026-11-22T20:05:33.810Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301/start-over",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ended": true
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-start-over-nothing",
+      "at": "2026-11-22T20:05:33.816Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301/start-over",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ended": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-start-over-not-found",
+      "at": "2026-11-22T20:05:33.822Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/practice-sets/00000000-0000-4000-8000-000000000000/start-over",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "That set is not in the app."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-after-start-over",
+      "at": "2026-11-22T20:05:33.832Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8018-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000004",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "single",
+              "topic": "Invented topic 3",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "restarted",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-after-start-over",
+      "at": "2026-11-22T20:05:33.837Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "archivedAt": null,
+          "semester": {
+            "id": "5e000000-0000-4000-8000-000000000301",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 3,
+          "examQuestionCount": 3,
+          "examTimeLimitSeconds": 270,
+          "weekCount": 1,
+          "folderCount": 1,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 2,
+          "fullyRightCount": 2,
+          "points": 2,
+          "maxPoints": 2,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 2,
+                  "fullyRightCount": 2,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "run": "restarted",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "00000000-0000-4000-8018-000000000001",
+              "name": "Week 1",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 2,
+                  "fullyRightCount": 2,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "run": "restarted",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.852Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "cccccccc-3333-4333-8333-333333333333",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "cccccccc-3333-4333-8333-333333333333",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.855Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.865Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "dddddddd-4444-4444-8444-444444444444",
+          "questionId": "00000000-0000-4000-8018-000000000003",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "dddddddd-4444-4444-8444-444444444444",
+          "questionId": "00000000-0000-4000-8018-000000000003",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.872Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.878Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "eeeeeeee-5555-4555-8555-555555555555",
+          "questionId": "00000000-0000-4000-8018-000000000004",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "eeeeeeee-5555-4555-8555-555555555555",
+          "questionId": "00000000-0000-4000-8018-000000000004",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.883Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:33.893Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "ffffffff-6666-4666-8666-666666666666",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false,
+          "shuffle": {
+            "kind": "options",
+            "order": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "ffffffff-6666-4666-8666-666666666666",
+          "questionId": "00000000-0000-4000-8018-000000000002",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:33.899Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-done-retake",
+      "at": "2026-11-22T20:05:33.904Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8018-000000000001",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8018-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8018-000000000004",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "single",
+              "topic": "Invented topic 3",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "done",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-done-retake",
+      "at": "2026-11-22T20:05:33.915Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "archivedAt": null,
+          "semester": {
+            "id": "5e000000-0000-4000-8000-000000000301",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 3,
+          "examQuestionCount": 3,
+          "examTimeLimitSeconds": 270,
+          "weekCount": 1,
+          "folderCount": 1,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 3,
+          "fullyRightCount": 3,
+          "points": 3,
+          "maxPoints": 3,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 3,
+                  "fullyRightCount": 3,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.899Z",
+                  "run": "done",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "00000000-0000-4000-8018-000000000001",
+              "name": "Week 1",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000301",
+                  "title": "Week 1 - Set 1: Invented basics",
+                  "description": "Invented practice questions.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:33.717Z",
+                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 3,
+                  "fullyRightCount": 3,
+                  "lastAnsweredAt": "2026-11-22T20:05:33.899Z",
+                  "run": "done",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8018-000000000002",
+                    "00000000-0000-4000-8018-000000000003",
+                    "00000000-0000-4000-8018-000000000004"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": []
+        }
+      }
+    }
+  ]
+}

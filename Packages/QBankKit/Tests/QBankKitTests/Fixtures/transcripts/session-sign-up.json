@@ -1,0 +1,285 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "session-sign-up",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:19.976Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "owner@example.com",
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-admin-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "owner@example.com",
+            "name": "Owner",
+            "role": "admin",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:20.060Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.060Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/sign-up-emails",
+        "query": {},
+        "authorization": "Bearer synthetic-admin-token",
+        "body": {
+          "email": "new.user@example.com"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "emails": [
+            {
+              "email": "new.user@example.com",
+              "addedAt": "2026-11-22T20:05:20.066Z",
+              "hasAccount": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "sign-up-short-password",
+      "at": "2026-11-22T20:05:20.068Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "new.user@example.com",
+          "password": "short"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "invalid_request",
+          "message": "Check the fields and try again."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "sign-up-refused",
+      "at": "2026-11-22T20:05:20.068Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "stranger@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "sign_up_refused",
+          "message": "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.070Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "sign_up_refused",
+          "message": "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.072Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "sign_up_refused",
+          "message": "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.090Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "sign_up_refused",
+          "message": "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.112Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "sign_up_refused",
+          "message": "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:20.114Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "sign-up-locked",
+      "at": "2026-11-22T20:05:20.119Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "locked@example.com",
+          "password": "synthetic-pass-3"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "sign-up",
+      "at": "2026-11-22T20:05:20.121Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-up",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "new.user@example.com",
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "new.user@example.com",
+            "name": "new.user",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:20.223Z"
+        }
+      }
+    }
+  ]
+}

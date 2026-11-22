@@ -4,7 +4,7 @@ import { question, source } from "./content";
 import { STUDENT, World, expect } from "./world";
 
 export async function recordTopics(): Promise<World[]> {
-  const world = await World.boot(4);
+  const world = await World.boot("topics", 4);
   await world.account(STUDENT, "synthetic-session-token");
   const semester1 = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
   const course = await world.ok("/api/courses", 201, {

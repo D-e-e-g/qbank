@@ -10,7 +10,7 @@ export async function recordPractice(): Promise<World[]> {
 }
 
 async function studying(): Promise<World> {
-  const world = await World.boot(10);
+  const world = await World.boot("practice-studying", 10);
   await world.account(STUDENT, "synthetic-session-token");
   await world.record("place-empty", "/api/me/place", 200);
   const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
@@ -112,7 +112,7 @@ async function studying(): Promise<World> {
   // as ended, a timeout at its end time with its score, before anything records that end.
   const wrongId = wrong.str("id");
   const endedAgo = (seconds: number) =>
-    world.sql("update study_session set started_at = now() - make_interval(secs => time_limit_seconds + $2) where id = $1", [wrongId, seconds]);
+    world.rewind("study_session", "started_at", "update study_session set started_at = now() - make_interval(secs => time_limit_seconds + $2) where id = $1", [wrongId, seconds]);
   await endedAgo(10);
   await world.record("exam-grace", `/api/exams/${wrongId}`, 200);
   await world.record("exam-setup-grace", exams, 200);
@@ -141,7 +141,7 @@ async function studying(): Promise<World> {
 
 /** A set replaced by a new file, and its earlier version brought back. */
 async function restoring(): Promise<World> {
-  const world = await World.boot(11);
+  const world = await World.boot("practice-restoring", 11);
   await world.account(STUDENT, "synthetic-session-token");
   const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
   const course = await world.ok("/api/courses", 201, { method: "POST", json: { semesterId: semester.str("id"), code: "NURS 101", title: "Invented Nursing Basics" } });
@@ -168,7 +168,7 @@ async function restoring(): Promise<World> {
  * the sitting, and Start over ends it.
  */
 async function continuing(): Promise<World> {
-  const world = await World.boot(18);
+  const world = await World.boot("practice-continuing", 18);
   await world.account(STUDENT, "synthetic-session-token");
   const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
   const course = await world.ok("/api/courses", 201, { method: "POST", json: { semesterId: semester.str("id"), code: "NURS 101", title: "Invented Nursing Basics" } });

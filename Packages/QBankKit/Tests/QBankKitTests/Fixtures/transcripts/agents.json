@@ -1,0 +1,1217 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "agents",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.388Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "owner@example.com",
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-admin-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "owner@example.com",
+            "name": "Owner",
+            "role": "admin",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:29.467Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.467Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:29.563Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-keys-empty",
+      "at": "2026-11-22T20:05:29.563Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent-keys",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "keys": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-lookup-not-found",
+      "at": "2026-11-22T20:05:29.578Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "ZZZZ-ZZZZ"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.587Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "name": "My MacBook agent",
+          "scopes": [
+            "import",
+            "read"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "deviceCode": "eKT4r0a89d9FGFIl7n4OAdw1Pur_wla0rPV_oJgjAc0",
+          "userCode": "MNQT-XPJQ",
+          "expiresAt": "2026-11-22T20:15:29.587Z",
+          "expiresIn": 600,
+          "interval": 5
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-lookup",
+      "at": "2026-11-22T20:05:29.596Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "MNQTXPJQ"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "My MacBook agent",
+          "scopes": [
+            "import",
+            "read"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "read",
+              "text": "Read how you answered: where you stand by topic, your Review lists, your exams and your progress export. It changes nothing."
+            }
+          ],
+          "status": "pending",
+          "createdAt": "2026-11-22T20:05:29.587Z",
+          "expiresAt": "2026-11-22T20:15:29.587Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-approve",
+      "at": "2026-11-22T20:05:29.603Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/approve",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "MNQT-XPJQ"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "My MacBook agent",
+          "scopes": [
+            "import",
+            "read"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "read",
+              "text": "Read how you answered: where you stand by topic, your Review lists, your exams and your progress export. It changes nothing."
+            }
+          ],
+          "status": "approved",
+          "createdAt": "2026-11-22T20:05:29.587Z",
+          "expiresAt": "2026-11-22T20:15:29.587Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.616Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/token",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "deviceCode": "eKT4r0a89d9FGFIl7n4OAdw1Pur_wla0rPV_oJgjAc0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-agent-key",
+          "key": {
+            "id": "00000000-0000-4000-8009-000000000001",
+            "name": "My MacBook agent",
+            "scopes": [
+              "import",
+              "read"
+            ],
+            "createdAt": "2026-11-22T20:05:29.617Z",
+            "lastUsedAt": null,
+            "revokedAt": null
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.620Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "name": "Study laptop agent",
+          "scopes": [
+            "import",
+            "manage"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "deviceCode": "Haasvx5t2-J-gyppsPW7L6shdEk2zTyNeIDyYMAz47E",
+          "userCode": "WHWP-QSTD",
+          "expiresAt": "2026-11-22T20:15:29.620Z",
+          "expiresIn": 600,
+          "interval": 5
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-lookup-manage",
+      "at": "2026-11-22T20:05:29.627Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "WHWP-QSTD"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "Study laptop agent",
+          "scopes": [
+            "import",
+            "manage"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "manage",
+              "text": "Add, change and delete your courses, topics, folders, pages and sets, as you can in QBank: make and rename them, move sets, replace or restore a set's questions, and set up a page's folders. Anything it deletes goes to Recently deleted, where you can bring it back for 30 days. It never answers questions for you."
+            }
+          ],
+          "status": "pending",
+          "createdAt": "2026-11-22T20:05:29.620Z",
+          "expiresAt": "2026-11-22T20:15:29.620Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-deny",
+      "at": "2026-11-22T20:05:29.635Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/deny",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "WHWP-QSTD"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "Study laptop agent",
+          "scopes": [
+            "import",
+            "manage"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "manage",
+              "text": "Add, change and delete your courses, topics, folders, pages and sets, as you can in QBank: make and rename them, move sets, replace or restore a set's questions, and set up a page's folders. Anything it deletes goes to Recently deleted, where you can bring it back for 30 days. It never answers questions for you."
+            }
+          ],
+          "status": "denied",
+          "createdAt": "2026-11-22T20:05:29.620Z",
+          "expiresAt": "2026-11-22T20:15:29.620Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-approve-answered",
+      "at": "2026-11-22T20:05:29.649Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/approve",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "WHWP-QSTD"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.657Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "name": "Study laptop agent",
+          "scopes": [
+            "import",
+            "manage"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "deviceCode": "6d8jJzoAQ3hp_aZ6vkJA0JBy36C-7QcHXkrEM4Fdjy8",
+          "userCode": "KLMN-PQRS",
+          "expiresAt": "2026-11-22T20:15:29.657Z",
+          "expiresIn": 600,
+          "interval": 5
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.661Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/approve",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "KLMN-PQRS"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "Study laptop agent",
+          "scopes": [
+            "import",
+            "manage"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "manage",
+              "text": "Add, change and delete your courses, topics, folders, pages and sets, as you can in QBank: make and rename them, move sets, replace or restore a set's questions, and set up a page's folders. Anything it deletes goes to Recently deleted, where you can bring it back for 30 days. It never answers questions for you."
+            }
+          ],
+          "status": "approved",
+          "createdAt": "2026-11-22T20:05:29.657Z",
+          "expiresAt": "2026-11-22T20:15:29.657Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.671Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/token",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "deviceCode": "6d8jJzoAQ3hp_aZ6vkJA0JBy36C-7QcHXkrEM4Fdjy8"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-agent-key-2",
+          "key": {
+            "id": "00000000-0000-4000-8009-000000000002",
+            "name": "Study laptop agent",
+            "scopes": [
+              "import",
+              "manage"
+            ],
+            "createdAt": "2026-11-22T20:05:29.671Z",
+            "lastUsedAt": null,
+            "revokedAt": null
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.682Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "name": "Old phone agent",
+          "scopes": [
+            "import"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "deviceCode": "Z6UM132qQkWFt1BFzscE-SwCxLB7sLUNzZ2Bln0zE8c",
+          "userCode": "TVWX-ZBCD",
+          "expiresAt": "2026-11-22T20:15:29.683Z",
+          "expiresIn": 600,
+          "interval": 5
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.688Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/approve",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "TVWX-ZBCD"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "Old phone agent",
+          "scopes": [
+            "import"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            }
+          ],
+          "status": "approved",
+          "createdAt": "2026-11-22T20:05:29.683Z",
+          "expiresAt": "2026-11-22T20:15:29.683Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.696Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/token",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "deviceCode": "Z6UM132qQkWFt1BFzscE-SwCxLB7sLUNzZ2Bln0zE8c"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-agent-key-3",
+          "key": {
+            "id": "c925031b-bff0-4153-aca1-ab8ff8648f21",
+            "name": "Old phone agent",
+            "scopes": [
+              "import"
+            ],
+            "createdAt": "2026-11-22T20:05:29.696Z",
+            "lastUsedAt": null,
+            "revokedAt": null
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.699Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8009-000000000003",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.721Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "00000000-0000-4000-8009-000000000003",
+          "code": "NURS 401",
+          "title": "Invented Agents Course"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "kind": "course",
+          "code": "NURS 401",
+          "title": "Invented Agents Course",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.739Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 1 - Set 1: Her own set\",\"desc\":\"Invented practice set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client is short of breath.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client has a racing heart.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client feels lightheaded.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"}]}",
+          "courseId": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "folderName": "Week 1",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "00000000-0000-4000-8009-000000000004",
+          "courseId": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "courseCode": "NURS 401",
+          "title": "Week 1 - Set 1: Her own set",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8009-000000000005",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.770Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-agent-key",
+        "body": {
+          "source": "{\"title\":\"Week 1 - Set 2: From her agent\",\"desc\":\"Invented practice set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client is short of breath.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client has a racing heart.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client feels lightheaded.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"}]}",
+          "courseId": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "folderName": "Week 1",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "00000000-0000-4000-8009-000000000006",
+          "courseId": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "courseCode": "NURS 401",
+          "title": "Week 1 - Set 2: From her agent",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8009-000000000005",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": {
+            "id": "00000000-0000-4000-8009-000000000001",
+            "name": "My MacBook agent"
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-imported-by-agent",
+      "at": "2026-11-22T20:05:29.789Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
+          "kind": "course",
+          "code": "NURS 401",
+          "title": "Invented Agents Course",
+          "archivedAt": null,
+          "semester": {
+            "id": "00000000-0000-4000-8009-000000000003",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 6,
+          "examQuestionCount": 6,
+          "examTimeLimitSeconds": 540,
+          "weekCount": 1,
+          "folderCount": 1,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "00000000-0000-4000-8009-000000000004",
+                  "title": "Week 1 - Set 1: Her own set",
+                  "description": "Invented practice set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:29.762Z",
+                  "activeSince": "2026-11-22T20:05:29.762Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8009-000000000007",
+                    "00000000-0000-4000-8009-000000000008",
+                    "00000000-0000-4000-8009-000000000009"
+                  ],
+                  "importedByAgent": null
+                },
+                {
+                  "id": "00000000-0000-4000-8009-000000000006",
+                  "title": "Week 1 - Set 2: From her agent",
+                  "description": "Invented practice set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:29.784Z",
+                  "activeSince": "2026-11-22T20:05:29.784Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8009-000000000010",
+                    "00000000-0000-4000-8009-000000000011",
+                    "00000000-0000-4000-8009-000000000012"
+                  ],
+                  "importedByAgent": {
+                    "id": "00000000-0000-4000-8009-000000000001",
+                    "name": "My MacBook agent"
+                  }
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "00000000-0000-4000-8009-000000000005",
+              "name": "Week 1",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "00000000-0000-4000-8009-000000000004",
+                  "title": "Week 1 - Set 1: Her own set",
+                  "description": "Invented practice set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:29.762Z",
+                  "activeSince": "2026-11-22T20:05:29.762Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8009-000000000007",
+                    "00000000-0000-4000-8009-000000000008",
+                    "00000000-0000-4000-8009-000000000009"
+                  ],
+                  "importedByAgent": null
+                },
+                {
+                  "id": "00000000-0000-4000-8009-000000000006",
+                  "title": "Week 1 - Set 2: From her agent",
+                  "description": "Invented practice set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:29.784Z",
+                  "activeSince": "2026-11-22T20:05:29.784Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8009-000000000010",
+                    "00000000-0000-4000-8009-000000000011",
+                    "00000000-0000-4000-8009-000000000012"
+                  ],
+                  "importedByAgent": {
+                    "id": "00000000-0000-4000-8009-000000000001",
+                    "name": "My MacBook agent"
+                  }
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.833Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent-keys",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "keys": [
+            {
+              "id": "c925031b-bff0-4153-aca1-ab8ff8648f21",
+              "name": "Old phone agent",
+              "scopes": [
+                "import"
+              ],
+              "createdAt": "2026-11-22T20:05:29.696Z",
+              "lastUsedAt": null,
+              "revokedAt": null
+            },
+            {
+              "id": "00000000-0000-4000-8009-000000000002",
+              "name": "Study laptop agent",
+              "scopes": [
+                "import",
+                "manage"
+              ],
+              "createdAt": "2026-11-22T20:05:29.671Z",
+              "lastUsedAt": null,
+              "revokedAt": null
+            },
+            {
+              "id": "00000000-0000-4000-8009-000000000001",
+              "name": "My MacBook agent",
+              "scopes": [
+                "import",
+                "read"
+              ],
+              "createdAt": "2026-11-22T20:05:29.617Z",
+              "lastUsedAt": "2026-11-22T20:05:29.770Z",
+              "revokedAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-key-revoke",
+      "at": "2026-11-22T20:05:29.839Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-keys/c925031b-bff0-4153-aca1-ab8ff8648f21/revoke",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c925031b-bff0-4153-aca1-ab8ff8648f21",
+          "name": "Old phone agent",
+          "scopes": [
+            "import"
+          ],
+          "createdAt": "2026-11-22T20:05:29.696Z",
+          "lastUsedAt": null,
+          "revokedAt": "2026-11-22T20:05:29.844Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-keys",
+      "at": "2026-11-22T20:05:29.845Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent-keys",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "keys": [
+            {
+              "id": "c925031b-bff0-4153-aca1-ab8ff8648f21",
+              "name": "Old phone agent",
+              "scopes": [
+                "import"
+              ],
+              "createdAt": "2026-11-22T20:05:29.696Z",
+              "lastUsedAt": null,
+              "revokedAt": "2026-11-22T20:05:29.844Z"
+            },
+            {
+              "id": "00000000-0000-4000-8009-000000000002",
+              "name": "Study laptop agent",
+              "scopes": [
+                "import",
+                "manage"
+              ],
+              "createdAt": "2026-11-22T20:05:29.671Z",
+              "lastUsedAt": null,
+              "revokedAt": null
+            },
+            {
+              "id": "00000000-0000-4000-8009-000000000001",
+              "name": "My MacBook agent",
+              "scopes": [
+                "import",
+                "read"
+              ],
+              "createdAt": "2026-11-22T20:05:29.617Z",
+              "lastUsedAt": "2026-11-22T20:05:29.770Z",
+              "revokedAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-key-revoke-not-found",
+      "at": "2026-11-22T20:05:29.848Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-keys/4d1c3f8e-0000-4000-8000-000000000404/revoke",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "agent_key_not_found",
+          "message": "You have no agent key with that id."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.853Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.862Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.869Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.878Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "pairing_not_found",
+          "message": "No agent is waiting under that code. Codes last 10 minutes: ask the agent for its new one."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.886Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-lookup-locked",
+      "at": "2026-11-22T20:05:29.893Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "GGGG-GGGG"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.900Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/student-password",
+        "query": {},
+        "authorization": "Bearer synthetic-admin-token",
+        "body": {
+          "temporaryPassword": "synthetic-temporary-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "status": "temporary_password_set",
+          "email": "student@example.com"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:29.973Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-temporary-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": true,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:30.034Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "agent-pairing-lookup-temporary-password",
+      "at": "2026-11-22T20:05:30.035Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/lookup",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "HHHH-HHHH"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "must_change_password",
+          "message": "Choose a new password to continue."
+        }
+      }
+    }
+  ]
+}

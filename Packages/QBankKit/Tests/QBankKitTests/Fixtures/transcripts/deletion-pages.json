@@ -1,0 +1,2216 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "deletion-pages",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.118Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:42.192Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.193Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "a0000000-0000-4000-8000-000000000901",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.200Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "a0000000-0000-4000-8000-000000000901",
+          "code": "NURS 101",
+          "title": "Foundations"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000901",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Foundations",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.208Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Heart A\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Heart A topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Heart A topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Heart A topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Heart A topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Heart A topic 3\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Heart A topic 3.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 1",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000901",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Heart A",
+          "weekLabel": "Week 1",
+          "folderId": "f0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (Q2): term \"invented-term\" has no definition and will be skipped",
+            "Question 3 (Q3): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.220Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Lungs A\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Lungs A topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Lungs A topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Lungs A topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Lungs A topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 3",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000902",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Lungs A",
+          "weekLabel": "Week 3",
+          "folderId": "f0000000-0000-4000-8000-000000000902",
+          "folderName": "Week 3",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (Q2): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.229Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Kidneys A\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Kidneys A topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Kidneys A topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Kidneys A topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Kidneys A topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Kidneys A topic 3\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Kidneys A topic 3.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 4",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000903",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Kidneys A",
+          "weekLabel": "Week 4",
+          "folderId": "f0000000-0000-4000-8000-000000000903",
+          "folderName": "Week 4",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (Q2): term \"invented-term\" has no definition and will be skipped",
+            "Question 3 (Q3): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.238Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Kidneys A exam\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"E1\",\"type\":\"single\",\"topic\":\"Kidneys A exam topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Kidneys A exam topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"E2\",\"type\":\"single\",\"topic\":\"Kidneys A exam topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Kidneys A exam topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}],\"kind\":\"exam\"}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 4",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "exam",
+          "setId": "00000000-0000-4000-8017-000000000001",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Kidneys A exam",
+          "weekLabel": "Week 4",
+          "folderId": "f0000000-0000-4000-8000-000000000903",
+          "folderName": "Week 4",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (E1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (E2): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.246Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Skin A\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Skin A topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Skin A topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Skin A topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Skin A topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "Week 5",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000904",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Skin A",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000904",
+          "folderName": "Week 5",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (Q2): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.255Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Mixed A\",\"desc\":\"Invented set.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Mixed A topic 1\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Mixed A topic 1.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Mixed A topic 2\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about Mixed A topic 2.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "folderName": "First Pass",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000905",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "title": "Mixed A",
+          "weekLabel": "First Pass",
+          "folderId": "f0000000-0000-4000-8000-000000000905",
+          "folderName": "First Pass",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [
+            "Question 1 (Q1): term \"invented-term\" has no definition and will be skipped",
+            "Question 2 (Q2): term \"invented-term\" has no definition and will be skipped"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.269Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Exam 1",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000901"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "ce000000-0000-4000-8000-000000000901",
+          "name": "Exam 1",
+          "sortOrder": 1,
+          "weekLabels": [
+            "Week 1"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000901"
+          ],
+          "linkUrl": null,
+          "badge": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.285Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Exam 2",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "ce000000-0000-4000-8000-000000000902",
+          "name": "Exam 2",
+          "sortOrder": 2,
+          "weekLabels": [
+            "Week 3",
+            "Week 4"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903"
+          ],
+          "linkUrl": null,
+          "badge": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.292Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000902",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000902",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "title": "Lungs A",
+          "weekLabel": "Week 3",
+          "folderId": "f0000000-0000-4000-8000-000000000902",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8017-000000000002",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Lungs A topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000003",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "single",
+              "topic": "Lungs A topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "new",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.302Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+          "questionId": "00000000-0000-4000-8017-000000000002",
+          "response": {
+            "type": "single",
+            "choice": 0
+          },
+          "guessed": false
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+          "questionId": "00000000-0000-4000-8017-000000000002",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "status": "correct",
+          "points": 1,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:42.309Z",
+          "inReview": false,
+          "label": "Correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.317Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903"
+          ],
+          "pool": "all"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "e0000000-0000-4000-8000-000000000901",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "courseTitle": "Foundations",
+          "weeks": [
+            "Week 3",
+            "Week 4"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903"
+          ],
+          "pool": "all",
+          "practiceWeeks": [
+            "Week 3"
+          ],
+          "timeLimitSeconds": 360,
+          "startedAt": "2026-11-22T20:05:42.320Z",
+          "endsAt": "2026-11-22T20:11:42.320Z",
+          "status": "running",
+          "finishedAt": null,
+          "endReason": null,
+          "serverNow": "2026-11-22T20:05:42.320Z",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8017-000000000003",
+              "publicId": "Q2",
+              "position": 1,
+              "type": "single",
+              "topic": "Lungs A topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000002",
+              "publicId": "Q1",
+              "position": 2,
+              "type": "single",
+              "topic": "Lungs A topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000004",
+              "publicId": "E2",
+              "position": 3,
+              "type": "single",
+              "topic": "Kidneys A exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000005",
+              "publicId": "E1",
+              "position": 4,
+              "type": "single",
+              "topic": "Kidneys A exam topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            }
+          ],
+          "answeredQuestionIds": [],
+          "result": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.327Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/exams/e0000000-0000-4000-8000-000000000901/finish",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "reason": "finished"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "e0000000-0000-4000-8000-000000000901",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "courseCode": "NURS 101",
+          "courseTitle": "Foundations",
+          "weeks": [
+            "Week 3",
+            "Week 4"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903"
+          ],
+          "pool": "all",
+          "practiceWeeks": [
+            "Week 3"
+          ],
+          "timeLimitSeconds": 360,
+          "startedAt": "2026-11-22T20:05:42.320Z",
+          "endsAt": "2026-11-22T20:11:42.320Z",
+          "status": "ended",
+          "finishedAt": "2026-11-22T20:05:42.330Z",
+          "endReason": "finished",
+          "serverNow": "2026-11-22T20:05:42.330Z",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8017-000000000003",
+              "publicId": "Q2",
+              "position": 1,
+              "type": "single",
+              "topic": "Lungs A topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000002",
+              "publicId": "Q1",
+              "position": 2,
+              "type": "single",
+              "topic": "Lungs A topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000004",
+              "publicId": "E2",
+              "position": 3,
+              "type": "single",
+              "topic": "Kidneys A exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000005",
+              "publicId": "E1",
+              "position": 4,
+              "type": "single",
+              "topic": "Kidneys A exam topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            }
+          ],
+          "answeredQuestionIds": [],
+          "result": {
+            "questionCount": 4,
+            "answered": 0,
+            "unanswered": 4,
+            "fullyRight": 0,
+            "partial": 0,
+            "missed": 0,
+            "guessed": 0,
+            "points": 0,
+            "maxPoints": 4,
+            "minutesUsed": 1,
+            "reviewCount": 0,
+            "examBankWrong": 0,
+            "byFolder": [
+              {
+                "folderId": "f0000000-0000-4000-8000-000000000902",
+                "label": "Week 3",
+                "right": 0,
+                "total": 2
+              },
+              {
+                "folderId": "f0000000-0000-4000-8000-000000000903",
+                "label": "Week 4",
+                "right": 0,
+                "total": 2
+              }
+            ],
+            "byWeek": [
+              {
+                "label": "Week 3",
+                "right": 0,
+                "total": 2
+              },
+              {
+                "label": "Week 4",
+                "right": 0,
+                "total": 2
+              }
+            ],
+            "byStep": [
+              {
+                "label": "Analyze cues",
+                "right": 0,
+                "total": 4
+              }
+            ],
+            "items": [
+              {
+                "questionId": "00000000-0000-4000-8017-000000000003",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8017-000000000002",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8017-000000000004",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8017-000000000005",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-preview",
+      "at": "2026-11-22T20:05:42.335Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000902",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "name": "Exam 2",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000902",
+              "name": "Week 3",
+              "setCount": 1,
+              "questionCount": 2
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000903",
+              "name": "Week 4",
+              "setCount": 2,
+              "questionCount": 5
+            }
+          ],
+          "pastExamCount": 1,
+          "folderCount": 2,
+          "setCount": 3,
+          "questionCount": 5,
+          "examQuestionCount": 2,
+          "answeredCount": 1,
+          "progress": {
+            "answeredCount": {
+              "before": 1,
+              "after": 1
+            },
+            "fullyRightCount": {
+              "before": 1,
+              "after": 1
+            },
+            "reviewCount": {
+              "before": 0,
+              "after": 0
+            },
+            "points": {
+              "before": 1,
+              "after": 1
+            },
+            "maxPoints": {
+              "before": 1,
+              "after": 1
+            },
+            "wrongCount": {
+              "before": 0,
+              "after": 0
+            }
+          },
+          "message": "Delete Exam 2? Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days.",
+          "warning": {
+            "title": "Delete Exam 2?",
+            "body": "Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days."
+          },
+          "refusal": null,
+          "confirm": "08b00fffe8f0f489",
+          "undoDays": 30
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-unconfirmed",
+      "at": "2026-11-22T20:05:42.342Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "confirmation_required",
+          "message": "Exam 2 still has 2 folders. Deleting it puts them under Folders, so look at what changes and confirm it first."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.351Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/folders/f0000000-0000-4000-8000-000000000904",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000902"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "f0000000-0000-4000-8000-000000000904",
+          "name": "Week 5",
+          "examPageId": "ce000000-0000-4000-8000-000000000902",
+          "sortOrder": 3,
+          "sets": [
+            {
+              "id": "5e700000-0000-4000-8000-000000000904",
+              "title": "Skin A",
+              "description": "Invented set.",
+              "questionCount": 2,
+              "importedAt": "2026-11-22T20:05:42.253Z",
+              "activeSince": "2026-11-22T20:05:42.253Z",
+              "status": "imported",
+              "canRestore": false,
+              "answeredCount": 0,
+              "fullyRightCount": 0,
+              "lastAnsweredAt": null,
+              "run": "new",
+              "sitting": null,
+              "questionIds": [
+                "00000000-0000-4000-8017-000000000006",
+                "00000000-0000-4000-8017-000000000007"
+              ],
+              "importedByAgent": null
+            }
+          ],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-changed",
+      "at": "2026-11-22T20:05:42.363Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
+        "query": {
+          "confirm": "08b00fffe8f0f489"
+        },
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "deletion_changed",
+          "message": "Exam 2 changed since you were warned. Look again before deleting it."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-preview-changed",
+      "at": "2026-11-22T20:05:42.374Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000902",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "name": "Exam 2",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000902",
+              "name": "Week 3",
+              "setCount": 1,
+              "questionCount": 2
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000903",
+              "name": "Week 4",
+              "setCount": 2,
+              "questionCount": 5
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000904",
+              "name": "Week 5",
+              "setCount": 1,
+              "questionCount": 2
+            }
+          ],
+          "pastExamCount": 1,
+          "folderCount": 3,
+          "setCount": 4,
+          "questionCount": 7,
+          "examQuestionCount": 2,
+          "answeredCount": 1,
+          "progress": {
+            "answeredCount": {
+              "before": 1,
+              "after": 1
+            },
+            "fullyRightCount": {
+              "before": 1,
+              "after": 1
+            },
+            "reviewCount": {
+              "before": 0,
+              "after": 0
+            },
+            "points": {
+              "before": 1,
+              "after": 1
+            },
+            "maxPoints": {
+              "before": 1,
+              "after": 1
+            },
+            "wrongCount": {
+              "before": 0,
+              "after": 0
+            }
+          },
+          "message": "Delete Exam 2? Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days.",
+          "warning": {
+            "title": "Delete Exam 2?",
+            "body": "Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days."
+          },
+          "refusal": null,
+          "confirm": "811a9b71b3f4b77a",
+          "undoDays": 30
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete",
+      "at": "2026-11-22T20:05:42.381Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
+        "query": {
+          "confirm": "811a9b71b3f4b77a"
+        },
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-gone",
+      "at": "2026-11-22T20:05:42.393Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "That page was deleted."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-after-exam-page-delete",
+      "at": "2026-11-22T20:05:42.397Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000901",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Foundations",
+          "archivedAt": null,
+          "semester": {
+            "id": "a0000000-0000-4000-8000-000000000901",
+            "number": 1,
+            "name": "Semester 1"
+          },
+          "questionCount": 12,
+          "examQuestionCount": 11,
+          "examTimeLimitSeconds": 990,
+          "weekCount": 5,
+          "folderCount": 5,
+          "termCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 1,
+          "fullyRightCount": 1,
+          "points": 1,
+          "maxPoints": 1,
+          "weeks": [
+            {
+              "label": "Week 1",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000901",
+                  "title": "Heart A",
+                  "description": "Invented set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:42.218Z",
+                  "activeSince": "2026-11-22T20:05:42.218Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000008",
+                    "00000000-0000-4000-8017-000000000009",
+                    "00000000-0000-4000-8017-000000000010"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            },
+            {
+              "label": "Week 3",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000902",
+                  "title": "Lungs A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.227Z",
+                  "activeSince": "2026-11-22T20:05:42.227Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 1,
+                  "fullyRightCount": 1,
+                  "lastAnsweredAt": "2026-11-22T20:05:42.309Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 1
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000002",
+                    "00000000-0000-4000-8017-000000000003"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            },
+            {
+              "label": "Week 4",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000903",
+                  "title": "Kidneys A",
+                  "description": "Invented set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:42.236Z",
+                  "activeSince": "2026-11-22T20:05:42.236Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000011",
+                    "00000000-0000-4000-8017-000000000012",
+                    "00000000-0000-4000-8017-000000000013"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 2
+            },
+            {
+              "label": "Week 5",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000904",
+                  "title": "Skin A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.253Z",
+                  "activeSince": "2026-11-22T20:05:42.253Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000006",
+                    "00000000-0000-4000-8017-000000000007"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            },
+            {
+              "label": "First Pass",
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000905",
+                  "title": "Mixed A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.267Z",
+                  "activeSince": "2026-11-22T20:05:42.267Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000014",
+                    "00000000-0000-4000-8017-000000000015"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0
+            }
+          ],
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000901",
+              "name": "Week 1",
+              "examPageId": "ce000000-0000-4000-8000-000000000901",
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000901",
+                  "title": "Heart A",
+                  "description": "Invented set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:42.218Z",
+                  "activeSince": "2026-11-22T20:05:42.218Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000008",
+                    "00000000-0000-4000-8017-000000000009",
+                    "00000000-0000-4000-8017-000000000010"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000905",
+              "name": "First Pass",
+              "examPageId": null,
+              "sortOrder": 5,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000905",
+                  "title": "Mixed A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.267Z",
+                  "activeSince": "2026-11-22T20:05:42.267Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000014",
+                    "00000000-0000-4000-8017-000000000015"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000902",
+              "name": "Week 3",
+              "examPageId": null,
+              "sortOrder": 1,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000902",
+                  "title": "Lungs A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.227Z",
+                  "activeSince": "2026-11-22T20:05:42.227Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 1,
+                  "fullyRightCount": 1,
+                  "lastAnsweredAt": "2026-11-22T20:05:42.309Z",
+                  "run": "midway",
+                  "sitting": {
+                    "answeredCount": 1
+                  },
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000002",
+                    "00000000-0000-4000-8017-000000000003"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000903",
+              "name": "Week 4",
+              "examPageId": null,
+              "sortOrder": 2,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000903",
+                  "title": "Kidneys A",
+                  "description": "Invented set.",
+                  "questionCount": 3,
+                  "importedAt": "2026-11-22T20:05:42.236Z",
+                  "activeSince": "2026-11-22T20:05:42.236Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000011",
+                    "00000000-0000-4000-8017-000000000012",
+                    "00000000-0000-4000-8017-000000000013"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 2,
+              "examSets": [
+                {
+                  "id": "00000000-0000-4000-8017-000000000001",
+                  "title": "Kidneys A exam",
+                  "questionCount": 2,
+                  "importedByAgent": null
+                }
+              ]
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000904",
+              "name": "Week 5",
+              "examPageId": null,
+              "sortOrder": 3,
+              "sets": [
+                {
+                  "id": "5e700000-0000-4000-8000-000000000904",
+                  "title": "Skin A",
+                  "description": "Invented set.",
+                  "questionCount": 2,
+                  "importedAt": "2026-11-22T20:05:42.253Z",
+                  "activeSince": "2026-11-22T20:05:42.253Z",
+                  "status": "imported",
+                  "canRestore": false,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "lastAnsweredAt": null,
+                  "run": "new",
+                  "sitting": null,
+                  "questionIds": [
+                    "00000000-0000-4000-8017-000000000006",
+                    "00000000-0000-4000-8017-000000000007"
+                  ],
+                  "importedByAgent": null
+                }
+              ],
+              "examBankCount": 0,
+              "examSets": []
+            }
+          ],
+          "exams": [
+            {
+              "id": "ce000000-0000-4000-8000-000000000901",
+              "name": "Exam 1",
+              "sortOrder": 1,
+              "weekLabels": [
+                "Week 1"
+              ],
+              "folderIds": [
+                "f0000000-0000-4000-8000-000000000901"
+              ],
+              "linkUrl": null,
+              "badge": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-deleted-exam-page",
+      "at": "2026-11-22T20:05:42.416Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "undoDays": 30,
+          "examPages": [
+            {
+              "id": "ce000000-0000-4000-8000-000000000902",
+              "name": "Exam 2",
+              "badge": null,
+              "folders": [
+                {
+                  "id": "f0000000-0000-4000-8000-000000000902",
+                  "name": "Week 3"
+                },
+                {
+                  "id": "f0000000-0000-4000-8000-000000000903",
+                  "name": "Week 4"
+                },
+                {
+                  "id": "f0000000-0000-4000-8000-000000000904",
+                  "name": "Week 5"
+                }
+              ],
+              "pastExamCount": 1,
+              "deletedAt": "2026-11-22T20:05:42.389Z",
+              "undoUntil": "2026-12-22T20:05:42.389Z",
+              "undoRefusal": null,
+              "deletedByAgent": null
+            }
+          ],
+          "folders": [],
+          "sets": [],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-undo-delete",
+      "at": "2026-11-22T20:05:42.432Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "ce000000-0000-4000-8000-000000000902",
+          "name": "Exam 2",
+          "sortOrder": 2,
+          "weekLabels": [
+            "Week 3",
+            "Week 4",
+            "Week 5"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000902",
+            "f0000000-0000-4000-8000-000000000903",
+            "f0000000-0000-4000-8000-000000000904"
+          ],
+          "linkUrl": null,
+          "badge": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.441Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000902",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "name": "Exam 2",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000902",
+              "name": "Week 3",
+              "setCount": 1,
+              "questionCount": 2
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000903",
+              "name": "Week 4",
+              "setCount": 2,
+              "questionCount": 5
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000904",
+              "name": "Week 5",
+              "setCount": 1,
+              "questionCount": 2
+            }
+          ],
+          "pastExamCount": 1,
+          "folderCount": 3,
+          "setCount": 4,
+          "questionCount": 7,
+          "examQuestionCount": 2,
+          "answeredCount": 1,
+          "progress": {
+            "answeredCount": {
+              "before": 1,
+              "after": 1
+            },
+            "fullyRightCount": {
+              "before": 1,
+              "after": 1
+            },
+            "reviewCount": {
+              "before": 0,
+              "after": 0
+            },
+            "points": {
+              "before": 1,
+              "after": 1
+            },
+            "maxPoints": {
+              "before": 1,
+              "after": 1
+            },
+            "wrongCount": {
+              "before": 0,
+              "after": 0
+            }
+          },
+          "message": "Delete Exam 2? Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days.",
+          "warning": {
+            "title": "Delete Exam 2?",
+            "body": "Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days."
+          },
+          "refusal": null,
+          "confirm": "811a9b71b3f4b77a",
+          "undoDays": 30
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.459Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
+        "query": {
+          "confirm": "811a9b71b3f4b77a"
+        },
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.466Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/folders",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Draft"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "f0000000-0000-4000-8000-000000000906",
+          "name": "Draft",
+          "examPageId": null,
+          "sortOrder": 6,
+          "sets": [],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.478Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Exam 2",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000906"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "ce000000-0000-4000-8000-000000000903",
+          "name": "Exam 2",
+          "sortOrder": 3,
+          "weekLabels": [
+            "Draft"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000906"
+          ],
+          "linkUrl": null,
+          "badge": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.488Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/folders/f0000000-0000-4000-8000-000000000906",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "First Pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "f0000000-0000-4000-8000-000000000906",
+          "name": "First Pass",
+          "examPageId": "ce000000-0000-4000-8000-000000000903",
+          "sortOrder": 1,
+          "sets": [],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-deleted-exam-page-name-taken",
+      "at": "2026-11-22T20:05:42.499Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "undoDays": 30,
+          "examPages": [
+            {
+              "id": "ce000000-0000-4000-8000-000000000902",
+              "name": "Exam 2",
+              "badge": null,
+              "folders": [
+                {
+                  "id": "f0000000-0000-4000-8000-000000000902",
+                  "name": "Week 3"
+                },
+                {
+                  "id": "f0000000-0000-4000-8000-000000000903",
+                  "name": "Week 4"
+                },
+                {
+                  "id": "f0000000-0000-4000-8000-000000000904",
+                  "name": "Week 5"
+                }
+              ],
+              "pastExamCount": 1,
+              "deletedAt": "2026-11-22T20:05:42.464Z",
+              "undoUntil": "2026-12-22T20:05:42.464Z",
+              "undoRefusal": "This course already has a page named Exam 2. Rename one of them, then bring this one back.",
+              "deletedByAgent": null
+            }
+          ],
+          "folders": [],
+          "sets": [],
+          "exams": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-undo-delete-name-taken",
+      "at": "2026-11-22T20:05:42.507Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "This course already has a page named Exam 2. Rename one of them, then bring this one back."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-preview-name-taken",
+      "at": "2026-11-22T20:05:42.513Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000903/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000903",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "name": "Exam 2",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000906",
+              "name": "First Pass",
+              "setCount": 0,
+              "questionCount": 0
+            }
+          ],
+          "pastExamCount": 0,
+          "folderCount": 1,
+          "setCount": 0,
+          "questionCount": 0,
+          "examQuestionCount": 0,
+          "answeredCount": 0,
+          "progress": {
+            "answeredCount": {
+              "before": 1,
+              "after": 1
+            },
+            "fullyRightCount": {
+              "before": 1,
+              "after": 1
+            },
+            "reviewCount": {
+              "before": 0,
+              "after": 0
+            },
+            "points": {
+              "before": 1,
+              "after": 1
+            },
+            "maxPoints": {
+              "before": 1,
+              "after": 1
+            },
+            "wrongCount": {
+              "before": 0,
+              "after": 0
+            }
+          },
+          "message": "Delete Exam 2? Its folder First Pass stays, with its sets and your progress, under Folders. You can undo this for 30 days.",
+          "warning": {
+            "title": "Delete Exam 2?",
+            "body": "Its folder First Pass stays, with its sets and your progress, under Folders. You can undo this for 30 days."
+          },
+          "refusal": "NURS 101 already has a folder named First Pass in its Folders list. Rename one of them before deleting Exam 2.",
+          "confirm": "393eff72f0b8ee46",
+          "undoDays": 30
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-exam-delete-name-taken",
+      "at": "2026-11-22T20:05:42.518Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000903",
+        "query": {
+          "confirm": "393eff72f0b8ee46"
+        },
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "NURS 101 already has a folder named First Pass in its Folders list. Rename one of them before deleting Exam 2."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.522Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901/delete-preview",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "examPageId": "ce000000-0000-4000-8000-000000000901",
+          "courseId": "c0000000-0000-4000-8000-000000000901",
+          "name": "Exam 1",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000901",
+              "name": "Week 1",
+              "setCount": 1,
+              "questionCount": 3
+            }
+          ],
+          "pastExamCount": 0,
+          "folderCount": 1,
+          "setCount": 1,
+          "questionCount": 3,
+          "examQuestionCount": 0,
+          "answeredCount": 0,
+          "progress": {
+            "answeredCount": {
+              "before": 1,
+              "after": 1
+            },
+            "fullyRightCount": {
+              "before": 1,
+              "after": 1
+            },
+            "reviewCount": {
+              "before": 0,
+              "after": 0
+            },
+            "points": {
+              "before": 1,
+              "after": 1
+            },
+            "maxPoints": {
+              "before": 1,
+              "after": 1
+            },
+            "wrongCount": {
+              "before": 0,
+              "after": 0
+            }
+          },
+          "message": "Delete Exam 1? Its folder Week 1 stays, with its sets and your progress, under Folders. You can undo this for 30 days.",
+          "warning": {
+            "title": "Delete Exam 1?",
+            "body": "Its folder Week 1 stays, with its sets and your progress, under Folders. You can undo this for 30 days."
+          },
+          "refusal": null,
+          "confirm": "6efff9fd15ab4e70",
+          "undoDays": 30
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:42.527Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901",
+        "query": {
+          "confirm": "6efff9fd15ab4e70"
+        },
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      }
+    },
+    {
+      "step": "write",
+      "at": "2026-11-22T20:05:42.532Z",
+      "table": "course_exam",
+      "id": "ce000000-0000-4000-8000-000000000901",
+      "column": "deleted_at",
+      "value": "2026-10-22T20:05:42.530Z"
+    },
+    {
+      "step": "request",
+      "name": "course-exam-undo-expired",
+      "at": "2026-11-22T20:05:42.532Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901/undo-delete",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "undo_expired",
+          "message": "Exam 1 was deleted more than 30 days ago, so it can't be brought back."
+        }
+      }
+    }
+  ]
+}

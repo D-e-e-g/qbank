@@ -57,7 +57,7 @@ The release plan says the screens do not change. The calls do not; the two point
 
 ### Proving it matches the server
 
-I-10 makes `test/record-contract.sh` also write each scenario as an ordered transcript, and adds a test helper that replays a transcript against any `HTTPTransport` and compares each answer. The engine passes when every bank transcript replays equal. After a server change, a re-record shows the drift. Three stored values are in no API answer (`contentHash`, `fileHash`, `stats`), so transcripts cannot prove them; a recorded bank archive can, and I-13 and I-17 use one.
+`test/record-contract.sh` also writes each scenario as an ordered transcript, and `TranscriptReplay` (QBankKit's test support, described in the package README) replays a transcript against any `HTTPTransport` and compares each answer. The engine passes when every bank transcript replays equal. Only times and delete `confirm` tokens are volatile; ids are compared as recorded. After a server change, a re-record shows the drift. Three stored values are in no API answer (`contentHash`, `fileHash`, `stats`), so transcripts cannot prove them; a recorded bank archive can, and I-13 and I-17 use one.
 
 ## The store
 

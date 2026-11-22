@@ -1,0 +1,154 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "admin",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:11.885Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "owner@example.com",
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "owner@example.com",
+            "name": "Owner",
+            "role": "admin",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:11.965Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:12.018Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-student-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:12.092Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:12.159Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "second.user@example.com",
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-student-token-2",
+          "user": {
+            "id": "synthetic-user-3",
+            "email": "second.user@example.com",
+            "name": "Second User",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:12.221Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "admin-students",
+      "at": "2026-11-22T20:05:12.221Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/students",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "students": [
+            {
+              "id": "synthetic-user-2",
+              "email": "student@example.com",
+              "name": "Sam Student",
+              "createdAt": "2026-11-22T20:05:11.967Z"
+            },
+            {
+              "id": "synthetic-user-3",
+              "email": "second.user@example.com",
+              "name": "Second User",
+              "createdAt": "2026-11-22T20:05:12.093Z"
+            }
+          ],
+          "viewingId": "synthetic-user-2"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "admin-read-only",
+      "at": "2026-11-22T20:05:12.231Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "admin_read_only",
+          "message": "This is a read-only view of a user account. Nothing here can be changed."
+        }
+      }
+    }
+  ]
+}

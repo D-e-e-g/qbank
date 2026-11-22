@@ -1,0 +1,2512 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "twins",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.591Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:47.641Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.688Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "other.student@example.com",
+          "password": "synthetic-other-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-other-session-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "other.student@example.com",
+            "name": "Other Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:47.737Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.738Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 3
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8021-000000000001",
+          "number": 3,
+          "name": "Semester 3",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.744Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "00000000-0000-4000-8021-000000000001",
+          "code": "NURS 406",
+          "title": "Invented Mental Health"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000501",
+          "kind": "course",
+          "code": "NURS 406",
+          "title": "Invented Mental Health",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.748Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 5 Harder A\",\"desc\":\"Invented.\",\"terms\":{},\"questions\":[{\"id\":\"A01\",\"type\":\"single\",\"topic\":\"Harder A 1\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented patient in Invented topic 1 reports cool hands since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 1 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 1: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"A02\",\"type\":\"single\",\"topic\":\"Harder A 2\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented resident in Invented topic 2 reports a dry cough since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 2 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 2: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"A03\",\"type\":\"single\",\"topic\":\"Harder A 3\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented adult in Invented topic 3 reports slurred words since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 3 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 3: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"A04\",\"type\":\"single\",\"topic\":\"Harder A 4\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented older adult in Invented topic 4 reports a low mood since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 4 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 4: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderName": "Week 5"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "courseCode": "NURS 406",
+          "title": "Week 5 Harder A",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "folderName": "Week 5",
+          "examPageId": null,
+          "questionCount": 4,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.755Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 5 Harder B\",\"desc\":\"Invented.\",\"terms\":{},\"questions\":[{\"id\":\"B01\",\"type\":\"single\",\"topic\":\"Harder B 1\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented patient in Invented topic 1 reports cool hands since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 1 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 1: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"B02\",\"type\":\"single\",\"topic\":\"Harder B 2\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented resident in Invented topic 2 reports a dry cough since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 2 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 2: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderName": "Week 5"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000502",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "courseCode": "NURS 406",
+          "title": "Week 5 Harder B",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "folderName": "Week 5",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.761Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 6 First Pass\",\"desc\":\"Invented.\",\"terms\":{},\"questions\":[{\"id\":\"C01\",\"type\":\"single\",\"topic\":\"First Pass 1\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented patient in Invented topic 1 reports cool hands since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 1 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 1: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"C02\",\"type\":\"single\",\"topic\":\"First Pass 2\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented resident in Invented topic 2 reports a dry cough since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 2 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 2: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"},{\"id\":\"C03\",\"type\":\"single\",\"topic\":\"First Pass 3\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":3,\"stem\":\"An invented adult in Invented topic 3 reports slurred words since this morning.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"Check the vital signs\",\"ok\":true,\"why\":\"Invented: the finding in Invented topic 3 needs a baseline first.\"},{\"t\":\"Call the provider now\",\"why\":\"Invented: assess before calling.\"},{\"t\":\"Give the next dose early\",\"why\":\"Invented: not ordered.\"},{\"t\":\"Teach about the finding\",\"why\":\"Invented: teaching is not first.\"}],\"rationale\":\"Invented rationale for Invented topic 3: a baseline comes before any other step.\",\"takeaway\":\"Assess first.\",\"terms\":[],\"src\":\"Invented slide 1\"}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderName": "Week 6"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000503",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "courseCode": "NURS 406",
+          "title": "Week 6 First Pass",
+          "weekLabel": "Week 6",
+          "folderId": "f0000000-0000-4000-8000-000000000502",
+          "folderName": "Week 6",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.768Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "title": "Week 5 Harder A",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000002",
+              "publicId": "A01",
+              "position": 1,
+              "type": "single",
+              "topic": "Harder A 1",
+              "cj": "Analyze cues",
+              "stem": "An invented patient in Invented topic 1 reports cool hands since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 1: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 1 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000003",
+              "publicId": "A02",
+              "position": 2,
+              "type": "single",
+              "topic": "Harder A 2",
+              "cj": "Analyze cues",
+              "stem": "An invented resident in Invented topic 2 reports a dry cough since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 2: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 2 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000004",
+              "publicId": "A03",
+              "position": 3,
+              "type": "single",
+              "topic": "Harder A 3",
+              "cj": "Analyze cues",
+              "stem": "An invented adult in Invented topic 3 reports slurred words since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 3: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 3 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000005",
+              "publicId": "A04",
+              "position": 4,
+              "type": "single",
+              "topic": "Harder A 4",
+              "cj": "Analyze cues",
+              "stem": "An invented older adult in Invented topic 4 reports a low mood since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 4: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 4 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "new",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.773Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+          "questionId": "00000000-0000-4000-8021-000000000002",
+          "response": {
+            "type": "single",
+            "choice": 1
+          },
+          "guessed": false
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+          "questionId": "00000000-0000-4000-8021-000000000002",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "status": "incorrect",
+          "points": 0,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:47.777Z",
+          "inReview": true,
+          "label": "Not correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.783Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "title": "Week 5 Harder A",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000002",
+              "publicId": "A01",
+              "position": 1,
+              "type": "single",
+              "topic": "Harder A 1",
+              "cj": "Analyze cues",
+              "stem": "An invented patient in Invented topic 1 reports cool hands since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 1: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 1 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000003",
+              "publicId": "A02",
+              "position": 2,
+              "type": "single",
+              "topic": "Harder A 2",
+              "cj": "Analyze cues",
+              "stem": "An invented resident in Invented topic 2 reports a dry cough since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 2: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 2 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000004",
+              "publicId": "A03",
+              "position": 3,
+              "type": "single",
+              "topic": "Harder A 3",
+              "cj": "Analyze cues",
+              "stem": "An invented adult in Invented topic 3 reports slurred words since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 3: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 3 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000005",
+              "publicId": "A04",
+              "position": 4,
+              "type": "single",
+              "topic": "Harder A 4",
+              "cj": "Analyze cues",
+              "stem": "An invented older adult in Invented topic 4 reports a low mood since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 4: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 4 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "midway",
+          "sitting": {
+            "id": "00000000-0000-4000-8021-000000000006",
+            "startedAt": "2026-11-22T20:05:47.777Z",
+            "answeredQuestionIds": [
+              "00000000-0000-4000-8021-000000000002"
+            ],
+            "answers": [
+              {
+                "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+                "questionId": "00000000-0000-4000-8021-000000000002",
+                "status": "incorrect",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:47.777Z",
+                "inReview": true,
+                "label": "Not correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 1
+                },
+                "shuffle": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.789Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000002",
+          "questionId": "00000000-0000-4000-8021-000000000004",
+          "response": {
+            "type": "single",
+            "choice": 1
+          },
+          "guessed": false
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000002",
+          "questionId": "00000000-0000-4000-8021-000000000004",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "status": "incorrect",
+          "points": 0,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:47.793Z",
+          "inReview": true,
+          "label": "Not correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.797Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000502",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000502",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "title": "Week 5 Harder B",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000007",
+              "publicId": "B01",
+              "position": 1,
+              "type": "single",
+              "topic": "Harder B 1",
+              "cj": "Analyze cues",
+              "stem": "An invented patient in Invented topic 1 reports cool hands since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 1: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 1 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000008",
+              "publicId": "B02",
+              "position": 2,
+              "type": "single",
+              "topic": "Harder B 2",
+              "cj": "Analyze cues",
+              "stem": "An invented resident in Invented topic 2 reports a dry cough since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 2: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 2 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "new",
+          "sitting": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.803Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000003",
+          "questionId": "00000000-0000-4000-8021-000000000008",
+          "response": {
+            "type": "single",
+            "choice": 1
+          },
+          "guessed": false
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000003",
+          "questionId": "00000000-0000-4000-8021-000000000008",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "status": "incorrect",
+          "points": 0,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:47.806Z",
+          "inReview": true,
+          "label": "Not correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-jobs-not-allowed",
+      "at": "2026-11-22T20:05:47.811Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-other-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "not_allowed",
+          "message": "Making questions is not available on this account. Import works on every account."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-no-wrong",
+      "at": "2026-11-22T20:05:47.813Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000502"
+          ],
+          "pool": "wrong"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "invalid_request",
+          "message": "Week 6 has no wrong questions, so there is nothing to twin."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-start",
+      "at": "2026-11-22T20:05:47.823Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong"
+        }
+      },
+      "response": {
+        "status": 202,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000501",
+          "status": "running",
+          "step": "read",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "current",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "wrong",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000501",
+              "name": "Week 5",
+              "questionCount": 3,
+              "twinCount": 3,
+              "alreadyTwinned": 0
+            }
+          ],
+          "twinCount": 3,
+          "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.836-05",
+          "updatedAt": "2026-11-22 15:05:47.838-05",
+          "finishedAt": null,
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-twins",
+      "at": "2026-11-22T20:05:47.852Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000501",
+          "status": "running",
+          "step": "twins",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "done",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "current",
+              "done": 2,
+              "total": 3
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "wrong",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000501",
+              "name": "Week 5",
+              "questionCount": 3,
+              "twinCount": 3,
+              "alreadyTwinned": 0
+            }
+          ],
+          "twinCount": 3,
+          "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.836-05",
+          "updatedAt": "2026-11-22 15:05:47.852-05",
+          "finishedAt": null,
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 4,
+            "inputTokens": 4000,
+            "outputTokens": 800,
+            "cacheReadTokens": 3200,
+            "cacheWriteTokens": 400
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-done",
+      "at": "2026-11-22T20:05:47.877Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000501",
+          "status": "done",
+          "step": "done",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "done",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "done",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "done",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "wrong",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000501",
+              "name": "Week 5",
+              "questionCount": 3,
+              "twinCount": 3,
+              "alreadyTwinned": 0
+            }
+          ],
+          "twinCount": 3,
+          "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
+          "sets": [
+            {
+              "setId": "5e700000-0000-4000-8000-000000000504",
+              "title": "Week 5 Harder A exam",
+              "folderId": "f0000000-0000-4000-8000-000000000501",
+              "termCount": 0,
+              "examPageId": null,
+              "folderName": "Week 5",
+              "questionCount": 2,
+              "twinsOf": {
+                "id": "5e700000-0000-4000-8000-000000000501",
+                "title": "Week 5 Harder A"
+              }
+            },
+            {
+              "setId": "5e700000-0000-4000-8000-000000000505",
+              "title": "Week 5 Harder B exam",
+              "folderId": "f0000000-0000-4000-8000-000000000501",
+              "termCount": 0,
+              "examPageId": null,
+              "folderName": "Week 5",
+              "questionCount": 1,
+              "twinsOf": {
+                "id": "5e700000-0000-4000-8000-000000000502",
+                "title": "Week 5 Harder B"
+              }
+            }
+          ],
+          "exam": {
+            "folderIds": [
+              "f0000000-0000-4000-8000-000000000501"
+            ],
+            "pool": "wrong"
+          },
+          "createdAt": "2026-11-22 15:05:47.836-05",
+          "updatedAt": "2026-11-22 15:05:47.877-05",
+          "finishedAt": "2026-11-22 15:05:47.877-05",
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 6,
+            "inputTokens": 6000,
+            "outputTokens": 1200,
+            "cacheReadTokens": 4800,
+            "cacheWriteTokens": 600
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-exam-start",
+      "at": "2026-11-22T20:05:47.882Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong",
+          "replaces": null
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "e0000000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "courseCode": "NURS 406",
+          "courseTitle": "Invented Mental Health",
+          "weeks": [
+            "Week 5"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong",
+          "practiceWeeks": [],
+          "timeLimitSeconds": 270,
+          "startedAt": "2026-11-22T20:05:47.885Z",
+          "endsAt": "2026-11-22T20:10:17.885Z",
+          "status": "running",
+          "finishedAt": null,
+          "endReason": null,
+          "serverNow": "2026-11-22T20:05:47.885Z",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000009",
+              "publicId": "XA01",
+              "position": 1,
+              "type": "sata",
+              "topic": "Harder A 1",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder A 1.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "A01",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000010",
+              "publicId": "XB02",
+              "position": 2,
+              "type": "sata",
+              "topic": "Harder B 2",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder B 2.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "B02",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000011",
+              "publicId": "XA03",
+              "position": 3,
+              "type": "sata",
+              "topic": "Harder A 3",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 3.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder A 3.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "A03",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            }
+          ],
+          "answeredQuestionIds": [],
+          "result": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.890Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/exams/e0000000-0000-4000-8000-000000000501/finish",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "reason": "finished"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "e0000000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "courseCode": "NURS 406",
+          "courseTitle": "Invented Mental Health",
+          "weeks": [
+            "Week 5"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong",
+          "practiceWeeks": [],
+          "timeLimitSeconds": 270,
+          "startedAt": "2026-11-22T20:05:47.885Z",
+          "endsAt": "2026-11-22T20:10:17.885Z",
+          "status": "ended",
+          "finishedAt": "2026-11-22T20:05:47.893Z",
+          "endReason": "finished",
+          "serverNow": "2026-11-22T20:05:47.893Z",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000009",
+              "publicId": "XA01",
+              "position": 1,
+              "type": "sata",
+              "topic": "Harder A 1",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder A 1.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "A01",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000010",
+              "publicId": "XB02",
+              "position": 2,
+              "type": "sata",
+              "topic": "Harder B 2",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder B 2.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "B02",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000011",
+              "publicId": "XA03",
+              "position": 3,
+              "type": "sata",
+              "topic": "Harder A 3",
+              "cj": "Recognize cues",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 3.",
+              "ask": "Which findings need a report? Select all that apply.",
+              "rationale": "Invented twin rationale for Harder A 3.",
+              "takeaway": "Report changes.",
+              "body": {
+                "twinOf": "A03",
+                "options": [
+                  {
+                    "t": "Heart rate of 124",
+                    "ok": true,
+                    "why": "Invented: fast."
+                  },
+                  {
+                    "t": "New confusion",
+                    "ok": true,
+                    "why": "Invented: a change."
+                  },
+                  {
+                    "t": "Mild thirst",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Soreness at the site",
+                    "why": "Invented: expected."
+                  },
+                  {
+                    "t": "Tired after walking",
+                    "why": "Invented: expected."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 5"
+            }
+          ],
+          "answeredQuestionIds": [],
+          "result": {
+            "questionCount": 3,
+            "answered": 0,
+            "unanswered": 3,
+            "fullyRight": 0,
+            "partial": 0,
+            "missed": 0,
+            "guessed": 0,
+            "points": 0,
+            "maxPoints": 6,
+            "minutesUsed": 1,
+            "reviewCount": 0,
+            "examBankWrong": 0,
+            "byFolder": [
+              {
+                "folderId": "f0000000-0000-4000-8000-000000000501",
+                "label": "Week 5",
+                "right": 0,
+                "total": 3
+              }
+            ],
+            "byWeek": [
+              {
+                "label": "Week 5",
+                "right": 0,
+                "total": 3
+              }
+            ],
+            "byStep": [
+              {
+                "label": "Recognize cues",
+                "right": 0,
+                "total": 3
+              }
+            ],
+            "items": [
+              {
+                "questionId": "00000000-0000-4000-8021-000000000009",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 2,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8021-000000000010",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 2,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8021-000000000011",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 2,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-cancel-finished",
+      "at": "2026-11-22T20:05:47.898Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501/cancel",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "wrong_step",
+          "message": "These exam twins have already finished."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-already-twinned",
+      "at": "2026-11-22T20:05:47.901Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "invalid_request",
+          "message": "Every wrong question in Week 5 already has an exam twin. Start the exam with Wrong questions only to take them."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.908Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000502"
+          ],
+          "pool": "all"
+        }
+      },
+      "response": {
+        "status": 202,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000502",
+          "status": "running",
+          "step": "read",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "current",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "all",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000502",
+              "name": "Week 6",
+              "questionCount": 3,
+              "twinCount": 3,
+              "alreadyTwinned": 0
+            }
+          ],
+          "twinCount": 3,
+          "note": "QBank writes exam twins of 3 questions in Week 6.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.914-05",
+          "updatedAt": "2026-11-22 15:05:47.915-05",
+          "finishedAt": null,
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-cancel",
+      "at": "2026-11-22T20:05:47.917Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000502/cancel",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000502",
+          "status": "cancelled",
+          "step": "read",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "cancelled",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "all",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000502",
+              "name": "Week 6",
+              "questionCount": 3,
+              "twinCount": 3,
+              "alreadyTwinned": 0
+            }
+          ],
+          "twinCount": 3,
+          "note": "QBank writes exam twins of 3 questions in Week 6.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.914-05",
+          "updatedAt": "2026-11-22 15:05:47.92-05",
+          "finishedAt": "2026-11-22 15:05:47.92-05",
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.923Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e700000-0000-4000-8000-000000000501",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "title": "Week 5 Harder A",
+          "weekLabel": "Week 5",
+          "folderId": "f0000000-0000-4000-8000-000000000501",
+          "kind": "practice",
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8021-000000000002",
+              "publicId": "A01",
+              "position": 1,
+              "type": "single",
+              "topic": "Harder A 1",
+              "cj": "Analyze cues",
+              "stem": "An invented patient in Invented topic 1 reports cool hands since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 1: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 1 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000003",
+              "publicId": "A02",
+              "position": 2,
+              "type": "single",
+              "topic": "Harder A 2",
+              "cj": "Analyze cues",
+              "stem": "An invented resident in Invented topic 2 reports a dry cough since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 2: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 2 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000004",
+              "publicId": "A03",
+              "position": 3,
+              "type": "single",
+              "topic": "Harder A 3",
+              "cj": "Analyze cues",
+              "stem": "An invented adult in Invented topic 3 reports slurred words since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 3: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 3 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            },
+            {
+              "id": "00000000-0000-4000-8021-000000000005",
+              "publicId": "A04",
+              "position": 4,
+              "type": "single",
+              "topic": "Harder A 4",
+              "cj": "Analyze cues",
+              "stem": "An invented older adult in Invented topic 4 reports a low mood since this morning.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "Invented rationale for Invented topic 4: a baseline comes before any other step.",
+              "takeaway": "Assess first.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Check the vital signs",
+                    "ok": true,
+                    "why": "Invented: the finding in Invented topic 4 needs a baseline first."
+                  },
+                  {
+                    "t": "Call the provider now",
+                    "why": "Invented: assess before calling."
+                  },
+                  {
+                    "t": "Give the next dose early",
+                    "why": "Invented: not ordered."
+                  },
+                  {
+                    "t": "Teach about the finding",
+                    "why": "Invented: teaching is not first."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
+            }
+          ],
+          "run": "midway",
+          "sitting": {
+            "id": "00000000-0000-4000-8021-000000000006",
+            "startedAt": "2026-11-22T20:05:47.777Z",
+            "answeredQuestionIds": [
+              "00000000-0000-4000-8021-000000000002",
+              "00000000-0000-4000-8021-000000000004"
+            ],
+            "answers": [
+              {
+                "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+                "questionId": "00000000-0000-4000-8021-000000000002",
+                "status": "incorrect",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:47.777Z",
+                "inReview": true,
+                "label": "Not correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 1
+                },
+                "shuffle": null
+              },
+              {
+                "clientAttemptId": "c1000000-0000-4000-8000-000000000002",
+                "questionId": "00000000-0000-4000-8021-000000000004",
+                "status": "incorrect",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "answeredAt": "2026-11-22T20:05:47.793Z",
+                "inReview": true,
+                "label": "Not correct",
+                "pointsText": null,
+                "ruleText": null,
+                "response": {
+                  "type": "single",
+                  "choice": 1
+                },
+                "shuffle": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.928Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/attempts",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000004",
+          "questionId": "00000000-0000-4000-8021-000000000005",
+          "response": {
+            "type": "single",
+            "choice": 1
+          },
+          "guessed": false
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "clientAttemptId": "c1000000-0000-4000-8000-000000000004",
+          "questionId": "00000000-0000-4000-8021-000000000005",
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "status": "incorrect",
+          "points": 0,
+          "maxPoints": 1,
+          "guessed": false,
+          "answeredAt": "2026-11-22T20:05:47.932Z",
+          "inReview": true,
+          "label": "Not correct",
+          "pointsText": null,
+          "ruleText": null,
+          "replayed": false
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:47.936Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000501"
+          ],
+          "pool": "wrong"
+        }
+      },
+      "response": {
+        "status": 202,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000503",
+          "status": "running",
+          "step": "read",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "current",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "wrong",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000501",
+              "name": "Week 5",
+              "questionCount": 4,
+              "twinCount": 1,
+              "alreadyTwinned": 3
+            }
+          ],
+          "twinCount": 1,
+          "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.945-05",
+          "updatedAt": "2026-11-22 15:05:47.945-05",
+          "finishedAt": null,
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-failed",
+      "at": "2026-11-22T20:05:47.950Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000503",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "a0b00000-0000-4000-8000-000000000503",
+          "status": "failed",
+          "step": "twins",
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your questions",
+              "state": "done",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "twins",
+              "label": "Exam twins",
+              "state": "failed",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the twins",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "c0000000-0000-4000-8000-000000000501",
+            "code": "NURS 406",
+            "title": "Invented Mental Health"
+          },
+          "level": "exam",
+          "pool": "wrong",
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000501",
+              "name": "Week 5",
+              "questionCount": 4,
+              "twinCount": 1,
+              "alreadyTwinned": 3
+            }
+          ],
+          "twinCount": 1,
+          "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
+          "sets": [],
+          "exam": null,
+          "createdAt": "2026-11-22 15:05:47.945-05",
+          "updatedAt": "2026-11-22 15:05:47.949-05",
+          "finishedAt": "2026-11-22 15:05:47.949-05",
+          "failure": "The model did not answer.",
+          "warnings": [],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 1000,
+            "outputTokens": 200,
+            "cacheReadTokens": 800,
+            "cacheWriteTokens": 100
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-jobs",
+      "at": "2026-11-22T20:05:47.954Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "jobs": [
+            {
+              "id": "a0b00000-0000-4000-8000-000000000503",
+              "status": "failed",
+              "step": "twins",
+              "steps": [
+                {
+                  "key": "read",
+                  "label": "Read your questions",
+                  "state": "done",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "twins",
+                  "label": "Exam twins",
+                  "state": "failed",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "file",
+                  "label": "File the twins",
+                  "state": "todo",
+                  "done": null,
+                  "total": null
+                }
+              ],
+              "course": {
+                "id": "c0000000-0000-4000-8000-000000000501",
+                "code": "NURS 406",
+                "title": "Invented Mental Health"
+              },
+              "level": "exam",
+              "pool": "wrong",
+              "folders": [
+                {
+                  "id": "f0000000-0000-4000-8000-000000000501",
+                  "name": "Week 5",
+                  "questionCount": 4,
+                  "twinCount": 1,
+                  "alreadyTwinned": 3
+                }
+              ],
+              "twinCount": 1,
+              "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
+              "sets": [],
+              "exam": null,
+              "createdAt": "2026-11-22 15:05:47.945-05",
+              "updatedAt": "2026-11-22 15:05:47.949-05",
+              "finishedAt": "2026-11-22 15:05:47.949-05",
+              "failure": "The model did not answer.",
+              "warnings": [],
+              "usage": {
+                "calls": 1,
+                "inputTokens": 1000,
+                "outputTokens": 200,
+                "cacheReadTokens": 800,
+                "cacheWriteTokens": 100
+              }
+            },
+            {
+              "id": "a0b00000-0000-4000-8000-000000000502",
+              "status": "cancelled",
+              "step": "read",
+              "steps": [
+                {
+                  "key": "read",
+                  "label": "Read your questions",
+                  "state": "cancelled",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "twins",
+                  "label": "Exam twins",
+                  "state": "todo",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "file",
+                  "label": "File the twins",
+                  "state": "todo",
+                  "done": null,
+                  "total": null
+                }
+              ],
+              "course": {
+                "id": "c0000000-0000-4000-8000-000000000501",
+                "code": "NURS 406",
+                "title": "Invented Mental Health"
+              },
+              "level": "exam",
+              "pool": "all",
+              "folders": [
+                {
+                  "id": "f0000000-0000-4000-8000-000000000502",
+                  "name": "Week 6",
+                  "questionCount": 3,
+                  "twinCount": 3,
+                  "alreadyTwinned": 0
+                }
+              ],
+              "twinCount": 3,
+              "note": "QBank writes exam twins of 3 questions in Week 6.",
+              "sets": [],
+              "exam": null,
+              "createdAt": "2026-11-22 15:05:47.914-05",
+              "updatedAt": "2026-11-22 15:05:47.92-05",
+              "finishedAt": "2026-11-22 15:05:47.92-05",
+              "failure": null,
+              "warnings": [],
+              "usage": {
+                "calls": 0,
+                "inputTokens": 0,
+                "outputTokens": 0,
+                "cacheReadTokens": 0,
+                "cacheWriteTokens": 0
+              }
+            },
+            {
+              "id": "a0b00000-0000-4000-8000-000000000501",
+              "status": "done",
+              "step": "done",
+              "steps": [
+                {
+                  "key": "read",
+                  "label": "Read your questions",
+                  "state": "done",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "twins",
+                  "label": "Exam twins",
+                  "state": "done",
+                  "done": null,
+                  "total": null
+                },
+                {
+                  "key": "file",
+                  "label": "File the twins",
+                  "state": "done",
+                  "done": null,
+                  "total": null
+                }
+              ],
+              "course": {
+                "id": "c0000000-0000-4000-8000-000000000501",
+                "code": "NURS 406",
+                "title": "Invented Mental Health"
+              },
+              "level": "exam",
+              "pool": "wrong",
+              "folders": [
+                {
+                  "id": "f0000000-0000-4000-8000-000000000501",
+                  "name": "Week 5",
+                  "questionCount": 3,
+                  "twinCount": 3,
+                  "alreadyTwinned": 0
+                }
+              ],
+              "twinCount": 3,
+              "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
+              "sets": [
+                {
+                  "setId": "5e700000-0000-4000-8000-000000000504",
+                  "title": "Week 5 Harder A exam",
+                  "folderId": "f0000000-0000-4000-8000-000000000501",
+                  "termCount": 0,
+                  "examPageId": null,
+                  "folderName": "Week 5",
+                  "questionCount": 2,
+                  "twinsOf": {
+                    "id": "5e700000-0000-4000-8000-000000000501",
+                    "title": "Week 5 Harder A"
+                  }
+                },
+                {
+                  "setId": "5e700000-0000-4000-8000-000000000505",
+                  "title": "Week 5 Harder B exam",
+                  "folderId": "f0000000-0000-4000-8000-000000000501",
+                  "termCount": 0,
+                  "examPageId": null,
+                  "folderName": "Week 5",
+                  "questionCount": 1,
+                  "twinsOf": {
+                    "id": "5e700000-0000-4000-8000-000000000502",
+                    "title": "Week 5 Harder B"
+                  }
+                }
+              ],
+              "exam": {
+                "folderIds": [
+                  "f0000000-0000-4000-8000-000000000501"
+                ],
+                "pool": "wrong"
+              },
+              "createdAt": "2026-11-22 15:05:47.836-05",
+              "updatedAt": "2026-11-22 15:05:47.877-05",
+              "finishedAt": "2026-11-22 15:05:47.877-05",
+              "failure": null,
+              "warnings": [],
+              "usage": {
+                "calls": 6,
+                "inputTokens": 6000,
+                "outputTokens": 1200,
+                "cacheReadTokens": 4800,
+                "cacheWriteTokens": 600
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-daily-limit",
+      "at": "2026-11-22T20:05:47.957Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/twin-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "c0000000-0000-4000-8000-000000000501",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000502"
+          ],
+          "pool": "all"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {},
+        "body": {
+          "error": "daily_limit",
+          "message": "You have started 3 sets in the last 24 hours, the most for one day. You can start another in 24 hours.",
+          "availableAt": "2026-11-23T20:05:47.836Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "question-maker-twins-daily-limit",
+      "at": "2026-11-22T20:05:47.963Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/question-maker",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "available": false,
+          "reason": "You have started 3 sets in the last 24 hours, the most for one day.",
+          "dailyLimit": 3,
+          "startedToday": 3,
+          "nextAvailableAt": "2026-11-23T20:05:47.836Z",
+          "levels": [
+            {
+              "level": "exam",
+              "minCount": 10,
+              "maxCount": 15,
+              "defaultCount": 15
+            },
+            {
+              "level": "course",
+              "minCount": 12,
+              "maxCount": 16,
+              "defaultCount": 15
+            },
+            {
+              "level": "board",
+              "minCount": 12,
+              "maxCount": 16,
+              "defaultCount": 15
+            }
+          ],
+          "defaultLevel": "exam",
+          "sampleSize": 5,
+          "limits": {
+            "photos": 20,
+            "photoBytes": 3750000,
+            "fileBytes": 20000000,
+            "textCharacters": 400000
+          },
+          "imageTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "fileTypes": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "twin-job-not-found",
+      "at": "2026-11-22T20:05:47.967Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/twin-jobs/0e000000-0000-4000-8000-000000000501",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "not_found",
+          "message": "Those exam twins are not in QBank."
+        }
+      }
+    }
+  ]
+}

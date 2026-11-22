@@ -39,7 +39,7 @@ const confirmed = (confirm: string): CallInit => ({ method: "DELETE", query: { c
 
 /** A course's sets, a folder with its sets, and a past exam: deleted, refused, listed, and brought back. */
 async function contents(): Promise<World> {
-  const world = await World.boot(15);
+  const world = await World.boot("deletion-contents", 15);
   await world.account(STUDENT, "synthetic-session-token");
   const { semesterId, courseId } = await course(world, 1, "NURS 210", "Invented Heart and Lungs");
   const heartA = await importSet(world, courseId, "Week 1", "Heart A", 4);
@@ -62,7 +62,7 @@ async function contents(): Promise<World> {
   // Kidneys went more than 30 days ago.
   const kidneysPreview = await world.ok(`/api/practice-sets/${kidneys.str("setId")}/delete-preview`, 200);
   await world.ok(`/api/practice-sets/${kidneys.str("setId")}`, 204, confirmed(kidneysPreview.str("confirm")));
-  await world.sql(`update practice_set set ${SHIFT} where deleted_at is not null and course_id = $1`, [courseId]);
+  await world.rewind("practice_set", "deleted_at", `update practice_set set ${SHIFT} where deleted_at is not null and course_id = $1`, [courseId]);
 
   // A past exam over Week 2: Lungs 1 again and Lungs 2, both right; Lungs 3 unanswered.
   const pastExam = (await world.ok(`/api/courses/${courseId}/exams`, 201, { method: "POST", json: { folderIds: [week2], pool: "all" } })).str("id");
@@ -125,7 +125,7 @@ async function contents(): Promise<World> {
 
 /** A course with an exam going, then deleted; a study topic deleted after it; Home's Recently deleted, and Undo. */
 async function courses(): Promise<World> {
-  const world = await World.boot(16);
+  const world = await World.boot("deletion-courses", 16);
   await world.account(STUDENT, "synthetic-session-token");
   const { semesterId, courseId } = await course(world, 2, "NURS 220", "Fundamentals");
   const basics = await importSet(world, courseId, "Week 1", "Fundamentals A", 3);
@@ -160,7 +160,7 @@ async function courses(): Promise<World> {
 
 /** Exam pages: one deleted while its folders stay in the course, refusals, Recently deleted, and Undo. */
 async function pages(): Promise<World> {
-  const world = await World.boot(17);
+  const world = await World.boot("deletion-pages", 17);
   await world.account(STUDENT, "synthetic-session-token");
   const { semesterId, courseId } = await course(world, 1, "NURS 101", "Foundations");
   const heart = await importSet(world, courseId, "Week 1", "Heart A", 3);
@@ -204,7 +204,7 @@ async function pages(): Promise<World> {
   // Exam 1 went more than 30 days ago.
   const exam1Preview = await world.ok(`${page(exam1)}/delete-preview`, 200);
   await world.ok(page(exam1), 204, confirmed(exam1Preview.str("confirm")));
-  await world.sql(`update course_exam set ${SHIFT} where id = $1`, [exam1]);
+  await world.rewind("course_exam", "deleted_at", `update course_exam set ${SHIFT} where id = $1`, [exam1]);
   await world.record("course-exam-undo-expired", `${page(exam1)}/undo-delete`, 409, { method: "POST" });
 
   world.name(semesterId, "a0000000-0000-4000-8000-000000000901");

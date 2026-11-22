@@ -5,10 +5,12 @@
 // from the iPhone repository. Each scenario boots its own throwaway server over an in-memory
 // database, signs in with invented accounts, drives the real routes (Make questions and exam
 // twins with the server's fake model), and keeps the exchanges it names. Every fixture is written
-// stamped with the commit, openapi.json is copied, and pin.json names the commit. It does not
-// fetch or modify the checkout, and it fails when a fixture in the directory has no scenario.
+// stamped with the commit, openapi.json is copied, and pin.json names the commit. Each world is also
+// written as a transcript in transcripts/: all its calls in order, named or not, so a replay of the
+// requests meets the same state the recording did. It does not fetch or modify the checkout, and it
+// fails when a fixture or a transcript in the directory has no scenario.
 
-import { copyFileSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { recordAccountDeletion } from "./account";
 import { recordAdmin } from "./admin";
@@ -46,26 +48,43 @@ const image = process.env.QBANK_API_IMAGE ?? IMAGES[commit];
 if (image === undefined || image === "") throw new Error(`No API image for ${commit}. Set QBANK_API_IMAGE to the image built from it.`);
 
 const recorded = new Map<string, Json>();
+const transcripts = new Map<string, Json>();
 for (const scenario of SCENARIOS) {
   for (const world of await scenario()) {
     for (const [name, fixture] of world.fixtures(commit)) {
       if (recorded.has(name)) throw new Error(`${name} is recorded by two scenarios`);
       recorded.set(name, fixture);
     }
+    if (transcripts.has(world.label)) throw new Error(`${world.label} is the name of two worlds`);
+    transcripts.set(world.label, world.transcript(commit));
   }
 }
 
+/** The names of the .json files in `dir` that `kept` does not hold. */
+function unkept(dir: string, kept: Map<string, Json>): string[] {
+  return readdirSync(dir)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => file.slice(0, -".json".length))
+    .filter((name) => !kept.has(name));
+}
+
 const contractDir = join(fixturesDir, "contract");
-const unrecorded = readdirSync(contractDir)
-  .filter((file) => file.endsWith(".json"))
-  .map((file) => file.slice(0, -".json".length))
-  .filter((name) => !recorded.has(name));
+const transcriptDir = join(fixturesDir, "transcripts");
+mkdirSync(transcriptDir, { recursive: true });
+const unrecorded = unkept(contractDir, recorded);
+const untranscribed = unkept(transcriptDir, transcripts);
 for (const [name, fixture] of recorded) {
   writeFileSync(join(contractDir, `${name}.json`), `${JSON.stringify(fixture, null, 2)}\n`);
 }
+for (const [name, transcript] of transcripts) {
+  writeFileSync(join(transcriptDir, `${name}.json`), `${JSON.stringify(transcript, null, 2)}\n`);
+}
 copyFileSync(openapiPath, join(fixturesDir, "openapi.json"));
 writeFileSync(join(fixturesDir, "pin.json"), `${JSON.stringify({ repository: "D-e-e-g/qbank-server", commit, path: "apps/api/openapi.json", image }, null, 2)}\n`);
-console.log(`recorded ${String(recorded.size)} fixtures live at ${commit}`);
+console.log(`recorded ${String(recorded.size)} fixtures and ${String(transcripts.size)} transcripts live at ${commit}`);
 if (unrecorded.length > 0) {
   throw new Error(`No scenario records these fixtures: ${unrecorded.join(", ")}`);
+}
+if (untranscribed.length > 0) {
+  throw new Error(`No world records these transcripts: ${untranscribed.join(", ")}`);
 }

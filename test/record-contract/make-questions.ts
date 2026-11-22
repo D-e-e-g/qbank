@@ -19,9 +19,9 @@ export async function recordMakeQuestions(): Promise<World[]> {
 }
 
 /** Boots a world whose question maker runs on `fake`, open to `accounts`. */
-async function boot(scenario: number, fake: FakeModel, accounts: string[]): Promise<{ world: World; runner: () => QuestionRunner }> {
+async function boot(name: string, scenario: number, fake: FakeModel, accounts: string[]): Promise<{ world: World; runner: () => QuestionRunner }> {
   let made: QuestionRunner | undefined;
-  const world = await World.boot(scenario, {
+  const world = await World.boot(name, scenario, {
     questionMaker: (db) => {
       made = new QuestionRunner({ db, client: fake, sweepMs: 0, log: () => undefined });
       return { settings: { accounts, dailyLimit: 4 }, runner: made };
@@ -38,7 +38,7 @@ async function boot(scenario: number, fake: FakeModel, accounts: string[]): Prom
 
 async function making(): Promise<World> {
   const fake = new FakeModel();
-  const { world, runner } = await boot(18, fake, [STUDENT.email]);
+  const { world, runner } = await boot("make-questions", 18, fake, [STUDENT.email]);
   await world.account(STUDENT, "synthetic-session-token");
   const semesterId = (await world.ok("/api/semesters", 201, { method: "POST", json: { number: 3 } })).str("id");
   const courseId = (await world.ok("/api/courses", 201, { method: "POST", json: { semesterId, code: "NURS 310", title: "Invented Mental Health" } })).str("id");
@@ -172,7 +172,7 @@ async function making(): Promise<World> {
 
 /** A server that makes questions, for other accounts than hers. */
 async function notAllowed(): Promise<World> {
-  const { world, runner } = await boot(19, new FakeModel(), ["someone.else@example.com"]);
+  const { world, runner } = await boot("make-questions-not-allowed", 19, new FakeModel(), ["someone.else@example.com"]);
   await world.account(STUDENT, "synthetic-session-token");
   await world.record("question-maker-not-allowed", "/api/question-maker", 200);
   await world.record("question-jobs-not-allowed", "/api/question-jobs", 403);
@@ -183,7 +183,7 @@ async function notAllowed(): Promise<World> {
 
 /** A server with no model key: it lists her account but has no runner. */
 async function notSetUp(): Promise<World> {
-  const world = await World.boot(20, { questionMaker: () => ({ settings: { accounts: [STUDENT.email], dailyLimit: 4 }, runner: null }) });
+  const world = await World.boot("make-questions-not-set-up", 20, { questionMaker: () => ({ settings: { accounts: [STUDENT.email], dailyLimit: 4 }, runner: null }) });
   await world.account(STUDENT, "synthetic-session-token");
   await world.record("question-maker-not-set-up", "/api/question-maker", 200);
   await world.record("question-jobs-not-set-up", "/api/question-jobs", 503);

@@ -42,6 +42,14 @@ A recording keeps what the server sent, rewritten only so that a re-record chang
 
 `Tests/QBankKitTests/Fixtures/openapi.json` is a copy of the server's OpenAPI document (`apps/api/openapi.json` in the server repository, served at `https://qbank.dimitrygallego.com/openapi.json`). `Fixtures/pin.json` names the server commit that copy and every fixture come from. A test checks that every recorded call and status is documented there, that every key in a recorded response is allowed by that schema, and that every key the kit reads while decoding a recording (watched through a recording `Decoder`) is a property of it.
 
+### Transcripts and the replay helper
+
+`Tests/QBankKitTests/Fixtures/transcripts/` holds one file per scenario world: every call the scenario made to its throwaway server, in order, named or not, as the same request and answer a fixture keeps (with the same rewrites), plus each write the scenario made straight to the database to let time pass (the Undo window's end, an exam's time running out) as a `write` step naming the table, the row's id, the column and the time it then held. Each step also carries `at`, the time the server took it. A fixture is the named step of one transcript (a test pins the names and statuses; the transcripts were recorded in a later run than the committed fixtures, so their times, `confirm` tokens and exam draws differ); the setup calls between the named steps are in the transcript and in no fixture, so a replay of a transcript's requests reaches the state the recording had.
+
+`Support/TranscriptReplay.swift` replays a transcript's requests, in order, against any `HTTPTransport` and compares each answer: status, `Retry-After`, and every key and value of the body. It returns no difference when all matched, and otherwise the differences of the first answer that did not. Only two kinds of value are volatile: a time (it may be up to 5 seconds from the recorded one, and the replay first hands the engine's clock the time each request was recorded at, through `Hooks.clock`), and a delete `confirm` token (the server hashes it from the real ids a recording rewrites, so the engine's own token stands for the recorded one and is sent in its place). Ids are compared as recorded. A `write` step is handed to `Hooks.write`; a transcript with a write cannot be replayed without one. `TranscriptReplayTests` replays every transcript against a transport that answers with the transcript itself (no difference), and shows that each kind of wrong answer, and only the volatile values, is what the replay finds.
+
+The server picks an exam's questions at random, so the draw in a recorded exam answer is the recording's; an engine proven by these transcripts takes its shuffle from the caller.
+
 When the server's API changes, re-record from a checkout of the commit to pin. The script reads that checkout and does not fetch:
 
 ```sh

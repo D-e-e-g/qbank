@@ -1,0 +1,230 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "practice-restoring",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:32.356Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:32.430Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:32.430Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8011-000000000001",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:32.446Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "00000000-0000-4000-8011-000000000001",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8011-000000000002",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing Basics",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:32.453Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 1 - Set 1: Invented basics\",\"desc\":\"Invented practice questions.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client is short of breath.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client has a racing heart.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"}]}",
+          "courseId": "00000000-0000-4000-8011-000000000002",
+          "folderName": "Week 1",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "00000000-0000-4000-8011-000000000003",
+          "courseId": "00000000-0000-4000-8011-000000000002",
+          "courseCode": "NURS 101",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8011-000000000004",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 2,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:32.466Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Week 1 - Set 1: Invented basics\",\"desc\":\"Invented practice questions.\",\"terms\":{},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client is short of breath.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client has a racing heart.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"Perfusion\",\"cj\":\"Analyze cues\",\"need\":\"Physiological Adaptation\",\"diff\":4,\"stem\":\"An invented client feels lightheaded.\",\"ask\":\"Which action first?\",\"options\":[{\"t\":\"Sit the client up\",\"ok\":true,\"why\":\"Upright eases the work of breathing.\"},{\"t\":\"Offer a book\",\"why\":\"Reading does not change oxygenation.\"},{\"t\":\"Dim the lights\",\"why\":\"The lights are not the problem.\"}],\"rationale\":\"Airway and breathing come before comfort measures.\",\"takeaway\":\"Raise the head of the bed when breathing is hard.\",\"terms\":[],\"src\":\"Ch 26 slide 22\"}]}",
+          "courseId": "00000000-0000-4000-8011-000000000002",
+          "folderName": "Week 1",
+          "decision": "replace"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "replaced",
+          "setKind": "practice",
+          "setId": "00000000-0000-4000-8011-000000000005",
+          "courseId": "00000000-0000-4000-8011-000000000002",
+          "courseCode": "NURS 101",
+          "title": "Week 1 - Set 1: Invented basics",
+          "weekLabel": "Week 1",
+          "folderId": "00000000-0000-4000-8011-000000000004",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 0,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-restore",
+      "at": "2026-11-22T20:05:32.477Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8011-000000000003",
+          "title": "Week 1 - Set 1: Invented basics",
+          "description": "Invented practice questions.",
+          "questionCount": 2,
+          "importedAt": "2026-11-22T20:05:32.463Z",
+          "activeSince": "2026-11-22T20:05:32.488Z",
+          "status": "restored",
+          "canRestore": true,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "lastAnsweredAt": null,
+          "run": "new",
+          "sitting": null,
+          "questionIds": [
+            "00000000-0000-4000-8011-000000000006",
+            "00000000-0000-4000-8011-000000000007"
+          ],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "practice-set-restore-not-current",
+      "at": "2026-11-22T20:05:32.499Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "That set is not the current version."
+        }
+      }
+    }
+  ]
+}

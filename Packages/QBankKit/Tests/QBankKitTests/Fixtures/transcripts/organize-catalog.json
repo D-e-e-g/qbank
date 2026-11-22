@@ -1,0 +1,447 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "organize-catalog",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:35.048Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:35.118Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semester-create",
+      "at": "2026-11-22T20:05:35.119Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "5e000000-0000-4000-8000-000000000001",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semester-create-taken",
+      "at": "2026-11-22T20:05:35.127Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "Semester 1 already exists."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semester-create-out-of-range",
+      "at": "2026-11-22T20:05:35.132Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 4
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "A semester is 1, 2, or 3."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semester-update",
+      "at": "2026-11-22T20:05:35.135Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/semesters/5e000000-0000-4000-8000-000000000001",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Fall 2026",
+          "startsOn": "2026-09-01",
+          "endsOn": null
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "5e000000-0000-4000-8000-000000000001",
+          "number": 1,
+          "name": "Fall 2026",
+          "startsOn": "2026-09-01",
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semester-update-blank",
+      "at": "2026-11-22T20:05:35.146Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/semesters/5e000000-0000-4000-8000-000000000001",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "  "
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "Semester name is required."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:35.149Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 2
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "5e000000-0000-4000-8000-000000000002",
+          "number": 2,
+          "name": "Semester 2",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-create",
+      "at": "2026-11-22T20:05:35.157Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "5e000000-0000-4000-8000-000000000001",
+          "code": "NURS 101",
+          "title": "Invented Basics"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000101",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Basics",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-create-taken",
+      "at": "2026-11-22T20:05:35.163Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "5e000000-0000-4000-8000-000000000001",
+          "code": "nurs 101",
+          "title": "Again"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "This semester already has a course with the code nurs 101."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:35.168Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "5e000000-0000-4000-8000-000000000001",
+          "code": "NURS 102",
+          "title": "Invented Second"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000102",
+          "kind": "course",
+          "code": "NURS 102",
+          "title": "Invented Second",
+          "sortOrder": 2,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-update",
+      "at": "2026-11-22T20:05:35.172Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "code": "NURS 111",
+          "title": "Invented Basics II",
+          "semesterId": "5e000000-0000-4000-8000-000000000002"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000101",
+          "kind": "course",
+          "code": "NURS 111",
+          "title": "Invented Basics II",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-update-blank",
+      "at": "2026-11-22T20:05:35.186Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "title": ""
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "request_refused",
+          "message": "Course name is required."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "course-archive",
+      "at": "2026-11-22T20:05:35.189Z",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "archived": true
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000101",
+          "kind": "course",
+          "code": "NURS 111",
+          "title": "Invented Basics II",
+          "sortOrder": 1,
+          "archivedAt": "2026-11-22T20:05:35.192Z",
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "semesters-edited",
+      "at": "2026-11-22T20:05:35.195Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "semesters": [
+            {
+              "id": "5e000000-0000-4000-8000-000000000001",
+              "number": 1,
+              "name": "Fall 2026",
+              "startsOn": "2026-09-01",
+              "endsOn": null,
+              "archivedAt": null,
+              "courses": [
+                {
+                  "id": "c0000000-0000-4000-8000-000000000102",
+                  "kind": "course",
+                  "code": "NURS 102",
+                  "title": "Invented Second",
+                  "sortOrder": 2,
+                  "archivedAt": null,
+                  "questionCount": 0,
+                  "weekCount": 0,
+                  "folderCount": 0,
+                  "reviewCount": 0,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "points": 0,
+                  "maxPoints": 0
+                }
+              ]
+            },
+            {
+              "id": "5e000000-0000-4000-8000-000000000002",
+              "number": 2,
+              "name": "Semester 2",
+              "startsOn": null,
+              "endsOn": null,
+              "archivedAt": null,
+              "courses": [
+                {
+                  "id": "c0000000-0000-4000-8000-000000000101",
+                  "kind": "course",
+                  "code": "NURS 111",
+                  "title": "Invented Basics II",
+                  "sortOrder": 1,
+                  "archivedAt": "2026-11-22T20:05:35.192Z",
+                  "questionCount": 0,
+                  "weekCount": 0,
+                  "folderCount": 0,
+                  "reviewCount": 0,
+                  "answeredCount": 0,
+                  "fullyRightCount": 0,
+                  "points": 0,
+                  "maxPoints": 0
+                }
+              ]
+            }
+          ],
+          "topics": []
+        }
+      }
+    }
+  ]
+}
