@@ -104,10 +104,13 @@ nonisolated extension FakeQBankServer {
             guard let number = body["semesterNumber"] as? Int, (1...3).contains(number) else {
                 return .failure(FakeStudy.Failure(status: 400, message: "A semester is 1, 2, or 3."))
             }
-            if !state.semesters.contains(where: { $0.number == number }) {
-                state.semesters.append(FakeSemester(id: "8d7b4f0e-0000-4000-8000-00000000000\(number)", number: number, name: "Semester \(number)"))
+            let semesterID: String
+            if let existing = state.semesters.first(where: { $0.number == number }) {
+                semesterID = existing.id
+            } else {
+                semesterID = "8d7b4f0e-0000-4000-8000-00000000000\(number)"
+                state.semesters.append(FakeSemester(id: semesterID, number: number, name: "Semester \(number)"))
             }
-            let semesterID = state.semesters.first { $0.number == number }!.id
             if let taken = codeTaken(code, in: semesterID, except: nil, courses: state.courses) {
                 return .failure(FakeStudy.Failure(status: taken.0, message: taken.1["message"] as? String ?? ""))
             }

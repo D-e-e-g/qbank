@@ -69,8 +69,9 @@ nonisolated extension FakeQBankServer {
         let made = state.withLock { state -> Bool? in
             if state.signUpRefusals[normalized, default: 0] >= Self.signUpLimit { return nil }
             guard normalized == Self.signUpEmail, !state.accounts.contains(where: { $0.email == normalized }) else {
-                state.signUpRefusals[normalized, default: 0] += 1
-                return state.signUpRefusals[normalized]! >= Self.signUpLimit ? nil : false
+                let refusals = state.signUpRefusals[normalized, default: 0] + 1
+                state.signUpRefusals[normalized] = refusals
+                return refusals >= Self.signUpLimit ? nil : false
             }
             state.signUpRefusals[normalized] = nil
             let name = String(normalized.prefix { $0 != "@" })
@@ -122,8 +123,9 @@ nonisolated extension FakeQBankServer {
         let checked = state.withLock { state -> Bool? in
             if state.wrongDeletePasswords[account.email, default: 0] >= Self.passwordLimit { return nil }
             guard password == account.password else {
-                state.wrongDeletePasswords[account.email, default: 0] += 1
-                return state.wrongDeletePasswords[account.email]! >= Self.passwordLimit ? nil : false
+                let wrong = state.wrongDeletePasswords[account.email, default: 0] + 1
+                state.wrongDeletePasswords[account.email] = wrong
+                return wrong >= Self.passwordLimit ? nil : false
             }
             return true
         }
@@ -167,7 +169,9 @@ nonisolated extension FakeQBankServer {
             return failure(400, "invalid_request", "Check the fields and try again.")
         }
         let updated = state.withLock { state -> Account in
-            let index = state.accounts.firstIndex { $0.email == account.email }!
+            guard let index = state.accounts.firstIndex(where: { $0.email == account.email }) else {
+                preconditionFailure("The signed-in account is in the fake server.")
+            }
             state.accounts[index].palette = palette
             return state.accounts[index]
         }
@@ -186,7 +190,9 @@ nonisolated extension FakeQBankServer {
             return failure(401, "invalid_credentials", "That password is not right.")
         }
         let (fresh, updated) = state.withLock { state -> (String, Account) in
-            let index = state.accounts.firstIndex { $0.email == account.email }!
+            guard let index = state.accounts.firstIndex(where: { $0.email == account.email }) else {
+                preconditionFailure("The signed-in account is in the fake server.")
+            }
             state.accounts[index].password = new
             state.accounts[index].mustChangePassword = false
             state.tokenCount += 1

@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
@@ -11,11 +11,15 @@ let package = Package(
         .library(name: "QBankKit", targets: ["QBankKit"]),
     ],
     targets: [
-        .target(name: "QBankKit"),
+        .target(
+            name: "QBankKit",
+            swiftSettings: [.treatAllWarnings(as: .error)]
+        ),
         .testTarget(
             name: "QBankKitTests",
             dependencies: ["QBankKit"],
-            resources: [.copy("Fixtures")]
+            resources: [.copy("Fixtures")],
+            swiftSettings: [.treatAllWarnings(as: .error)]
         ),
     ]
 )

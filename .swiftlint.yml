@@ -1,0 +1,21 @@
+# Crash and leak tripwires for shipping code. Test targets are left out on
+# purpose. Add or drop a rule by one line under only_rules, and fix or disable
+# the new hits in the same pull request. docs/ci.md says how.
+swiftlint_version: 0.65.1
+strict: true
+included:
+  - QBank
+  - Packages/QBankKit/Sources
+  - Packages/QBankDesign/Sources
+only_rules:
+  - force_try
+  - force_cast
+  - discarded_notification_center_observer
+  - force_unwrapping
+  - custom_rules
+custom_rules:
+  no_print:
+    name: "No print in app code"
+    regex: '^\s*(print|debugPrint|NSLog)\('
+    message: "Use Logger; print can leak secrets"
+    severity: error

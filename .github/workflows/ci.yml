@@ -34,6 +34,32 @@ jobs:
       - name: Repository and pipeline rules
         run: ./test/release-checks.sh
 
+      # SwiftLint 0.65.1, pinned like gitleaks. The zip's dynamic binary runs
+      # every enabled rule. The static one is built with SourceKit disabled and
+      # skips custom rules; in 0.65.1 a custom rule still reads the SourceKit
+      # syntax map, so no_print needs libsourcekitdInProc.so from the Swift
+      # toolchain already on this Ubuntu image.
+      - name: Install SwiftLint
+        run: |
+          version=0.65.1
+          sha256=caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d
+          curl --fail --silent --show-error --location --retry 3 -o "$RUNNER_TEMP/swiftlint.zip" \
+            "https://github.com/realm/SwiftLint/releases/download/$version/swiftlint_linux_amd64.zip"
+          echo "$sha256  $RUNNER_TEMP/swiftlint.zip" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/swiftlint.zip" swiftlint -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/swiftlint"
+          swift_bin=$(command -v swift)
+          libsourcekit="$(dirname "$(dirname "$(readlink -f "$swift_bin")")")/lib/libsourcekitdInProc.so"
+          test -f "$libsourcekit"
+          if ldd "$RUNNER_TEMP/swiftlint" | grep -q 'not found'; then
+            sudo apt-get update
+            sudo apt-get install -y libcurl4 libxml2
+          fi
+
+      - name: SwiftLint
+        run: |
+          "$RUNNER_TEMP/swiftlint" lint
+
   # A change must not add a secret; see test/leak-check.sh.
   secrets:
     name: Secrets

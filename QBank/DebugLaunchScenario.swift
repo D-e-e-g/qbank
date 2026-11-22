@@ -118,7 +118,9 @@ nonisolated enum DebugLaunchScenario {
     /// made after its window is visible.
     @MainActor
     private static func keepScrollViewsAtNormalSpeed() {
-        let original = class_getInstanceMethod(UIScrollView.self, #selector(UIView.didMoveToWindow))!
+        guard let original = class_getInstanceMethod(UIScrollView.self, #selector(UIView.didMoveToWindow)) else {
+            preconditionFailure("UIView.didMoveToWindow is a method of UIScrollView.")
+        }
         typealias Implementation = @convention(c) (UIScrollView, Selector) -> Void
         let previous = unsafeBitCast(method_getImplementation(original), to: Implementation.self)
         let replacement: @convention(block) (UIScrollView) -> Void = { scrollView in
@@ -316,7 +318,9 @@ nonisolated enum DebugLaunchScenario {
     /// The scenario's own defaults suite, so a test never sees the developer's settings or
     /// another test's.
     static func phoneSettings(keep: Bool) -> UserDefaults {
-        let defaults = UserDefaults(suiteName: defaultsSuite)!
+        guard let defaults = UserDefaults(suiteName: defaultsSuite) else {
+            preconditionFailure("The UI test defaults suite name is valid.")
+        }
         if !keep {
             defaults.removePersistentDomain(forName: defaultsSuite)
         }

@@ -65,3 +65,7 @@ A new UI test says why a unit test cannot do the job. A unit test can check a mo
 ## What each run holds
 
 [ci.md](ci.md) describes the jobs and the rules for who may run them.
+
+## Lint
+
+`Linux checks` lints shipping Swift. [ci.md](ci.md) names the rules and how to add or drop one. A per-line disable names its reason and is only for a fixed invariant.

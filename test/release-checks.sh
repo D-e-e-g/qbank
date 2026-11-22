@@ -164,6 +164,40 @@ ruby_check "ci.yml has a Secrets job that runs test/leak-check.sh over the full 
   abort "the Secrets job does not run test/leak-check.sh" unless steps.any? { |s| s["run"].to_s.include?("test/leak-check.sh") }
 '
 require_grep '^useDefault = true$' .gitleaks.toml ".gitleaks.toml keeps gitleaks' own rules"
+# SwiftLint is a required tripwire on every pull request. The checks job
+# downloads one pinned Linux release, and .swiftlint.yml turns on only the
+# crash and leak rules. Test targets stay out of included.
+ruby_check "ci.yml installs SwiftLint 0.65.1 with a checksum and lints" "$CI" '
+  jobs = YAML.load_file(ARGV[0])["jobs"] || {}
+  job = jobs.values.find { |j| j["name"] == "Linux checks" } or abort "no job is named Linux checks"
+  steps = job["steps"] || []
+  install = steps.map { |s| s["run"].to_s }.find { |r| r.include?("swiftlint_linux_amd64.zip") && r.include?("sha256sum --check") }
+  abort "the checks job does not install SwiftLint with a checksum check" unless install
+  abort "the checks job does not pin SwiftLint 0.65.1" unless install =~ /^version=0\.65\.1$/
+  abort "the checks job does not pin the SwiftLint sha256" unless install =~ /^sha256=caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d$/
+  abort "the checks job unpacks the static binary, which skips custom rules" if install.include?("swiftlint-static")
+  abort "the checks job does not unpack the dynamic swiftlint binary" unless install.include?("unzip") && install.include?(" swiftlint ")
+  abort "the checks job does not require libsourcekitdInProc.so" unless install.include?("libsourcekitdInProc.so")
+  abort "the checks job does not run swiftlint lint" unless steps.any? { |s| s["run"].to_s.match?(/\/swiftlint" lint$/) }
+  abort "the checks job runs swiftlint-static" if steps.any? { |s| s["run"].to_s.include?("swiftlint-static") }
+'
+ruby_check ".swiftlint.yml enables only the crash and leak rules" .swiftlint.yml '
+  config = YAML.load_file(ARGV[0])
+  abort "swiftlint_version is #{config["swiftlint_version"].inspect}" unless config["swiftlint_version"] == "0.65.1"
+  abort "strict is not true" unless config["strict"] == true
+  included = config["included"]
+  abort "included is #{included.inspect}" unless included == ["QBank", "Packages/QBankKit/Sources", "Packages/QBankDesign/Sources"]
+  rules = config["only_rules"]
+  expected = %w[force_try force_cast discarded_notification_center_observer force_unwrapping custom_rules]
+  abort "only_rules is #{rules.inspect}" unless rules == expected
+  custom = config["custom_rules"] || {}
+  abort "custom rules are #{custom.keys.inspect}" unless custom.keys == ["no_print"]
+  rule = custom["no_print"] || {}
+  abort "no_print regex is #{rule["regex"].inspect}" unless rule["regex"] == %q{^\s*(print|debugPrint|NSLog)\(}
+  abort "no_print severity is #{rule["severity"].inspect}" unless rule["severity"] == "error"
+  extra = config.keys - %w[swiftlint_version strict included only_rules custom_rules]
+  abort "unexpected SwiftLint config keys #{extra.inspect}" unless extra.empty?
+'
 
 # --- xcode.yml: trusted code only, pull requests on the MacBook Pro 14 -------
 
