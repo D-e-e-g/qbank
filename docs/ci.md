@@ -10,6 +10,7 @@ Every pull request and every push to `main` runs two Linux jobs on GitHub-hosted
 
 - `shellcheck` over `test/*.sh` and `scripts/*.sh`
 - `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git), and the 1,000 code-line limit (`test/max-lines.conf`)
+- SwiftLint 0.65.1 over shipping code. A hit fails the job. See [SwiftLint](#swiftlint).
 
 `Secrets`: `test/leak-check.sh` runs [gitleaks](https://github.com/gitleaks/gitleaks), a pinned release whose checksum the job checks, over the commits the change adds and over every tracked file at HEAD, and fails on any finding. It uses gitleaks' own rules with no exceptions (`.gitleaks.toml` only extends the defaults). Findings print redacted. To run it on a Mac with gitleaks installed: `test/leak-check.sh origin/main HEAD`.
 
@@ -20,6 +21,24 @@ The workflow references no secrets, reads the repository with a `contents: read`
 `ruby test/max-lines.rb`, which `test/release-checks.sh` runs, fails when a hand-written source file has more than 1,000 code lines. A code line is a line that is not blank and not only a comment. The check counts Swift and shell, tests included. `test/max-lines.conf` names each exclusion with a one-line reason: the pinned OpenAPI document, recorded fixtures and snapshots, build output, and non-code assets. A tracked file that matches neither an inclusion nor an exclusion fails until it is named there.
 
 Files already over 1,000 are listed in that config with their code-line count, kept for reference. A listed file is exempt until it is split. The check warns, and does not fail, if a listed file grows past its recorded count, if the file is gone, or if it now has 1,000 code lines or fewer, so an in-flight change is not blocked. A file that is not listed fails when it has more than 1,000 code lines. The no-growth rule for a listed file switches on when that file is split: remove its entry in the split, and from then on it fails if it goes over 1,000. `ruby test/max-lines.rb --dump` prints every counted file's code-line count, highest first.
+
+### SwiftLint
+
+`.swiftlint.yml` pins SwiftLint 0.65.1. The job downloads that Linux release, checks its checksum, and runs the zip's dynamic `swiftlint` binary. `strict: true`, so any hit fails `swiftlint lint`. The rules are `force_try`, `force_cast`, `discarded_notification_center_observer`, `force_unwrapping`, and the custom `no_print` rule (`print`, `debugPrint`, and `NSLog` at the start of a line). The check covers `QBank`, `Packages/QBankKit/Sources`, and `Packages/QBankDesign/Sources`. Test targets are left out.
+
+The custom rule reads SwiftLint's SourceKit syntax map. The zip also contains `swiftlint-static`, built with SourceKit turned off, and that binary skips `no_print`. Setting `execution_mode: swiftsyntax` does not avoid it in 0.65.1: the rule still asks SourceKit for the syntax map, and the static binary then aborts. The dynamic binary loads `libsourcekitdInProc.so` from the Swift toolchain already on the Ubuntu 26.04 runner. The install step fails if that library is missing, so a missing toolchain cannot look like a clean run.
+
+To add or drop a rule, add or delete one line under `only_rules:` and make the same change in the rule list `test/release-checks.sh` checks, then fix or disable the new hits in the same pull request. A disable is one line, names its reason, and is only for a fixed invariant:
+
+```swift
+let row = table[key]! // swiftlint:disable:this force_unwrapping - fixed table
+```
+
+Prefer a real fix: `guard` or `if let`, a non-optional value, or `preconditionFailure` with a message. Do not add line length, trailing comma, identifier names, size and complexity, magic numbers, self style, optional data string conversion, the remaining SwiftLint defaults, or Swift 7 upcoming features.
+
+`Packages/QBankKit` and `Packages/QBankDesign` treat every warning as an error, as the app target already does.
+
+On a Mac with SwiftLint 0.65.1 installed, run `swiftlint lint` from the repository root.
 
 ## Trusted code: `xcode.yml`
 

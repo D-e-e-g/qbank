@@ -197,7 +197,9 @@ nonisolated final class FakeQuestionMaker: Sendable {
             "available": reason == nil, "reason": json(reason), "dailyLimit": Self.dailyLimit, "startedToday": started,
             "nextAvailableAt": started >= Self.dailyLimit ? QBankJSON.formatDate(.now.addingTimeInterval(3 * 3_600)) : NSNull(),
             "levels": ["exam", "course", "board"].map { level in
-                let size = Self.levelSizes[level]!
+                guard let size = Self.levelSizes[level] else {
+                    preconditionFailure("Every question-maker level has a size.")
+                }
                 return ["level": level, "minCount": size.min, "maxCount": size.max, "defaultCount": size.default]
             },
             "defaultLevel": "exam", "sampleSize": Self.sampleSize,
@@ -354,7 +356,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
             return nil
         }
         if let toFile { file(toFile, library: library) }
-        return state.withLock { state in state.jobs.first { $0.id == id }! }
+        return requireJob(id)
     }
 
     /// Files a set at its last step: the practice set, and its exam twins as the folder's bank.
@@ -387,7 +389,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
     // MARK: Her checks
 
     private func samples(_ id: String) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         guard job.materialKind == "notes" else { return Self.failure(409, "wrong_step", "This set copies questions from photos; it has no samples.") }
         guard job.round > 0 else { return Self.failure(409, "wrong_step", "The samples are not written yet.") }
         let templates = [6, 1, 2, 0, 4]
@@ -414,7 +416,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
     }
 
     private func revise(_ id: String, body: [String: Any], library: some FakeQuestionLibrary) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         if let problem = waitingProblem(job, for: "notes") { return problem }
         if job.round >= Self.maxSampleRounds {
             return Self.failure(409, "wrong_step", "The samples were written \(Self.maxSampleRounds) times. Accept them, or cancel and start again with other material.")
@@ -436,7 +438,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
     }
 
     private func copies(_ id: String) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         guard job.materialKind == "questions" else { return Self.failure(409, "wrong_step", "This set writes new questions; it has no copies to check.") }
         guard !job.copies.isEmpty else { return Self.failure(409, "wrong_step", "The questions are not copied yet.") }
         return (200, [
@@ -453,7 +455,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
     }
 
     private func acceptCopies(_ id: String, keep: [[String: Any]], library: some FakeQuestionLibrary) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         if let problem = waitingProblem(job, for: "questions") { return problem }
         guard !keep.isEmpty else { return Self.failure(400, "invalid_request", "Keep at least one question, or cancel the set.") }
         var seen: Set<String> = []
@@ -479,10 +481,10 @@ nonisolated final class FakeQuestionMaker: Sendable {
 
     /// Moves a set that waits for her back to work, as her answer says.
     private func resume(_ id: String, kind: String, library: some FakeQuestionLibrary, _ change: (inout Job) -> Void) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         if let problem = waitingProblem(job, for: kind) { return problem }
         let resumed = state.withLock { state -> Job in
-            let index = state.jobs.firstIndex { $0.id == id }!
+            let index = Self.index(of: id, in: state.jobs)
             state.jobs[index].status = "running"
             state.jobs[index].updatedAt = .now
             change(&state.jobs[index])
@@ -492,7 +494,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
     }
 
     private func result(_ id: String, library: some FakeQuestionLibrary) -> Reply {
-        let job = state.withLock { state in state.jobs.first { $0.id == id }! }
+        let job = requireJob(id)
         guard job.status == "done", let filed = job.filed, let title = job.filedTitle else {
             return Self.failure(409, "wrong_step", "This set is not finished yet.")
         }
@@ -529,7 +531,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
 
     private func cancel(_ id: String, library: some FakeQuestionLibrary) -> Reply {
         let cancelled = state.withLock { state -> Job? in
-            let index = state.jobs.firstIndex { $0.id == id }!
+            let index = Self.index(of: id, in: state.jobs)
             guard ["running", "waiting"].contains(state.jobs[index].status) else { return nil }
             state.jobs[index].status = "cancelled"
             state.jobs[index].finishedAt = .now
@@ -570,7 +572,7 @@ nonisolated final class FakeQuestionMaker: Sendable {
             }
             let progress = state == "current" ? job.progress : nil
             return [
-                "key": key, "label": job.materialKind == "questions" && key == "read" ? "Copy the questions" : Self.labels[key]!, "state": state,
+                "key": key, "label": job.materialKind == "questions" && key == "read" ? "Copy the questions" : Self.label(key), "state": state,
                 "done": progress.map { $0.done as Any } ?? NSNull(), "total": progress.map { $0.total as Any } ?? NSNull(),
             ]
         }
@@ -642,6 +644,30 @@ nonisolated final class FakeQuestionMaker: Sendable {
 
     private static func failure(_ status: Int, _ code: String, _ message: String) -> Reply {
         (status, ["error": code, "message": message])
+    }
+
+    /// The route has already refused a missing job. Reaching here without it is a bug in the fake.
+    private func requireJob(_ id: String) -> Job {
+        state.withLock { state in
+            guard let job = state.jobs.first(where: { $0.id == id }) else {
+                preconditionFailure("Question-maker job \(id) is in the fake server.")
+            }
+            return job
+        }
+    }
+
+    private static func index(of id: String, in jobs: [Job]) -> Int {
+        guard let index = jobs.firstIndex(where: { $0.id == id }) else {
+            preconditionFailure("Question-maker job \(id) is in the fake server.")
+        }
+        return index
+    }
+
+    private static func label(_ key: String) -> String {
+        guard let label = labels[key] else {
+            preconditionFailure("Every question-maker step has a label.")
+        }
+        return label
     }
 }
 #endif

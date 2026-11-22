@@ -255,7 +255,9 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         }
         // A 204 has no body, as the server sends it.
         let data = status == 204 ? Data() : try JSONSerialization.data(withJSONObject: body)
-        let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers)!
+        guard let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers) else {
+            preconditionFailure("The fake server builds an HTTP response.")
+        }
         return (data, response)
     }
 

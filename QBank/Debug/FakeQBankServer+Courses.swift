@@ -102,7 +102,9 @@ nonisolated extension FakeQBankServer {
     /// The fields a course's detail shares with Settings, which can rename and move it.
     func stored(_ id: String) -> [String: Any] {
         state.withLock { state in
-            let course = state.courses.first { $0.id == id }!
+            guard let course = state.courses.first(where: { $0.id == id }) else {
+                preconditionFailure("Course \(id) is in the fake server.")
+            }
             let semester = state.semesters.first { $0.id == course.semesterID }
             return [
                 "id": course.id, "kind": course.kind, "code": course.code, "title": course.title, "archivedAt": json(course.archivedAt),

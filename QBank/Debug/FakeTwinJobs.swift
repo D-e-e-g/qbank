@@ -251,7 +251,7 @@ nonisolated final class FakeTwinJobs: Sendable {
             return nil
         }
         if let toFile { file(toFile, library: library) }
-        return state.withLock { state in state.jobs.first { $0.id == id }! }
+        return requireJob(id)
     }
 
     /// Files each practice set's twins as a new exam set beside it, in its folder's exam bank.
@@ -277,7 +277,7 @@ nonisolated final class FakeTwinJobs: Sendable {
 
     private func cancel(_ id: String, library: some FakeQuestionLibrary) -> Reply {
         let cancelled = state.withLock { state -> Job? in
-            let index = state.jobs.firstIndex { $0.id == id }!
+            let index = Self.index(of: id, in: state.jobs)
             guard state.jobs[index].status == "running" else { return nil }
             state.jobs[index].status = "cancelled"
             state.jobs[index].progress = nil
@@ -307,7 +307,7 @@ nonisolated final class FakeTwinJobs: Sendable {
             }
             let progress = state == "current" ? job.progress : nil
             return [
-                "key": key, "label": Self.labels[key]!, "state": state,
+                "key": key, "label": Self.label(key), "state": state,
                 "done": progress.map { $0.done as Any } ?? NSNull(), "total": progress.map { $0.total as Any } ?? NSNull(),
             ]
         }
@@ -347,6 +347,30 @@ nonisolated final class FakeTwinJobs: Sendable {
 
     private static func failure(_ status: Int, _ code: String, _ message: String) -> Reply {
         (status, ["error": code, "message": message])
+    }
+
+    /// The route has already refused a missing job. Reaching here without it is a bug in the fake.
+    private func requireJob(_ id: String) -> Job {
+        state.withLock { state in
+            guard let job = state.jobs.first(where: { $0.id == id }) else {
+                preconditionFailure("Twin job \(id) is in the fake server.")
+            }
+            return job
+        }
+    }
+
+    private static func index(of id: String, in jobs: [Job]) -> Int {
+        guard let index = jobs.firstIndex(where: { $0.id == id }) else {
+            preconditionFailure("Twin job \(id) is in the fake server.")
+        }
+        return index
+    }
+
+    private static func label(_ key: String) -> String {
+        guard let label = labels[key] else {
+            preconditionFailure("Every twin-job step has a label.")
+        }
+        return label
     }
 }
 #endif

@@ -34,6 +34,38 @@ jobs:
       - name: Repository and pipeline rules
         run: ./test/release-checks.sh
 
+      # SwiftLint 0.65.1, pinned like gitleaks. The zip's dynamic binary runs
+      # every enabled rule. The static one is built with SourceKit disabled and
+      # skips custom rules; in 0.65.1 a custom rule still reads the SourceKit
+      # syntax map, so no_print needs libsourcekitdInProc.so from the Swift
+      # toolchain already on this Ubuntu image.
+      - name: Install SwiftLint
+        run: |
+          version=0.65.1
+          sha256=caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d
+          curl --fail --silent --show-error --location --retry 3 -o "$RUNNER_TEMP/swiftlint.zip" \
+            "https://github.com/realm/SwiftLint/releases/download/$version/swiftlint_linux_amd64.zip"
+          echo "$sha256  $RUNNER_TEMP/swiftlint.zip" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/swiftlint.zip" swiftlint -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/swiftlint"
+          swift_bin=$(command -v swift)
+          libsourcekit="$(dirname "$(dirname "$(readlink -f "$swift_bin")")")/lib/libsourcekitdInProc.so"
+          test -f "$libsourcekit"
+          # Ubuntu 26.04 ships libxml2 as libxml2.so.16; the binary asks for .so.2.
+          libxml2=$(ldconfig -p | awk '/libxml2\.so\.16 / {print $NF; exit}')
+          test -n "$libxml2"
+          mkdir "$RUNNER_TEMP/swiftlint-lib"
+          ln -s "$libxml2" "$RUNNER_TEMP/swiftlint-lib/libxml2.so.2"
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/swiftlint-lib" >> "$GITHUB_ENV"
+          if LD_LIBRARY_PATH="$RUNNER_TEMP/swiftlint-lib" ldd "$RUNNER_TEMP/swiftlint" | grep 'not found'; then
+            exit 1
+          fi
+          LD_LIBRARY_PATH="$RUNNER_TEMP/swiftlint-lib" "$RUNNER_TEMP/swiftlint" version
+
+      - name: SwiftLint
+        run: |
+          "$RUNNER_TEMP/swiftlint" lint
+
   # A change must not add a secret; see test/leak-check.sh.
   secrets:
     name: Secrets
