@@ -69,6 +69,48 @@ struct AIConsentTests {
         #expect(!server.calls.contains { $0.contains("question-jobs") }, "no request left the phone")
     }
 
+    @Test func herNotesOnASetAlreadyBeingMadeWaitForAllow() async throws {
+        let server = StubServer([
+            "GET /api/question-jobs/job1": .ok(MakeQuestionsTests.job(status: "waiting", waitingFor: "samples")),
+            "GET /api/question-jobs/job1/samples": .ok(MakeQuestionsTests.samples),
+            "POST /api/question-jobs/job1/samples/revise": StubServer.Reply(status: 202, body: MakeQuestionsTests.job()),
+            "POST /api/question-jobs/job1/samples/accept": StubServer.Reply(status: 202, body: MakeQuestionsTests.job()),
+        ])
+        // A set started before the permission was asked, or after she turned it off in Settings.
+        let (app, _) = TestApp.make(server, account: .student())
+        let model = JobModel(app: app, id: "job1")
+        await model.load()
+        let question = try #require(model.samples?.questions.last)
+        model.mark(question, .change)
+        model.notes[question.id] = "Ask about day 3."
+
+        await model.reviseSamples()
+        #expect(model.problem == AIConsentWording.needed)
+        await model.acceptSamples()
+        #expect(model.problem == AIConsentWording.needed)
+        #expect(!server.calls.contains { $0.hasPrefix("POST") }, "her notes never left the phone")
+
+        app.aiConsent.isAllowed = true
+        await model.reviseSamples()
+        #expect(model.problem == nil)
+        #expect(server.calls.contains { $0.contains("samples/revise") })
+    }
+
+    @Test func checkedCopiesWaitForAllow() async throws {
+        let app = MakeQuestionsTests.app(aiAllowed: false)
+        let model = JobModel(app: app, id: MakeQuestionsTests.copyJob, pollInterval: .zero)
+        await model.follow()
+        #expect(model.copies != nil)
+        await model.acceptCopies()
+        #expect(model.problem == AIConsentWording.needed)
+        #expect(model.job?.waitingFor == .copies, "still waiting for her check")
+
+        app.aiConsent.isAllowed = true
+        await model.acceptCopies()
+        #expect(model.problem == nil)
+        #expect(model.job?.waitingFor != .copies, "the server took her copies")
+    }
+
     @Test func examTwinsSendNothingBeforeAllow() async throws {
         let app = MakeQuestionsTests.app(aiAllowed: false)
         let setup = try await TwinJobTests.week2(app)

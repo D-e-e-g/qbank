@@ -218,13 +218,18 @@ final class AddHereUITests: XCTestCase {
     @MainActor
     func testMakeQuestionsFromACourseStartsWithItPicked() throws {
         try skipOnIPad()
-        let app = launch("maker", aiAllowed: true)
+        let app = launch("maker")
         openHome(app)
         open(app.buttons["home.course.NURS 220"], titled: "NURS 220", in: app)
         app.buttons["course.add"].tap()
         let make = menuItem(app, "course.add.make", "Make questions")
         XCTAssertTrue(make.appears(timeout: 5))
         chooseFromMenu(make)
+        // The permission screen rises over Add as the tab changes: only the running app shows it
+        // is not dropped on the way.
+        XCTAssertTrue(app.staticTexts["ai.permission.title"].appears(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Your material"].exists, "nothing opens before Allow")
+        tapWhenStill(app.buttons["ai.permission.confirm"])
         XCTAssertTrue(app.navigationBars["Your material"].appears(timeout: 5))
         waitForLabel(app.buttons["import.course"], containing: "NURS 220 · Fundamentals")
         XCTAssertTrue(app.buttons["import.folder.Unsorted"].isSelected)

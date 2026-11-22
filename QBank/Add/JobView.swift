@@ -240,6 +240,10 @@ private struct SamplesView: View {
     let samples: QuestionSamples
     let open: (Question, Int) -> Void
     @FocusState private var noting: String?
+    /// Her notes start new writing: the permission screen first when she has not allowed it, and
+    /// what it sends once she does.
+    @State private var asksAIPermission = false
+    @State private var sendAfterPermission: (() -> Void)?
 
     var body: some View {
         JobColumn {
@@ -292,7 +296,7 @@ private struct SamplesView: View {
             VStack(spacing: QBankSpacing.space2) {
                 Button {
                     noting = nil
-                    Task { await model.acceptSamples() }
+                    afterAIPermission { Task { await model.acceptSamples() } }
                 } label: {
                     ButtonLabel(text: "Write the other \(model.restCount)", isBusy: model.isSending)
                 }
@@ -301,7 +305,7 @@ private struct SamplesView: View {
                 if samples.canRevise {
                     Button("Redo the samples") {
                         noting = nil
-                        Task { await model.reviseSamples() }
+                        afterAIPermission { Task { await model.reviseSamples() } }
                     }
                     .buttonStyle(.qbank(.plain, size: .large, fullWidth: true))
                     .disabled(!model.canRevise)
@@ -310,6 +314,19 @@ private struct SamplesView: View {
                 }
             }
             .disabled(model.isSending)
+        }
+        .aiPermissionSheet(isPresented: $asksAIPermission, store: model.aiConsent) {
+            sendAfterPermission?()
+            sendAfterPermission = nil
+        }
+    }
+
+    private func afterAIPermission(_ send: @escaping () -> Void) {
+        if model.aiConsent.isAllowed {
+            send()
+        } else {
+            sendAfterPermission = send
+            asksAIPermission = true
         }
     }
 }
@@ -386,6 +403,8 @@ private struct CopiesView: View {
     let retake: () -> Void
     @State private var checking: QuestionCopies.Copy?
     @State private var asksToRetake = false
+    /// Her checked copies start new writing: the permission screen first when she has not allowed it.
+    @State private var asksAIPermission = false
 
     var body: some View {
         JobColumn {
@@ -417,7 +436,11 @@ private struct CopiesView: View {
             }
             VStack(spacing: QBankSpacing.space2) {
                 Button {
-                    Task { await model.acceptCopies() }
+                    if model.aiConsent.isAllowed {
+                        addCopies()
+                    } else {
+                        asksAIPermission = true
+                    }
                 } label: {
                     ButtonLabel(text: "Add \(Wording.count(model.keptCount, "question")) to \(job.folder.name)", isBusy: model.isSending)
                 }
@@ -433,12 +456,17 @@ private struct CopiesView: View {
         .sheet(item: $checking) { copy in
             CopySheet(model: model, copy: copy, number: (copies.questions.firstIndex(of: copy) ?? 0) + 1)
         }
+        .aiPermissionSheet(isPresented: $asksAIPermission, store: model.aiConsent, onAllow: addCopies)
         .confirmationDialog(retakeTitle, isPresented: $asksToRetake, titleVisibility: .visible) {
             Button("Start over with new photos", role: .destructive, action: retake)
                 .accessibilityIdentifier("make.retake.confirm")
         } message: {
             Text("The questions found in these photos are let go.")
         }
+    }
+
+    private func addCopies() {
+        Task { await model.acceptCopies() }
     }
 
     /// "Retake photo 2" when a photo could not be read, else "Start over".

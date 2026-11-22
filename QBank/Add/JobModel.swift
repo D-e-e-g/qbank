@@ -147,6 +147,7 @@ final class JobModel {
 
     /// The samples look right: the rest is written the same way, following her notes.
     func acceptSamples() async {
+        guard mayShare() else { return }
         let words = changes.compactMap { change -> String? in
             guard let number = samples?.questions.firstIndex(where: { $0.id == change.questionID }) else { return nil }
             return "Sample \(number + 1): \(change.note)"
@@ -159,7 +160,7 @@ final class JobModel {
     /// Writes the samples again from her notes.
     func reviseSamples() async {
         let changes = changes
-        guard !changes.isEmpty else { return }
+        guard !changes.isEmpty, mayShare() else { return }
         await send { () async throws(QBankError) in try await app.client.reviseSamples(jobID: id, changes: changes) }
     }
 
@@ -190,7 +191,7 @@ final class JobModel {
 
     /// Adds the copies she kept, in order, each with her answer when she set one.
     func acceptCopies() async {
-        guard let copies else { return }
+        guard let copies, mayShare() else { return }
         let keep = copies.questions.filter { !isSkipped($0) }.map { copy in
             KeptCopy(id: copy.id, question: answers[copy.id].map { Self.file(copy.file, answering: $0) })
         }
@@ -228,6 +229,23 @@ final class JobModel {
             problem = Wording.problem(error)
             return false
         }
+    }
+
+    /// Whether she allowed her material to go to Anthropic. Her notes on the samples and her
+    /// checked copies start new writing on the server, so, as a new set does, they wait for her
+    /// permission, which may be missing for a set started before it was asked, or after she turned
+    /// it off in Settings.
+    var aiConsent: AIConsentStore {
+        app.aiConsent
+    }
+
+    /// False, with the reason said, while she has not allowed her material to go to Anthropic.
+    private func mayShare() -> Bool {
+        guard app.aiConsent.isAllowed else {
+            problem = AIConsentWording.needed
+            return false
+        }
+        return true
     }
 
     private func send(_ call: () async throws(QBankError) -> QuestionJob) async {

@@ -97,11 +97,8 @@ struct AddView: View {
                 path = NavigationPath()
             } startOver: {
                 // Her material stays when she made the set in this session, so she can retake
-                // one photo and keep the rest.
-                if making == nil { making = MakeModel(app: app, status: model.status) }
-                var next = NavigationPath()
-                next.append(AddRoute.material)
-                path = next
+                // one photo and keep the rest. Starting over makes a new set, so it asks first too.
+                afterAIPermission { openMaterial(making ?? MakeModel(app: app, status: model.status), fresh: true) }
             }
             .id(id)
         }

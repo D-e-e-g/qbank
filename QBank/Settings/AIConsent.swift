@@ -35,7 +35,7 @@ nonisolated enum AIConsentWording {
     static let settingsHeader = "Anthropic"
     static let settingsTitle = "Share with Anthropic"
     static let settingsFooter =
-        "Making questions and exam twins send your notes, photos, files or questions to Anthropic's Claude through the QBank server. When this is off, QBank asks before you use either. A set already being made carries on; stop it from Add."
+        "Making questions and exam twins send your notes, photos, files or questions to Anthropic's Claude through the QBank server. When this is off, QBank sends nothing new and asks first, including before your notes on a set already being made. What was already sent stays with the server, which finishes work it already started; stop a set from Add."
 
     /// Said when something that sends her material is started without her permission.
     static let needed = "Allow sharing with Anthropic first. Turn it on in Settings, or choose Allow when QBank asks."

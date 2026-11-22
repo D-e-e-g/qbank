@@ -207,7 +207,16 @@ final class MakeQuestionsUITests: XCTestCase {
         let add = app.buttons["make.addCopies"]
         reveal(add, in: app)
         XCTAssertEqual(add.label, "Add 2 questions to Week 3")
+        // A set started before she was asked: her checked copies wait for Allow, as a new set does.
         add.tap()
+        let permission = app.staticTexts["ai.permission.title"]
+        XCTAssertTrue(permission.appears(timeout: 5))
+        tapWhenStill(app.buttons["ai.permission.cancel"])
+        XCTAssertTrue(permission.disappears(timeout: 5))
+        XCTAssertTrue(add.exists, "Not now sends nothing")
+        XCTAssertFalse(app.staticTexts["make.done.title"].exists)
+        add.tap()
+        tapWhenStill(app.buttons["ai.permission.confirm"])
         let done = app.staticTexts["make.done.title"]
         XCTAssertTrue(done.appears(timeout: 30))
         XCTAssertTrue(app.staticTexts["2 questions checked by you"].exists)
