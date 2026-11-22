@@ -6,13 +6,13 @@ import { ADMIN, STUDENT, World, expect } from "./world";
 const SECOND = { email: "second.user@example.com", password: "synthetic-pass-2", name: "Second User", role: "student" as const };
 
 export async function recordAdmin(): Promise<World[]> {
-  const none = await World.boot(20);
+  const none = await World.boot("admin-no-students", 20);
   await none.account(ADMIN, "synthetic-session-token");
   const empty = await none.record("admin-students-none", "/api/admin/students", 200);
   expect(empty.isNull("viewingId"), "an admin with no user account yet looks at nobody", empty.value);
   await none.close();
 
-  const world = await World.boot(21);
+  const world = await World.boot("admin", 21);
   await world.account(ADMIN, "synthetic-session-token");
   await world.account(STUDENT, "synthetic-student-token");
   await world.account(SECOND, "synthetic-student-token-2");

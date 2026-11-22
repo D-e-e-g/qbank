@@ -28,7 +28,7 @@ export async function pairAgent(world: World, name: string, scopes: string[], an
 }
 
 export async function recordAgents(): Promise<World[]> {
-  const world = await World.boot(9);
+  const world = await World.boot("agents", 9);
   await world.create(STUDENT);
   const admin = await world.account(ADMIN, "synthetic-admin-token");
   world.token = await world.signIn(STUDENT.email, STUDENT.password, "synthetic-session-token");

@@ -1,0 +1,661 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "organize-imports",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.819Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:37.877Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.877Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "5e000000-0000-4000-8000-000000000301",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.885Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "5e000000-0000-4000-8000-000000000301",
+          "code": "NURS 101",
+          "title": "Invented Nursing"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "c0000000-0000-4000-8000-000000000301",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Nursing",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.897Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Week 1"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "f0000000-0000-4000-8000-000000000301",
+          "name": "Week 1",
+          "examPageId": null,
+          "sortOrder": 1,
+          "sets": [],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.904Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Week 2"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "f0000000-0000-4000-8000-000000000302",
+          "name": "Week 2",
+          "examPageId": null,
+          "sortOrder": 2,
+          "sets": [],
+          "examBankCount": 0,
+          "examSets": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:37.915Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses/c0000000-0000-4000-8000-000000000301/course-exams",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "name": "Exam 1",
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000302"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "ce000000-0000-4000-8000-000000000301",
+          "name": "Exam 1",
+          "sortOrder": 1,
+          "weekLabels": [
+            "Week 2"
+          ],
+          "folderIds": [
+            "f0000000-0000-4000-8000-000000000302"
+          ],
+          "linkUrl": null,
+          "badge": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-check",
+      "at": "2026-11-22T20:05:37.921Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports/check",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"sata\",\"topic\":\"Invented safety checks\",\"cj\":\"Recognize cues\",\"stem\":\"An invented client is being prepared for a procedure.\",\"ask\":\"Which checks should the nurse make? Select all that apply.\",\"options\":[{\"t\":\"Check the identity band\",\"ok\":true,\"why\":\"Two identifiers prevent errors.\"},{\"t\":\"Check allergies\",\"ok\":true,\"why\":\"Allergies change the plan.\"},{\"t\":\"Skip the consent\",\"why\":\"Consent is required.\"},{\"t\":\"Ask about the last meal\",\"ok\":true,\"why\":\"It matters for sedation.\"}],\"rationale\":\"Identity, allergies and the last meal are checked before an invented procedure.\",\"takeaway\":\"Check identity, allergies and intake first.\",\"need\":\"Safety and infection control\",\"diff\":2,\"src\":\"Invented lecture notes\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Take action\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ok": true,
+          "title": "Invented Depression Care",
+          "description": "Invented practice questions.",
+          "kind": "practice",
+          "questionCount": 3,
+          "termCount": 1,
+          "formats": [
+            {
+              "type": "single",
+              "label": "Single answer",
+              "count": 2
+            },
+            {
+              "type": "sata",
+              "label": "Select all that apply",
+              "count": 1
+            }
+          ],
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-check-errors",
+      "at": "2026-11-22T20:05:37.928Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports/check",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Broken set\",\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"stem\":\"Invented.\",\"ask\":\"Which?\",\"options\":[{\"t\":\"One\",\"ok\":true},{\"t\":\"Two\"},{\"t\":\"Three\",\"ok\":true}],\"rationale\":\"Invented.\"}]}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ok": false,
+          "title": "Broken set",
+          "description": "",
+          "kind": "practice",
+          "questionCount": 0,
+          "termCount": 0,
+          "formats": [],
+          "errors": [
+            "Question 1 (Q1): missing takeaway",
+            "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
+          ],
+          "warnings": [
+            "Question 1 (Q1): missing cj",
+            "Question 1 (Q1): missing need",
+            "Question 1 (Q1): missing diff",
+            "Question 1 (Q1): missing src"
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-check-not-json",
+      "at": "2026-11-22T20:05:37.931Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports/check",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "Here are your questions: {"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ok": false,
+          "title": null,
+          "description": "",
+          "kind": "practice",
+          "questionCount": 0,
+          "termCount": 0,
+          "formats": [],
+          "errors": [
+            "This is not valid JSON: Unexpected token 'H', \"Here are y\"... is not valid JSON. Ask your AI chat to resend only the JSON block."
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-check-exam",
+      "at": "2026-11-22T20:05:37.937Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports/check",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Exam\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"E1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"E2\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}],\"kind\":\"exam\"}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "ok": true,
+          "title": "Invented Depression Exam",
+          "description": "Invented practice questions.",
+          "kind": "exam",
+          "questionCount": 2,
+          "termCount": 1,
+          "formats": [
+            {
+              "type": "single",
+              "label": "Single answer",
+              "count": 2
+            }
+          ],
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import",
+      "at": "2026-11-22T20:05:37.942Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"sata\",\"topic\":\"Invented safety checks\",\"cj\":\"Recognize cues\",\"stem\":\"An invented client is being prepared for a procedure.\",\"ask\":\"Which checks should the nurse make? Select all that apply.\",\"options\":[{\"t\":\"Check the identity band\",\"ok\":true,\"why\":\"Two identifiers prevent errors.\"},{\"t\":\"Check allergies\",\"ok\":true,\"why\":\"Allergies change the plan.\"},{\"t\":\"Skip the consent\",\"why\":\"Consent is required.\"},{\"t\":\"Ask about the last meal\",\"ok\":true,\"why\":\"It matters for sedation.\"}],\"rationale\":\"Identity, allergies and the last meal are checked before an invented procedure.\",\"takeaway\":\"Check identity, allergies and intake first.\",\"need\":\"Safety and infection control\",\"diff\":2,\"src\":\"Invented lecture notes\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Take action\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000301",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Invented Depression Care",
+          "weekLabel": "Unsorted",
+          "folderId": "f0000000-0000-4000-8000-000000000303",
+          "folderName": "Unsorted",
+          "examPageId": null,
+          "questionCount": 3,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-folder",
+      "at": "2026-11-22T20:05:37.951Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Anxiety Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"panic\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about panic.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"single\",\"topic\":\"breathing\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about breathing.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "title": "Anxiety, renamed",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderId": "f0000000-0000-4000-8000-000000000302",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000302",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Anxiety, renamed",
+          "weekLabel": "Week 2",
+          "folderId": "f0000000-0000-4000-8000-000000000302",
+          "folderName": "Week 2",
+          "examPageId": "ce000000-0000-4000-8000-000000000301",
+          "questionCount": 2,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-new-folder",
+      "at": "2026-11-22T20:05:37.961Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Sleep Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"rest\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about rest.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderName": "First Pass",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000303",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Invented Sleep Care",
+          "weekLabel": "First Pass",
+          "folderId": "f0000000-0000-4000-8000-000000000304",
+          "folderName": "First Pass",
+          "examPageId": null,
+          "questionCount": 1,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-new-course",
+      "at": "2026-11-22T20:05:37.969Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Sleep Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"rest\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about rest.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "newCourse": {
+            "code": "NURS 102",
+            "title": "Invented Second Course",
+            "semesterNumber": 1
+          },
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000304",
+          "courseId": "c0000000-0000-4000-8000-000000000302",
+          "courseCode": "NURS 102",
+          "title": "Invented Sleep Care",
+          "weekLabel": "Unsorted",
+          "folderId": "00000000-0000-4000-8014-000000000001",
+          "folderName": "Unsorted",
+          "examPageId": null,
+          "questionCount": 1,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-conflict",
+      "at": "2026-11-22T20:05:37.977Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"sata\",\"topic\":\"Invented safety checks\",\"cj\":\"Recognize cues\",\"stem\":\"An invented client is being prepared for a procedure.\",\"ask\":\"Which checks should the nurse make? Select all that apply.\",\"options\":[{\"t\":\"Check the identity band\",\"ok\":true,\"why\":\"Two identifiers prevent errors.\"},{\"t\":\"Check allergies\",\"ok\":true,\"why\":\"Allergies change the plan.\"},{\"t\":\"Skip the consent\",\"why\":\"Consent is required.\"},{\"t\":\"Ask about the last meal\",\"ok\":true,\"why\":\"It matters for sedation.\"}],\"rationale\":\"Identity, allergies and the last meal are checked before an invented procedure.\",\"takeaway\":\"Check identity, allergies and intake first.\",\"need\":\"Safety and infection control\",\"diff\":2,\"src\":\"Invented lecture notes\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Take action\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q4\",\"type\":\"single\",\"topic\":\"appetite\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about appetite.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderId": "f0000000-0000-4000-8000-000000000301",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "conflict": true,
+          "title": "Invented Depression Care",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "courseTitle": "Invented Nursing",
+          "weekLabel": "Unsorted",
+          "folderId": "f0000000-0000-4000-8000-000000000303",
+          "folderName": "Unsorted",
+          "existingQuestionCount": 3,
+          "incomingQuestionCount": 4,
+          "setId": "5e700000-0000-4000-8000-000000000301"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-replace",
+      "at": "2026-11-22T20:05:37.984Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"sata\",\"topic\":\"Invented safety checks\",\"cj\":\"Recognize cues\",\"stem\":\"An invented client is being prepared for a procedure.\",\"ask\":\"Which checks should the nurse make? Select all that apply.\",\"options\":[{\"t\":\"Check the identity band\",\"ok\":true,\"why\":\"Two identifiers prevent errors.\"},{\"t\":\"Check allergies\",\"ok\":true,\"why\":\"Allergies change the plan.\"},{\"t\":\"Skip the consent\",\"why\":\"Consent is required.\"},{\"t\":\"Ask about the last meal\",\"ok\":true,\"why\":\"It matters for sedation.\"}],\"rationale\":\"Identity, allergies and the last meal are checked before an invented procedure.\",\"takeaway\":\"Check identity, allergies and intake first.\",\"need\":\"Safety and infection control\",\"diff\":2,\"src\":\"Invented lecture notes\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Take action\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q4\",\"type\":\"single\",\"topic\":\"appetite\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about appetite.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderId": "f0000000-0000-4000-8000-000000000301",
+          "decision": "replace"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "replaced",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000305",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Invented Depression Care",
+          "weekLabel": "Unsorted",
+          "folderId": "f0000000-0000-4000-8000-000000000303",
+          "folderName": "Unsorted",
+          "examPageId": null,
+          "questionCount": 4,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-separate",
+      "at": "2026-11-22T20:05:38.000Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Care\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q2\",\"type\":\"sata\",\"topic\":\"Invented safety checks\",\"cj\":\"Recognize cues\",\"stem\":\"An invented client is being prepared for a procedure.\",\"ask\":\"Which checks should the nurse make? Select all that apply.\",\"options\":[{\"t\":\"Check the identity band\",\"ok\":true,\"why\":\"Two identifiers prevent errors.\"},{\"t\":\"Check allergies\",\"ok\":true,\"why\":\"Allergies change the plan.\"},{\"t\":\"Skip the consent\",\"why\":\"Consent is required.\"},{\"t\":\"Ask about the last meal\",\"ok\":true,\"why\":\"It matters for sedation.\"}],\"rationale\":\"Identity, allergies and the last meal are checked before an invented procedure.\",\"takeaway\":\"Check identity, allergies and intake first.\",\"need\":\"Safety and infection control\",\"diff\":2,\"src\":\"Invented lecture notes\",\"terms\":[]},{\"id\":\"Q3\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Take action\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"Q4\",\"type\":\"single\",\"topic\":\"appetite\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about appetite.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderId": "f0000000-0000-4000-8000-000000000301",
+          "decision": "separate"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "practice",
+          "setId": "5e700000-0000-4000-8000-000000000306",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Invented Depression Care",
+          "weekLabel": "Week 1",
+          "folderId": "f0000000-0000-4000-8000-000000000301",
+          "folderName": "Week 1",
+          "examPageId": null,
+          "questionCount": 4,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-invalid",
+      "at": "2026-11-22T20:05:38.014Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Broken set\",\"questions\":[{\"id\":\"Q1\",\"type\":\"single\",\"stem\":\"Invented.\",\"ask\":\"Which?\",\"options\":[{\"t\":\"One\",\"ok\":true},{\"t\":\"Two\"},{\"t\":\"Three\",\"ok\":true}],\"rationale\":\"Invented.\"}]}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "invalid_import",
+          "message": "Question 1 (Q1): missing takeaway",
+          "errors": [
+            "Question 1 (Q1): missing takeaway",
+            "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
+          ],
+          "warnings": [
+            "Question 1 (Q1): missing cj",
+            "Question 1 (Q1): missing need",
+            "Question 1 (Q1): missing diff",
+            "Question 1 (Q1): missing src"
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "import-exam",
+      "at": "2026-11-22T20:05:38.017Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/imports",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "source": "{\"title\":\"Invented Depression Exam\",\"desc\":\"Invented practice questions.\",\"terms\":{\"invented-term\":[\"Invented term\",\"A word made up for this fixture.\"]},\"questions\":[{\"id\":\"E1\",\"type\":\"single\",\"topic\":\"mood\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about mood.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]},{\"id\":\"E2\",\"type\":\"single\",\"topic\":\"sleep\",\"cj\":\"Analyze cues\",\"stem\":\"An invented client presents with a finding about sleep.\",\"ask\":\"Which action should the nurse take first?\",\"options\":[{\"t\":\"The action that addresses the finding\",\"ok\":true,\"why\":\"It addresses the finding.\"},{\"t\":\"An action for a different finding\",\"why\":\"It does not change this finding.\"},{\"t\":\"Waiting to reassess later\",\"why\":\"It delays care.\"},{\"t\":\"Documenting only\",\"why\":\"It does not treat the client.\"}],\"rationale\":\"The first action addresses the invented finding.\",\"takeaway\":\"Match the action to the finding.\",\"need\":\"Physiological integrity\",\"diff\":3,\"src\":\"Invented lecture notes\",\"terms\":[\"invented-term\"]}],\"kind\":\"exam\"}",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "folderId": "f0000000-0000-4000-8000-000000000302",
+          "decision": "import"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "kind": "imported",
+          "setKind": "exam",
+          "setId": "5e700000-0000-4000-8000-000000000307",
+          "courseId": "c0000000-0000-4000-8000-000000000301",
+          "courseCode": "NURS 101",
+          "title": "Invented Depression Exam",
+          "weekLabel": "Week 2",
+          "folderId": "f0000000-0000-4000-8000-000000000302",
+          "folderName": "Week 2",
+          "examPageId": "ce000000-0000-4000-8000-000000000301",
+          "questionCount": 2,
+          "termCount": 1,
+          "warnings": [],
+          "importedByAgent": null
+        }
+      }
+    }
+  ]
+}

@@ -17,7 +17,7 @@ export async function recordAccountDeletion(): Promise<World[]> {
 async function deleted(): Promise<World> {
   const fake = new FakeModel().on("sample", never);
   let runner: QuestionRunner | undefined;
-  const world = await World.boot(5, {
+  const world = await World.boot("account-deleted", 5, {
     questionMaker: (db) => {
       runner = new QuestionRunner({ db, client: fake, sweepMs: 0, log: () => undefined });
       return { settings: { accounts: [HER.email], dailyLimit: 50 }, runner };
@@ -67,7 +67,7 @@ async function deleted(): Promise<World> {
 
 /** The owner gave her a temporary password: she chooses her own before anything else. */
 async function temporaryPassword(): Promise<World> {
-  const world = await World.boot(6);
+  const world = await World.boot("account-temporary-password", 6);
   await world.create(HER);
   await world.account(ADMIN, "synthetic-admin-token");
   await world.ok("/api/admin/student-password", 200, { method: "POST", json: { temporaryPassword: "synthetic-temporary-pass" } });
@@ -79,7 +79,7 @@ async function temporaryPassword(): Promise<World> {
 
 /** Wrong passwords lock deleting, as they lock sign-in. */
 async function locked(): Promise<World> {
-  const world = await World.boot(7);
+  const world = await World.boot("account-locked", 7);
   await world.account(HER, "synthetic-session-token");
   for (let miss = 1; miss < SIGN_IN_FAILURE_LIMIT; miss += 1) await world.ok("/api/me", 401, remove("not-it"));
   await world.ok("/api/me", 429, remove("not-it"));
@@ -90,7 +90,7 @@ async function locked(): Promise<World> {
 
 /** A server with sign-in not configured answers every account route 503. */
 async function unavailable(): Promise<World> {
-  const world = await World.boot(8, { auth: false });
+  const world = await World.boot("account-unavailable", 8, { auth: false });
   world.token = "synthetic-session-token";
   await world.record("account-delete-unavailable", "/api/me", 503, remove(HER.password));
   await world.close();

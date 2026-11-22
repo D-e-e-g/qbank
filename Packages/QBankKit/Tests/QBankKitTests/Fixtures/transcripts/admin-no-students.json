@@ -1,0 +1,57 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "admin-no-students",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:08.809Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "owner@example.com",
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "owner@example.com",
+            "name": "Owner",
+            "role": "admin",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:08.979Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "admin-students-none",
+      "at": "2026-11-22T20:05:08.980Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/students",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "students": [],
+          "viewingId": null
+        }
+      }
+    }
+  ]
+}

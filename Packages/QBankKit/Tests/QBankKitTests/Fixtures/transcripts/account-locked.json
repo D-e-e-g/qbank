@@ -1,0 +1,175 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "account-locked",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.370Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:26.459Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.461Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "invalid_credentials",
+          "message": "That password is not right."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.546Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "invalid_credentials",
+          "message": "That password is not right."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.626Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "invalid_credentials",
+          "message": "That password is not right."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.707Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "invalid_credentials",
+          "message": "That password is not right."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:26.801Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-locked",
+      "at": "2026-11-22T20:05:26.879Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "retry-after": "900"
+        },
+        "body": {
+          "error": "too_many_attempts",
+          "message": "Too many tries. Try again in 15 minutes.",
+          "retryAfterSeconds": 900
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "make-questions-not-set-up",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:46.829Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:46.883Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "question-maker-not-set-up",
+      "at": "2026-11-22T20:05:46.883Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/question-maker",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "available": false,
+          "reason": "Making questions is not set up yet.",
+          "dailyLimit": 4,
+          "startedToday": 0,
+          "nextAvailableAt": null,
+          "levels": [
+            {
+              "level": "exam",
+              "minCount": 10,
+              "maxCount": 15,
+              "defaultCount": 15
+            },
+            {
+              "level": "course",
+              "minCount": 12,
+              "maxCount": 16,
+              "defaultCount": 15
+            },
+            {
+              "level": "board",
+              "minCount": 12,
+              "maxCount": 16,
+              "defaultCount": 15
+            }
+          ],
+          "defaultLevel": "exam",
+          "sampleSize": 5,
+          "limits": {
+            "photos": 20,
+            "photoBytes": 3750000,
+            "fileBytes": 20000000,
+            "textCharacters": 400000
+          },
+          "imageTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "fileTypes": [
+            "application/pdf",
+            "text/plain",
+            "text/markdown"
+          ]
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "question-jobs-not-set-up",
+      "at": "2026-11-22T20:05:46.886Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/question-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 503,
+        "headers": {},
+        "body": {
+          "error": "not_set_up",
+          "message": "Making questions is not set up yet."
+        }
+      }
+    }
+  ]
+}

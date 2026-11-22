@@ -1,0 +1,632 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "account-deleted",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.115Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "owner@example.com",
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "owner@example.com",
+            "name": "Owner",
+            "role": "admin",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:22.228Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.320Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:22.481Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.481Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token-2",
+          "user": {
+            "id": "synthetic-user-2",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:22.581Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-admin",
+      "at": "2026-11-22T20:05:22.582Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "synthetic-admin-pass"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "admin_cannot_delete_account",
+          "message": "The admin account can't be deleted."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-wrong-password",
+      "at": "2026-11-22T20:05:22.591Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "not-it"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "invalid_credentials",
+          "message": "That password is not right."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-no-password",
+      "at": "2026-11-22T20:05:22.764Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {}
+      },
+      "response": {
+        "status": 400,
+        "headers": {},
+        "body": {
+          "error": "invalid_request",
+          "message": "Check the fields and try again."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.765Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "name": "My MacBook agent",
+          "scopes": [
+            "import",
+            "read"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "deviceCode": "no-FGF3v2WhA0DptoUakFBPIHcK04SVe_4g_YqsQPJQ",
+          "userCode": "BCDF-GHJK",
+          "expiresAt": "2026-11-22T20:15:22.765Z",
+          "expiresIn": 600,
+          "interval": 5
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.770Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/approve",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "userCode": "BCDF-GHJK"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "name": "My MacBook agent",
+          "scopes": [
+            "import",
+            "read"
+          ],
+          "scopeTexts": [
+            {
+              "scope": "import",
+              "text": "Import question sets into your courses and topics, and see your courses, folders and sets to do it."
+            },
+            {
+              "scope": "read",
+              "text": "Read how you answered: where you stand by topic, your Review lists, your exams and your progress export. It changes nothing."
+            }
+          ],
+          "status": "approved",
+          "createdAt": "2026-11-22T20:05:22.765Z",
+          "expiresAt": "2026-11-22T20:15:22.765Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.790Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent-pairings/token",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "deviceCode": "no-FGF3v2WhA0DptoUakFBPIHcK04SVe_4g_YqsQPJQ"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-agent-key",
+          "key": {
+            "id": "00000000-0000-4000-8005-000000000001",
+            "name": "My MacBook agent",
+            "scopes": [
+              "import",
+              "read"
+            ],
+            "createdAt": "2026-11-22T20:05:22.791Z",
+            "lastUsedAt": null,
+            "revokedAt": null
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-agent-key",
+      "at": "2026-11-22T20:05:22.795Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-agent-key",
+        "body": {
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {},
+        "body": {
+          "error": "agent_key_not_allowed",
+          "message": "An agent key can't do this. Sign in to QBank to do it."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.796Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/semesters",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "number": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8005-000000000002",
+          "number": 1,
+          "name": "Semester 1",
+          "startsOn": null,
+          "endsOn": null,
+          "archivedAt": null,
+          "courses": []
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.818Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/courses",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "semesterId": "00000000-0000-4000-8005-000000000002",
+          "code": "NURS 101",
+          "title": "Invented Basics"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8005-000000000003",
+          "kind": "course",
+          "code": "NURS 101",
+          "title": "Invented Basics",
+          "sortOrder": 1,
+          "archivedAt": null,
+          "questionCount": 0,
+          "weekCount": 0,
+          "folderCount": 0,
+          "reviewCount": 0,
+          "answeredCount": 0,
+          "fullyRightCount": 0,
+          "points": 0,
+          "maxPoints": 0
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:22.831Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/question-jobs",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "courseId": "00000000-0000-4000-8005-000000000003",
+          "folderName": "Week 1",
+          "materialKind": "notes",
+          "material": {
+            "text": "Invented lecture notes.\nSlide 1: invented topics for a test."
+          },
+          "level": "exam",
+          "count": 10,
+          "examTwins": false
+        }
+      },
+      "response": {
+        "status": 202,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8005-000000000004",
+          "status": "running",
+          "step": "read",
+          "waitingFor": null,
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your material",
+              "state": "current",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "samples",
+              "label": "Write 5 samples",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "review",
+              "label": "Your check",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "write",
+              "label": "Write the rest",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "check",
+              "label": "Blind check",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the set",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "00000000-0000-4000-8005-000000000003",
+            "code": "NURS 101",
+            "title": "Invented Basics"
+          },
+          "folder": {
+            "id": null,
+            "name": "Week 1"
+          },
+          "materialKind": "notes",
+          "level": "exam",
+          "reference": null,
+          "count": 10,
+          "examTwins": false,
+          "title": null,
+          "photoCount": 0,
+          "sets": [],
+          "createdAt": "2026-11-22 15:05:22.854-05",
+          "updatedAt": "2026-11-22 15:05:22.854-05",
+          "finishedAt": null,
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-in-use",
+      "at": "2026-11-22T20:05:22.962Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {},
+        "body": {
+          "error": "in_use",
+          "message": "QBank is still making a set in NURS 101. Wait until it is filed, or cancel it, then delete your account."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:23.042Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/question-jobs/00000000-0000-4000-8005-000000000004/cancel",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "00000000-0000-4000-8005-000000000004",
+          "status": "cancelled",
+          "step": "samples",
+          "waitingFor": null,
+          "steps": [
+            {
+              "key": "read",
+              "label": "Read your material",
+              "state": "done",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "samples",
+              "label": "Write 5 samples",
+              "state": "cancelled",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "review",
+              "label": "Your check",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "write",
+              "label": "Write the rest",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "check",
+              "label": "Blind check",
+              "state": "todo",
+              "done": null,
+              "total": null
+            },
+            {
+              "key": "file",
+              "label": "File the set",
+              "state": "todo",
+              "done": null,
+              "total": null
+            }
+          ],
+          "course": {
+            "id": "00000000-0000-4000-8005-000000000003",
+            "code": "NURS 101",
+            "title": "Invented Basics"
+          },
+          "folder": {
+            "id": null,
+            "name": "Week 1"
+          },
+          "materialKind": "notes",
+          "level": "exam",
+          "reference": null,
+          "count": 10,
+          "examTwins": false,
+          "title": null,
+          "photoCount": 0,
+          "sets": [],
+          "createdAt": "2026-11-22 15:05:22.854-05",
+          "updatedAt": "2026-11-22 15:05:23.05-05",
+          "finishedAt": "2026-11-22 15:05:23.05-05",
+          "failure": null,
+          "warnings": [],
+          "usage": {
+            "calls": 1,
+            "inputTokens": 1000,
+            "outputTokens": 200,
+            "cacheReadTokens": 800,
+            "cacheWriteTokens": 100
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete",
+      "at": "2026-11-22T20:05:23.061Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "status": "deleted"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "session-after-account-delete",
+      "at": "2026-11-22T20:05:23.152Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/session",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token-2",
+        "body": null
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "unauthenticated",
+          "message": "Sign in to continue."
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "account-delete-signed-out",
+      "at": "2026-11-22T20:05:23.159Z",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/me",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "password": "synthetic-pass-2"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {},
+        "body": {
+          "error": "unauthenticated",
+          "message": "Sign in to continue."
+        }
+      }
+    }
+  ]
+}

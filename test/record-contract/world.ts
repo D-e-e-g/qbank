@@ -6,6 +6,11 @@
 // scenario where a test names it, numbered in the order the server first sent it otherwise),
 // every session token and agent key becomes a `synthetic-*` placeholder, and each user id and
 // pairing code becomes a fixed stand-in. Times and `confirm` tokens stay as the server sent them.
+//
+// Every call a scenario makes is also kept, in order, as the world's transcript: the exchanges a
+// fixture is made from and the setup calls between them, with the same rewrites, and each write a
+// scenario makes straight to the database to let time pass. Replaying the transcript's requests,
+// and its writes where they fall, brings a fresh server to the state the recording had.
 
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -106,6 +111,11 @@ export interface Exchange {
   response: Json;
 }
 
+/** One step of a world's transcript, in the order it happened. */
+export type Step =
+  | { step: "request"; name: string | null; at: string; exchange: Exchange }
+  | { step: "write"; at: string; table: string; id: string; column: string; value: string };
+
 export interface CallInit {
   method?: string;
   json?: Json;
@@ -143,6 +153,10 @@ function queryable(client: PGlite): Queryable {
 
 export class World {
   readonly recorded = new Map<string, Exchange>();
+  /** Every call and every direct write, in order. */
+  readonly #steps: Step[] = [];
+  /** The name the world's transcript is stored under. */
+  readonly label: string;
   /** The signed-in session calls send unless they name another token. */
   token: string | null = null;
   readonly #names = new Map<string, string>();
@@ -158,7 +172,8 @@ export class World {
   readonly auth: Auth;
   readonly app: ReturnType<typeof createApp>;
 
-  private constructor(scenario: number, client: PGlite, db: AppDatabase, auth: Auth, app: ReturnType<typeof createApp>) {
+  private constructor(label: string, scenario: number, client: PGlite, db: AppDatabase, auth: Auth, app: ReturnType<typeof createApp>) {
+    this.label = label;
     this.scenario = scenario;
     this.client = client;
     this.db = db;
@@ -166,14 +181,15 @@ export class World {
     this.app = app;
   }
 
-  static async boot(scenario: number, options: BootOptions = {}): Promise<World> {
+  /** `label` names the world's transcript; `scenario` numbers the ids the world's server makes. */
+  static async boot(label: string, scenario: number, options: BootOptions = {}): Promise<World> {
     const client = new PGlite();
     await applyMigrations(queryable(client));
     const db = drizzle(client, { schema: dbSchema }) as unknown as AppDatabase;
     const auth = createAuth({ db, secret: SECRET, baseURL: BASE });
     const questionMaker = options.questionMaker?.(db);
     const app = createApp({ version: "0000000", auth: options.auth === false ? undefined : { auth, db }, questionMaker });
-    return new World(scenario, client, db, auth, app);
+    return new World(label, scenario, client, db, auth, app);
   }
 
   async close(): Promise<void> {
@@ -237,8 +253,23 @@ export class World {
     return `c1000000-0000-4000-8000-${String(this.#clientIds).padStart(12, "0")}`;
   }
 
-  async sql(statement: string, params: unknown[] = []): Promise<void> {
+  /**
+   * Lets time pass on rows in `table` by changing their `column` with `statement`, and keeps each
+   * changed row's new time in the transcript as a write, which a replay makes the same way.
+   */
+  async rewind(table: string, column: string, statement: string, params: unknown[] = []): Promise<void> {
+    const read = async (): Promise<Map<string, string>> => {
+      const result = await this.client.query<{ id: string; at: Date | string }>(`select id, ${column} as at from ${table}`);
+      return new Map(result.rows.map((row) => [row.id, new Date(row.at).toISOString()]));
+    };
+    const before = await read();
     await this.client.query(statement, params);
+    const at = new Date().toISOString();
+    for (const [id, value] of await read()) {
+      if (before.get(id) === value) continue;
+      expect(this.#known.has(id), `a ${table} row the server never sent changed`, id);
+      this.#steps.push({ step: "write", at, table, id, column, value });
+    }
   }
 
   /** One call through the routes. Ids it sends that no response carried first are the client's own and stay as they are. */
@@ -252,6 +283,7 @@ export class World {
     const method = init.method ?? "GET";
     const body = init.json ?? null;
     this.#see(JSON.stringify([path, query, body]), false);
+    const at = new Date().toISOString();
     const response = await this.app.request(search === "" ? path : `${path}?${search}`, {
       method,
       headers,
@@ -263,7 +295,9 @@ export class World {
     const kept: Record<string, string> = {};
     const retryAfter = response.headers.get("retry-after");
     if (retryAfter !== null) kept["retry-after"] = retryAfter;
-    return { method, path, query, token, body, status: response.status, headers: kept, response: parsed };
+    const exchange: Exchange = { method, path, query, token, body, status: response.status, headers: kept, response: parsed };
+    this.#steps.push({ step: "request", name: null, at, exchange });
+    return exchange;
   }
 
   /** A call that must answer `status`, for setting a scenario up. */
@@ -280,6 +314,9 @@ export class World {
     const exchange = await this.call(path, init);
     expect(exchange.status === status, `${name} answered ${String(exchange.status)}, not ${String(status)}`, exchange.response);
     this.recorded.set(name, exchange);
+    const step = this.#steps[this.#steps.length - 1];
+    expect(step?.step === "request" && step.exchange === exchange, `${name} is not the last step`);
+    step.name = name;
     return new Doc(exchange.response, name);
   }
 
@@ -293,8 +330,8 @@ export class World {
     }
   }
 
-  /** The recordings as fixture files, every rewrite applied. */
-  fixtures(commit: string): Map<string, Json> {
+  /** The rewrites every recording is written with: ids by name or first-seen order, then tokens and stand-ins. */
+  #rewrites(): { rewrite: (text: string) => string; deep: (value: Json) => Json } {
     const names = new Map(this.#names);
     const taken = new Set(names.values());
     let next = 0;
@@ -322,20 +359,44 @@ export class World {
       }
       return value;
     };
+    return { rewrite, deep };
+  }
+
+  /** The request and response of an exchange, as a fixture and a transcript step both keep them. */
+  static #halves(exchange: Exchange, { rewrite, deep }: { rewrite: (text: string) => string; deep: (value: Json) => Json }): { request: Json; response: Json } {
+    return {
+      request: {
+        method: exchange.method,
+        path: rewrite(exchange.path),
+        query: deep(exchange.query),
+        authorization: exchange.token === null ? null : `Bearer ${rewrite(exchange.token)}`,
+        body: deep(exchange.body),
+      },
+      response: { status: exchange.status, headers: exchange.headers, body: deep(exchange.response) },
+    };
+  }
+
+  /** The recordings as fixture files, every rewrite applied. */
+  fixtures(commit: string): Map<string, Json> {
+    const rewrites = this.#rewrites();
     const out = new Map<string, Json>();
-    for (const [name, exchange] of this.recorded) {
-      out.set(name, {
-        recordedFrom: commit,
-        request: {
-          method: exchange.method,
-          path: rewrite(exchange.path),
-          query: deep(exchange.query),
-          authorization: exchange.token === null ? null : `Bearer ${rewrite(exchange.token)}`,
-          body: deep(exchange.body),
-        },
-        response: { status: exchange.status, headers: exchange.headers, body: deep(exchange.response) },
-      });
-    }
+    for (const [name, exchange] of this.recorded) out.set(name, { recordedFrom: commit, ...World.#halves(exchange, rewrites) });
     return out;
+  }
+
+  /**
+   * The world's transcript, every rewrite applied: each call in the order it was made, with the
+   * time the server took it at, and each direct write to let time pass. A named step is the fixture
+   * of that name.
+   */
+  transcript(commit: string): Json {
+    const rewrites = this.#rewrites();
+    const steps = this.#steps.map((step): Json => {
+      if (step.step === "write") {
+        return { step: "write", at: step.at, table: step.table, id: rewrites.rewrite(step.id), column: step.column, value: step.value };
+      }
+      return { step: "request", name: step.name, at: step.at, ...World.#halves(step.exchange, rewrites) };
+    });
+    return { recordedFrom: commit, world: this.label, steps };
   }
 }

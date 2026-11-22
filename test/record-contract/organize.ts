@@ -9,7 +9,7 @@ export async function recordOrganizing(): Promise<World[]> {
 }
 
 async function catalog(): Promise<World> {
-  const world = await World.boot(12);
+  const world = await World.boot("organize-catalog", 12);
   await world.account(STUDENT, "synthetic-session-token");
   const first = await world.record("semester-create", "/api/semesters", 201, { method: "POST", json: { number: 1 } });
   await world.record("semester-create-taken", "/api/semesters", 409, { method: "POST", json: { number: 1 } });
@@ -43,7 +43,7 @@ async function catalog(): Promise<World> {
 
 /** A course's pages and folders, as FolderContractTests names them. */
 async function folders(): Promise<World> {
-  const world = await World.boot(13);
+  const world = await World.boot("organize-folders", 13);
   await world.account(STUDENT, "synthetic-session-token");
   const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
   const course = await world.ok("/api/courses", 201, { method: "POST", json: { semesterId: semester.str("id"), code: "NURS 101", title: "Invented Nursing Basics" } });
@@ -118,7 +118,7 @@ async function folders(): Promise<World> {
 
 /** Checking and importing set files into a course with folders, a page, and Unsorted. */
 async function imports(): Promise<World> {
-  const world = await World.boot(14);
+  const world = await World.boot("organize-imports", 14);
   await world.account(STUDENT, "synthetic-session-token");
   const semester = await world.ok("/api/semesters", 201, { method: "POST", json: { number: 1 } });
   const courseId = (await world.ok("/api/courses", 201, { method: "POST", json: { semesterId: semester.str("id"), code: "NURS 101", title: "Invented Nursing" } })).str("id");

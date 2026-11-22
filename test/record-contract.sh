@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Records the live QBankKit contract fixtures from a local qbank-server checkout.
+# Records the live QBankKit contract fixtures, and each scenario's ordered transcript,
+# from a local qbank-server checkout.
 #
 # usage: test/record-contract.sh SERVER_CHECKOUT
 #
@@ -7,10 +8,15 @@
 # checkout's HEAD. Set QBANK_CONTRACT_SCRATCH to reuse a scratch tree; the
 # default is a directory under ${TMPDIR:-/tmp}. Set QBANK_API_IMAGE when that
 # commit has no image digest recorded in test/record-contract/main.ts.
+#
+# Writes Fixtures/contract/ and Fixtures/transcripts/ under
+# Packages/QBankKit/Tests/QBankKitTests. Every file is rewritten, and a record
+# is not byte-stable: times, delete confirm tokens and the exam questions the
+# server draws at random change from one run to the next.
 set -euo pipefail
 
 usage() {
-  sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//' >&2
+  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' >&2
   exit 64
 }
 
@@ -34,4 +40,4 @@ cp -R "$root/test/record-contract" "$scratch/apps/api/scripts/record-contract"
   cd "$scratch/apps/api" || exit 1
   pnpm exec tsx scripts/record-contract/main.ts "$commit" "$fixtures" "$scratch/apps/api/openapi.json"
 )
-echo "contract fixtures pinned to $commit"
+echo "contract fixtures and transcripts pinned to $commit"

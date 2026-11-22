@@ -9,7 +9,7 @@ export async function recordSessions(): Promise<World[]> {
 }
 
 async function session(): Promise<World> {
-  const world = await World.boot(1);
+  const world = await World.boot("session", 1);
   await world.record("health", "/health", 200, { token: null });
   await world.record("session-signed-out", "/api/session", 401, { token: null });
   await world.record("semesters-signed-out", "/api/semesters", 401, { token: null });
@@ -45,7 +45,7 @@ async function session(): Promise<World> {
 
 /** Signed in on two devices, she signs out everywhere from one: the other's session ends too. */
 async function signOutEverywhere(): Promise<World> {
-  const world = await World.boot(22);
+  const world = await World.boot("session-sign-out-everywhere", 22);
   const phone = await world.account(STUDENT, "synthetic-session-token");
   const laptop = await world.signIn(STUDENT.email, STUDENT.password, "synthetic-session-token-2");
   await world.record("sign-out-everywhere", "/api/sign-out/everywhere", 200, { method: "POST", token: phone });
@@ -56,7 +56,7 @@ async function signOutEverywhere(): Promise<World> {
 }
 
 async function palette(): Promise<World> {
-  const world = await World.boot(2);
+  const world = await World.boot("session-palette", 2);
   await world.account(STUDENT, "synthetic-session-token");
   const account = await world.record("palette", "/api/me/palette", 200, { method: "PUT", json: { palette: "slate" } });
   expect(account.str("palette") === "slate", "the palette did not change", account.value);
@@ -66,7 +66,7 @@ async function palette(): Promise<World> {
 }
 
 async function signUp(): Promise<World> {
-  const world = await World.boot(3);
+  const world = await World.boot("session-sign-up", 3);
   // The owner adds her email to the sign-up list from his own session.
   await world.account(ADMIN, "synthetic-admin-token");
   await world.ok("/api/admin/sign-up-emails", 200, { method: "POST", json: { email: "new.user@example.com" } });

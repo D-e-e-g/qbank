@@ -1,0 +1,90 @@
+{
+  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "world": "session-palette",
+  "steps": [
+    {
+      "step": "request",
+      "name": null,
+      "at": "2026-11-22T20:05:16.574Z",
+      "request": {
+        "method": "POST",
+        "path": "/api/sign-in/password",
+        "query": {},
+        "authorization": null,
+        "body": {
+          "email": "student@example.com",
+          "password": "synthetic-pass-1"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "token": "synthetic-session-token",
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "dusk"
+          },
+          "expiresAt": "2027-12-27T20:05:16.748Z"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "palette",
+      "at": "2026-11-22T20:05:16.749Z",
+      "request": {
+        "method": "PUT",
+        "path": "/api/me/palette",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": {
+          "palette": "slate"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "id": "synthetic-user-1",
+          "email": "student@example.com",
+          "name": "Sam Student",
+          "role": "student",
+          "mustChangePassword": false,
+          "palette": "slate"
+        }
+      }
+    },
+    {
+      "step": "request",
+      "name": "session-slate",
+      "at": "2026-11-22T20:05:16.753Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/session",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "user": {
+            "id": "synthetic-user-1",
+            "email": "student@example.com",
+            "name": "Sam Student",
+            "role": "student",
+            "mustChangePassword": false,
+            "palette": "slate"
+          },
+          "expiresAt": "2027-12-27T20:05:16.740Z"
+        }
+      }
+    }
+  ]
+}

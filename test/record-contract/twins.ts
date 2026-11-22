@@ -13,7 +13,7 @@ const OTHER = { email: "other.student@example.com", password: "synthetic-other-p
 export async function recordTwins(): Promise<World[]> {
   const fake = new FakeModel();
   let made: QuestionRunner | undefined;
-  const world = await World.boot(21, {
+  const world = await World.boot("twins", 21, {
     questionMaker: (db) => {
       made = new QuestionRunner({ db, client: fake, sweepMs: 0, log: () => undefined });
       return { settings: { accounts: [STUDENT.email], dailyLimit: 3 }, runner: made };
