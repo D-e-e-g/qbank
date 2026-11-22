@@ -51,13 +51,16 @@ jobs:
           swift_bin=$(command -v swift)
           libsourcekit="$(dirname "$(dirname "$(readlink -f "$swift_bin")")")/lib/libsourcekitdInProc.so"
           test -f "$libsourcekit"
-          if ldd "$RUNNER_TEMP/swiftlint" | grep -q 'not found'; then
-            sudo apt-get update
-            sudo apt-get install -y libcurl4t64 libxml2-16
-          fi
-          if ldd "$RUNNER_TEMP/swiftlint" | grep 'not found'; then
+          # Ubuntu 26.04 ships libxml2 as libxml2.so.16; the binary asks for .so.2.
+          libxml2=$(ldconfig -p | awk '/libxml2\.so\.16 / {print $NF; exit}')
+          test -n "$libxml2"
+          mkdir "$RUNNER_TEMP/swiftlint-lib"
+          ln -s "$libxml2" "$RUNNER_TEMP/swiftlint-lib/libxml2.so.2"
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/swiftlint-lib" >> "$GITHUB_ENV"
+          if LD_LIBRARY_PATH="$RUNNER_TEMP/swiftlint-lib" ldd "$RUNNER_TEMP/swiftlint" | grep 'not found'; then
             exit 1
           fi
+          LD_LIBRARY_PATH="$RUNNER_TEMP/swiftlint-lib" "$RUNNER_TEMP/swiftlint" version
 
       - name: SwiftLint
         run: |
