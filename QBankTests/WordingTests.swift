@@ -371,4 +371,24 @@ struct WordingTests {
             #expect(!line.localizedCaseInsensitiveContains("student"), "\(line)")
         }
     }
+
+    /// The app's own lines fit any course or topic: none names a profession, a licensing exam or an agent.
+    @Test func linesForAnySubject() {
+        let lines = [
+            Wording.firstScreenLine, Wording.questionFileDetail, Wording.questionFileHint, Wording.copyFileErrors,
+            Wording.noTopicsYet, Wording.nothingChosenTitle, Wording.nothingChosenDetail,
+        ]
+        for line in lines {
+            #expect(!line.localizedCaseInsensitiveContains("nclex"), "\(line)")
+            #expect(!line.localizedCaseInsensitiveContains("nurs"), "\(line)")
+            #expect(!line.localizedCaseInsensitiveContains("agent"), "\(line)")
+        }
+        #expect(Wording.firstScreenLine == "Practice questions on any course or topic.")
+        #expect(Wording.noTopicsYet.hasPrefix("Tap + to add a study topic"), "an empty Home leads with topics")
+    }
+
+    @Test(arguments: [("", false), ("   \n\t", false), ("Why?", true), (" a ", true)] as [(String, Bool)])
+    func aStemRationaleOrTakeawayShowsOnlyWithText(text: String, shows: Bool) {
+        #expect(Wording.shows(text) == shows)
+    }
 }

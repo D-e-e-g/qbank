@@ -17,10 +17,12 @@ struct PracticeResultView: View {
             VStack(alignment: .leading, spacing: QBankSpacing.space7) {
                 head
                 stats
-                section("By clinical judgment step") {
-                    QBankListGroup {
-                        ForEach(result.steps, id: \.label) { step in
-                            ResultStepRow(label: step.label, right: step.right, total: step.total)
+                if result.hasSteps {
+                    section("By clinical judgment step") {
+                        QBankListGroup {
+                            ForEach(result.steps, id: \.label) { step in
+                                ResultStepRow(label: step.label, right: step.right, total: step.total)
+                            }
                         }
                     }
                 }
@@ -154,17 +156,23 @@ private struct ResultQuestionRow: View {
             .accessibilityIdentifier("result.question.\(row.number)")
             if isExpanded {
                 VStack(alignment: .leading, spacing: QBankSpacing.space4) {
-                    Prose(row.question.stem)
+                    if Wording.shows(row.question.stem) {
+                        Prose(row.question.stem)
+                    }
                     StemExhibits(question: row.question)
                     Text(row.question.ask)
                         .qbankFont(.readingSmall, weight: .semibold)
                         .foregroundStyle(.qbank(.text1))
-                    Prose(row.question.rationale)
+                    if Wording.shows(row.question.rationale) {
+                        Prose(row.question.rationale)
+                    }
                     RationaleImages(question: row.question)
-                    Prose(row.question.takeaway)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, QBankSpacing.space5)
-                        .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+                    if Wording.shows(row.question.takeaway) {
+                        Prose(row.question.takeaway)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, QBankSpacing.space5)
+                            .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+                    }
                 }
                 .padding(.leading, 52)
                 .padding(.trailing, QBankSpacing.rowPaddingHorizontal)

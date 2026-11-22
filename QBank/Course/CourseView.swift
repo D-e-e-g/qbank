@@ -138,7 +138,7 @@ struct CourseView: View {
                     app.frozen.perform { sheet = .importFile }
                 } label: {
                     Text("Import a question file")
-                    Text("A JSON file from your agent")
+                    Text(Wording.questionFileDetail)
                     Image(systemName: "square.and.arrow.down")
                 }
                 .accessibilityIdentifier("course.add.import")

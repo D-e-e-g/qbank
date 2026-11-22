@@ -181,7 +181,7 @@ struct ImportView: View {
                 }
                 .accessibilityLabel("Paste JSON")
                 .accessibilityIdentifier("import.paste")
-            FieldHint("Paste the JSON from your agent.")
+            FieldHint(Wording.questionFileHint)
         }
     }
 
@@ -411,7 +411,7 @@ struct FolderPicker<Field: Hashable>: View {
 }
 
 /// The check's answer: Ready with the format counts, the errors that block the file with a way to
-/// copy them for your agent, and warnings.
+/// copy them, and warnings.
 private struct ReportView: View {
     let report: ImportReport
     let copied: Bool
@@ -450,7 +450,7 @@ private struct ReportView: View {
             if !report.errors.isEmpty {
                 VStack(alignment: .leading, spacing: QBankSpacing.space2) {
                     Issues(items: report.errors)
-                    Button(copied ? "Copied" : "Copy these for your agent", action: copy)
+                    Button(copied ? "Copied" : Wording.copyFileErrors, action: copy)
                         .buttonStyle(.qbank(.secondary, size: .small))
                         .accessibilityIdentifier("import.copyErrors")
                 }

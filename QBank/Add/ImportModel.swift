@@ -43,7 +43,7 @@ final class ImportModel {
     private(set) var done: Done?
     private(set) var problem: String?
     private(set) var isBusy = false
-    /// The errors were copied for your agent.
+    /// The errors were copied.
     private(set) var copied = false
 
     private let app: AppModel
@@ -185,7 +185,7 @@ final class ImportModel {
         offline.saveCourses(in: catalog, force: true)
     }
 
-    /// The errors, one per line, for your agent to fix.
+    /// The errors, one per line, to paste back to whoever wrote the file.
     func copyErrors() -> String {
         copied = true
         return report?.errors.joined(separator: "\n") ?? ""

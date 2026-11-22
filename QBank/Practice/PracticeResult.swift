@@ -53,6 +53,10 @@ nonisolated struct PracticeResult: Equatable {
     let steps: [Step]
     let rows: [Row]
 
+    /// Whether any question in the result has a clinical judgment step, which is when the result
+    /// shows its breakdown by step.
+    var hasSteps: Bool { steps.contains { $0.label != Wording.notLabeled } }
+
     init(title: String, isReview: Bool = false, questions: [Question], attempts: [PracticeModel.Attempt], elapsed: TimeInterval?) {
         let verdicts = questions.indices.map { attempts.indices.contains($0) ? attempts[$0].feedback : nil }
         let scores = verdicts.map { $0?.score }
@@ -71,7 +75,7 @@ nonisolated struct PracticeResult: Equatable {
         var order: [String] = []
         var counts: [String: (right: Int, total: Int)] = [:]
         for (question, score) in zip(questions, scores) {
-            let label = question.clinicalJudgmentStep.flatMap { $0.isEmpty ? nil : $0 } ?? "Not labeled"
+            let label = question.clinicalJudgmentStep.flatMap { $0.isEmpty ? nil : $0 } ?? Wording.notLabeled
             if counts[label] == nil { order.append(label) }
             var count = counts[label] ?? (0, 0)
             count.total += 1
@@ -81,4 +85,9 @@ nonisolated struct PracticeResult: Equatable {
         steps = order.map { Step(label: $0, right: counts[$0]?.right ?? 0, total: counts[$0]?.total ?? 0) }
         rows = questions.indices.map { Row(number: $0 + 1, question: questions[$0], feedback: verdicts[$0], guessed: guesses[$0]) }
     }
+}
+
+nonisolated extension ExamResult {
+    /// Whether any question in the exam has a clinical judgment step.
+    var hasSteps: Bool { byStep.contains { $0.label != Wording.notLabeled } }
 }
