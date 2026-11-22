@@ -13,36 +13,49 @@ import Testing
 /// difference.
 ///
 /// An answer must match the recorded one in its status, its `Retry-After` header and its whole body:
-/// every key present on both sides, every list the same length, every value equal. Only two kinds
-/// of value are volatile, and nothing else is ignored:
+/// every key present on both sides, every list the same length, every value equal. Three kinds of
+/// value are not compared as text, and nothing else is ignored:
 ///
 /// - **A time.** A string in a time form the API sends (`2026-11-22T14:37:05.123Z`, or Postgres's
 ///   `2026-11-22 14:37:05.123-05`) matches a time within `tolerance` of the recorded one, and a
 ///   string that is not a time never matches one. The recording's times are those of the day it was
 ///   made, so the replay first hands the engine's clock the time each request was recorded at
-///   (`Hooks.clock`), and the engine's times then fall within a few milliseconds of the recorded
-///   ones.
+///   (`Hooks.clock`). What remains is the time the server took to stamp it, which the recorder
+///   keeps within `timeTolerance` (`test/record-contract/world.ts`), so a time from another step
+///   fails.
+/// - **An id.** A recording's ids are rewritten (named by the scenario, or numbered in the order the
+///   server first sent them), so no engine can make the recorded ones. An id is bound one to one,
+///   in the order the replay meets it. An id first met in a recorded answer stands for the id the
+///   engine answered in its place, from then on, and the replay sends the engine's id wherever the
+///   recording sent the recorded one: in a path, a query, a body and a write. An id first met in a
+///   recorded request is the client's own (an answer's `clientAttemptId`, or an id sent to be not
+///   found): it is sent as recorded and stands only for itself.
 /// - **A `confirm` token.** The server hashes it from the real ids a delete preview names, which a
-///   recording rewrites, so no engine can make the recorded text. A token matches when it is a
-///   string, and the replay then sends the engine's own token wherever the recording sent the one it
-///   stood for. A recorded token meets one token of the engine's, and the engine's token one
-///   recorded token, from the first answer that carries it to the end.
+///   recording rewrites, so no engine can make the recorded text. It is bound one to one the same
+///   way, from the first answer that carries it.
 ///
-/// Ids are not volatile: the engine's ids must be the recording's, which is why the engine takes an
-/// id generator (docs/on-phone-bank.md, rule 5). A direct write in the transcript (`Transcript.Write`)
-/// has no route, so the replay hands it to `Hooks.write`; a transcript with a write and no
-/// handler cannot be replayed.
+/// A direct write in the transcript (`Transcript.Write`) has no route, so the replay hands it to
+/// `Hooks.write`; a transcript with a write and no handler cannot be replayed. A request the engine
+/// does not serve by design (`Hooks.serves`) is not sent and its answer not compared, but the clock
+/// still meets its time, so the clock sees every step in the recorded order.
 enum TranscriptReplay {
-    /// How the replay reaches what a request cannot: the engine's clock and its store.
+    /// How the replay reaches what a request cannot: the engine's clock and its store, and which
+    /// requests the engine serves.
     struct Hooks: Sendable {
-        /// Called with the time a step was recorded at, before the step.
+        /// Called with the time a step was recorded at, before the step, served or not.
         var clock: @Sendable (Date) async throws -> Void = { _ in }
-        /// Called for each direct write, in place. Nil when the engine has no way to make one.
+        /// Called for each direct write, in place, with the engine's ids. Nil when the engine has no way to make one.
         var write: (@Sendable (Transcript.Write) async throws -> Void)?
+        /// Whether the engine serves a recorded request. One it does not is skipped.
+        var serves: @Sendable (Fixture.Request) -> Bool = { _ in true }
 
-        init(clock: @escaping @Sendable (Date) async throws -> Void = { _ in }, write: (@Sendable (Transcript.Write) async throws -> Void)? = nil) {
+        init(
+            clock: @escaping @Sendable (Date) async throws -> Void = { _ in }, write: (@Sendable (Transcript.Write) async throws -> Void)? = nil,
+            serves: @escaping @Sendable (Fixture.Request) -> Bool = { _ in true }
+        ) {
             self.clock = clock
             self.write = write
+            self.serves = serves
         }
     }
 
@@ -52,7 +65,7 @@ enum TranscriptReplay {
         let step: Int
         /// The fixture the step is, when it is one.
         let name: String?
-        /// Where in the answer: `status`, `headers.Retry-After` or `body.folders[2].name`.
+        /// Where in the answer: `status`, `headers.Retry-After` or `body.folders[2].name`, or `request` for an id the request cannot send.
         let path: String
         let expected: String
         let actual: String
@@ -72,9 +85,12 @@ enum TranscriptReplay {
         }
     }
 
-    /// How far apart two times may be and still match. The engine's clock is set to the recorded
-    /// time, so what remains is the few milliseconds the server took.
-    static let timeTolerance: TimeInterval = 5
+    /// How far apart two times may be and still match. The engine's clock is set to the time each
+    /// request was recorded at, so what remains is how long the server took to stamp a time while
+    /// answering. The recorder holds the server's clock while it answers and fails a recording in
+    /// which that is still longer than this (`TIME_TOLERANCE_MS` in `test/record-contract/world.ts`,
+    /// which must stay equal to it).
+    static let timeTolerance: TimeInterval = 0.025
 
     /// Replays the transcript against `transport`. Returns no difference when every answer matched,
     /// and otherwise the differences of the first step that did not match: after one the state is
@@ -82,20 +98,24 @@ enum TranscriptReplay {
     static func run(
         _ transcript: Transcript, over transport: some HTTPTransport, baseURL: URL = TestClient.baseURL, tolerance: TimeInterval = timeTolerance, hooks: Hooks = Hooks()
     ) async throws -> [Difference] {
-        var tokens = Tokens()
+        var bound = Bound()
         for (index, step) in transcript.steps.enumerated() {
             switch step {
             case .write(let write):
                 guard let apply = hooks.write else { throw Failure.cannotWrite(write) }
                 try await hooks.clock(write.at)
-                try await apply(write)
+                try await apply(bound.sent(write))
             case .request(let exchange):
                 try await hooks.clock(exchange.at)
-                let request = try urlRequest(for: exchange.request, baseURL: baseURL, tokens: tokens)
+                if let clash = bound.meet(exchange.request) {
+                    return [Difference(step: index, name: exchange.name, path: "request", expected: "\(clash.id), the client's own id", actual: "the engine's id for \(clash.standsFor)")]
+                }
+                guard hooks.serves(exchange.request) else { continue }
+                let request = try urlRequest(for: exchange.request, baseURL: baseURL, bound: bound)
                 let (data, response) = try await transport.send(request)
-                var comparison = Comparison(tokens: tokens, tolerance: tolerance)
+                var comparison = Comparison(bound: bound, tolerance: tolerance)
                 comparison.compare(exchange.response, with: data, response)
-                tokens = comparison.tokens
+                bound = comparison.bound
                 if !comparison.found.isEmpty {
                     return comparison.found.map { Difference(step: index, name: exchange.name, path: $0.path, expected: $0.expected, actual: $0.actual) }
                 }
@@ -104,23 +124,24 @@ enum TranscriptReplay {
         return []
     }
 
-    /// The request as the app sends it (a delete sends its `confirm` in the query, other routes in the body), with the engine's `confirm` tokens in place of the recorded ones.
-    static func urlRequest(for recorded: Fixture.Request, baseURL: URL, tokens: Tokens = Tokens()) throws -> URLRequest {
+    /// The request as the app sends it (a delete sends its `confirm` in the query, other routes in the body), with the engine's ids and `confirm` tokens in place of the recorded ones.
+    static func urlRequest(for recorded: Fixture.Request, baseURL: URL, bound: Bound = Bound()) throws -> URLRequest {
+        let sent = bound.sent(recorded)
         var components = try #require(URLComponents(url: baseURL, resolvingAgainstBaseURL: false))
-        components.path = recorded.path
-        if !recorded.query.isEmpty {
-            components.queryItems = recorded.query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: tokens.sent($0.value)) }
+        components.path = sent.path
+        if !sent.query.isEmpty {
+            components.queryItems = sent.query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         }
         var request = URLRequest(url: try #require(components.url))
-        request.httpMethod = recorded.method
+        request.httpMethod = sent.method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let authorization = recorded.authorization {
+        if let authorization = sent.authorization {
             request.setValue(authorization, forHTTPHeaderField: "Authorization")
         }
-        if let body = recorded.body, !body.isNull {
+        if let body = sent.body, !body.isNull {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.sortedKeys]
-            request.httpBody = try encoder.encode(tokens.sent(body))
+            request.httpBody = try encoder.encode(body)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
         return request
@@ -132,44 +153,102 @@ enum TranscriptReplay {
         return QBankJSON.parseDate(text)
     }
 
-    /// The `confirm` tokens met so far: the one the recording had, and the one the engine made for it.
-    struct Tokens {
-        private(set) var engines: [String: String] = [:]
-        private var used: Set<String> = []
+    /// An id as the API writes one: a lowercase UUID.
+    static var id: Regex<Substring> { /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/ }
 
-        /// Whether the engine's `actual` may stand for the recorded `expected`, remembering it if so.
+    /// Whether the whole string is an id.
+    static func isID(_ text: String) -> Bool {
+        text.wholeMatch(of: id) != nil
+    }
+
+    /// Recorded values bound one to one to the engine's, in the order the replay meets them.
+    struct Binding {
+        /// The engine's value for each recorded one.
+        private(set) var engines: [String: String] = [:]
+        /// The recorded value each of the engine's stands for.
+        private(set) var recordeds: [String: String] = [:]
+
+        /// Whether the engine's `actual` may stand for the recorded `expected`, binding the two if
+        /// neither is bound yet. Once bound, each stands only for the other.
         mutating func stand(_ actual: String, for expected: String) -> Bool {
             if let known = engines[expected] { return known == actual }
-            guard !used.contains(actual) else { return false }
+            guard recordeds[actual] == nil else { return false }
             engines[expected] = actual
-            used.insert(actual)
+            recordeds[actual] = expected
             return true
         }
 
-        /// A string a request sends, replaced by the engine's token when it is a recorded one.
+        /// A recorded value, replaced by the engine's when one stands for it.
         func sent(_ text: String) -> String {
             engines[text] ?? text
         }
+    }
 
-        /// A request body with each recorded token the engine has made another for, replaced by it.
+    /// The ids and `confirm` tokens met so far.
+    struct Bound {
+        var ids = Binding()
+        var tokens = Binding()
+
+        /// Binds each id the recorded request names that no earlier step met: the client's own, which
+        /// stands for itself. Returns the first such id the engine already answered for another
+        /// recorded id, which the request can then not send.
+        mutating func meet(_ request: Fixture.Request) -> (id: String, standsFor: String)? {
+            var named = request.path.matches(of: TranscriptReplay.id).map { String($0.output) }
+            for (key, value) in request.query.sorted(by: { $0.key < $1.key }) { named += Self.named(in: .string(key)) + Self.named(in: .string(value)) }
+            named += request.body.map(Self.named) ?? []
+            for id in named where ids.engines[id] == nil {
+                if !ids.stand(id, for: id) { return (id, ids.recordeds[id] ?? "?") }
+            }
+            return nil
+        }
+
+        /// The recorded request with the engine's ids and tokens in place of the recorded ones.
+        func sent(_ request: Fixture.Request) -> Fixture.Request {
+            Fixture.Request(
+                method: request.method, path: translated(request.path),
+                query: Dictionary(uniqueKeysWithValues: request.query.map { (translated($0.key), tokens.sent(translated($0.value))) }),
+                authorization: request.authorization, body: request.body.map(sent))
+        }
+
+        /// The recorded write, on the engine's row.
+        func sent(_ write: Transcript.Write) -> Transcript.Write {
+            Transcript.Write(at: write.at, table: write.table, id: translated(write.id), column: write.column, value: write.value)
+        }
+
+        /// A request body with each recorded id and token replaced by the engine's.
         func sent(_ body: JSONValue) -> JSONValue {
             switch body {
-            case .string(let text): .string(sent(text))
+            case .string(let text): .string(tokens.sent(translated(text)))
             case .array(let items): .array(items.map(sent))
-            case .object(let fields): .object(fields.mapValues(sent))
+            case .object(let fields): .object(Dictionary(uniqueKeysWithValues: fields.map { (translated($0.key), sent($0.value)) }))
             default: body
+            }
+        }
+
+        /// Text with every recorded id in it replaced by the engine's.
+        private func translated(_ text: String) -> String {
+            text.replacing(TranscriptReplay.id) { ids.sent(String($0.output)) }
+        }
+
+        /// Every id in a value, keys included, in order.
+        private static func named(in value: JSONValue) -> [String] {
+            switch value {
+            case .string(let text): text.matches(of: TranscriptReplay.id).map { String($0.output) }
+            case .array(let items): items.flatMap(named)
+            case .object(let fields): fields.sorted { $0.key < $1.key }.flatMap { named(in: .string($0.key)) + named(in: $0.value) }
+            default: []
             }
         }
     }
 
     /// The comparison of one answer with its recording.
     struct Comparison {
-        var tokens: Tokens
+        var bound: Bound
         let tolerance: TimeInterval
         private(set) var found: [(path: String, expected: String, actual: String)] = []
 
-        init(tokens: Tokens, tolerance: TimeInterval) {
-            self.tokens = tokens
+        init(bound: Bound, tolerance: TimeInterval) {
+            self.bound = bound
             self.tolerance = tolerance
         }
 
@@ -214,7 +293,9 @@ enum TranscriptReplay {
                 }
             case (.string(let recorded), .string(let answered)):
                 if key == "confirm" {
-                    if !tokens.stand(answered, for: recorded) { note(path, "the token that stood for \(recorded)", answered) }
+                    if !bound.tokens.stand(answered, for: recorded) { note(path, Self.owed(recorded, in: bound.tokens, "token"), answered) }
+                } else if TranscriptReplay.isID(recorded) {
+                    if !TranscriptReplay.isID(answered) || !bound.ids.stand(answered, for: recorded) { note(path, Self.owed(recorded, in: bound.ids, "id"), answered) }
                 } else if recorded == answered {
                     return
                 } else if let one = TranscriptReplay.time(recorded), let other = TranscriptReplay.time(answered) {
@@ -231,6 +312,12 @@ enum TranscriptReplay {
             if expected != actual { found.append((path, expected, actual)) }
         }
 
+        /// What the engine had to answer for a recorded id or token, for a message.
+        private static func owed(_ recorded: String, in binding: Binding, _ what: String) -> String {
+            if let known = binding.engines[recorded] { return known == recorded ? recorded : "\(known), the \(what) that stood for \(recorded)" }
+            return "a new \(what) of the engine's for \(recorded)"
+        }
+
         /// A value as short JSON text, for a message.
         static func show(_ value: JSONValue) -> String {
             let encoder = JSONEncoder()
@@ -243,7 +330,8 @@ enum TranscriptReplay {
 
 /// A recording as the server: answers each request with the next recorded answer, after checking
 /// that the request is the next recorded one. Replaying a transcript against it is the proof that
-/// the replay sends what the recording sent and accepts what the recording answered.
+/// the replay sends what the recording sent and accepts what the recording answered. Given
+/// `serving`, it holds only the requests that says it serves, as an engine that serves only those.
 final class TranscriptTransport: HTTPTransport, @unchecked Sendable {
     struct Mismatch: Error, CustomStringConvertible {
         let step: Int
@@ -255,8 +343,8 @@ final class TranscriptTransport: HTTPTransport, @unchecked Sendable {
     private let exchanges: [Transcript.Exchange]
     private let next = Mutex(0)
 
-    init(_ transcript: Transcript) {
-        exchanges = transcript.exchanges
+    init(_ transcript: Transcript, serving: (Fixture.Request) -> Bool = { _ in true }) {
+        exchanges = transcript.exchanges.filter { serving($0.request) }
     }
 
     /// How many requests it has answered.
