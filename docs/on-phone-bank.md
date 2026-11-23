@@ -210,6 +210,8 @@ The server, on an upload, also requires (S-09):
 8. No id in the document is already on the server, in any account.
 9. Each set passes the import check, the same one `POST /api/imports` runs. The set is rebuilt as a question file from its rows: `title`, `desc` from `description`, `kind`, a `terms` object of `key: [term, meaning]`, and its questions in `position` order, each the `body` object plus the hoisted fields under their file names (`id` from `publicId`, `type`, `topic`, `cj`, `need` from `clientNeed`, `diff` from `difficulty`, `wk` from `weekLabel`, `stem`, `ask`, `rationale`, `takeaway`, `terms` from `termKeys`, `src` from `source`), leaving out a null or empty one (`packages/questions/src/import.ts:30-44`, `apps/api/src/content/import-set.ts:208-235`). A set with an error refuses the whole archive. The server stores the question and term fields the check returns and takes everything else from the rows (ids, lineage ids, positions, times, order, folder, version marks), except `contentHash` and `stats`, which it works out itself (`apps/api/src/content/hash.ts:9-26`, `import-set.ts:348-365`). For a set made by the same rules the result is the rows that were sent.
 
+The phone's reader also refuses a document whose `complete` is false, since a move takes only a complete one, and refuses to write into a bank that already holds a row: an archive is read into a fresh bank, never merged into one.
+
 The phone does not run the import check on an archive from the server. A person whose Cloud ended must get their bank back even if a rule was tightened after a set was imported.
 
 ### Versions
