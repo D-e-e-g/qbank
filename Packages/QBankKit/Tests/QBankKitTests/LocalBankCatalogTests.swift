@@ -115,7 +115,7 @@ import Testing
 
     @Test func aPathNoFamilyServesIsA404InTheContractsShape() async throws {
         let harness = try LocalBankHarness()
-        let answer = try await harness.send("POST", "/api/attempts", .object([:]))
+        let answer = try await harness.send("POST", "/api/exams/\(UUID().uuidString.lowercased())/finish", .object([:]))
         #expect(answer.status == 404 && answer.body["error"]?.stringValue == "not_found" && answer.body["message"]?.stringValue != nil)
         let wrongMethod = try await harness.send("DELETE", "/api/semesters")
         #expect(wrongMethod.status == 404)

@@ -1,55 +1,39 @@
 import Foundation
 
-/// The rule family for the sets a bank holds: reading the current version of one, bringing back the
-/// version a replacement set aside, and a course's terms. Importing a set is `ImportRules`.
+/// The rule family for the sets a bank holds: reading the current version of one, starting it over,
+/// bringing back the version a replacement set aside, and a course's terms. Importing a set is `ImportRules`.
 enum SetRules {
     static func register(in router: inout BankRouter) {
         router.get("/api/practice-sets/:id", readSet)
         router.post("/api/practice-sets/:id/restore", restore)
+        router.post("/api/practice-sets/:id/start-over", startOver)
         router.get("/api/courses/:id/terms", courseTerms)
     }
 
     // MARK: Reading a set
 
-    /// The current version of a set, with each question's terms from its own set. Where the person is in the set (its run and sitting) belongs to the answers rule family, so until it exists a set reads as new.
+    /// The current version of a set, with each question's terms from its own set, and where the
+    /// person is in it: its run and the sitting that would be continued.
     private static func readSet(_ call: BankCall) throws -> BankAnswer {
         let tx = call.tx
         let set = try BankLookup.set(tx, try BankBody.pathID(call))
         if !set.isCurrent { throw BankRefusal.refused(404, "That set is not the current version.") }
-        let terms = try tx.rows("SELECT key, term, meaning FROM term WHERE set_id = ?", [.text(set.id)])
-        var byKey: [String: StoreRow] = [:]
-        for term in terms { byKey[term.string("key")] = term }
-        let questions = try tx.rows("SELECT * FROM question WHERE set_id = ? ORDER BY position, id", [.text(set.id)]).map { row -> JSONValue in
-            let body = try bodyNode(row)
-            let termKeys = (try? JSParser.parse(row.string("term_keys")))?.list ?? []
-            return .object([
-                "id": .string(row.string("id")), "publicId": .string(row.string("public_id")), "position": .int(row.integer("position")),
-                "type": .string(try questionType(row)), "topic": .string(row.string("topic")), "cj": .optional(row.text("cj")),
-                "stem": .string(row.string("stem")), "ask": .string(row.string("ask")), "rationale": .string(row.string("rationale")),
-                "takeaway": .string(row.string("takeaway")), "body": body.json, "table": ImportMedia.readTable(body.record?["table"]),
-                "images": .array(ImportMedia.readImages(body.record?["images"])),
-                "terms": .array(
-                    termKeys.compactMap { $0.text.flatMap { byKey[$0] } }.map {
-                        .object(["key": .string($0.string("key")), "term": .string($0.string("term")), "meaning": .string($0.string("meaning"))])
-                    }),
-            ])
-        }
+        let rows = try tx.rows("SELECT * FROM question WHERE set_id = ? ORDER BY position, id", [.text(set.id)])
+        let questions = try StudyViews.questions(tx, rows: rows)
+        let study = set.kind == "practice" ? try Sittings.read(tx, lineageID: set.lineageId, questions: rows) : (run: "new", sitting: JSONValue.null)
         return .ok(
             .object([
                 "id": .string(set.id), "courseId": .string(set.courseId), "title": .string(set.title), "weekLabel": .string(set.weekLabel),
-                "folderId": .optional(set.folderId), "kind": .string(set.kind), "questions": .array(questions), "run": .string("new"), "sitting": .null,
+                "folderId": .optional(set.folderId), "kind": .string(set.kind), "questions": .array(questions), "run": .string(study.run), "sitting": study.sitting,
             ]))
     }
 
-    private static func bodyNode(_ row: StoreRow) throws -> JSNode {
-        guard let body = try? JSParser.parse(row.string("body")) else { throw BankRefusal.failed }
-        return body
-    }
-
-    private static func questionType(_ row: StoreRow) throws -> String {
-        let type = row.string("type")
-        guard ImportChecker.typeLabels.contains(where: { $0.type == type }) else { throw BankRefusal.refused(404, "This set could not be read.") }
-        return type
+    /// Start over: the sitting that would be continued ends, every answer stays, and the set opens at question 1.
+    private static func startOver(_ call: BankCall) throws -> BankAnswer {
+        let set = try BankLookup.set(call.tx, try BankBody.pathID(call))
+        if !set.isCurrent { throw BankRefusal.refused(404, "That set is not the current version.") }
+        if set.kind != "practice" { throw BankRefusal.refused(404, "That set is not in the app.") }
+        return .ok(.object(["ended": .bool(try Sittings.end(call, setLineageID: set.lineageId))]))
     }
 
     // MARK: Restore
@@ -82,7 +66,8 @@ enum SetRules {
         let questions = try FolderContent.counts(tx, courseID: updated.courseId, setIds: ids)[updated.id] ?? 0
         let questionIds = try FolderContent.questionIDs(tx, courseID: updated.courseId, setIds: ids)[updated.id] ?? []
         let study = try FolderContent.progress(tx, courseID: updated.courseId, setIds: ids)[updated.id]
-        return FolderContent.summary(updated, lineage: siblings, questions: questions, ids: questionIds, study: study)
+        let run = updated.kind == "practice" ? try Sittings.summaries(tx, lineageIDs: [updated.lineageId])[updated.lineageId] : nil
+        return FolderContent.summary(updated, lineage: siblings, questions: questions, ids: questionIds, study: study, run: run)
     }
 
     // MARK: Terms

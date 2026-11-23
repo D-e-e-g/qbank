@@ -11,14 +11,19 @@ struct BankCall {
     let tx: StoreTransaction
     let now: Date
     private let ids: @Sendable () -> String
+    private let random: @Sendable (Int) -> Int
 
-    init(params: [String: String], query: [String: String], body: JSONValue?, tx: StoreTransaction, now: Date, ids: @escaping @Sendable () -> String) {
+    init(
+        params: [String: String], query: [String: String], body: JSONValue?, tx: StoreTransaction, now: Date, ids: @escaping @Sendable () -> String,
+        random: @escaping @Sendable (Int) -> Int = { Int.random(in: 0..<$0) }
+    ) {
         self.params = params
         self.query = query
         self.body = body
         self.tx = tx
         self.now = now
         self.ids = ids
+        self.random = random
     }
 
     /// The time as the API writes it.
@@ -26,6 +31,13 @@ struct BankCall {
 
     /// A new id: a lowercase UUID from the generator the bank was given.
     func newID() -> String { ids() }
+
+    /// The items in a new random order, by the server's own shuffle (from the last place to the second, each swapped with one at or before it).
+    func shuffled<Item>(_ items: [Item]) -> [Item] {
+        var list = items
+        for index in stride(from: list.count - 1, to: 0, by: -1) { list.swapAt(index, random(index + 1)) }
+        return list
+    }
 }
 
 /// One route of the bank: a method and a path pattern whose `:name` parts are parameters.

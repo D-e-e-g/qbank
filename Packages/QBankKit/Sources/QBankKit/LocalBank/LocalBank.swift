@@ -18,22 +18,32 @@ public final class LocalBank: HTTPTransport {
     public typealias Clock = @Sendable () -> Date
     /// Where the bank gets an id: a lowercase UUID, `8-4-4-4-12`.
     public typealias IDGenerator = @Sendable () -> String
+    /// Where the bank gets a random whole number below its argument, for the order of questions a runner is given.
+    public typealias Randomness = @Sendable (Int) -> Int
 
     private let store: LocalStore
     private let clock: Clock
     private let ids: IDGenerator
+    private let random: Randomness
     private let router: BankRouter
 
-    public init(store: LocalStore, clock: @escaping Clock = { Date() }, ids: @escaping IDGenerator = LocalBank.randomID) {
+    public init(
+        store: LocalStore, clock: @escaping Clock = { Date() }, ids: @escaping IDGenerator = LocalBank.randomID,
+        random: @escaping Randomness = { Int.random(in: 0..<$0) }
+    ) {
         self.store = store
         self.clock = clock
         self.ids = ids
+        self.random = random
         var router = BankRouter()
         CatalogRules.register(in: &router)
         PageRules.register(in: &router)
         FolderRules.register(in: &router)
         ImportRules.register(in: &router)
         SetRules.register(in: &router)
+        AnswerRules.register(in: &router)
+        ReviewRules.register(in: &router)
+        PlaceRules.register(in: &router)
         self.router = router
     }
 
@@ -68,9 +78,10 @@ public final class LocalBank: HTTPTransport {
         let json = body.flatMap { $0.isEmpty ? nil : try? JSONDecoder().decode(JSONValue.self, from: $0) }
         let now = clock()
         let ids = ids
+        let random = random
         let handler = route.handler
         let run: (StoreTransaction) throws -> BankAnswer = { tx in
-            try handler(BankCall(params: params, query: query, body: json, tx: tx, now: now, ids: ids))
+            try handler(BankCall(params: params, query: query, body: json, tx: tx, now: now, ids: ids, random: random))
         }
         // A write that is refused after it began leaves nothing behind: the transaction undoes it.
         return route.writes ? try store.transaction(run) : try store.read(run)

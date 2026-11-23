@@ -48,14 +48,18 @@ enum TranscriptReplay {
         var write: (@Sendable (Transcript.Write) async throws -> Void)?
         /// Whether the engine serves a recorded request. One it does not is skipped.
         var serves: @Sendable (Fixture.Request) -> Bool = { _ in true }
+        /// Whether the answer to a request lists its `questions` in an order the server draws at random, so a list is
+        /// compared as the same questions in any order, each with its own `position` left out.
+        var shuffles: @Sendable (Fixture.Request) -> Bool = { _ in false }
 
         init(
             clock: @escaping @Sendable (Date) async throws -> Void = { _ in }, write: (@Sendable (Transcript.Write) async throws -> Void)? = nil,
-            serves: @escaping @Sendable (Fixture.Request) -> Bool = { _ in true }
+            serves: @escaping @Sendable (Fixture.Request) -> Bool = { _ in true }, shuffles: @escaping @Sendable (Fixture.Request) -> Bool = { _ in false }
         ) {
             self.clock = clock
             self.write = write
             self.serves = serves
+            self.shuffles = shuffles
         }
     }
 
@@ -113,7 +117,7 @@ enum TranscriptReplay {
                 guard hooks.serves(exchange.request) else { continue }
                 let request = try urlRequest(for: exchange.request, baseURL: baseURL, bound: bound)
                 let (data, response) = try await transport.send(request)
-                var comparison = Comparison(bound: bound, tolerance: tolerance)
+                var comparison = Comparison(bound: bound, tolerance: tolerance, shuffled: hooks.shuffles(exchange.request))
                 comparison.compare(exchange.response, with: data, response)
                 bound = comparison.bound
                 if !comparison.found.isEmpty {
@@ -245,11 +249,26 @@ enum TranscriptReplay {
     struct Comparison {
         var bound: Bound
         let tolerance: TimeInterval
+        let shuffled: Bool
         private(set) var found: [(path: String, expected: String, actual: String)] = []
 
-        init(bound: Bound, tolerance: TimeInterval) {
+        init(bound: Bound, tolerance: TimeInterval, shuffled: Bool = false) {
             self.bound = bound
             self.tolerance = tolerance
+            self.shuffled = shuffled
+        }
+
+        /// A list of questions the server drew in a random order, read in the order of the questions' own names.
+        private static func inNameOrder(_ body: JSONValue) -> JSONValue {
+            guard case .object(var fields) = body, case .array(let questions)? = fields["questions"] else { return body }
+            let ordered = questions.sorted { ($0["publicId"]?.stringValue ?? "") < ($1["publicId"]?.stringValue ?? "") }
+            fields["questions"] = .array(
+                ordered.map { question in
+                    guard case .object(var one) = question else { return question }
+                    one["position"] = .null
+                    return .object(one)
+                })
+            return .object(fields)
         }
 
         mutating func compare(_ expected: Fixture.Response, with data: Data, _ response: HTTPURLResponse) {
@@ -269,7 +288,11 @@ enum TranscriptReplay {
                 }
                 body = decoded
             }
-            compare(expected.body, body, at: "body")
+            if shuffled {
+                compare(Self.inNameOrder(expected.body), Self.inNameOrder(body), at: "body")
+            } else {
+                compare(expected.body, body, at: "body")
+            }
         }
 
         mutating func compare(_ expected: JSONValue, _ actual: JSONValue, at path: String, key: String? = nil) {
