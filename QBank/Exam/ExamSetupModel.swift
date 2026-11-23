@@ -302,7 +302,7 @@ final class ExamSetupModel {
     /// The Twin option and her twin jobs, for the one account that may make questions. Every other
     /// account hears no from the status and is never sent to the twin-job routes.
     private func loadTwins() async {
-        guard isStudent, let status = try? await app.client.questionMakerStatus() else { return }
+        guard isStudent, app.offersQuestionMaker, let status = try? await app.client.questionMakerStatus() else { return }
         maker = status
         guard Twins.listsJobs(status) else {
             twinJobs = nil

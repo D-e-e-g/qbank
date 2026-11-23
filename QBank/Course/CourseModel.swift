@@ -73,7 +73,7 @@ final class CourseModel {
 
     /// Reads whether she may make questions. Failing leaves Make questions off the +.
     func loadMaker() async {
-        guard isStudent, app.connection.isOnline else { return }
+        guard isStudent, app.offersQuestionMaker, app.connection.isOnline else { return }
         maker = try? await app.client.questionMakerStatus()
     }
 

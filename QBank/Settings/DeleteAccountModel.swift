@@ -24,9 +24,10 @@ final class DeleteAccountModel {
         self.now = now
     }
 
-    /// Settings offers it to a user account; the admin's cannot be deleted.
-    static func isOffered(to account: Account?) -> Bool {
-        account?.role == .student
+    /// Settings offers it to an invited user account, which is deleted with its password; the
+    /// admin's cannot be deleted. A store account is deleted with a fresh Sign in with Apple instead.
+    static func isOffered(to account: Account?, kind: AccountKind = .invited) -> Bool {
+        kind.deletesWithPassword && account?.role == .student
     }
 
     var canDelete: Bool {

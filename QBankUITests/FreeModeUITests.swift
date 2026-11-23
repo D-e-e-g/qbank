@@ -1,0 +1,94 @@
+import XCTest
+
+/// A free account on this iPhone: its bank is on the phone, so with no network at all it can make a
+/// topic, import a question file, practice and review, and Settings offers only what such an account
+/// can do. Invented topics and question files only. A unit test cannot do this job: it is the real
+/// screens running over the bank on the phone, with the network off, that shows nothing waits for a
+/// connection and nothing a free account cannot use is on screen.
+final class FreeModeUITests: XCTestCase {
+    private let topic = "Invented Sleep Notes"
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    @MainActor
+    func testANewBankPracticesAndReviewsWithNoNetwork() throws {
+        try skipOnIPad()
+        let app = launch("free-new-bank", online: false)
+
+        // A new bank is empty: Home leads with topics, and the + makes one with no network.
+        XCTAssertTrue(app.buttons["home.add"].appears(timeout: 10))
+        attach(app, "free new bank, home")
+        app.buttons["home.add"].tap()
+        chooseFromMenu(menuItem(app, "home.add.topic", "New study topic"))
+        let name = app.textFields["newTopic.name"]
+        XCTAssertTrue(name.appears(timeout: 5))
+        name.typeText(topic)
+        tapWhenStill(app.buttons["newTopic.save"])
+        XCTAssertTrue(app.navigationBars[topic].appears(timeout: 10))
+        XCTAssertTrue(app.staticTexts["This topic has no question sets yet."].exists)
+
+        // Import checks and files a question file on the phone.
+        openTab(app, "Add")
+        XCTAssertTrue(app.navigationBars["Add questions"].appears(timeout: 5))
+        app.buttons["add.import"].tap()
+        XCTAssertTrue(app.navigationBars["Import"].appears(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["import.offline"].exists, "import does not wait for a connection")
+        waitForLabel(app.buttons["import.course"], containing: topic)
+        paste(AddUITests.file, in: app)
+        tapVisible(app.buttons["import.check"], in: app)
+        let ready = app.descendants(matching: .any)["import.ready"]
+        XCTAssertTrue(ready.appears(timeout: 5))
+        XCTAssertEqual(ready.label, "Ready: 3 questions, 1 term")
+        tapVisible(app.buttons["import.commit"], in: app)
+        XCTAssertTrue(app.staticTexts["import.done.title"].appears(timeout: 5))
+        XCTAssertEqual(app.staticTexts["import.done.title"].label, "Imported")
+        app.buttons["import.done.open"].tap()
+        XCTAssertTrue(app.navigationBars["Unsorted"].appears(timeout: 5))
+
+        // Practice: an answer flagged as a guess goes to Review whether or not it is right.
+        let set = app.buttons["course.set.Invented Sleep and Rest"]
+        XCTAssertTrue(set.appears(timeout: 5))
+        tapVisible(set, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("1 of 3"))
+        tapVisible(app.switches["practice.guess"], in: app)
+        tapVisible(app.buttons["practice.option.0"], in: app)
+        app.buttons["practice.check"].tap()
+        let feedback = app.descendants(matching: .any)["practice.feedback"]
+        XCTAssertTrue(feedback.appears(timeout: 5))
+        XCTAssertTrue(feedback.label.contains("Flagged as a guess"), feedback.label)
+        attach(app, "free new bank, practice")
+        app.buttons["practice.close"].tap()
+        XCTAssertTrue(app.navigationBars["Unsorted"].appears(timeout: 5))
+        waitForLabel(set, containing: "1 of 3 answered")
+
+        // Review lists it, and practicing the list works with no network too.
+        goBack(app, from: "Unsorted")
+        XCTAssertTrue(app.navigationBars[topic].appears(timeout: 5))
+        let tile = app.buttons["course.tile.review"]
+        XCTAssertTrue(tile.appears(timeout: 5))
+        tile.tap()
+        XCTAssertTrue(app.navigationBars["Review"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["Guessed 1"].appears(timeout: 5))
+        let listed = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'review.question.'"))
+        XCTAssertEqual(listed.count, 1)
+        attach(app, "free new bank, review")
+        tapVisible(app.buttons["Practice these 1 (shuffled)"], in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("1 of 1"))
+        app.buttons["practice.close"].tap()
+        XCTAssertTrue(app.navigationBars["Review"].appears(timeout: 5))
+
+        // Settings offers what this account can do: no password, agent or saved courses.
+        openTab(app, "Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].appears(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings.account"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.signOut"].exists)
+        XCTAssertFalse(app.buttons["settings.changePassword"].exists)
+        XCTAssertFalse(app.buttons["settings.connectAgent"].exists)
+        XCTAssertFalse(app.buttons["settings.savedForOffline"].exists)
+        attach(app, "free new bank, settings")
+    }
+}

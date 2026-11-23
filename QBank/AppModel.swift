@@ -1,8 +1,13 @@
 import Observation
 import QBankKit
 
-/// The app's top-level state: who is signed in, the client every screen talks through, and what
-/// the phone keeps for her account to study without signal.
+/// The app's top-level state: who is signed in, what kind of account it is, the client every screen
+/// talks through, and what the phone keeps for her account to study without signal.
+///
+/// An invited or store account's bank is on the server, and the client talks to it. A free account's
+/// bank is on this phone: its client is made by `client(for:)` so that the bank's requests are
+/// answered on the phone, and the screens see a connection that is always up. Which kind the
+/// account is, and so which rows Settings offers, is `kind`, not the account's role.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -30,6 +35,8 @@ final class AppModel {
     private(set) var signIns = 0
 
     let client: QBankClient
+    /// What kind of account is signed in, which decides where its bank is and what it can do.
+    let kind: AccountKind
     /// Light or dark, chosen in Settings and kept on this phone.
     let look: LookStore
     /// The color scheme she picked in Settings while it is on its way to the server, shown at once.
@@ -44,7 +51,7 @@ final class AppModel {
     let highlighter: HighlighterStore
     /// Whether she allowed her material to go to Anthropic, kept on this phone.
     let aiConsent: AIConsentStore
-    /// Whether the phone has a network path.
+    /// Whether the phone has a network path. Always up when the bank is on this phone.
     let connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
     let deletions = Deletions()
@@ -58,6 +65,7 @@ final class AppModel {
 
     init(
         client: QBankClient,
+        kind: AccountKind = .invited,
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
@@ -67,18 +75,20 @@ final class AppModel {
         networkWatcher: NetworkWatcher? = nil
     ) {
         self.client = client
+        self.kind = kind
         self.look = look
         self.lock = lock
         self.highlighter = highlighter
         self.aiConsent = aiConsent
         self.storage = storage
-        self.connection = connection
-        self.networkWatcher = networkWatcher
+        // A bank on this phone is always reachable, so no network path is followed for it.
+        self.connection = kind.bankIsOnPhone ? Connection.onThisPhone() : connection
+        self.networkWatcher = kind.bankIsOnPhone ? nil : networkWatcher
         let stored = try? client.storedSession()
         route = stored?.account.map(Self.route(for:)) ?? .signedOut
         openOffline()
         frozen.isOn = account?.role == .admin
-        connection.onChange = { [weak self] isOnline in
+        self.connection.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
         }
     }
@@ -122,7 +132,9 @@ final class AppModel {
     /// Checks the stored session with the server. The phone stays signed in when the server
     /// cannot be reached; only a session the server has ended signs her out.
     func refreshSession() async {
-        guard account != nil else { return }
+        // A free account's session is checked with the server when it signs in; until then the
+        // phone's bank opens as it is.
+        guard account != nil, !kind.bankIsOnPhone else { return }
         do {
             let session = try await client.session()
             route = Self.route(for: session.user)
@@ -245,7 +257,7 @@ final class AppModel {
     /// Opens the phone's store for the account signed in, keeping it while the account stays. An
     /// ended session closes it but leaves its files, so waiting answers go once she signs in again.
     private func openOffline() {
-        guard let account else {
+        guard kind.savesForOffline, let account else {
             offline?.stop()
             offline = nil
             return

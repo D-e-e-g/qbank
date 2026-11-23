@@ -48,7 +48,7 @@ final class AddModel {
     }
 
     func load() async {
-        guard app.connection.isOnline else { return }
+        guard app.connection.isOnline, app.offersQuestionMaker else { return }
         do {
             status = try await app.client.questionMakerStatus()
         } catch {
