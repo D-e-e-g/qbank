@@ -1,8 +1,7 @@
 import Foundation
 
-/// The person's progress as the saved answers give it, and the standing in a course worked out from
-/// it. A delete of a past exam rebuilds the progress of the questions it was answered on, and its
-/// warning says how the standing changes before anything is written.
+/// The person's progress as the saved answers give it. A delete of a past exam, and its Undo, rebuild
+/// the progress of the questions it was answered on; the warning's standing is `StandingRules`'s.
 enum ProgressRebuild {
     /// One question lineage's progress, as a rebuild writes it.
     struct Line {
@@ -28,6 +27,11 @@ enum ProgressRebuild {
             lastMaxPoints = row.integer("last_max_points")
             inReview = row.flag("in_review")
             lastAttemptId = row.string("last_attempt_id")
+        }
+
+        /// The same line as the standing and the pools read it.
+        var progressLine: ProgressLine {
+            ProgressLine(lastStatus: lastStatus, lastAnsweredAt: lastAnsweredAt, lastPoints: lastPoints, lastMaxPoints: lastMaxPoints, inReview: inReview)
         }
 
         init(first answer: StoreRow, lineageId: String, inReview: Bool) {
@@ -130,61 +134,5 @@ enum ProgressRebuild {
                     .text(line.lastAnsweredAt), .integer(Int64(line.lastPoints)), .integer(Int64(line.lastMaxPoints)), .bool(line.inReview), .text(line.lastAttemptId),
                 ])
         }
-    }
-
-    // MARK: Standing
-
-    /// The standing in one course: the course page's counts over its practice questions, and Wrong
-    /// questions over every folder's exam pool.
-    struct Standing {
-        var answeredCount = 0
-        var fullyRightCount = 0
-        var reviewCount = 0
-        var points = 0
-        var maxPoints = 0
-        var wrongCount = 0
-
-        var fields: [(key: String, value: Int)] {
-            [
-                ("answeredCount", answeredCount), ("fullyRightCount", fullyRightCount), ("reviewCount", reviewCount), ("points", points), ("maxPoints", maxPoints),
-                ("wrongCount", wrongCount),
-            ]
-        }
-    }
-
-    /// The course's current questions of the sets that were not deleted, and the progress on them.
-    static func standingInputs(_ tx: StoreTransaction, courseID: String) throws -> (questions: [PoolQuestion], progress: [String: Line]) {
-        let questions = try ExamPools.courseQuestions(tx, courseID: courseID)
-        var progress: [String: Line] = [:]
-        for chunk in Chunks.of(Array(Set(questions.map(\.lineageId))).sorted()) {
-            for row in try tx.rows("SELECT * FROM question_progress WHERE question_lineage_id IN \(Chunks.marks(chunk))", chunk.map(StoreValue.text)) {
-                progress[row.string("question_lineage_id")] = Line(row)
-            }
-        }
-        return (questions, progress)
-    }
-
-    static func standing(of questions: [PoolQuestion], _ progress: [String: Line]) -> Standing {
-        var standing = Standing()
-        for question in questions where question.kind == "practice" {
-            guard let line = progress[question.lineageId] else { continue }
-            standing.answeredCount += 1
-            standing.points += line.lastPoints
-            standing.maxPoints += line.lastMaxPoints
-            if line.lastStatus == "correct" { standing.fullyRightCount += 1 }
-            if line.inReview { standing.reviewCount += 1 }
-        }
-        let answers = progress.mapValues { LastAnswer(status: $0.lastStatus, answeredAt: $0.lastAnsweredAt) }
-        for pool in ExamPools.folderPools(questions, answers: answers).values { standing.wrongCount += pool.wrong.count }
-        return standing
-    }
-
-    /// Each part of the standing now and once the delete is done, as the previews send it.
-    static func change(from before: Standing, to after: Standing) -> JSONValue {
-        var fields: [String: JSONValue] = [:]
-        for (was, now) in zip(before.fields, after.fields) {
-            fields[was.key] = .object(["before": .int(was.value), "after": .int(now.value)])
-        }
-        return .object(fields)
     }
 }

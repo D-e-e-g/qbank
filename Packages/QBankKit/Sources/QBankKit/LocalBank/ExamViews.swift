@@ -11,9 +11,8 @@ enum ExamViews {
         let pools: [String: FolderPool]
 
         static func load(_ tx: StoreTransaction, courseID: String) throws -> CoursePools {
-            let questions = try ExamPools.courseQuestions(tx, courseID: courseID)
-            let answers = try ExamPools.lastAnswers(tx, lineageIDs: questions.map(\.lineageId))
-            return CoursePools(folders: try FolderOrder.rows(tx, courseID: courseID), pools: ExamPools.folderPools(questions, answers: answers))
+            let inputs = try StandingRules.inputs(tx, courseID: courseID)
+            return CoursePools(folders: try FolderOrder.rows(tx, courseID: courseID), pools: ExamPools.folderPools(inputs.questions, progress: inputs.progress))
         }
     }
 

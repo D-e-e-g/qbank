@@ -155,6 +155,25 @@ import Testing
         #expect(try world.count("study_session", "id = '\(exam)'") == 1 && (try world.count("attempt", "study_session_id = '\(exam)'")) == 3)
     }
 
+    @Test func aDeletedExamIsListedInRecentlyDeletedUntilItIsBroughtBackOrThirtyDaysPass() async throws {
+        let (world, exam, _) = try await world()
+        let listing = { try await world.harness.send("GET", "/api/courses/\(world.course)/deleted").body["exams"]?.arrayValue ?? [] }
+        #expect(try await listing().isEmpty)
+        let confirm = try #require(try await world.harness.send("GET", "/api/exams/\(exam)/delete-preview").body["confirm"]?.stringValue)
+        _ = try await delete(world, exam, confirm: confirm)
+        let listed = try await listing()
+        #expect(listed.count == 1 && listed[0]["id"] == .string(exam) && listed[0]["status"] == .string("ended"))
+        #expect(listed[0]["deletedAt"] == .string(world.time(40)) && listed[0]["undoUntil"] == .string(world.time(40 + 30 * 24 * 60 * 60)))
+        world.at(50)
+        _ = try await world.harness.send("POST", "/api/exams/\(exam)/undo-delete")
+        #expect(try await listing().isEmpty)
+        world.at(60)
+        _ = try await delete(world, exam, confirm: confirm)
+        #expect(try await listing().count == 1)
+        world.at(60 + 31.0 * 24 * 60 * 60)
+        #expect(try await listing().isEmpty)
+    }
+
     // MARK: An exam still going
 
     @Test func anExamStillGoingIsRefusedUntilItIsFinishedOrItsTimeIsUp() async throws {

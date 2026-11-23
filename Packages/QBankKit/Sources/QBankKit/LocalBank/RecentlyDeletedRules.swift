@@ -19,7 +19,7 @@ enum RecentlyDeletedRules {
             .object([
                 "undoDays": .int(DeleteMarks.undoDays), "examPages": .array(try deletedPages(tx, courseID: course.id, since: since, now: call.now)),
                 "folders": .array(try folders.map { folder in try folderJSON(tx, folder, sets: sets.filter { $0.deletion == folder.deletion }, now: call.now) }),
-                "sets": .array(try sets.filter { !withFolder.contains($0.deletion) }.map { try setJSON(tx, $0, now: call.now) }), "exams": .array([]),
+                "sets": .array(try sets.filter { !withFolder.contains($0.deletion) }.map { try setJSON(tx, $0, now: call.now) }), "exams": .array(try ExamDeletions.recentlyDeleted(tx, courseID: course.id, since: since, now: call.now)),
             ]))
     }
 
