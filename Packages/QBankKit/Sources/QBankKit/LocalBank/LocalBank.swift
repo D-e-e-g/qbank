@@ -32,6 +32,8 @@ public final class LocalBank: HTTPTransport {
         CatalogRules.register(in: &router)
         PageRules.register(in: &router)
         FolderRules.register(in: &router)
+        ImportRules.register(in: &router)
+        SetRules.register(in: &router)
         self.router = router
     }
 

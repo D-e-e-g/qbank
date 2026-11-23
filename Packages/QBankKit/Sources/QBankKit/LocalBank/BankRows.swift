@@ -92,6 +92,7 @@ struct SetRow {
     let title: String
     let description: String
     let weekLabel: String
+    let sortOrder: Int
     let folderId: String?
     let importedAt: String
     let replacedAt: String?
@@ -106,6 +107,7 @@ struct SetRow {
         title = row.string("title")
         description = row.string("description")
         weekLabel = row.string("week_label")
+        sortOrder = row.integer("sort_order")
         folderId = row.text("folder_id")
         importedAt = row.string("imported_at")
         replacedAt = row.text("replaced_at")

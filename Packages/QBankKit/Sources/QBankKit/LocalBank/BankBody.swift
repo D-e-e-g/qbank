@@ -35,6 +35,16 @@ struct BankBody {
     func optionalUUIDs(_ key: String, max: Int) throws -> [String]? { try fields[key].map { try list($0, max: max, id) } }
     func optionalStrings(_ key: String, max: Int) throws -> [String]? { try fields[key].map { try list($0, max: max, text) } }
 
+    /// A nested object that may be left out, read against its own fields.
+    func optionalObject(_ key: String) throws -> BankBody? { try fields[key].map { try BankBody($0) } }
+
+    /// A text that may be left out and is one of `choices` when sent.
+    func optionalChoice(_ key: String, _ choices: [String]) throws -> String? {
+        guard let value = try optionalString(key) else { return nil }
+        guard choices.contains(value) else { throw BankRefusal.invalidRequest }
+        return value
+    }
+
     // MARK: Nullable
 
     func nullableString(_ key: String) throws -> Patch<String> { try patch(key, text) }

@@ -148,7 +148,7 @@ enum FolderRules {
 
     /// Puts every version of a set in the folder. Each version's week label becomes the folder's
     /// name, and so does the week of each of its questions that carried the set's.
-    private static func fileLineage(_ tx: StoreTransaction, lineageID: String, into folder: FolderRow) throws {
+    static func fileLineage(_ tx: StoreTransaction, lineageID: String, into folder: FolderRow) throws {
         for version in try tx.rows("SELECT * FROM practice_set WHERE lineage_id = ?", [.text(lineageID)]).map(SetRow.init) where version.weekLabel != folder.name {
             try tx.execute("UPDATE question SET week_label = ? WHERE set_id = ? AND week_label = ?", [.text(folder.name), .text(version.id), .text(version.weekLabel)])
         }

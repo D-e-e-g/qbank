@@ -62,7 +62,8 @@ struct BankRouter: Sendable {
     private(set) var routes: [BankRoute] = []
 
     mutating func get(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("GET", pattern, writes: false, handler) }
-    mutating func post(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("POST", pattern, writes: true, handler) }
+    /// A POST that changes nothing, such as a check: it runs in a read, not a transaction that could commit.
+    mutating func post(_ pattern: String, writes: Bool = true, _ handler: @escaping BankRoute.Handler) { add("POST", pattern, writes: writes, handler) }
     mutating func put(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("PUT", pattern, writes: true, handler) }
     mutating func patch(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("PATCH", pattern, writes: true, handler) }
     mutating func delete(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("DELETE", pattern, writes: true, handler) }

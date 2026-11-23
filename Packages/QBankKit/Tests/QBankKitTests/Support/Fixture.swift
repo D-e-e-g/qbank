@@ -21,6 +21,12 @@ struct Fixture: Decodable {
         let status: Int
         let headers: [String: String]
         let body: JSONValue
+
+        init(status: Int, headers: [String: String], body: JSONValue) {
+            self.status = status
+            self.headers = headers
+            self.body = body
+        }
     }
 
     let name: String
