@@ -60,8 +60,9 @@ Your answers and progress are yours alone among users: other users cannot see th
 
 - **Saved for offline.** So you can practice without a signal, the app keeps a copy of the courses on your Home screen, with their sets and questions, and your recent progress, plus the Review list and terms of each course you open, in its own storage on the device. It saves them by itself while it is online. Answers you give without a connection are scored on the device and wait there until they can be sent. The server ignores an answer it already has, so nothing is counted twice. Exams need a connection and are not kept for offline use.
 - **Settings on the device.** Your light or dark look choice and whether the Face ID lock is on are stored on the device.
+- **Sets you are writing.** A set you begin writing by hand in the Add tab and have not saved is kept as a draft on the device, under your account, and is not sent anywhere until you save it; it then goes to the server like an imported file. Signing out keeps your drafts for when you sign back in, another account signed in on the device does not see them, and deleting your account deletes them.
 - **The Face ID lock.** When you turn it on, iOS checks your face, fingerprint, or passcode and tells the app only whether it matched. The app never receives or stores any biometric data, and nothing about the lock is sent to the server.
-- **Signing out** removes the session token, the offline copy, and any answers still waiting to send. The app warns you before it removes answers that have not been sent.
+- **Signing out** removes the session token, the offline copy, and any answers still waiting to send, and keeps your drafts. The app warns you before it removes answers that have not been sent.
 - Deleting the app removes everything it stored on that device.
 
 ### 6. Exporting your data
@@ -86,7 +87,7 @@ While the app is tested through Apple's TestFlight, Apple may share with the own
 
 ## Deleting your account and data
 
-To delete your account, open **Settings > Delete account** in the app and enter your password. The server deletes the account for good, and with it everything linked to it: sign-in, sessions on every device, passkeys, agent keys, your study content (semesters, courses, topics, pages, folders, sets, questions, and terms), answers, progress, Review list, exams, the records of the sets you made questions for, and your last-opened course. Nothing goes to Recently deleted and there is no Undo. The app then signs out and deletes what it kept on your device, including answers not yet sent. Your email stays on the owner's sign-up list until he removes it. Backup copies age out within about 30 days. You can also ask the owner to delete your account (contact below). To remove only the copy on your device, sign out or delete the app.
+To delete your account, open **Settings > Delete account** in the app and enter your password. The server deletes the account for good, and with it everything linked to it: sign-in, sessions on every device, passkeys, agent keys, your study content (semesters, courses, topics, pages, folders, sets, questions, and terms), answers, progress, Review list, exams, the records of the sets you made questions for, and your last-opened course. Nothing goes to Recently deleted and there is no Undo. The app then signs out and deletes what it kept on your device, including answers not yet sent and the sets you were writing. Your email stays on the owner's sign-up list until he removes it. Backup copies age out within about 30 days. You can also ask the owner to delete your account (contact below). To remove only the copy on your device, sign out or delete the app.
 
 If you only want a copy of your data, use **Export my progress** first.
 
