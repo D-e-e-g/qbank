@@ -7,9 +7,10 @@ import Testing
 ///
 /// `organize-folders` begins with four imports, then makes pages and folders, moves a set and orders
 /// folders, and ends with two exams. The bank serves every step but two kinds: the delete preview of a
-/// page that is not there, and the exams at its end, which later slices serve. They are left out, and
-/// the rest replays in order with no difference, so the folders and pages are proven over the state
-/// the bank's own imports made.
+/// page that is not there, and the exams at its end, which the exam family serves. The preview is served, but the recording asks for
+/// the page by an id it gave to a page made in the next step, which a replay sends as it is and then cannot bind to the page the bank
+/// makes; `LocalBankDeleteTests` proves its answer against the recorded fixture. Both are left out, and the rest replays in order
+/// with no difference, so the folders and pages are proven over the state the bank's own imports made.
 @Suite struct LocalBankOrganizeTests {
     /// The steps the bank serves: everything before the exams at the end, but for the one delete preview.
     private static let served = 0..<30

@@ -44,6 +44,10 @@ public final class LocalBank: HTTPTransport {
         AnswerRules.register(in: &router)
         ReviewRules.register(in: &router)
         PlaceRules.register(in: &router)
+        SetDeleteRules.register(in: &router)
+        PageDeleteRules.register(in: &router)
+        CourseDeleteRules.register(in: &router)
+        RecentlyDeletedRules.register(in: &router)
         self.router = router
     }
 
