@@ -29,16 +29,15 @@ nonisolated enum DebugFreeMode {
         look.listen()
         self.look = look
         DebugWindows.listen()
-        let client = AppModel.client(
-            for: .free,
+        let client = QBankClient(
             configuration: APIConfiguration(baseURL: URL(string: "https://fake-qbank.invalid")!),
-            network: server,
-            bank: bank,
+            transport: server,
             sessionStore: InMemorySessionStore(FakeQBankServer.storedStudentSession())
         )
         return AppModel(
             client: client,
             kind: .free,
+            bank: bank,
             look: lookStore,
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),

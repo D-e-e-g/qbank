@@ -14,13 +14,12 @@ struct AccountKindTests {
     ) throws -> (AppModel, InMemorySessionStore) {
         let bank = try bank ?? LocalBank(store: LocalStore.inMemory())
         let store = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
-        let client = AppModel.client(
-            for: .free, configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!),
-            network: network, bank: bank, sessionStore: store
+        let client = QBankClient(
+            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: network, sessionStore: store
         )
         let defaults = TestApp.freshDefaults()
         let app = AppModel(
-            client: client, kind: .free, look: LookStore(defaults: defaults),
+            client: client, kind: .free, bank: bank, look: LookStore(defaults: defaults),
             lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
             aiConsent: AIConsentStore(defaults: defaults), storage: .memory(), connection: connection
         )
@@ -111,6 +110,41 @@ struct AccountKindTests {
             transport: BankRoutedTransport(bank: bank, account: network), sessionStore: again
         )
         #expect(try await reopened.catalog().topics.map(\.id) == [made.id])
+    }
+
+    @Test func aPasswordSignInAfterAFreeSignOutIsOnTheServerAndLeavesTheFreeBankAlone() async throws {
+        let network = StubServer([
+            "POST /api/sign-out": .ok(#"{"status":"ok"}"#),
+            "POST /api/sign-in/password": .ok(Bodies.signedIn()),
+            "GET /api/semesters": .ok(Bodies.semesters([])),
+        ])
+        let bank = LocalBank(store: try LocalStore.inMemory())
+        let connection = Connection()
+        let (app, _) = try freeApp(network: network, connection: connection, bank: bank)
+        let made = try await app.client.createTopic(title: "Pharmacology")
+        await app.signOut()
+
+        let signIn = SignInModel(app: app)
+        signIn.email = "student@example.com"
+        signIn.password = "synthetic-password-1"
+        await signIn.signIn()
+
+        #expect(app.route == .signedIn(.student()))
+        #expect(app.kind == .invited)
+        #expect(app.offersQuestionMaker)
+        #expect(app.offline != nil, "its saved courses and waiting answers are kept as ever")
+        connection.update(isOnline: false)
+        #expect(!app.connection.isOnline, "its connection follows the phone's network again")
+        connection.update(isOnline: true)
+
+        let catalog = try await app.client.catalog()
+        #expect(catalog.topics.isEmpty, "the free bank's topic is not the invited account's")
+        #expect(network.calls == ["POST /api/sign-out", "POST /api/sign-in/password", "GET /api/semesters"])
+        let freeBank = QBankClient(
+            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!),
+            transport: bank, sessionStore: InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
+        )
+        #expect(try await freeBank.catalog().topics.map(\.id) == [made.id], "the free bank stays on the phone as it was")
     }
 
     // MARK: What each kind is offered
