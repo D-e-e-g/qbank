@@ -20,6 +20,9 @@ struct BankBody {
         self.fields = fields
     }
 
+    /// A field as sent, whatever it holds, or nil when the request left it out.
+    func value(_ key: String) -> JSONValue? { fields[key] }
+
     // MARK: Required
 
     func string(_ key: String) throws -> String { try text(fields[key]) }
@@ -31,6 +34,8 @@ struct BankBody {
 
     func optionalString(_ key: String) throws -> String? { try fields[key].map(text) }
     func optionalBool(_ key: String) throws -> Bool? { try fields[key].map(flag) }
+    /// A bool that is false when left out (a null is not a bool).
+    func bool(_ key: String, default fallback: Bool) throws -> Bool { try optionalBool(key) ?? fallback }
     func optionalUUID(_ key: String) throws -> String? { try fields[key].map(id) }
     func optionalUUIDs(_ key: String, max: Int) throws -> [String]? { try fields[key].map { try list($0, max: max, id) } }
     func optionalStrings(_ key: String, max: Int) throws -> [String]? { try fields[key].map { try list($0, max: max, text) } }

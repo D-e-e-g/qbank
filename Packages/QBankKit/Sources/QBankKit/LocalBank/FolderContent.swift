@@ -2,9 +2,8 @@ import Foundation
 
 /// A course's folders as the screens read them: in the course's order, each with its sets.
 ///
-/// What an answer adds to a set (its run and sitting) belongs to the answers rule family; until
-/// that family exists a set reads as not started, and its answered counts come from the progress
-/// rows the store holds.
+/// Where the person is in each set (its run and sitting) comes from `Sittings`, and its answered
+/// counts from the progress rows the store holds.
 struct FolderContent {
     struct Folder {
         let row: FolderRow
@@ -35,6 +34,7 @@ struct FolderContent {
         let questionCounts = try counts(tx, courseID: courseID, setIds: currentIDs)
         let ids = try questionIDs(tx, courseID: courseID, setIds: Set(current.filter { $0.kind == "practice" }.map(\.id)))
         let study = try progress(tx, courseID: courseID, setIds: currentIDs)
+        let runs = try Sittings.summaries(tx, lineageIDs: current.filter { $0.kind == "practice" }.map(\.lineageId))
         var byLineage: [String: [SetRow]] = [:]
         for set in setRows { byLineage[set.lineageId, default: []].append(set) }
 
@@ -42,7 +42,7 @@ struct FolderContent {
             let practice = current.filter { $0.kind == "practice" && $0.folderId == folder.id }
             let exam = current.filter { $0.kind == "exam" && $0.folderId == folder.id }
             let sorted = practice.sorted { BankText.localeCompare($0.title, $1.title) < 0 }.map { set in
-                summary(set, lineage: byLineage[set.lineageId] ?? [set], questions: questionCounts[set.id] ?? 0, ids: ids[set.id] ?? [], study: study[set.id])
+                summary(set, lineage: byLineage[set.lineageId] ?? [set], questions: questionCounts[set.id] ?? 0, ids: ids[set.id] ?? [], study: study[set.id], run: runs[set.lineageId])
             }
             let examSorted = exam.sorted { BankText.localeCompare($0.title, $1.title) < 0 }
             return Folder(
@@ -84,7 +84,9 @@ struct FolderContent {
 
     // MARK: Sets
 
-    static func summary(_ set: SetRow, lineage: [SetRow], questions: Int, ids: [String], study: SetProgress?) -> JSONValue {
+    static func summary(
+        _ set: SetRow, lineage: [SetRow], questions: Int, ids: [String], study: SetProgress?, run: (run: String, sitting: JSONValue)?
+    ) -> JSONValue {
         let others = lineage.filter { $0.id != set.id }
         let newest = lineage.allSatisfy { $0.importedAt <= set.importedAt }
         let status = others.isEmpty ? "imported" : (newest ? "replaced" : "restored")
@@ -94,7 +96,7 @@ struct FolderContent {
             "id": .string(set.id), "title": .string(set.title), "description": .string(set.description), "questionCount": .int(questions),
             "importedAt": .string(set.importedAt), "activeSince": .string(activeSince), "status": .string(status), "canRestore": .bool(!others.isEmpty),
             "answeredCount": .int(study?.answered ?? 0), "fullyRightCount": .int(study?.fullyRight ?? 0), "lastAnsweredAt": .optional(study?.lastAnsweredAt),
-            "run": .string("new"), "sitting": .null, "questionIds": .array(ids.map(JSONValue.string)), "importedByAgent": .null,
+            "run": .string(run?.run ?? "new"), "sitting": run?.sitting ?? .null, "questionIds": .array(ids.map(JSONValue.string)), "importedByAgent": .null,
         ])
     }
 

@@ -7,9 +7,9 @@ import Testing
 /// every answer matches in status, header and body, with times within the replay's tolerance and
 /// ids bound one to one (`TranscriptReplay`).
 ///
-/// The bank serves the catalog (semesters, courses, topics, pages and folders) and the sets (import, replace, restore, a set's questions
-/// and a course's terms). A transcript is proven whole when every bank request in it is one the bank serves. One that also holds a
-/// request a later slice serves (answers, exams, deletion, the place, the archive) is proven up to that request, and the request is
+/// The bank serves the catalog (semesters, courses, topics, pages and folders), the sets (import, replace, restore, a set's questions
+/// and a course's terms) and the study routes (answers, a set's sittings and Start over, Review and the place). A transcript is proven whole when every bank request in it is one the bank serves. One that also holds a
+/// request a later slice serves (exams, deletion, the archive) is proven up to that request, and the request is
 /// named in `waiting`, so the day a slice serves it the transcript moves to the whole list. Import answers the server has changed since
 /// the recording come from `Fixtures/import-drift.json` (`Transcript.loadWithImportDrift`). An agent's imports and the admin's reads are
 /// not the bank's to answer, so those transcripts are not listed.
@@ -22,26 +22,29 @@ import Testing
         ].contains { request.path == $0 || request.path.hasPrefix($0 + "/") }
     }
 
+    /// What the phone answers: the bank's paths, from someone signed in. It does not check the bearer token (a file on the phone is already
+    /// the signed-in person's), so a request sent with none belongs to the account and stays on the server.
+    static func isAnswered(_ request: Fixture.Request) -> Bool { isBank(request) && request.authorization != nil }
+
     /// Transcripts that replay whole: every bank request in them is served by this slice.
-    static let whole = ["organize-catalog", "organize-imports", "practice-restoring"]
+    static let whole = ["organize-catalog", "organize-imports", "practice-continuing", "practice-restoring", "topics"]
 
     /// Transcripts that hold a request of a later slice: how many steps come before the first such
     /// request, and what it is. Those steps replay now.
     static let waiting: [String: (step: Int, request: String)] = [
         "organize-folders": (13, "GET /api/course-exams/ce000000-0000-4000-8000-000000000002/delete-preview"),
-        "topics": (10, "POST /api/attempts"),
-        "practice-continuing": (5, "POST /api/attempts"),
-        "deletion-contents": (10, "POST /api/attempts"),
-        "deletion-courses": (6, "POST /api/attempts"),
-        "deletion-pages": (12, "POST /api/attempts"),
-        "twins": (8, "POST /api/attempts"),
+        "practice-studying": (27, "GET /api/courses/c0000000-0000-4000-8000-000000000201/exams"),
+        "deletion-contents": (21, "GET /api/practice-sets/5e700000-0000-4000-8000-000000000705/delete-preview"),
+        "deletion-courses": (7, "POST /api/courses/c0000000-0000-4000-8000-000000000801/exams"),
+        "deletion-pages": (13, "POST /api/courses/c0000000-0000-4000-8000-000000000901/exams"),
+        "twins": (18, "POST /api/courses/c0000000-0000-4000-8000-000000000501/exams"),
     ]
 
     @Test(arguments: whole)
     func replaysWhole(_ name: String) async throws {
         let transcript = try Transcript.loadWithImportDrift(name)
         let harness = try LocalBankHarness()
-        let differences = try await TranscriptReplay.run(transcript, over: harness.bank, hooks: harness.hooks(serves: Self.isBank))
+        let differences = try await TranscriptReplay.run(transcript, over: harness.bank, hooks: harness.hooks(serves: Self.isAnswered))
         #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
         #expect(transcript.exchanges.filter { Self.isBank($0.request) }.allSatisfy { harness.bank.serves($0.request.method, path: $0.request.path) })
     }
@@ -59,7 +62,7 @@ import Testing
         #expect(first == expected.step)
         if case .request(let exchange) = transcript.steps[first] { #expect("\(exchange.request.method) \(exchange.request.path)" == expected.request) }
         let prefix = Transcript(recordedFrom: transcript.recordedFrom, world: transcript.world, steps: Array(transcript.steps[..<first]))
-        let differences = try await TranscriptReplay.run(prefix, over: harness.bank, hooks: harness.hooks(serves: Self.isBank))
+        let differences = try await TranscriptReplay.run(prefix, over: harness.bank, hooks: harness.hooks(serves: Self.isAnswered))
         #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
     }
 }

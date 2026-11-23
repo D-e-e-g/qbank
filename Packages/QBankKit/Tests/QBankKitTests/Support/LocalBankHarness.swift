@@ -35,7 +35,10 @@ final class LocalBankHarness: Sendable {
 
     /// What the replay hands the engine: its clock set to each step's recorded time, and which requests it serves.
     func hooks(serves: @escaping @Sendable (Fixture.Request) -> Bool = { _ in true }) -> TranscriptReplay.Hooks {
-        TranscriptReplay.Hooks(clock: { [self] date in set(date) }, serves: serves)
+        TranscriptReplay.Hooks(
+            clock: { [self] date in set(date) }, serves: serves,
+            // The server draws the order of a Review list's questions at random.
+            shuffles: { $0.path.hasSuffix("/review/practice") })
     }
 
     /// Sends one request and returns its status and JSON body.
