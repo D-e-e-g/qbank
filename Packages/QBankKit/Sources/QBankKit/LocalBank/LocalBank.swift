@@ -74,9 +74,8 @@ public final class LocalBank: HTTPTransport {
 
     private func respond(method: String, url: URL, body: Data?) throws -> BankAnswer {
         guard let (route, params) = router.find(method, path: url.path) else { throw BankRefusal.notServed(method, url.path) }
-        let query = Dictionary(
-            (URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []).map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let query = Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
         let lists = Dictionary(grouping: items, by: \.name).mapValues { $0.map { $0.value ?? "" } }
         let json = body.flatMap { $0.isEmpty ? nil : try? JSONDecoder().decode(JSONValue.self, from: $0) }
         let now = clock()
