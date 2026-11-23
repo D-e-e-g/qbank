@@ -64,7 +64,7 @@ A new UI test says why a unit test cannot do the job. A unit test can check a mo
 
 ## A new launch scenario, scripted Sign in with Apple, or fake store
 
-The Debug launch seam (`QBank/DebugLaunchScenario.swift`) and the UI test helpers (`QBankUITests/UITestSupport.swift`) are shared test machinery: a pull request that changes either runs the full suite. A new scenario does not need to change them.
+A new scenario does not need to change the Debug launch seam (`QBank/DebugLaunchScenario.swift`) or the UI test helpers (`QBankUITests/UITestSupport.swift`). See [ci.md](ci.md) for how changes to shared test machinery select the test suite.
 
 - **A scenario** is a static member of `DebugScenario` in its own file under `QBank/Debug/Scenarios/`, built with `context.model(server:session:)`, plus one line in `DebugScenarioCatalog`. A test starts it by name: `launch("my-scenario")`.
 - **Scripted Sign in with Apple and the fake store** are `DebugScriptedAppleSignIn` and `DebugFakeStore` under `QBank/Debug/`, reached from the scenario's `context.appleSignIn` and `context.store`. Each is empty until the pull request that needs it fills it in.
