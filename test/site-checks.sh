@@ -94,24 +94,35 @@ fi
 # --- The format page describes the API's import check -----------------------------
 
 FORMAT="$SITE/format/index.html"
-if grep -q 'id="source-of-truth"' "$FORMAT" && grep -q 'single source of truth' "$FORMAT"; then
-  pass "the format page says the API is its source of truth"
-else
-  fail "the format page says the API is its source of truth"
-fi
+OPENAPI=Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json
 
-# What the server's import check (packages/questions in the private server
-# repository) defines. When it changes, change the page and this list together.
-for token in single priority sata highlight order match matrix matrixmulti cloze \
-  '300 KB' 'at most 4 pictures' 'kind' 'twinOf' 'stem' 'rationale' 'takeaway' 'ask'; do
-  if ! grep -qF -- "$token" "$FORMAT"; then
-    missing="${missing:-} $token"
-  fi
-done
-if [ -n "${missing:-}" ]; then
-  fail "the format page covers the importer's nine types and limits (missing:$missing)"
+# The oracle for the types is the server's published API (the pinned OpenAPI
+# fixture): the type enum of DraftQuestion, a question as the importer stores it.
+# The oracle for the limits is the server's import check
+# (packages/questions/src/media.ts in the private server repository): at most 4
+# images per question, each at most 300 KB after decoding.
+format_check="$(ruby -rjson -rcgi -e '
+  html, api = File.read(ARGV[0]), JSON.parse(File.read(ARGV[1]))
+  types = api.dig("components", "schemas", "DraftQuestion", "properties", "type", "enum") or abort "#{ARGV[1]}: no DraftQuestion type enum"
+  section = lambda do |title|
+    html[%r{<h2>#{Regexp.escape(title)}</h2>(.*?)(?=<h2>|</main>)}m, 1] or abort "no #{title.inspect} section"
+  end
+  rows = section.("The nine question formats").scan(%r{<tr><td><code>([^<]+)</code></td>}).flatten
+  abort "the format table lists #{rows.inspect}, the API #{types.inspect}" unless rows.sort == types.sort && rows.uniq == rows
+  type_row = section.("Every question")[%r{<tr><td><code>type</code></td><td>(.*?)</td></tr>}m, 1] or abort "no type row under Every question"
+  listed = type_row.scan(%r{<code>([^<]+)</code>}).flatten
+  abort "the type row lists #{listed.inspect}, the API #{types.inspect}" unless listed.sort == types.sort && listed.uniq == listed
+  media = CGI.unescapeHTML(section.("Tables and pictures").gsub(/<[^>]+>/, ""))
+  count = media[/images is a list of at most (\d+) pictures per question/, 1]
+  abort "the picture count limit is #{count.inspect}, the importer 4" unless count == "4"
+  size = media[/An image may be at most (\d+) KB after decoding/, 1]
+  abort "the image size limit is #{size.inspect} KB, the importer 300" unless size == "300"
+' "$FORMAT" "$OPENAPI" 2>&1)"
+# shellcheck disable=SC2181 # the program's output is the failure message
+if [ $? -eq 0 ]; then
+  pass "the format page lists the API's nine types and the importer's image limits"
 else
-  pass "the format page covers the importer's nine types and limits"
+  fail "the format page lists the API's nine types and the importer's image limits: $format_check"
 fi
 
 ruby_example="$(ruby -rjson -rcgi -e '
@@ -150,15 +161,20 @@ else
     upload = steps.find { |step| step["uses"].to_s.start_with?("actions/upload-pages-artifact@") }
     abort "no step uploads site/" unless upload && upload.dig("with", "path") == "site"
     abort "no step deploys with actions/deploy-pages" unless steps.any? { |step| step["uses"].to_s.start_with?("actions/deploy-pages@") }
+    strings = lambda do |node|
+      case node
+      when Hash then node.flat_map { |key, value| strings.(key) + strings.(value) }
+      when Array then node.flat_map { |value| strings.(value) }
+      when String then [node]
+      else []
+      end
+    end
+    used = strings.(wf).grep(/\$\{\{[^}]*\bsecrets\b/)
+    abort "the workflow uses secrets: #{used.inspect}" unless used.empty?
   ' "$PAGES" 2>&1; then
-    pass "$PAGES publishes site/ from main with pages: write and id-token: write on Linux"
+    pass "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   else
-    fail "$PAGES publishes site/ from main with pages: write and id-token: write on Linux"
-  fi
-  if grep -qE 'secrets\.' "$PAGES"; then
-    fail "$PAGES references no secrets"
-  else
-    pass "$PAGES references no secrets"
+    fail "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   fi
 fi
 

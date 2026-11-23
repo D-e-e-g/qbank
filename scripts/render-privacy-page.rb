@@ -10,41 +10,63 @@
 #
 # The policy uses a small Markdown subset: "##" and "###" headings, "-" bullets,
 # paragraphs, **bold**, and plain URLs and email addresses. The renderer refuses
-# anything else instead of guessing.
+# anything else instead of guessing. Above the first section, only the "Status:"
+# and "Last reviewed against the code:" lines are published; links to other
+# docs in them point at those docs on GitHub.
 
 require "cgi"
 
 ROOT = File.expand_path("..", __dir__)
 SOURCE = File.join(ROOT, "docs", "privacy-policy.md")
 TARGET = File.join(ROOT, "site", "privacy", "index.html")
+DOCS_URL = "https://github.com/D-e-e-g/qbank/blob/main/docs/"
 
-def inline(text)
+def refuse(number, line)
+  abort "#{SOURCE}:#{number}: Markdown this renderer does not handle: #{line[0, 60]}"
+end
+
+def inline(text, number)
+  refuse(number, text) if text.match?(/`|\[[^\]]*\]\(/)
   CGI.escapeHTML(text)
      .gsub(/\*\*(.+?)\*\*/, '<strong>\1</strong>')
      .gsub(%r{(https://[^\s<)]+[^\s<).,;])}, '<a href="\1">\1</a>')
      .gsub(/\b([\w.+-]+@[\w-]+\.[\w.]+[\w])/, '<a href="mailto:\1">\1</a>')
 end
 
+def preamble_line(lines, start, label)
+  index = lines[0...start].index { |line| line.start_with?("#{label}: ") } or abort "#{SOURCE} has no \"#{label}:\" line before its first section"
+  lines[index][(label.length + 2)..].split(/(\[[^\]]+\]\([\w-]+\.md\))/).map do |piece|
+    if (link = piece.match(/\A\[([^\]]+)\]\(([\w-]+\.md)\)\z/))
+      %(<a href="#{DOCS_URL}#{link[2]}">#{CGI.escapeHTML(link[1])}</a>)
+    else
+      inline(piece, index + 1)
+    end
+  end.join
+end
+
 def render_body(markdown)
   lines = markdown.lines.map(&:chomp)
   start = lines.index { |line| line.start_with?("## ") } or abort "#{SOURCE} has no ## section"
-  html = []
+  html = [
+    %(<p class="note"><strong>Status:</strong> #{preamble_line(lines, start, "Status")}</p>),
+    %(<p><strong>Last updated</strong> (last reviewed against the code): #{preamble_line(lines, start, "Last reviewed against the code")}</p>)
+  ]
   list = false
   lines[start..].each_with_index do |line, offset|
+    number = start + offset + 1
     if line.start_with?("- ")
       html << "<ul>" unless list
       list = true
-      html << "<li>#{inline(line[2..])}</li>"
+      html << "<li>#{inline(line[2..], number)}</li>"
       next
     end
     (html << "</ul>"; list = false) if list
     case line
     when "" then next
-    when /\A### (.+)/ then html << "<h3>#{inline(Regexp.last_match(1))}</h3>"
-    when /\A## (.+)/ then html << "<h2>#{inline(Regexp.last_match(1))}</h2>"
-    when /\A[#>|`\d]/, /\A\s/, /\[[^\]]*\]\(/
-      abort "#{SOURCE}:#{start + offset + 1}: Markdown this renderer does not handle: #{line[0, 60]}"
-    else html << "<p>#{inline(line)}</p>"
+    when /\A### (.+)/ then html << "<h3>#{inline(Regexp.last_match(1), number)}</h3>"
+    when /\A## (.+)/ then html << "<h2>#{inline(Regexp.last_match(1), number)}</h2>"
+    when /\A[#>|\d]/, /\A\s/ then refuse(number, line)
+    else html << "<p>#{inline(line, number)}</p>"
     end
   end
   html << "</ul>" if list
