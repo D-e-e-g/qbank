@@ -91,4 +91,33 @@ final class FreeModeUITests: XCTestCase {
         XCTAssertFalse(app.buttons["settings.savedForOffline"].exists)
         attach(app, "free new bank, settings")
     }
+
+    /// After a free account signs out, an invited account that signs in with its password gets the
+    /// server's bank, not the free bank left on the phone, and Settings offers what it can do. A unit
+    /// test cannot do this job: it is the real sign-out and sign-in screens over the free model's
+    /// transport that show the account's bank and Settings rows follow the account that signed in.
+    @MainActor
+    func testAPasswordSignInAfterAFreeSignOutUsesTheServer() throws {
+        try skipOnIPad()
+        let app = launch("free-new-bank")
+        XCTAssertTrue(app.buttons["home.add"].appears(timeout: 10))
+
+        openTab(app, "Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].appears(timeout: 5))
+        tapVisible(app.buttons["settings.signOut"], in: app)
+        XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+
+        signIn(app, email: "student@example.com", password: "synthetic-pass-1")
+        dismissSavePassword(app)
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10), "the server's bank, not the free one")
+        XCTAssertTrue(app.buttons["course.page.Exam 1"].appears(timeout: 5))
+        attach(app, "invited after free sign-out, course")
+
+        openTab(app, "Settings")
+        XCTAssertTrue(app.staticTexts["student@example.com"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.changePassword"].exists)
+        XCTAssertTrue(app.buttons["settings.connectAgent"].exists)
+        XCTAssertTrue(app.buttons["settings.savedForOffline"].exists)
+        attach(app, "invited after free sign-out, settings")
+    }
 }
