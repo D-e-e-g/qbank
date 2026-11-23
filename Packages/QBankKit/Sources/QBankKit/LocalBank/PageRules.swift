@@ -118,13 +118,17 @@ enum PageRules {
         let leaving = rows.filter { $0.courseExamId == page.id && !keep.contains($0.id) }
         let loose = rows.filter { $0.courseExamId == nil && !keep.contains($0.id) }
         for row in leaving { try FolderRules.assertNameFree(loose, row.name, FolderRules.label(course, nil), except: row.id) }
-        var nextSort = FolderRules.endOf(loose)
         for row in leaving {
-            try tx.execute("UPDATE folder SET course_exam_id = NULL, sort_order = ? WHERE id = ?", [.integer(Int64(nextSort)), .text(row.id)])
-            nextSort += 1
+            try tx.execute("UPDATE folder SET name = ? WHERE id = ?", [.text(row.id), .text(row.id)])
         }
         for (index, row) in target.enumerated() {
             try tx.execute("UPDATE folder SET course_exam_id = ?, sort_order = ? WHERE id = ?", [.text(page.id), .integer(Int64(index + 1)), .text(row.id)])
+        }
+        var nextSort = FolderRules.endOf(loose)
+        for row in leaving {
+            try tx.execute(
+                "UPDATE folder SET course_exam_id = NULL, sort_order = ?, name = ? WHERE id = ?", [.integer(Int64(nextSort)), .text(row.name), .text(row.id)])
+            nextSort += 1
         }
     }
 

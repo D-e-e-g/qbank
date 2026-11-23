@@ -17,20 +17,22 @@ struct CourseCounts {
 enum CatalogViews {
     /// Every course's numbers. Practice questions of the sets in force (current, not deleted, in a
     /// folder that is not deleted); progress over those questions only.
-    static func counts(_ tx: StoreTransaction) throws -> [String: CourseCounts] {
+    static func counts(_ tx: StoreTransaction, courseID: String? = nil) throws -> [String: CourseCounts] {
+        let only = courseID == nil ? "" : " AND ps.course_id = ?"
+        let args: [StoreValue] = courseID.map { [.text($0)] } ?? []
         var counts: [String: CourseCounts] = [:]
         for row in try tx.rows(
             """
             SELECT ps.course_id AS course_id, count(q.id) AS questions, count(DISTINCT f.name) AS weeks
             FROM practice_set ps JOIN folder f ON f.id = ps.folder_id LEFT JOIN question q ON q.set_id = ps.id
-            WHERE ps.is_current = 1 AND ps.deleted_at IS NULL AND ps.kind = 'practice' AND f.deleted_at IS NULL
+            WHERE ps.is_current = 1 AND ps.deleted_at IS NULL AND ps.kind = 'practice' AND f.deleted_at IS NULL\(only)
             GROUP BY ps.course_id
-            """)
+            """, args)
         {
             counts[row.string("course_id"), default: CourseCounts()].questionCount = row.integer("questions")
             counts[row.string("course_id"), default: CourseCounts()].weekCount = row.integer("weeks")
         }
-        for row in try tx.rows("SELECT course_id, count(*) AS n FROM folder WHERE deleted_at IS NULL GROUP BY course_id") {
+        for row in try tx.rows("SELECT course_id, count(*) AS n FROM folder WHERE deleted_at IS NULL\(courseID == nil ? "" : " AND course_id = ?") GROUP BY course_id", args) {
             counts[row.string("course_id"), default: CourseCounts()].folderCount = row.integer("n")
         }
         for row in try tx.rows(
@@ -40,9 +42,9 @@ enum CatalogViews {
                    sum(qp.in_review) AS in_review, sum(qp.last_points) AS points, sum(qp.last_max_points) AS max_points
             FROM question q JOIN practice_set ps ON ps.id = q.set_id
             JOIN question_progress qp ON qp.question_lineage_id = q.lineage_id
-            WHERE ps.is_current = 1 AND ps.deleted_at IS NULL AND ps.kind = 'practice'
+            WHERE ps.is_current = 1 AND ps.deleted_at IS NULL AND ps.kind = 'practice'\(only)
             GROUP BY ps.course_id
-            """)
+            """, args)
         {
             var entry = counts[row.string("course_id"), default: CourseCounts()]
             entry.answeredCount = row.integer("answered")
@@ -68,11 +70,8 @@ enum CatalogViews {
     /// The card of a course or topic as the catalog lists it now.
     static func card(_ tx: StoreTransaction, courseID: String) throws -> JSONValue {
         let course = try BankLookup.course(tx, courseID)
-        return card(course, try counts(tx)[courseID] ?? CourseCounts())
+        return card(course, try counts(tx, courseID: courseID)[courseID] ?? CourseCounts())
     }
-
-    /// A card with nothing in it yet, for a course or topic just made.
-    static func emptyCard(_ course: CourseRow) -> JSONValue { card(course, CourseCounts()) }
 
     /// The semesters with their courses (in order, courses by their sort order and code), and the topics.
     static func catalog(_ tx: StoreTransaction) throws -> (semesters: [JSONValue], topics: [JSONValue]) {

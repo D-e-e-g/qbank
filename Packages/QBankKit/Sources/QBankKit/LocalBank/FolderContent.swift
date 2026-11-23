@@ -6,11 +6,6 @@ import Foundation
 /// that family exists a set reads as not started, and its answered counts come from the progress
 /// rows the store holds.
 struct FolderContent {
-    struct SetEntry {
-        let row: SetRow
-        let json: JSONValue
-    }
-
     struct Folder {
         let row: FolderRow
         let sets: [JSONValue]
@@ -36,22 +31,22 @@ struct FolderContent {
         let rows = try FolderOrder.rows(tx, courseID: courseID)
         let setRows = try tx.rows("SELECT * FROM practice_set WHERE course_id = ? AND deleted_at IS NULL", [.text(courseID)]).map(SetRow.init)
         let current = setRows.filter { $0.isCurrent && $0.folderId != nil }
-        let questionCounts = try counts(tx, setIds: current.map(\.id))
-        let ids = try questionIDs(tx, setIds: current.filter { $0.kind == "practice" }.map(\.id))
-        let study = try progress(tx, setIds: current.map(\.id))
+        let currentIDs = Set(current.map(\.id))
+        let questionCounts = try counts(tx, courseID: courseID, setIds: currentIDs)
+        let ids = try questionIDs(tx, courseID: courseID, setIds: Set(current.filter { $0.kind == "practice" }.map(\.id)))
+        let study = try progress(tx, courseID: courseID, setIds: currentIDs)
         var byLineage: [String: [SetRow]] = [:]
         for set in setRows { byLineage[set.lineageId, default: []].append(set) }
 
         let folders = rows.map { folder -> Folder in
             let practice = current.filter { $0.kind == "practice" && $0.folderId == folder.id }
             let exam = current.filter { $0.kind == "exam" && $0.folderId == folder.id }
-            let entries = practice.map { set in
-                SetEntry(row: set, json: summary(set, lineage: byLineage[set.lineageId] ?? [set], questions: questionCounts[set.id] ?? 0, ids: ids[set.id] ?? [], study: study[set.id]))
+            let sorted = practice.sorted { BankText.localeCompare($0.title, $1.title) < 0 }.map { set in
+                summary(set, lineage: byLineage[set.lineageId] ?? [set], questions: questionCounts[set.id] ?? 0, ids: ids[set.id] ?? [], study: study[set.id])
             }
-            let sorted = entries.sorted { BankText.localeCompare($0.row.title, $1.row.title) < 0 }
             let examSorted = exam.sorted { BankText.localeCompare($0.title, $1.title) < 0 }
             return Folder(
-                row: folder, sets: sorted.map(\.json), setCount: sorted.count,
+                row: folder, sets: sorted, setCount: sorted.count,
                 examBankCount: exam.reduce(0) { $0 + (questionCounts[$1.id] ?? 0) },
                 examSets: examSorted.map {
                     .object(["id": .string($0.id), "title": .string($0.title), "questionCount": .int(questionCounts[$0.id] ?? 0), "importedByAgent": .null])
@@ -109,29 +104,36 @@ struct FolderContent {
         var lastAnsweredAt: String?
     }
 
-    private static func counts(_ tx: StoreTransaction, setIds: [String]) throws -> [String: Int] {
+    private static func counts(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: Int] {
         var counts: [String: Int] = [:]
-        for row in try tx.rows("SELECT set_id, count(*) AS n FROM question GROUP BY set_id") where setIds.contains(row.string("set_id")) {
+        for row in try tx.rows(
+            "SELECT q.set_id AS set_id, count(*) AS n FROM question q JOIN practice_set ps ON ps.id = q.set_id WHERE ps.course_id = ? GROUP BY q.set_id",
+            [.text(courseID)]) where setIds.contains(row.string("set_id"))
+        {
             counts[row.string("set_id")] = row.integer("n")
         }
         return counts
     }
 
-    private static func questionIDs(_ tx: StoreTransaction, setIds: [String]) throws -> [String: [String]] {
+    private static func questionIDs(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: [String]] {
         var ids: [String: [String]] = [:]
-        for row in try tx.rows("SELECT id, set_id FROM question ORDER BY position, id") where setIds.contains(row.string("set_id")) {
+        for row in try tx.rows(
+            "SELECT q.id AS id, q.set_id AS set_id FROM question q JOIN practice_set ps ON ps.id = q.set_id WHERE ps.course_id = ? ORDER BY q.position, q.id",
+            [.text(courseID)]) where setIds.contains(row.string("set_id"))
+        {
             ids[row.string("set_id"), default: []].append(row.string("id"))
         }
         return ids
     }
 
-    private static func progress(_ tx: StoreTransaction, setIds: [String]) throws -> [String: SetProgress] {
+    private static func progress(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: SetProgress] {
         var result: [String: SetProgress] = [:]
         for row in try tx.rows(
             """
             SELECT q.set_id AS set_id, qp.last_status AS status, qp.last_answered_at AS answered_at
-            FROM question q JOIN question_progress qp ON qp.question_lineage_id = q.lineage_id
-            """) where setIds.contains(row.string("set_id"))
+            FROM question q JOIN practice_set ps ON ps.id = q.set_id JOIN question_progress qp ON qp.question_lineage_id = q.lineage_id
+            WHERE ps.course_id = ?
+            """, [.text(courseID)]) where setIds.contains(row.string("set_id"))
         {
             var entry = result[row.string("set_id"), default: SetProgress()]
             entry.answered += 1

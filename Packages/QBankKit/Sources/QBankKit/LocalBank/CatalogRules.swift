@@ -95,7 +95,6 @@ enum CatalogRules {
             let newTitle = try title.map { try BankText.required($0, "Course name", 160) } ?? current.title
             let currentSemester = current.semesterId ?? ""
             let targetSemester = semesterId ?? currentSemester
-            if targetSemester != currentSemester { _ = try BankLookup.semester(tx, targetSemester) }
             try assertCodeFree(tx, targetSemester, newCode, except: id)
             let sortOrder =
                 targetSemester == currentSemester

@@ -6,7 +6,7 @@ enum CourseView {
         let course = try BankLookup.course(tx, courseID)
         let semester = try course.semesterId.map { try BankLookup.semester(tx, $0) }
         let content = try FolderContent.load(tx, courseID: courseID)
-        let counts = try CatalogViews.counts(tx)[courseID] ?? CourseCounts()
+        let counts = try CatalogViews.counts(tx, courseID: courseID)[courseID] ?? CourseCounts()
         let pool = try examPool(tx, courseID: courseID, folders: content.folders.map(\.row))
         let weeks = content.weeks
         return .object([

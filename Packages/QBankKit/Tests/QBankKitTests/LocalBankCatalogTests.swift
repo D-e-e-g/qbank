@@ -65,6 +65,24 @@ import Testing
         #expect(error(clash) == "409 request_refused Pharmacology already has a folder named Loose.")
     }
 
+    @Test func aPageSwapsAFolderForOneOfTheSameNameInTheFoldersList() async throws {
+        let harness = try LocalBankHarness()
+        let id = try await topic(harness, "Pharmacology")
+        let page = try #require(try await harness.send("POST", "/api/courses/\(id)/course-exams", .object(["name": .string("Exam 1")])).body["id"]?.stringValue)
+        let onPage = try await harness.send("POST", "/api/courses/\(id)/folders", .object(["name": .string("First Pass"), "examPageId": .string(page)]))
+        let loose = try await harness.send("POST", "/api/courses/\(id)/folders", .object(["name": .string("First Pass"), "examPageId": .null]))
+        let leaving = try #require(onPage.body["id"]?.stringValue)
+        let arriving = try #require(loose.body["id"]?.stringValue)
+
+        let swapped = try await harness.send("PUT", "/api/course-exams/\(page)", .object(["name": .string("Exam 1"), "folderIds": .array([.string(arriving)])]))
+        #expect(swapped.status == 200)
+        let detail = try await harness.send("GET", "/api/courses/\(id)")
+        let folders = try #require(detail.body["folders"]?.arrayValue)
+        #expect(folders.compactMap { $0["id"]?.stringValue } == [arriving, leaving])
+        #expect(folders.compactMap { $0["name"]?.stringValue } == ["First Pass", "First Pass"])
+        #expect(folders.map { $0["examPageId"] } == [.string(page), .null])
+    }
+
     @Test func aRefusedWriteLeavesNothingBehind() async throws {
         let harness = try LocalBankHarness()
         let id = try await topic(harness, "Pharmacology")
