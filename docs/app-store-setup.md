@@ -60,7 +60,7 @@ Type these exactly. A mistake in a product id cannot be undone.
 | 11 | Sandbox tester | Owner click | Before the device pass (R-2) |
 | 12 | App Privacy | Owner click, worker-prepared text, **waiting** | Before submission |
 | 13 | Age rating and content rights | Owner click, worker-prepared text | Before submission |
-| 14 | Countries and regions | Owner click, **waiting** | Before submission |
+| 14 | Countries and regions | Owner click | Before submission |
 | 15 | Price, copyright, review contact | Owner click | Before submission |
 | 16 | Privacy policy, support and terms addresses | Owner click, **waiting** | Before submission |
 | 17 | Release option | Owner click | At submission |
@@ -115,14 +115,14 @@ Apple: [App Store Small Business Program](https://developer.apple.com/app-store/
 
 **Owner click.** Roles: Account Holder or Admin. The app launches without the EU, and the owner is not a trader under the EU Digital Services Act (DSA). Apple still wants a declaration, so make it once.
 
-- [ ] **Business** (at the top) > **Agreements** tab > scroll to **Compliance** > next to **Digital Services Act**, **Complete Compliance Requirements**. Choose **This is not a trader account.** Apple's page says no contact information is needed. **Done**.
+- [ ] **Business** (at the top) > **Agreements** tab > scroll to **Compliance** > next to **Digital Services Act**, **Complete Compliance Requirements**. Choose **I'm not a trader under the DSA or I don't plan to distribute in the EU** (Apple's page words it **This is not a trader account.**). Apple's page says no contact information is needed. **Done**.
 - [ ] Nothing else is asked: no address, no P.O. Box, no phone number, no document.
 
-Apple's page words the two options "This is a trader account." and "This is not a trader account." The screen may word the second one a little differently (for example, that the owner is not a trader or does not plan to distribute in the EU); it is the one that means not a trader. Step 14 takes the EU storefronts out, so no EU page ever shows trader details.
+Apple's page words the two options "This is a trader account." and "This is not a trader account." The screen words the second one "I'm not a trader under the DSA or I don't plan to distribute in the EU", as the owner reported it; it is the one that means not a trader. Step 14 takes the EU storefronts out, so no EU page ever shows trader details.
 
-**Adding the EU later** needs, first, trader status: the same screen with **This is a trader account.** Then the owner enters an address or P.O. Box, a phone number and an email address, validates the phone and email with a code, and uploads a current document that proves the name and address (a P.O. Box also needs a receipt or bill that ties the owner to it). Apple shows these details publicly on the app's page in the EU. The app's own setting is under **Apps** > QBank > **General** > **App Compliance** > **Digital Services Act** > **Edit**. Only after the status is verified would the EU storefronts be ticked in step 14. Apple removes an app from the EU storefronts while it has no verified status.
+**Adding the EU later** needs, first, trader status: the same screen with the trader option (Apple's page words it **This is a trader account.**). Then the owner enters an address or P.O. Box, a phone number and an email address, validates the phone and email with a code, and uploads a current document that proves the name and address (a P.O. Box also needs a receipt or bill that ties the owner to it). Apple shows these details publicly on the app's page in the EU. The app's own setting is under **Apps** > QBank > **General** > **App Compliance** > **Digital Services Act** > **Edit**. Only after the status is verified would the EU storefronts be ticked in step 14. Apple removes an app from the EU storefronts while it has no verified status.
 
-Apple: [Manage European Union Digital Services Act trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/). Read 2026-11-22. The quoted option wording and the menu path are from that page; the screen itself was not seen.
+Apple: [Manage European Union Digital Services Act trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/). Read 2026-11-22. The menu path and the option wording "This is not a trader account." are from that page; the screen wording of that option is as the owner reported it.
 
 ### 6. Sign in with Apple on the App ID
 
