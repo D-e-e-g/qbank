@@ -2,7 +2,7 @@
 
 The design record for the bank that lives on the iPhone or iPad: how the screens reach it, what it stores, and the one file format that carries a whole bank between the phone and the server. [cloud.md](cloud.md) is its other half: who has which bank, and the rules for moving one.
 
-This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) exists so far, and nothing in the app uses it yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is older, server commit `6acfbcf` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`).
+This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) and the engine's catalog slice (I-12, `Packages/QBankKit/Sources/QBankKit/LocalBank`: semesters, courses, topics, pages and folders) exist so far, and nothing in the app uses them yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is older, server commit `6acfbcf` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`).
 
 Ids such as A1, I-11 and S-09 name calls and pull requests in the App Store release plan. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
