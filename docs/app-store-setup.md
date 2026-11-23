@@ -295,7 +295,7 @@ Apple: [Set a price](https://developer.apple.com/help/app-store-connect/manage-a
 
 - [ ] **App Privacy** > **Privacy Policy** > **Edit** (step 12): the privacy address.
 - [ ] **App Information**, the version's **Support URL**: the support address.
-- [ ] The subscriptions' terms: the description on the version page, and the app, must link the **Terms of Use** and the **Privacy Policy**. The owner uses Apple's standard terms; I-42 names the address once.
+- [ ] The subscriptions' terms: the description on the version page, and the app, must link the **Terms of Use** and the **Privacy Policy**. The owner uses Apple's standard terms; the app names all three addresses once, in `QBank/Shared/LegalLinks.swift`.
 
 The privacy address changes with the next app version, not instantly, when edited. Apple wants both links in the app and in the metadata for a subscription; an earlier app that sold Cloud this way was rejected under 3.1.2 for a missing terms link.
 
