@@ -73,28 +73,6 @@ enum ExamDeletions {
         return try ExamViews.summary(tx, try ExamStore.own(tx, exam.id), now: call.now).json
     }
 
-    /// The past exams of a course deleted in the last 30 days, newest first: what Undo can still bring
-    /// back, as Recently deleted lists them.
-    static func recentlyDeleted(_ call: BankCall, courseID: String) throws -> [JSONValue] {
-        let tx = call.tx
-        let since = ExamClock.text(milliseconds: ExamClock.milliseconds(call.now) - undoMilliseconds)
-        let rows = try tx.rows(
-            """
-            SELECT * FROM study_session WHERE course_id = ? AND mode = 'exam' AND deleted_at IS NOT NULL AND deleted_at > ?
-            ORDER BY deleted_at DESC, started_at DESC, id
-            """, [.text(courseID), .text(since)]
-        ).map(ExamRow.init)
-        let folders = try FolderOrder.rows(tx, courseID: courseID)
-        let pages = try PageViews.pages(tx, courseID: courseID)
-        let summaries = try ExamViews.summaries(tx, rows, folders: folders, pages: pages, now: call.now)
-        return zip(summaries, rows).map { summary, row in
-            guard case .object(var fields) = summary.json else { return summary.json }
-            fields["deletedAt"] = .string(row.deletedAt ?? "")
-            fields["undoUntil"] = .string(ExamClock.text(milliseconds: (ExamClock.milliseconds(row.deletedAt ?? "") ?? 0) + undoMilliseconds))
-            return .object(fields)
-        }
-    }
-
     // MARK: What it names
 
     private static func expired(_ deletedAt: String, _ now: Date) -> Bool {

@@ -142,29 +142,17 @@ import Testing
         #expect(try await world.harness.send("GET", "/api/exams/\(exam)/delete-preview").body["confirm"]?.stringValue == confirm)
     }
 
-    @Test func undoLastsThirtyDaysAndRecentlyDeletedListsWhatItCanStillBringBack() async throws {
+    @Test func undoLastsThirtyDays() async throws {
         let (world, exam, _) = try await world()
         let confirm = try #require(try await world.harness.send("GET", "/api/exams/\(exam)/delete-preview").body["confirm"]?.stringValue)
         _ = try await delete(world, exam, confirm: confirm)
         let day = 24.0 * 60 * 60
-        world.at(40 + 29 * day)
-        let listed = try listDeleted(world)
-        #expect(listed.count == 1 && listed[0]["id"] == .string(exam) && listed[0]["deletedAt"] == .string(world.time(40)))
-        #expect(listed[0]["undoUntil"] == .string(world.time(40 + 30 * day)) && listed[0]["status"] == .string("ended"))
         world.at(40 + 31 * day)
-        #expect(try listDeleted(world).isEmpty)
         #expect(
             words(try await world.harness.send("POST", "/api/exams/\(exam)/undo-delete"))
                 == "409 undo_expired This exam was deleted more than 30 days ago, so it can't be brought back.")
         // Nothing is removed on its own: the exam and its answers are still there.
         #expect(try world.count("study_session", "id = '\(exam)'") == 1 && (try world.count("attempt", "study_session_id = '\(exam)'")) == 3)
-    }
-
-    private func listDeleted(_ world: ExamWorld) throws -> [JSONValue] {
-        try world.harness.store.read { tx in
-            try ExamDeletions.recentlyDeleted(
-                BankCall(params: [:], query: [:], body: nil, tx: tx, now: world.harness.now, ids: { LocalBank.randomID() }), courseID: world.course)
-        }
     }
 
     // MARK: An exam still going
