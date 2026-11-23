@@ -10,6 +10,4 @@ nonisolated enum LegalLinks {
     static let privacyPolicy = URL(string: "https://\(siteHost)/privacy")!
     static let help = URL(string: "https://\(siteHost)/support")!
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-
-    static let all = [privacyPolicy, help, termsOfUse]
 }

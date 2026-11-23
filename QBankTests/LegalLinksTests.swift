@@ -4,7 +4,7 @@ import Testing
 
 struct LegalLinksTests {
     @Test func everyAddressIsHTTPS() {
-        for url in LegalLinks.all {
+        for url in [LegalLinks.privacyPolicy, LegalLinks.help, LegalLinks.termsOfUse] {
             #expect(url.scheme == "https", "\(url)")
         }
     }
