@@ -80,7 +80,7 @@ enum StandingRules {
             if row.lastStatus == "correct" { standing.fullyRightCount += 1 }
             if row.inReview { standing.reviewCount += 1 }
         }
-        standing.wrongCount = wrongCount(list, progress)
+        standing.wrongCount = ExamPools.folderPools(list, progress: progress).values.reduce(0) { $0 + $1.wrong.count }
         return standing
     }
 
@@ -93,58 +93,4 @@ enum StandingRules {
             "maxPoints": pair(before.maxPoints, after.maxPoints), "wrongCount": pair(before.wrongCount, after.wrongCount),
         ])
     }
-
-    // MARK: Wrong questions
-
-    /// How many questions the folders' exam pools hold as wrong. A folder with an exam bank draws only those questions; a folder without
-    /// one draws its practice questions; a question whose set has no folder is in no pool. Wrong means the last answer was not fully right.
-    /// An exam-bank question is also wrong while the last answer to its practice twin is not fully right, until she answers the exam
-    /// question fully right after that answer.
-    private static func wrongCount(_ pool: [StandingQuestion], _ progress: [String: ProgressLine]) -> Int {
-        let twin = twinResolver(pool)
-        let hasBank = Set(pool.filter { $0.kind == "exam" }.compactMap(\.folderId))
-        func notFullyRight(_ lineage: String) -> Bool { progress[lineage].map { $0.lastStatus != "correct" } ?? false }
-        var wrong = 0
-        for question in pool {
-            guard let folder = question.folderId else { continue }
-            let source = hasBank.contains(folder) ? "exam" : "practice"
-            if question.kind != source { continue }
-            if question.kind != "exam" {
-                if notFullyRight(question.lineageId) { wrong += 1 }
-                continue
-            }
-            if notFullyRight(question.lineageId) {
-                wrong += 1
-            } else if let twin = twin(question).flatMap({ progress[$0.lineageId] }), twin.lastStatus != "correct" {
-                guard let own = progress[question.lineageId] else {
-                    wrong += 1
-                    continue
-                }
-                if time(own.lastAnsweredAt) <= time(twin.lastAnsweredAt) { wrong += 1 }
-            }
-        }
-        return wrong
-    }
-
-    /// The practice question an exam question twins, among the pool's: the one practice question of the same folder whose lineage it
-    /// names (QBank's own twins), and otherwise the one whose public id it names. Ids repeat across folders and sometimes across
-    /// sets, so a name that matches nothing in the folder, or more than one question, links to no twin.
-    private static func twinResolver(_ pool: [StandingQuestion]) -> (StandingQuestion) -> StandingQuestion? {
-        var byPublicId: [String: [StandingQuestion]] = [:]
-        var byLineage: [String: [StandingQuestion]] = [:]
-        for question in pool where question.kind == "practice" && question.folderId != nil {
-            byPublicId[question.publicId, default: []].append(question)
-            byLineage[question.lineageId, default: []].append(question)
-        }
-        return { question in
-            guard question.kind == "exam" else { return nil }
-            func inFolder(_ found: [StandingQuestion]?) -> [StandingQuestion] { (found ?? []).filter { $0.folderId == question.folderId } }
-            let linked = question.twinOfLineageId.map { inFolder(byLineage[$0]) } ?? []
-            if linked.count == 1 { return linked[0] }
-            let named = question.twinOf.map { inFolder(byPublicId[$0]) } ?? []
-            return named.count == 1 ? named[0] : nil
-        }
-    }
-
-    private static func time(_ text: String) -> Double { QBankJSON.parseDate(text)?.timeIntervalSince1970 ?? 0 }
 }

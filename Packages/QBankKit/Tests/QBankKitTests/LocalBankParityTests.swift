@@ -8,12 +8,10 @@ import Testing
 /// ids bound one to one (`TranscriptReplay`).
 ///
 /// The bank serves the catalog (semesters, courses, topics, pages and folders), the sets (import, replace, restore, a set's questions
-/// and a course's terms), the study routes (answers, a set's sittings and Start over, Review and the place) and deleting and Undo
-/// (sets, folders, pages, courses and topics, with Recently deleted). A transcript is proven whole when every bank request in it is one
-/// the bank serves. One that also holds a request a later slice serves (exams, the archive) is proven up to that request, and the
-/// request is named in `waiting`, so the day a slice serves it the transcript moves to the whole list. The deletion transcripts all
-/// reach an exam, which is the exam family's; what follows it there is proven by `LocalBankDeleteTests` and `LocalBankUndoTests`, which
-/// make the same states with exam rows written by hand. Import answers the server has changed since
+/// and a course's terms), the study routes (answers, a set's sittings and Start over, Review and the place), deleting and Undo
+/// (sets, folders, pages, courses and topics, with Recently deleted) and exams. A transcript is proven whole when every bank request in it is one
+/// the bank serves. One that also holds a request a later slice serves (the archive) is proven up to that request, and the
+/// request is named in `waiting`, so the day a slice serves it the transcript moves to the whole list. Import answers the server has changed since
 /// the recording come from `Fixtures/import-drift.json` (`Transcript.loadWithImportDrift`). An agent's imports and the admin's reads are
 /// not the bank's to answer, so those transcripts are not listed.
 @Suite struct LocalBankParityTests {
@@ -30,16 +28,18 @@ import Testing
     static func isAnswered(_ request: Fixture.Request) -> Bool { isBank(request) && request.authorization != nil }
 
     /// Transcripts that replay whole: every bank request in them is served by this slice.
-    static let whole = ["organize-catalog", "organize-imports", "practice-continuing", "practice-restoring", "topics"]
+    static let whole = [
+        "deletion-contents", "deletion-courses", "deletion-pages", "organize-catalog", "organize-imports", "practice-continuing", "practice-restoring", "practice-studying", "topics",
+    ]
 
     /// Transcripts that hold a request of a later slice: how many steps come before the first such
     /// request, and what it is. Those steps replay now.
-    static let waiting: [String: (step: Int, request: String)] = [
-        "practice-studying": (27, "GET /api/courses/c0000000-0000-4000-8000-000000000201/exams"),
-        "deletion-contents": (24, "POST /api/courses/c0000000-0000-4000-8000-000000000701/exams"),
-        "deletion-courses": (7, "POST /api/courses/c0000000-0000-4000-8000-000000000801/exams"),
-        "deletion-pages": (13, "POST /api/courses/c0000000-0000-4000-8000-000000000901/exams"),
-        "twins": (18, "POST /api/courses/c0000000-0000-4000-8000-000000000501/exams"),
+    static let waiting: [String: (step: Int, request: String)] = [:]
+
+    /// Transcripts whose exam asks for sets the server's twin job filed, which the phone has no job to write: how many
+    /// steps come before it and what it is. Those steps replay now.
+    static let askingForTwins: [String: (step: Int, request: String)] = [
+        "twins": (18, "POST /api/courses/c0000000-0000-4000-8000-000000000501/exams")
     ]
 
     // `organize-folders` is not listed: it holds exams too, but a delete preview in it asks for a page by an id the recording gave to a
@@ -67,6 +67,22 @@ import Testing
         #expect(first == expected.step)
         if case .request(let exchange) = transcript.steps[first] { #expect("\(exchange.request.method) \(exchange.request.path)" == expected.request) }
         let prefix = Transcript(recordedFrom: transcript.recordedFrom, world: transcript.world, steps: Array(transcript.steps[..<first]))
+        let differences = try await TranscriptReplay.run(prefix, over: harness.bank, hooks: harness.hooks(serves: Self.isAnswered))
+        #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
+    }
+
+    @Test(arguments: askingForTwins.keys.sorted())
+    func replaysUpToTheExamThatAsksForTwins(_ name: String) async throws {
+        let transcript = try Transcript.loadWithImportDrift(name)
+        let harness = try LocalBankHarness()
+        let expected = try #require(Self.askingForTwins[name])
+        guard case .request(let exchange) = transcript.steps[expected.step] else {
+            Issue.record("step \(expected.step) is not a request")
+            return
+        }
+        #expect("\(exchange.request.method) \(exchange.request.path)" == expected.request)
+        #expect(harness.bank.serves(exchange.request.method, path: exchange.request.path))
+        let prefix = Transcript(recordedFrom: transcript.recordedFrom, world: transcript.world, steps: Array(transcript.steps[..<expected.step]))
         let differences = try await TranscriptReplay.run(prefix, over: harness.bank, hooks: harness.hooks(serves: Self.isAnswered))
         #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
     }

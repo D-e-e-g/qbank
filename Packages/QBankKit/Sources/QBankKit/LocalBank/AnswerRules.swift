@@ -12,9 +12,6 @@ enum AnswerRules {
         router.post("/api/attempts", record)
     }
 
-    /// An exam answer is taken for this long after its time ran out, if it was sent before the exam was ended.
-    static let examGraceSeconds = 30.0
-
     private struct Question {
         let id: String
         let lineageId: String
@@ -144,10 +141,7 @@ enum AnswerRules {
 
     /// Running, or in the grace after its time ran out: it takes an answer. Only its end is stored; the rest is told from the clock.
     static func isOpen(_ exam: StoreRow, now: Date) -> Bool {
-        if exam.text("finished_at") != nil { return false }
-        guard let start = exam.text("started_at").flatMap(QBankJSON.parseDate) else { return false }
-        let end = start.addingTimeInterval(Double(exam.int("time_limit_seconds") ?? 0))
-        return now.timeIntervalSince1970 <= end.timeIntervalSince1970 + examGraceSeconds
+        ExamClock.isOpen(ExamRow(exam).status(now))
     }
 
     // MARK: Progress
