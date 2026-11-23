@@ -114,19 +114,28 @@ struct WriteModelTests {
         #expect(!server.calls.contains("POST /api/imports"))
     }
 
-    @Test func anEditWhileTheCheckRunsIsNotFiledUnchecked() async throws {
-        let (server, model) = Self.app(Self.written())
-        let report = ImportChecker.report(for: model.draft.file())
+    @Test func nothingChangesWhileTheSetIsCheckedOrFiled() async throws {
+        let (server, model, app) = Self.appWithPhone(Self.written())
+        await model.importing.load()
+        let written = model.draft
+        let report = ImportChecker.report(for: written.file())
         server["POST /api/imports/check"] = .ok(String(decoding: try JSONEncoder().encode(report), as: UTF8.self))
         server.hold("POST /api/imports/check")
+        server.hold("POST /api/imports")
         let saving = Task { await model.save() }
         while !server.calls.contains("POST /api/imports/check") { await Task.yield() }
-        model.editQuestion(id: model.draft.questions[1].id) { $0.right = nil }
+        model.editQuestion(id: written.questions[1].id) { $0.right = nil }
+        model.edit { $0.title = "Invented edit while checking" }
+        #expect(model.draft == written, "the check judges what she wrote")
         server.release("POST /api/imports/check")
+        while !server.calls.contains("POST /api/imports") { await Task.yield() }
+        model.addQuestion()
+        #expect(model.draft == written, "what is filed is what she wrote")
+        server.release("POST /api/imports")
         await saving.value
-        #expect(model.report == nil, "the answer was for the set before the edit")
-        #expect(!server.calls.contains("POST /api/imports"))
-        #expect(model.importing.done == nil)
+        #expect(try Self.importBody(server)["source"] as? String == written.file())
+        #expect(model.importing.done?.set.title == "Invented Sleep")
+        #expect(app.drafts.draft(id: written.id) == nil)
     }
 
     @Test func aSetWithoutANameIsNotSent() async throws {

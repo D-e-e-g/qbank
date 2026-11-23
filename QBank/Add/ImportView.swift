@@ -354,7 +354,7 @@ struct FolderPicker<Field: Hashable>: View {
 
 /// The check's answer: Ready with the format counts, the errors that block the file with a way to
 /// copy them, and warnings.
-struct ReportView: View {
+private struct ReportView: View {
     let report: ImportReport
     let copied: Bool
     let copy: () -> Void

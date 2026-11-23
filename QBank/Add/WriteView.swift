@@ -77,35 +77,38 @@ struct WriteView: View {
                 .qbankFont(.subheadline)
                 .foregroundStyle(.qbank(.text2))
                 .padding(.horizontal, QBankSpacing.space1)
-            LabeledField(label: "Set name", hint: WriteWording.titleHint) {
-                TextField("Set name", text: Binding(get: { model.draft.title }, set: { text in model.edit { $0.title = text } }))
-                    .focused($focus, equals: .title)
-                    .submitLabel(.done)
-                    .accessibilityIdentifier("write.title")
-            }
-            if let problem = model.titleProblem {
-                ProblemText(text: problem)
-                    .accessibilityIdentifier("write.titleProblem")
-            }
-            ForEach(Array(model.draft.questions.enumerated()), id: \.element.id) { index, question in
-                WriteQuestionEditor(
-                    number: index + 1,
-                    question: question,
-                    problems: model.problems(inQuestion: question.id),
-                    canRemove: model.draft.questions.count > 1
-                ) { change in
-                    model.editQuestion(id: question.id, change)
-                } remove: {
-                    model.removeQuestion(id: question.id)
+            Group {
+                LabeledField(label: "Set name", hint: WriteWording.titleHint) {
+                    TextField("Set name", text: Binding(get: { model.draft.title }, set: { text in model.edit { $0.title = text } }))
+                        .focused($focus, equals: .title)
+                        .submitLabel(.done)
+                        .accessibilityIdentifier("write.title")
                 }
+                if let problem = model.titleProblem {
+                    ProblemText(text: problem)
+                        .accessibilityIdentifier("write.titleProblem")
+                }
+                ForEach(Array(model.draft.questions.enumerated()), id: \.element.id) { index, question in
+                    WriteQuestionEditor(
+                        number: index + 1,
+                        question: question,
+                        problems: model.problems(inQuestion: question.id),
+                        canRemove: model.draft.questions.count > 1
+                    ) { change in
+                        model.editQuestion(id: question.id, change)
+                    } remove: {
+                        model.removeQuestion(id: question.id)
+                    }
+                }
+                Button {
+                    model.addQuestion()
+                } label: {
+                    Label("Add a question", systemImage: "plus")
+                }
+                .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
+                .accessibilityIdentifier("write.add")
             }
-            Button {
-                model.addQuestion()
-            } label: {
-                Label("Add a question", systemImage: "plus")
-            }
-            .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
-            .accessibilityIdentifier("write.add")
+            .disabled(model.isBusy)
             DestinationFields(destination: model.importing.destination, focus: $focus, field: Field.destination)
             if !model.problems.isEmpty {
                 Issues(items: model.problems)
@@ -132,6 +135,7 @@ struct WriteView: View {
             FieldHint(WriteWording.draftNote)
             Button("Discard draft") { asksToDiscard = true }
                 .buttonStyle(.qbank(.quiet, size: .large, fullWidth: true))
+                .disabled(model.isBusy)
                 .accessibilityIdentifier("write.discard")
         }
     }

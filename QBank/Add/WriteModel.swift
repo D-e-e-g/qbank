@@ -58,7 +58,9 @@ final class WriteModel {
     }
 
     /// Changes the draft and keeps it on this phone. A changed draft needs a new check.
+    /// Nothing changes while the set is being checked or filed, so what is filed is what she wrote.
     func edit(_ change: (inout SetDraft) -> Void) {
+        guard !isBusy else { return }
         change(&draft)
         titleProblem = nil
         importing.setSource(draft.file())
