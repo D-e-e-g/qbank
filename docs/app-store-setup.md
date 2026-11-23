@@ -19,10 +19,9 @@ Each step carries one tag:
 
 A step can carry two tags (text prepared by a worker, clicked by the owner).
 
-Three things are still open and are named wherever they bite:
+Two things are still open and are named wherever they bite:
 
 - **OD1, the pages' address.** Where the privacy and support pages live is not decided. Steps 12 and 16 need it.
-- **OD3, mainland China.** In or out of the 175 storefronts. Step 14 needs it.
 - **Later pull requests.** The notification route (S-08), the privacy answers (I-43) and the listing text (I-44) do not exist yet. Steps 10, 12 and 13 name which one they wait on.
 
 ## The names, in one place
@@ -52,7 +51,7 @@ Type these exactly. A mistake in a product id cannot be undone.
 | 2 | Tax forms | Owner click | Now, after 1 |
 | 3 | Banking | Owner click | Now, after 2 |
 | 4 | Small Business Program | Owner click | Now, after 1 |
-| 5 | Trader status | Owner click | Now; needed before submission |
+| 5 | Digital Services Act status (not a trader) | Owner click | Now; needed before submission |
 | 6 | Sign in with Apple on the App ID | Owner click | Before 7 |
 | 7 | Sign in with Apple key, into the vault | Owner click, owner vault step | Before the server's account deletion (S-06) is used |
 | 8 | Subscription group and the two subscriptions | Owner click, worker-prepared text | After 1, before the plans sheet (I-33) is tried on a device |
@@ -112,17 +111,18 @@ Timing matters: Apple adjusts proceeds fifteen days after the end of the fiscal 
 
 Apple: [App Store Small Business Program](https://developer.apple.com/app-store/small-business-program/). Read 2026-11-22.
 
-### 5. Trader status
+### 5. Digital Services Act status (not a trader)
 
-**Owner click.** Roles: Account Holder or Admin. The owner chose **Trader**: the app is sold in the EU as a business activity.
+**Owner click.** Roles: Account Holder or Admin. The app launches without the EU, and the owner is not a trader under the EU Digital Services Act (DSA). Apple still wants a declaration, so make it once.
 
-- [ ] **Business** > **Agreements** tab > **Compliance** > **Digital Services Act** > **Complete Compliance Requirements**. Choose **This is a trader account.**
-- [ ] Enter the address (an individual types an address or P.O. Box), a phone number and an email address, and upload the document Apple asks for to prove the name and address. Apple validates the phone and email with a code. A P.O. Box needs extra documents.
-- [ ] Then, in the app: **Apps** > QBank > **General** > **App Compliance** > **Digital Services Act** > **Edit**.
+- [ ] **Business** (at the top) > **Agreements** tab > scroll to **Compliance** > next to **Digital Services Act**, **Complete Compliance Requirements**. Choose **This is not a trader account.** Apple's page says no contact information is needed. **Done**.
+- [ ] Nothing else is asked: no address, no P.O. Box, no phone number, no document.
 
-Apple shows these contact details publicly on the app's page in the EU, so give the phone and email the owner is willing to show. Use the public contact email the pages carry (see step 16). An app with no trader status is removed from the EU storefronts until the status is verified. Declare a status even if the EU is left out.
+Apple's page words the two options "This is a trader account." and "This is not a trader account." The screen may word the second one a little differently (for example, that the owner is not a trader or does not plan to distribute in the EU); it is the one that means not a trader. Step 14 takes the EU storefronts out, so no EU page ever shows trader details.
 
-Apple: [Manage European Union Digital Services Act trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/), [Upcoming requirements](https://developer.apple.com/news/upcoming-requirements/?id=02172025a). Read 2026-11-22.
+**Adding the EU later** needs, first, trader status: the same screen with **This is a trader account.** Then the owner enters an address or P.O. Box, a phone number and an email address, validates the phone and email with a code, and uploads a current document that proves the name and address (a P.O. Box also needs a receipt or bill that ties the owner to it). Apple shows these details publicly on the app's page in the EU. The app's own setting is under **Apps** > QBank > **General** > **App Compliance** > **Digital Services Act** > **Edit**. Only after the status is verified would the EU storefronts be ticked in step 14. Apple removes an app from the EU storefronts while it has no verified status.
+
+Apple: [Manage European Union Digital Services Act trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/). Read 2026-11-22. The quoted option wording and the menu path are from that page; the screen itself was not seen.
 
 ### 6. Sign in with Apple on the App ID
 
@@ -172,7 +172,7 @@ Apple: [Create a private key](https://developer.apple.com/help/account/keys/crea
 - [ ] App Store Connect > **Apps** > QBank > **Monetization** > **Subscriptions** > **+**. Reference name `QBank Cloud`. **Create**.
 - [ ] In the group, **Display Name and Description** > **Add**: language English (U.S.), display name `QBank Cloud`. Apple does not show the reference name to people; it shows the display name.
 - [ ] In the group > **Create**: **Reference Name** `QBank Cloud Monthly`, **Product ID** `com.dimitrygallego.qbank.cloud.monthly`. **Subscription Duration**: **1 month**. A duration cannot change after submission.
-- [ ] **Subscription Prices** > **Add Subscription Price**: country **United States**, price **US$4.99**, **Next**, then **Confirm**. Apple fills in comparable prices for all 175 storefronts, with tax and exchange rates. The owner reviews the list before **Next**; each one can be edited.
+- [ ] **Subscription Prices** > **Add Subscription Price**: country **United States**, price **US$4.99**, **Next**, then **Confirm**. Apple fills in comparable prices for every storefront, with tax and exchange rates. The owner reviews the list before **Next**; each one can be edited.
 - [ ] **Availability**: every country the app is sold in (step 14).
 - [ ] Localization, English (U.S.): display name `QBank Cloud Monthly`, description `Save your bank to Cloud and sync devices`.
 - [ ] In the group > **Create**: **Reference Name** `QBank Cloud Yearly`, **Product ID** `com.dimitrygallego.qbank.cloud.yearly`, **Subscription Duration** **1 year**, price **US$29.99**, availability as above, localization display name `QBank Cloud Yearly`, same description.
@@ -266,16 +266,16 @@ Apple: [Set an age rating](https://developer.apple.com/help/app-store-connect/ma
 
 ### 14. Countries and regions
 
-**Owner click. Waiting** on OD3 (mainland China).
+**Owner click.** Launch is without mainland China and without the EU.
 
-- [ ] **Pricing and Availability** > **App Availability** > **Set Up Availability**.
-- **If mainland China is out (the recommendation):** choose specific countries and regions and clear mainland China, so the app is in 174. Tick the box at the bottom of the list that Apple's page names, so countries added later are included. **Next**, **Confirm**.
-- **If mainland China is in:** choose **All Countries or Regions** (it also adds countries Apple adds later), **Next**, **Confirm**. First file for Apple's ICP filing number, with China's ministry (outside Apple), and enter it where Apple's **Availability in China mainland** section says. Without a valid number the app shows **ICP Filing Number Missing** and is not available there.
+- [ ] **Pricing and Availability** > **App Availability** > **Set Up Availability**. Choose **Specific Countries or Regions**, and clear these 28 (App Store Connect's names): **China mainland**, **Austria**, **Belgium**, **Bulgaria**, **Croatia**, **Cyprus**, **Czechia**, **Denmark**, **Estonia**, **Finland**, **France**, **Germany**, **Greece**, **Hungary**, **Ireland**, **Italy**, **Latvia**, **Lithuania**, **Luxembourg**, **Malta**, **Netherlands**, **Poland**, **Portugal**, **Romania**, **Slovakia**, **Slovenia**, **Spain**, **Sweden**. **Next**, **Confirm**.
+- [ ] Leave the box at the bottom of the list **unticked**. It adds every country Apple opens later, and one of them could be an EU member's or China's. Add later countries by hand.
+- [ ] The count after the change is **147**: Apple's availability page counts 175 storefronts, less these 28. Apple's start-times table for the same storefronts lists 174 rows, so the screen may show 146; both lists hold all 27 member states and China mainland, so the 28 are right either way. Read the count off the screen and make sure the 28 are the only ones missing.
 - [ ] The subscriptions' availability in step 8 follows the same list.
 
-The picks chose all 175. Apple's own page counts 175 storefronts.
+**Adding mainland China later** takes an ICP filing number from China's ministry (outside Apple), entered where Apple's **Availability in China mainland** section says. Without a valid number the app shows **ICP Filing Number Missing** and is not available there. **Adding the EU later** takes trader status first (step 5).
 
-Apple: [Manage availability for your app](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store), [App information, Availability in China mainland](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/). Read 2026-11-22. The names "ICP Filing Number Missing" and "...Invalid" come from the status reference and search results, not from this page.
+Apple: [Manage availability for your app](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store), [Start times by country or region](https://developer.apple.com/help/app-store-connect/reference/app-store-pricing-and-availability-start-times-by-country-or-region/), [App information, Availability in China mainland](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/). Read 2026-11-22. The names "ICP Filing Number Missing" and "...Invalid" come from the status reference and search results, not from this page.
 
 ### 15. Price, copyright, review contact
 
@@ -338,7 +338,6 @@ Apple: [About Sign in with Apple](https://developer.apple.com/help/account/capab
 ## What is still open
 
 - **OD1**, the pages' address: steps 12 and 16, and through them the privacy policy, the support page and the app's own links.
-- **OD3**, mainland China: step 14.
 - **S-08**, the notification route: step 10.
 - **I-43 and I-44**, the privacy answers, the age-rating answers and the review notes: steps 12, 13 and 15.
 
