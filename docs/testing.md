@@ -62,6 +62,16 @@ Only someone with write access can start a manual run. The workflow still treats
 
 A new UI test says why a unit test cannot do the job. A unit test can check a model, the fake server, and what a screen is told. A UI test is for something only the running app can show, such as a control on screen, a gesture, or a system sheet.
 
+## A new launch scenario, scripted Sign in with Apple, or fake store
+
+A new scenario does not need to change the Debug launch seam (`QBank/DebugLaunchScenario.swift`) or the UI test helpers (`QBankUITests/UITestSupport.swift`). See [ci.md](ci.md) for how changes to shared test machinery select the test suite.
+
+- **A scenario** is a static member of `DebugScenario` in its own file under `QBank/Debug/Scenarios/`, built with `context.model(server:session:)`, plus one line in `DebugScenarioCatalog`. A test starts it by name: `launch("my-scenario")`.
+- **Scripted Sign in with Apple and the fake store** are `DebugScriptedAppleSignIn` and `DebugFakeStore` under `QBank/Debug/`, reached from the scenario's `context.appleSignIn` and `context.store`. Each is empty until the pull request that needs it fills it in.
+- **Launch environment and notifications** a new fake needs go through `launch(_:environment:)` and `postDebugNotification(_:)`, which take any name, so no new parameter or helper joins the shared file. Put a new UI test helper in a new file.
+
+Everything under `QBank/Debug/` stays inside `#if DEBUG`, and `test/release-checks.sh` checks that.
+
 ## What each run holds
 
 [ci.md](ci.md) describes the jobs and the rules for who may run them.

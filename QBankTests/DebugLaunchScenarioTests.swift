@@ -20,6 +20,33 @@ struct DebugLaunchScenarioTests {
         #expect(Self.launch([:]) == nil)
     }
 
+    /// The scenarios the seam had before they moved into their own files; each keeps its name.
+    static let originalScenarios = [
+        "signed-out", "signed-in", "exam-in-progress", "exam-finish-drops", "exam-time-running-out", "slow-saves", "maker",
+        "maker-not-set-up", "owner", "owner-exam-in-progress", "matrix-multi", "sata-all-correct",
+    ]
+
+    @Test func theCatalogKeepsEveryScenarioItHadUnderItsName() {
+        let names = DebugScenarioCatalog.all.map(\.name)
+        #expect(Set(names).count == names.count, "two scenarios share a name")
+        #expect(Set(Self.originalScenarios).isSubset(of: names))
+        #expect(names.prefix(Self.originalScenarios.count).elementsEqual(Self.originalScenarios))
+    }
+
+    @Test(arguments: DebugScenarioCatalog.all.map(\.name))
+    func everyScenarioInTheCatalogLaunchesByItsName(name: String) throws {
+        let environment = [DebugLaunchScenario.scenarioKey: name]
+        #expect(try DebugLaunchScenario.scenario(in: environment)?.name == name)
+        #expect(Self.launch(environment) != nil)
+    }
+
+    @Test func anUnknownScenarioNamesTheKnownOnes() {
+        let error = DebugLaunchScenario.UnknownScenario(name: "welcome")
+        for name in Self.originalScenarios {
+            #expect(error.description.contains(name))
+        }
+    }
+
     @Test func signedOutScenarioStartsOnSignIn() throws {
         let environment = [DebugLaunchScenario.scenarioKey: "signed-out"]
         #expect(try DebugLaunchScenario.scenario(in: environment) == .signedOut)

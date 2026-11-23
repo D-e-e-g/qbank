@@ -8,7 +8,9 @@ extension XCTestCase {
     /// starts without a network. `deviceOwner` is how the device answers the Face ID lock, such as
     /// `face-id` (`QB_UITEST_DEVICE_OWNER`); every launch gets a fake, so the simulator's own
     /// Face ID never plays a part. `largestText` shows the app at the largest accessibility text
-    /// size, where a question runs well past the screen. `aiAllowed` starts with her permission to
+    /// size, where a question runs well past the screen. `environment` adds launch environment
+    /// variables the seam reads, such as the ones a scripted Sign in with Apple or the fake store
+    /// take, so a new scenario needs no new parameter here. `aiAllowed` starts with her permission to
     /// share her material with Anthropic already given (`QB_UITEST_AI_CONSENT`); a test of the
     /// permission screen itself leaves it off.
     @MainActor
@@ -20,6 +22,7 @@ extension XCTestCase {
         online: Bool = true,
         deviceOwner: String = "face-id",
         largestText: Bool = false,
+        environment: [String: String] = [:],
         aiAllowed: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
@@ -31,6 +34,7 @@ extension XCTestCase {
         if aiAllowed {
             app.launchEnvironment["QB_UITEST_AI_CONSENT"] = "allowed"
         }
+        app.launchEnvironment.merge(environment) { _, extra in extra }
         if keepPhoneSettings {
             app.launchEnvironment["QB_UITEST_KEEP_PHONE_SETTINGS"] = "1"
         }
@@ -68,15 +72,19 @@ extension XCTestCase {
     /// Makes the fake device confirm her at the next Face ID check, or refuse as though she
     /// cancelled, through the Darwin notifications `DebugLaunchScenario` names.
     func setDeviceOwner(confirms: Bool) {
-        let name = confirms ? "com.dimitrygallego.qbank.uitest.owner.confirms" : "com.dimitrygallego.qbank.uitest.owner.refuses"
+        postDebugNotification(confirms ? "com.dimitrygallego.qbank.uitest.owner.confirms" : "com.dimitrygallego.qbank.uitest.owner.refuses")
+    }
+
+    /// Posts a Darwin notification a Debug fake in the app listens for, such as the ones a scripted
+    /// Sign in with Apple or the fake store take, so a new fake needs no new helper here.
+    func postDebugNotification(_ name: String) {
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString), nil, nil, true)
     }
 
     /// Opens another window of the app on iPad, as she can from the Dock, through the Darwin
     /// notification `DebugLaunchScenario` names.
     func openAnotherWindow() {
-        let name = "com.dimitrygallego.qbank.uitest.window.new"
-        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString), nil, nil, true)
+        postDebugNotification("com.dimitrygallego.qbank.uitest.window.new")
     }
 
     /// Keeps a screenshot in the test results, for comparing the screens with the wireframes.
