@@ -22,6 +22,12 @@ public struct QBankClient: Sendable {
         self.sessionStore = sessionStore
     }
 
+    /// This client with a bank on the phone: `bank` answers the bank's requests and every other
+    /// request, the account's, still goes where this client sends it (`BankRoutedTransport`).
+    public func routingBank(to bank: any HTTPTransport) -> QBankClient {
+        QBankClient(configuration: configuration, transport: BankRoutedTransport(bank: bank, account: transport), sessionStore: sessionStore)
+    }
+
     // MARK: Sign-in and session
 
     /// `GET /health`.

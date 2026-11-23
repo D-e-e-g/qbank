@@ -9,13 +9,26 @@ final class Connection {
     private(set) var isOnline: Bool
     /// Told about every change, after `isOnline` has changed.
     @ObservationIgnored var onChange: ((Bool) -> Void)?
+    /// True for a bank on this phone, which is always reachable: nothing the network does changes it.
+    @ObservationIgnored let isFixed: Bool
 
     init(isOnline: Bool = true) {
         self.isOnline = isOnline
+        isFixed = false
+    }
+
+    private init(fixedOnline: Void) {
+        isOnline = true
+        isFixed = true
+    }
+
+    /// What the screens read when the bank is on this phone: always online, whatever the network does.
+    static func onThisPhone() -> Connection {
+        Connection(fixedOnline: ())
     }
 
     func update(isOnline: Bool) {
-        guard isOnline != self.isOnline else { return }
+        guard !isFixed, isOnline != self.isOnline else { return }
         self.isOnline = isOnline
         onChange?(isOnline)
     }

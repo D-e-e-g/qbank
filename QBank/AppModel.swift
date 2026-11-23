@@ -1,8 +1,14 @@
 import Observation
 import QBankKit
 
-/// The app's top-level state: who is signed in, the client every screen talks through, and what
-/// the phone keeps for her account to study without signal.
+/// The app's top-level state: who is signed in, what kind of account it is, the client every screen
+/// talks through, and what the phone keeps for her account to study without signal.
+///
+/// An invited or store account's bank is on the server, and the client talks to it. A free account's
+/// bank is on this phone: its client answers the bank's requests on the phone, and the screens see a
+/// connection that is always up. Which kind the account is, and so which rows Settings offers, is
+/// `kind`, not the account's role. A password sign-in is always an invited account's, so it puts the
+/// model back on the server, leaving a free bank on the phone as it was.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -29,7 +35,10 @@ final class AppModel {
     /// just signed out.
     private(set) var signIns = 0
 
-    let client: QBankClient
+    /// The client every screen talks through: the bank on this phone for a free account, else the server.
+    private(set) var client: QBankClient
+    /// What kind of account is signed in, which decides where its bank is and what it can do.
+    private(set) var kind: AccountKind
     /// Light or dark, chosen in Settings and kept on this phone.
     let look: LookStore
     /// The color scheme she picked in Settings while it is on its way to the server, shown at once.
@@ -44,8 +53,8 @@ final class AppModel {
     let highlighter: HighlighterStore
     /// Whether she allowed her material to go to Anthropic, kept on this phone.
     let aiConsent: AIConsentStore
-    /// Whether the phone has a network path.
-    let connection: Connection
+    /// Whether the phone has a network path. Always up when the bank is on this phone.
+    private(set) var connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
     let deletions = Deletions()
     /// The admin's look at a user account: each control answers with one note and changes nothing.
@@ -54,10 +63,17 @@ final class AppModel {
     private(set) var offline: OfflineStore?
 
     private let storage: PhoneStorage
+    /// The client that talks to the server, and the phone's network path it follows.
+    private let server: QBankClient
+    private let network: Connection
     private let networkWatcher: NetworkWatcher?
 
+    /// `client` talks to the server. A free account is given its `bank` on this phone, which answers
+    /// the bank's requests, and only a free account is.
     init(
         client: QBankClient,
+        kind: AccountKind = .invited,
+        bank: LocalBank? = nil,
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
@@ -66,19 +82,24 @@ final class AppModel {
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
     ) {
-        self.client = client
+        precondition(kind.bankIsOnPhone == (bank != nil), "A free account, and only a free account, has its bank on this phone.")
+        self.kind = kind
         self.look = look
         self.lock = lock
         self.highlighter = highlighter
         self.aiConsent = aiConsent
         self.storage = storage
-        self.connection = connection
+        server = client
+        network = connection
         self.networkWatcher = networkWatcher
+        self.client = bank.map(client.routingBank(to:)) ?? client
+        // A bank on this phone is always reachable, so no network path is followed for it.
+        self.connection = bank == nil ? connection : Connection.onThisPhone()
         let stored = try? client.storedSession()
         route = stored?.account.map(Self.route(for:)) ?? .signedOut
         openOffline()
         frozen.isOn = account?.role == .admin
-        connection.onChange = { [weak self] isOnline in
+        network.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
         }
     }
@@ -122,7 +143,9 @@ final class AppModel {
     /// Checks the stored session with the server. The phone stays signed in when the server
     /// cannot be reached; only a session the server has ended signs her out.
     func refreshSession() async {
-        guard account != nil else { return }
+        // A free account's session is checked with the server when it signs in; until then the
+        // phone's bank opens as it is.
+        guard account != nil, !kind.bankIsOnPhone else { return }
         do {
             let session = try await client.session()
             route = Self.route(for: session.user)
@@ -137,8 +160,11 @@ final class AppModel {
         await lock.becameActive()
     }
 
-    /// After a sign-in with her password.
+    /// After a sign-in with her password, which only an invited account has: its bank is on the server.
     func signedIn(_ signedIn: SignedIn, password: String) {
+        kind = .invited
+        client = server
+        connection = network
         signIns += 1
         signedOutReason = nil
         hasLanded = false
@@ -245,7 +271,7 @@ final class AppModel {
     /// Opens the phone's store for the account signed in, keeping it while the account stays. An
     /// ended session closes it but leaves its files, so waiting answers go once she signs in again.
     private func openOffline() {
-        guard let account else {
+        guard kind.savesForOffline, let account else {
             offline?.stop()
             offline = nil
             return

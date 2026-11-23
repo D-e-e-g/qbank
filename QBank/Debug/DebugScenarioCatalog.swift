@@ -18,6 +18,7 @@ nonisolated enum DebugScenarioCatalog {
         .ownerExamInProgress,
         .matrixMulti,
         .sataAllCorrect,
+        .freeNewBank,
     ]
 
     /// The scenario named `name`, or nil when none is.

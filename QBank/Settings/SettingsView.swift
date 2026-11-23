@@ -43,7 +43,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: QBankSpacing.space7) {
                     account
                     lock
-                    if app.aiConsent.isAllowed || Twins.listsJobs(maker) {
+                    if app.offersQuestionMaker, app.aiConsent.isAllowed || Twins.listsJobs(maker) {
                         anthropic
                     }
                     if catalog.isEditable {
@@ -89,7 +89,7 @@ struct SettingsView: View {
             await catalog.load()
         }
         .task {
-            guard app.connection.isOnline else { return }
+            guard app.offersQuestionMaker, app.connection.isOnline else { return }
             maker = try? await app.client.questionMakerStatus()
         }
         .task(id: app.offline?.savedRevision) {
@@ -122,16 +122,20 @@ struct SettingsView: View {
             .padding(.vertical, 11)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("settings.account")
-            NavigationLink(value: SettingsRoute.changePassword) {
-                QBankListRow("Change password", showsChevron: true)
+            if app.kind.hasPassword {
+                NavigationLink(value: SettingsRoute.changePassword) {
+                    QBankListRow("Change password", showsChevron: true)
+                }
+                .buttonStyle(.qbankRow)
+                .accessibilityIdentifier("settings.changePassword")
             }
-            .buttonStyle(.qbankRow)
-            .accessibilityIdentifier("settings.changePassword")
-            NavigationLink(value: SettingsRoute.connectAgent) {
-                QBankListRow("Connect an agent", detail: AgentWording.settingsDetail, showsChevron: true)
+            if app.kind.connectsAgents {
+                NavigationLink(value: SettingsRoute.connectAgent) {
+                    QBankListRow("Connect an agent", detail: AgentWording.settingsDetail, showsChevron: true)
+                }
+                .buttonStyle(.qbankRow)
+                .accessibilityIdentifier("settings.connectAgent")
             }
-            .buttonStyle(.qbankRow)
-            .accessibilityIdentifier("settings.connectAgent")
             Button {
                 if app.offline?.waiting.isEmpty == false {
                     asksToSignOut = true
@@ -184,7 +188,7 @@ struct SettingsView: View {
                     Text(waitingWarning)
                 }
             }
-            if DeleteAccountModel.isOffered(to: app.account) {
+            if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
                 NavigationLink(value: SettingsRoute.deleteAccount) {
                     QBankListRow("Delete account", showsChevron: true, isDestructive: true)
                 }
@@ -362,7 +366,13 @@ struct SettingsView: View {
         .padding(QBankSpacing.space3)
     }
 
-    private var onThisPhone: some View {
+    @ViewBuilder private var onThisPhone: some View {
+        if app.kind.savesForOffline {
+            savedForOffline
+        }
+    }
+
+    private var savedForOffline: some View {
         let waiting = app.offline?.waiting.count ?? 0
         return QBankListGroup(header: "On this \(Device.noun)") {
             NavigationLink(value: SettingsRoute.savedForOffline) {

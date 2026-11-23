@@ -12,7 +12,7 @@ import FoundationNetworking
 ///
 /// The bank does not check the bearer token: a file on the phone is already the signed-in
 /// person's (`docs/on-phone-bank.md`). It reads the time from the clock it was given and takes
-/// every id from the generator it was given, so a test sets both. Nothing in the app uses it yet.
+/// every id from the generator it was given, so a test sets both. A free account's model uses it, behind `BankRoutedTransport`.
 public final class LocalBank: HTTPTransport {
     /// Where the bank reads the time.
     public typealias Clock = @Sendable () -> Date

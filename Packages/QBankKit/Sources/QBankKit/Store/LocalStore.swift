@@ -9,7 +9,7 @@ import Synchronization
 /// Foreign keys are on. Everything runs under one lock, so a store can be shared across tasks.
 /// The store is not re-entrant: inside a `transaction` or `read` body, use the `StoreTransaction`
 /// it hands you, never the store itself, which would wait on its own lock forever.
-/// Nothing in the app uses it yet.
+/// A free account's bank is one.
 public final class LocalStore: Sendable {
     /// The file, or nil for an in-memory store.
     public let fileURL: URL?
