@@ -163,8 +163,10 @@ private struct QuestionPage: View {
                 ProblemText(text: problem)
             }
             QuestionMeta(question: question, pen: HighlighterPen(store: model.app.highlighter, isOpen: $isPenOpen))
-            MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if Wording.shows(question.stem) {
+                MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             StemExhibits(question: question)
             MarkableText(text: question.ask, part: .ask, style: .headline, identifier: "practice.ask", isHeader: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -363,21 +365,27 @@ private struct RationaleSections: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: QBankSpacing.space1) {
-                Kicker("Rationale")
-                Prose(question.rationale)
-                    .accessibilityIdentifier("practice.rationale")
-                RationaleImages(question: question)
-                    .padding(.top, QBankSpacing.space4)
+            if Wording.shows(question.rationale) || question.images.contains(where: { $0.placement == .rationale }) {
+                VStack(alignment: .leading, spacing: QBankSpacing.space1) {
+                    Kicker("Rationale")
+                    if Wording.shows(question.rationale) {
+                        Prose(question.rationale)
+                            .accessibilityIdentifier("practice.rationale")
+                    }
+                    RationaleImages(question: question)
+                        .padding(.top, QBankSpacing.space4)
+                }
             }
-            VStack(alignment: .leading, spacing: QBankSpacing.space1) {
-                Kicker("Key takeaway")
-                Prose(question.takeaway)
+            if Wording.shows(question.takeaway) {
+                VStack(alignment: .leading, spacing: QBankSpacing.space1) {
+                    Kicker("Key takeaway")
+                    Prose(question.takeaway)
+                }
+                .padding(.vertical, 14)
+                .padding(.horizontal, QBankSpacing.space5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
             }
-            .padding(.vertical, 14)
-            .padding(.horizontal, QBankSpacing.space5)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
             if !question.terms.isEmpty {
                 VStack(alignment: .leading, spacing: QBankSpacing.space1) {
                     Kicker("Terms in this question")

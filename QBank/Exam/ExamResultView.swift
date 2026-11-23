@@ -25,7 +25,9 @@ struct ExamResultView: View {
                     // An exam from before folders.
                     breakdown("By week", rows: result.byWeek, detail: source)
                 }
-                breakdown("By clinical judgment step", rows: result.byStep) { _ in nil }
+                if result.hasSteps {
+                    breakdown("By clinical judgment step", rows: result.byStep) { _ in nil }
+                }
                 questions
                 Button("Back to \(Wording.words(kind).container)") { close(.backToCourse) }
                     .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
@@ -273,7 +275,9 @@ private struct ExamResultQuestion: View {
         let layout = item.shuffle ?? .plain
         let draft = item.response.flatMap { AnswerDraft(response: $0, body: question.body) } ?? AnswerDraft(body: question.body, layout: layout)
         return VStack(alignment: .leading, spacing: QBankSpacing.space4) {
-            Prose(question.stem)
+            if Wording.shows(question.stem) {
+                Prose(question.stem)
+            }
             StemExhibits(question: question)
             Text(question.ask)
                 .qbankFont(.readingSmall, weight: .semibold)
@@ -284,12 +288,16 @@ private struct ExamResultQuestion: View {
                     .foregroundStyle(.qbank(.text2))
             }
             AnswerArea(question: question, layout: layout, draft: draft, revealed: true, isLocked: true) { _ in }
-            Prose(question.rationale)
+            if Wording.shows(question.rationale) {
+                Prose(question.rationale)
+            }
             RationaleImages(question: question)
-            Prose(question.takeaway)
-                .padding(.vertical, 14)
-                .padding(.horizontal, QBankSpacing.space5)
-                .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+            if Wording.shows(question.takeaway) {
+                Prose(question.takeaway)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, QBankSpacing.space5)
+                    .background(.qbank(.tintSoft), in: .rect(cornerRadius: QBankRadius.sm, style: .continuous))
+            }
         }
     }
 

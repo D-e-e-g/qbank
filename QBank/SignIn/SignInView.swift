@@ -46,7 +46,7 @@ struct SignInView: View {
                 .foregroundStyle(.qbank(.text1))
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("signIn.title")
-            Text("NCLEX practice, synced across your devices.")
+            Text(Wording.firstScreenLine)
                 .qbankFont(.subheadline)
                 .foregroundStyle(.qbank(.text2))
                 .multilineTextAlignment(.center)

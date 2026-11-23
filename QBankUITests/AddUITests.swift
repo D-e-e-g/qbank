@@ -142,7 +142,10 @@ final class AddUITests: XCTestCase {
     private func openImport(_ app: XCUIApplication) {
         openTab(app, "Add")
         XCTAssertTrue(app.navigationBars["Add questions"].appears(timeout: 5))
-        app.buttons["add.import"].tap()
+        let row = app.buttons["add.import"]
+        XCTAssertTrue(row.label.contains("A JSON file of questions."), "the row says what a question file is: \(row.label)")
+        XCTAssertFalse(row.label.localizedCaseInsensitiveContains("agent"), "and does not name an agent: \(row.label)")
+        row.tap()
         XCTAssertTrue(app.navigationBars["Import"].appears(timeout: 5))
     }
 }

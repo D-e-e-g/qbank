@@ -124,7 +124,7 @@ struct ExamPageView: View {
                     app.frozen.perform { adding = .importFile }
                 } label: {
                     Text("Import a question file here")
-                    Text("A JSON file from your agent")
+                    Text(Wording.questionFileDetail)
                     Image(systemName: "square.and.arrow.down")
                 }
                 .accessibilityIdentifier("page.add.import")

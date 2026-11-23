@@ -177,8 +177,10 @@ private struct ExamQuestionPage: View {
                         .foregroundStyle(.qbank(.guess))
                 }
             }
-            MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if Wording.shows(question.stem) {
+                MarkableText(text: question.stem, part: .stem, style: .stem, identifier: "practice.stem")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             StemExhibits(question: question)
             MarkableText(text: question.ask, part: .ask, style: .headline, identifier: "practice.ask", isHeader: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

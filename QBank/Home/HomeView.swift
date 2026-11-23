@@ -231,8 +231,8 @@ struct HomeView: View {
                         .padding(.top, QBankSpacing.space3)
                 }
                 if catalog.semesters.isEmpty {
-                    EmptyCard(message: "No semesters yet. Tap + to add one, or import a question file.")
-                        .padding(.top, QBankSpacing.space3)
+                    // A bank with no semesters leads with its topics.
+                    topics(leading: true)
                 }
                 ForEach(model.studiedSemesters) { semester in
                     let courses = model.courses(in: semester)
@@ -247,7 +247,9 @@ struct HomeView: View {
                         courseLink(course)
                     }
                 }
-                topics
+                if !catalog.semesters.isEmpty {
+                    topics(leading: false)
+                }
                 if !model.archived.isEmpty {
                     archived
                 }
@@ -265,17 +267,23 @@ struct HomeView: View {
         }
     }
 
-    /// Her study topics. The + at the top makes one.
+    /// Her study topics. The + at the top makes one. `leading` is a bank with no semesters, where
+    /// they come first and an empty list says how to begin.
     @ViewBuilder
-    private var topics: some View {
+    private func topics(leading: Bool) -> some View {
         let topics = model.topics
         QBankSectionHeader("Study topics")
             .padding(.horizontal, QBankSpacing.space1)
-            .padding(.top, QBankSpacing.space5)
+            .padding(.top, leading ? QBankSpacing.space3 : QBankSpacing.space5)
             .padding(.bottom, -QBankSpacing.space2)
         if topics.isEmpty {
-            EmptyCard(message: "A topic is a place for questions that are not a course: a certification, a language, your own notes.", systemImage: "book.closed")
-                .accessibilityIdentifier("home.noTopics")
+            EmptyCard(
+                message: leading
+                    ? Wording.noTopicsYet
+                    : "A topic is a place for questions that are not a course: a certification, a language, your own notes.",
+                systemImage: "book.closed"
+            )
+            .accessibilityIdentifier("home.noTopics")
         }
         ForEach(topics) { topic in
             courseLink(topic)
@@ -493,13 +501,13 @@ private struct NoCourseChosen: View {
                 .padding(.bottom, QBankSpacing.space2)
                 .accessibilityHidden(true)
             if let hasCourses {
-                Text(hasCourses ? "Choose a course" : "No courses yet")
+                Text(hasCourses ? "Choose a course" : Wording.nothingChosenTitle)
                     .qbankFont(.title3)
                     .foregroundStyle(.qbank(.text1))
                 Text(
                     hasCourses
                         ? "Its pages, folders, Review and Terms open here."
-                        : "Tap + to add one, or import its first question file."
+                        : Wording.nothingChosenDetail
                 )
                 .qbankFont(.subheadline)
                 .foregroundStyle(.qbank(.text2))

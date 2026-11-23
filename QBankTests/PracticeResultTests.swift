@@ -56,4 +56,29 @@ struct PracticeResultTests {
         #expect(result.rows.last?.title == "P-5", "a question without a topic shows its id")
         #expect(result.rows.map(\.number) == [1, 2, 3, 4, 5])
     }
+
+    @Test func theStepBreakdownShowsOnlyWhenAQuestionHasAStep() throws {
+        func result(_ steps: [String?]) throws -> PracticeResult {
+            let questions = try steps.enumerated().map { try Self.question("\($0.offset)", cj: $0.element) }
+            return PracticeResult(
+                title: "Set", questions: questions, attempts: questions.map { _ in Self.attempt(Self.right) }, elapsed: nil)
+        }
+        #expect(try !result([nil, "", nil]).hasSteps, "a set from any course or topic has no steps")
+        #expect(try !result([]).hasSteps)
+        #expect(try result([nil, "Take action"]).hasSteps, "a nursing set keeps its breakdown")
+        #expect(try result(["Analyze cues", "Take action"]).hasSteps)
+        #expect(try result([nil, "Take action"]).steps.map(\.label) == ["Not labeled", "Take action"], "unlabeled questions still count beside steps")
+    }
+
+    @Test func anExamResultHidesTheStepBreakdownWithoutSteps() throws {
+        func decode(_ steps: [String]) throws -> ExamResult {
+            let rows = steps.map { #"{"label":"\#($0)","right":1,"total":1}"# }.joined(separator: ",")
+            let body = StudyBodies.result().replacingOccurrences(
+                of: #""byStep":[{"label":"Take action","right":1,"total":3}]"#, with: #""byStep":[\#(rows)]"#)
+            return try QBankJSON.decoder.decode(ExamResult.self, from: Data(body.utf8))
+        }
+        #expect(try !decode(["Not labeled"]).hasSteps)
+        #expect(try !decode([]).hasSteps)
+        #expect(try decode(["Take action", "Not labeled"]).hasSteps)
+    }
 }

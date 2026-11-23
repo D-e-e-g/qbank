@@ -8,6 +8,27 @@ nonisolated enum Wording {
         "\(number) \(number == 1 ? singular : plural ?? singular + "s")"
     }
 
+    /// The line under the name on the first screen.
+    static let firstScreenLine = "Practice questions on any course or topic."
+
+    /// What Add, the course menus and Import say a question file is.
+    static let questionFileDetail = "A JSON file of questions."
+    static let questionFileHint = "Paste the question file's JSON."
+    static let copyFileErrors = "Copy these errors"
+
+    /// Home's empty states, which lead with topics: a topic holds any course, exam, language or notes.
+    static let noTopicsYet = "Tap + to add a study topic, or import a question file. A topic can be any course, exam, language or your own notes."
+    static let nothingChosenTitle = "No topics yet"
+    static let nothingChosenDetail = "Tap + to add a study topic, or import a question file."
+
+    /// The label of a question without a clinical judgment step in a result's breakdown.
+    static let notLabeled = "Not labeled"
+
+    /// Whether a stem, rationale or takeaway has anything to show.
+    static func shows(_ text: String) -> Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     /// "today", or a short month and day such as "Oct 3" in the phone's language.
     static func when(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
         if calendar.isDate(date, inSameDayAs: now) { return "today" }
