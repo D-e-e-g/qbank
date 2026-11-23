@@ -6,6 +6,8 @@ import SwiftUI
 struct WriteQuestionEditor: View {
     let number: Int
     let question: QuestionDraft
+    /// What the import check refused in this question, in her words.
+    let problems: [String]
     let canRemove: Bool
     let edit: ((inout QuestionDraft) -> Void) -> Void
     let remove: () -> Void
@@ -26,6 +28,10 @@ struct WriteQuestionEditor: View {
                         .accessibilityLabel("Remove question \(number)")
                         .accessibilityIdentifier("\(prefix).remove")
                 }
+            }
+            ForEach(problems, id: \.self) { problem in
+                ProblemText(text: problem.prefix(1).uppercased() + problem.dropFirst())
+                    .accessibilityIdentifier("\(prefix).problem")
             }
             QBankSegmentedControl(
                 "Kind of question \(number)",
@@ -61,7 +67,7 @@ struct WriteQuestionEditor: View {
                     .buttonStyle(.qbank(.plain, size: .medium))
                     .accessibilityIdentifier("\(prefix).addChoice")
                 }
-                FieldHint("Tap the circle beside the right choice.")
+                FieldHint(question.kind == .single ? "Tap the circle beside the right choice. Empty choices are left out." : "Tap the circle beside the right answer.")
             }
             LabeledField(label: "Explanation (optional)", hint: "Shown after the answer.") {
                 TextField("Why the right choice is right", text: Binding(get: { question.explanation }, set: { text in edit { $0.explanation = text } }), axis: .vertical)
@@ -72,7 +78,10 @@ struct WriteQuestionEditor: View {
         }
         .padding(QBankSpacing.space4)
         .background(.qbank(.surfaceRaised), in: .rect(cornerRadius: QBankRadius.md, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: QBankRadius.md, style: .continuous).strokeBorder(.qbank(.separator), lineWidth: QBankBorder.hairline))
+        .overlay(
+            RoundedRectangle(cornerRadius: QBankRadius.md, style: .continuous)
+                .strokeBorder(.qbank(problems.isEmpty ? .separator : .wrongBorder), lineWidth: problems.isEmpty ? QBankBorder.hairline : QBankBorder.regular)
+        )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(prefix)
     }

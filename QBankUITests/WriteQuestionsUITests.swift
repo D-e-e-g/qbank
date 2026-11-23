@@ -1,9 +1,9 @@
 import XCTest
 
-/// Writing a set by hand: the set editor under Add, the import check's words when a question is
-/// not finished, saving through Import, and practicing what was written, on a free account whose
+/// Writing a set by hand: the set editor under Add, what the import check refuses said in the
+/// editor's words when a question is not finished, saving through Import, and practicing what was written, on a free account whose
 /// bank is on the phone, with no network at all. Invented sets only. A unit test cannot do this
-/// job: it is the real editor, typed into with the keyboard, that shows the check's errors on
+/// job: it is the real editor, typed into with the keyboard, that shows the refusal on
 /// screen, a draft coming back after she leaves, and the saved set opening in the same runner an
 /// imported one does.
 final class WriteQuestionsUITests: XCTestCase {
@@ -35,7 +35,8 @@ final class WriteQuestionsUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Write questions"].appears(timeout: 5))
         attachLooks(app, "write, empty editor")
 
-        // A single-answer question, left unfinished: the import check says what to fix.
+        // A single-answer question with its fourth choice left empty and none marked: the empty
+        // choice is left out, and the editor says what the import check refused.
         type("Invented Sleep Habits", into: "write.title", in: app)
         type("Which habit helps sleep?", into: "write.q1.ask", in: app)
         type("A regular bedtime", into: "write.q1.choice.0", in: app)
@@ -43,18 +44,20 @@ final class WriteQuestionsUITests: XCTestCase {
         type("Coffee at night", into: "write.q1.choice.2", in: app)
         type("A steady schedule sets the body clock.", into: "write.q1.explanation", in: app)
         tapVisible(app.buttons["write.save"], in: app)
-        let errors = app.descendants(matching: .any)["import.errors"]
+        let errors = app.descendants(matching: .any)["write.errors"]
         XCTAssertTrue(errors.appears(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Question 1 (W1): every option needs text \"t\""].exists)
-        XCTAssertTrue(app.staticTexts["Question 1 (W1): needs exactly one option with \"ok\": true (found 0)"].exists)
+        XCTAssertTrue(app.staticTexts["Question 1: mark the right answer"].exists)
+        XCTAssertEqual(errors.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question'")).count, 1, "the empty choice is not a problem")
+        let inline = app.staticTexts["write.q1.problem"]
+        XCTAssertTrue(inline.exists)
+        XCTAssertTrue(inline.label.contains("Mark the right answer"), inline.label)
         attachLooks(app, "write, the check's errors")
 
-        // The fix: drop the blank fourth choice and mark the right one.
-        tapVisible(app.buttons["write.q1.removeChoice.3"], in: app)
-        XCTAssertFalse(app.buttons["write.q1.choice.3"].exists)
+        // The fix: mark the right one.
         tapVisible(app.buttons["write.q1.right.0"], in: app)
         XCTAssertTrue(app.buttons["write.q1.right.0"].isSelected)
         XCTAssertTrue(errors.disappears(timeout: 5), "a change needs a new check")
+        XCTAssertFalse(inline.exists)
 
         // A draft stays on the phone when she leaves, and comes back as she left it.
         goBack(app, from: "Write questions")
@@ -66,7 +69,6 @@ final class WriteQuestionsUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Write questions"].appears(timeout: 5))
         XCTAssertEqual(app.textFields["write.title"].value as? String, "Invented Sleep Habits")
         XCTAssertTrue(app.buttons["write.q1.right.0"].isSelected)
-        XCTAssertFalse(app.buttons["write.q1.choice.3"].exists)
 
         // A true-or-false question: the two choices are fixed.
         tapVisible(app.buttons["write.add"], in: app)

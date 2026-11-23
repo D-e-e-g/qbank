@@ -3,7 +3,8 @@ import QBankKit
 import SwiftUI
 
 /// The set editor: a set name, questions with their choices, and where the set goes. Save checks
-/// the set with the import check, in the words Import uses, and files it the way Import does. What
+/// the set with the import check, says what it refused in the editor's words, and files it the way
+/// Import does. What
 /// she has written stays on this phone as a draft until it is saved or discarded.
 struct WriteView: View {
     let app: AppModel
@@ -90,6 +91,7 @@ struct WriteView: View {
                 WriteQuestionEditor(
                     number: index + 1,
                     question: question,
+                    problems: model.problems(inQuestion: question.id),
                     canRemove: model.draft.questions.count > 1
                 ) { change in
                     model.editQuestion(id: question.id, change)
@@ -105,10 +107,14 @@ struct WriteView: View {
             .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
             .accessibilityIdentifier("write.add")
             DestinationFields(destination: model.importing.destination, focus: $focus, field: Field.destination)
-            if let report = model.report, !report.ok {
-                ReportView(report: report, copied: model.importing.copied) {
-                    UIPasteboard.general.string = model.importing.copyErrors()
-                }
+            if !model.problems.isEmpty {
+                Issues(items: model.problems)
+                    .padding(QBankSpacing.space3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.qbank(.wrongSoft), in: .rect(cornerRadius: QBankRadius.md, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: QBankRadius.md, style: .continuous).strokeBorder(.qbank(.wrongBorder), lineWidth: QBankBorder.regular))
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("write.errors")
             }
             if let problem = model.problem {
                 ProblemText(text: problem)

@@ -4,7 +4,7 @@ import QBankKit
 
 /// Writing a set by hand. The editor builds a question file from what she types and saves it through
 /// Import, the path a pasted file takes, so the import check judges it in her course, topic or
-/// account kind alike and says what to fix in its own words. The set is filed where Import files it
+/// account kind alike, and the editor says what it refused in her words. The set is filed where Import files it
 /// (see `SetDestination`). What she has written is a draft kept on this phone until the set is saved.
 @Observable
 final class WriteModel {
@@ -27,12 +27,28 @@ final class WriteModel {
         importing.isBusy
     }
 
-    /// The check's errors, which block saving, and its warnings, in the importer's words.
+    /// The check's answer for the draft as it stands. Nil before a check, and after any change.
     var report: ImportReport? {
         importing.report
     }
 
-    /// What she can fix: the check's errors, or a problem with the course or the connection.
+    /// Why the check refused the set, in the editor's words: each question by its number, and
+    /// what to do in it. The check's own lines when it refused something else.
+    var problems: [String] {
+        guard let report, !report.ok else { return [] }
+        let lines = draft.questions.enumerated().flatMap { index, question in
+            question.problems.map { "Question \(index + 1): \($0)" }
+        }
+        return lines.isEmpty ? report.errors : lines
+    }
+
+    /// What the check refused in one question, shown with it.
+    func problems(inQuestion id: UUID) -> [String] {
+        guard let report, !report.ok else { return [] }
+        return draft.questions.first { $0.id == id }?.problems ?? []
+    }
+
+    /// What she can fix: a problem with the course or the connection.
     var problem: String? {
         importing.problem
     }
@@ -111,10 +127,10 @@ nonisolated enum WriteWording {
     static let titleHint = "What the set is called in its folder."
     static let draftNote = "Kept on this phone until you save it. Nothing is sent before then."
 
-    /// "3 questions", for a draft's row.
+    /// "3 questions", or "No questions yet", for a draft's row.
     static func detail(_ draft: SetDraft) -> String {
         let written = draft.questions.filter { !$0.isBlank }.count
-        return Wording.count(max(written, 1), "question")
+        return written == 0 ? "No questions yet" : Wording.count(written, "question")
     }
 
     static func name(_ draft: SetDraft) -> String {

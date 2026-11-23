@@ -53,23 +53,79 @@ struct WriteModelTests {
         #expect(ImportChecker.report(for: draft.file()).ok)
     }
 
-    // MARK: The import check's words
+    @Test func blankChoicesAreLeftOutOfTheFile() throws {
+        var draft = Self.written()
+        draft.questions[0].choices.append(QuestionDraft.Choice(text: "  "))
+        draft.questions[0].choices.insert(QuestionDraft.Choice(), at: 1)
+        let file = try Self.parsed(draft.file())
+        let questions = try #require(file["questions"] as? [[String: Any]])
+        let options = try #require(questions[0]["options"] as? [[String: Any]])
+        #expect(options.map { $0["t"] as? String } == ["A regular bedtime", "An evening nap", "Coffee at night"])
+        #expect(ImportChecker.report(for: draft.file()).ok)
+    }
+
+    // MARK: What the check refuses, in the editor's words
 
     @Test(arguments: [
-        (Mistake.noQuestionText, "Question 1 (W1): missing ask"),
-        (.nothingMarked, "Question 1 (W1): needs exactly one option with \"ok\": true (found 0)"),
-        (.blankChoice, "Question 1 (W1): every option needs text \"t\""),
+        (Mistake.noQuestionText, "Question 1: write the question"),
+        (.nothingMarked, "Question 1: mark the right answer"),
+        (.rightChoiceBlank, "Question 1: the right choice is empty"),
+        (.oneChoice, "Question 1: write at least two choices"),
     ])
-    func whatIsWrongIsSaidInTheImportChecksWords(mistake: Mistake, line: String) async throws {
+    func whatIsWrongIsSaidInTheEditorsWords(mistake: Mistake, line: String) async throws {
         let (server, model) = Self.app()
         model.edit { $0.title = "Invented Sleep" }
-        model.editQuestion(id: model.draft.questions[0].id) { Self.fill(&$0, mistake: mistake) }
+        let id = model.draft.questions[0].id
+        model.editQuestion(id: id) { Self.fill(&$0, mistake: mistake) }
         await Self.save(model, on: server)
         let report = try #require(model.report)
-        #expect(!report.ok)
-        #expect(report.errors.contains(line), "\(report.errors)")
-        #expect(report.errors == ImportChecker.report(for: model.draft.file()).errors, "the editor adds no rules of its own")
+        #expect(!report.ok, "the import check refuses it")
+        #expect(model.problems == [line])
+        #expect(model.problems(inQuestion: id) == [String(line.dropFirst("Question 1: ".count))], "said with the question too")
+        #expect(!model.problems.joined().contains("W1"), "no file ids")
         #expect(!server.calls.contains("POST /api/imports"), "a set the check refuses is not filed")
+        #expect(model.importing.done == nil)
+        model.editQuestion(id: id) { $0.explanation = "Invented." }
+        #expect(model.problems.isEmpty, "a change needs a new check")
+        #expect(model.problems(inQuestion: id).isEmpty)
+    }
+
+    @Test func theProblemsNameEachQuestionByItsNumber() async throws {
+        var draft = Self.written()
+        draft.questions[1].right = nil
+        draft.questions.append(QuestionDraft())
+        let (server, model) = Self.app(draft)
+        await Self.save(model, on: server)
+        #expect(model.problems == [
+            "Question 2: mark the right answer",
+            "Question 3: write the question",
+            "Question 3: write at least two choices",
+            "Question 3: mark the right answer",
+        ])
+        #expect(model.problems(inQuestion: draft.questions[0].id).isEmpty)
+    }
+
+    @Test func aRefusalTheEditorCannotSayIsShownInTheChecksWords() async throws {
+        let (server, model) = Self.app(Self.written())
+        server["POST /api/imports/check"] = .ok(
+            #"{"ok":false,"title":"Invented Sleep","description":"","kind":"practice","questionCount":0,"termCount":0,"formats":[],"errors":["Invented server rule"],"warnings":[]}"#)
+        await model.save()
+        #expect(model.problems == ["Invented server rule"])
+        #expect(!server.calls.contains("POST /api/imports"))
+    }
+
+    @Test func anEditWhileTheCheckRunsIsNotFiledUnchecked() async throws {
+        let (server, model) = Self.app(Self.written())
+        let report = ImportChecker.report(for: model.draft.file())
+        server["POST /api/imports/check"] = .ok(String(decoding: try JSONEncoder().encode(report), as: UTF8.self))
+        server.hold("POST /api/imports/check")
+        let saving = Task { await model.save() }
+        while !server.calls.contains("POST /api/imports/check") { await Task.yield() }
+        model.editQuestion(id: model.draft.questions[1].id) { $0.right = nil }
+        server.release("POST /api/imports/check")
+        await saving.value
+        #expect(model.report == nil, "the answer was for the set before the edit")
+        #expect(!server.calls.contains("POST /api/imports"))
         #expect(model.importing.done == nil)
     }
 
@@ -199,10 +255,54 @@ struct WriteModelTests {
         model.edit { $0.title = "Invented Sleep" }
         model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps?" }
         let relaunched = WriteDraftStore(defaults: defaults)
+        relaunched.open(accountID: "a1")
         #expect(relaunched.drafts.map(\.title) == ["Invented Sleep"])
         #expect(relaunched.draft(id: model.draft.id)?.questions[0].ask == "Which habit helps?")
         #expect(WriteWording.name(relaunched.drafts[0]) == "Invented Sleep")
         #expect(WriteWording.detail(relaunched.drafts[0]) == "1 question")
+    }
+
+    @Test func aDraftWithNoQuestionWrittenSaysSo() throws {
+        var draft = SetDraft(title: "Invented Sleep")
+        #expect(WriteWording.detail(draft) == "No questions yet")
+        draft.questions[0].ask = "  \n"
+        draft.questions[0].choices[0].text = " "
+        #expect(draft.questions[0].isBlank, "spaces are not writing")
+        #expect(WriteWording.detail(draft) == "No questions yet")
+        #expect(SetDraft(title: " ", questions: draft.questions).isBlank)
+        draft.questions.append(Self.written().questions[0])
+        #expect(WriteWording.detail(draft) == "1 question")
+        #expect(WriteWording.detail(Self.written()) == "2 questions")
+    }
+
+    @Test func eachAccountSeesOnlyItsOwnDrafts() async throws {
+        let defaults = TestApp.freshDefaults()
+        let (server, model, app) = Self.appWithPhone(Self.written(), defaults: defaults)
+        server["POST /api/sign-out"] = .ok(#"{"status":"signed_out"}"#)
+        #expect(app.drafts.drafts.map(\.id) == [model.draft.id])
+        await app.signOut()
+        #expect(app.drafts.drafts.isEmpty, "no one is signed in")
+
+        let (other, _) = TestApp.make(server, account: .admin, defaults: defaults)
+        #expect(other.drafts.drafts.isEmpty, "another account on this phone sees none of hers")
+        other.drafts.keep(SetDraft(title: "Invented other"))
+
+        let (back, _) = TestApp.make(server, account: .student(), defaults: defaults)
+        #expect(back.drafts.drafts.map(\.id) == [model.draft.id], "a sign-out keeps them for her")
+    }
+
+    @Test func deletingTheAccountDeletesItsDrafts() async throws {
+        let defaults = TestApp.freshDefaults()
+        let (server, _, app) = Self.appWithPhone(Self.written(), defaults: defaults)
+        let (other, _) = TestApp.make(server, account: .admin, defaults: defaults)
+        other.drafts.keep(SetDraft(title: "Invented other"))
+        server["DELETE /api/me"] = .ok(#"{"status":"deleted"}"#)
+        try await app.deleteAccount(password: "invented-password")
+        #expect(app.drafts.drafts.isEmpty)
+        #expect(defaults.data(forKey: WriteDraftStore.key(for: "a1")) == nil)
+        let (back, _) = TestApp.make(server, account: .student(), defaults: defaults)
+        #expect(back.drafts.drafts.isEmpty, "the account is gone, and so are its drafts")
+        #expect(defaults.data(forKey: WriteDraftStore.key(for: "a2")) != nil, "another account's drafts stay")
     }
 
     @Test func clearingADraftForgetsItAndDiscardingRemovesIt() throws {
@@ -214,12 +314,15 @@ struct WriteModelTests {
         #expect(app.drafts.drafts.isEmpty, "a draft with nothing in it is not kept")
         model.edit { $0.title = "Invented Sleep" }
         model.discard()
-        #expect(WriteDraftStore(defaults: defaults).drafts.isEmpty)
-        #expect(defaults.data(forKey: WriteDraftStore.key) == nil)
+        let relaunched = WriteDraftStore(defaults: defaults)
+        relaunched.open(accountID: "a1")
+        #expect(relaunched.drafts.isEmpty)
+        #expect(defaults.data(forKey: WriteDraftStore.key(for: "a1")) == nil)
     }
 
     @Test func theNewestDraftIsListedFirst() throws {
         let store = WriteDraftStore(defaults: TestApp.freshDefaults())
+        store.open(accountID: "a1")
         store.keep(SetDraft(title: "Invented first"))
         store.keep(SetDraft(title: "Invented second"))
         #expect(store.drafts.map(\.title) == ["Invented second", "Invented first"])
@@ -231,7 +334,8 @@ struct WriteModelTests {
     enum Mistake: CaseIterable {
         case noQuestionText
         case nothingMarked
-        case blankChoice
+        case rightChoiceBlank
+        case oneChoice
     }
 
     /// A question that is right apart from `mistake`.
@@ -242,7 +346,10 @@ struct WriteModelTests {
         }
         question.right = 0
         if mistake == .nothingMarked { question.right = nil }
-        if mistake == .blankChoice { question.choices[3].text = " " }
+        if mistake == .rightChoiceBlank { question.choices[0].text = " " }
+        if mistake == .oneChoice {
+            for position in 1..<question.choices.count { question.choices[position].text = "" }
+        }
     }
 
     /// Two written questions: a single-answer one with an explanation, and a true-or-false one without.

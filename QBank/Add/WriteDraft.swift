@@ -57,7 +57,32 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     }
 
     var isBlank: Bool {
-        ask.isEmpty && explanation.isEmpty && choices.allSatisfy { $0.text.isEmpty }
+        [ask, explanation].allSatisfy(Self.isEmpty) && choices.allSatisfy { Self.isEmpty($0.text) }
+    }
+
+    /// The choices that go into the file, with their positions: her filled ones and the marked
+    /// one, so the blank rows she left unused are dropped. True or false always has its two.
+    var fileChoices: [(position: Int, text: String)] {
+        choiceTexts.enumerated()
+            .filter { kind == .trueFalse || !Self.isEmpty($0.element) || $0.offset == right }
+            .map { ($0.offset, $0.element.trimmingCharacters(in: .whitespacesAndNewlines)) }
+    }
+
+    /// What keeps the question from being saved, in her words: what the import check refuses in a
+    /// question she wrote. Empty when it is ready.
+    var problems: [String] {
+        var found: [String] = []
+        if Self.isEmpty(ask) { found.append("write the question") }
+        if kind == .single {
+            if choices.filter({ !Self.isEmpty($0.text) }).count < Self.choiceRange.lowerBound { found.append("write at least two choices") }
+            if let right, choices.indices.contains(right), Self.isEmpty(choices[right].text) { found.append("the right choice is empty") }
+        }
+        if right == nil { found.append("mark the right answer") }
+        return found
+    }
+
+    private static func isEmpty(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     mutating func addChoice() {
@@ -97,8 +122,8 @@ nonisolated struct SetDraft: Codable, Equatable, Identifiable, Sendable {
             File.Question(
                 id: "W\(index + 1)",
                 ask: question.ask.trimmingCharacters(in: .whitespacesAndNewlines),
-                options: question.choiceTexts.enumerated().map { position, text in
-                    File.Option(t: text.trimmingCharacters(in: .whitespacesAndNewlines), ok: question.right == position ? true : nil)
+                options: question.fileChoices.map { position, text in
+                    File.Option(t: text, ok: question.right == position ? true : nil)
                 },
                 rationale: Self.nonEmpty(question.explanation)
             )
@@ -136,20 +161,37 @@ nonisolated struct SetDraft: Codable, Equatable, Identifiable, Sendable {
 }
 
 /// The sets she has begun and not saved, kept on this phone like the Look and the lock: never sent
-/// anywhere, and still there after she signs out or the app is closed.
+/// anywhere. Each account has its own: another account signed in on this phone never sees them, a
+/// sign-out keeps them for when she signs back in, and deleting the account deletes them.
 @Observable
 final class WriteDraftStore {
-    static let key = "qbank-write-drafts"
+    /// Where the drafts of the account with this id are kept.
+    static func key(for accountID: String) -> String {
+        "qbank-write-drafts.\(accountID)"
+    }
 
-    /// Her drafts, the one she touched last first.
-    private(set) var drafts: [SetDraft]
+    /// The drafts of the account signed in, the one she touched last first. None when no one is.
+    private(set) var drafts: [SetDraft] = []
 
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private var accountID: String?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        let stored = defaults.data(forKey: Self.key).flatMap { try? JSONDecoder().decode([SetDraft].self, from: $0) } ?? []
+    }
+
+    /// Shows the drafts of the account signed in, or none when no one is.
+    func open(accountID: String?) {
+        guard accountID != self.accountID else { return }
+        self.accountID = accountID
+        let stored = accountID.flatMap { defaults.data(forKey: Self.key(for: $0)) }.flatMap { try? JSONDecoder().decode([SetDraft].self, from: $0) } ?? []
         drafts = stored.sorted { $0.updatedAt > $1.updatedAt }
+    }
+
+    /// Deletes every draft of the account with this id, for an account that is gone.
+    func erase(accountID: String) {
+        defaults.removeObject(forKey: Self.key(for: accountID))
+        if accountID == self.accountID { drafts = [] }
     }
 
     func draft(id: UUID) -> SetDraft? {
@@ -172,12 +214,12 @@ final class WriteDraftStore {
     }
 
     private func replace(with next: [SetDraft]) {
-        guard next != drafts else { return }
+        guard let accountID, next != drafts else { return }
         drafts = next
         if next.isEmpty {
-            defaults.removeObject(forKey: Self.key)
+            defaults.removeObject(forKey: Self.key(for: accountID))
         } else if let data = try? JSONEncoder().encode(next) {
-            defaults.set(data, forKey: Self.key)
+            defaults.set(data, forKey: Self.key(for: accountID))
         }
     }
 }
