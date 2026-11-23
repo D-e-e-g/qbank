@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QBank question file format</title>
+<meta name="description" content="The JSON file format QBank imports: nine question formats, with the rules a file must meet.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header>
+<a class="brand" href="../">QBank</a>
+<nav aria-label="Pages"><ul>
+<li><a href="../privacy/">Privacy</a></li>
+<li><a href="../support/">Support</a></li>
+<li><a href="../format/" aria-current="page">Question file format</a></li>
+</ul></nav>
+</header>
+<main>
+<h1>Question file format</h1>
+<p class="lede">QBank imports a set of questions from one JSON file. You can write the file by hand or ask an AI chat to write it. This page lists what a file may hold and what makes the importer refuse it.</p>
+
+<p class="note" id="source-of-truth"><strong>Source of truth.</strong> This page describes the import check of the QBank API, which is the single source of truth for the format. If this page and the importer ever disagree, the importer is right, and its message names the question and the field to fix. Last checked against the importer on 2026-11-22.</p>
+
+<h2>The file</h2>
+<p>The file is one JSON object. A bare list of questions also works; it becomes a set titled &ldquo;Imported questions&rdquo;. A single code fence (<code>```json</code> &hellip; <code>```</code>) around the JSON is ignored, so you can paste an AI chat&rsquo;s reply as it is.</p>
+<table>
+<thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>title</code></td><td>The set&rsquo;s name. Optional; &ldquo;Imported questions&rdquo; when missing. You can change it when you import.</td></tr>
+<tr><td><code>desc</code></td><td>A short description. Optional.</td></tr>
+<tr><td><code>kind</code></td><td><code>"practice"</code> (the default) or <code>"exam"</code>. Questions of an exam set are asked only on exams. Any other value is refused.</td></tr>
+<tr><td><code>questions</code></td><td>The list of questions. Required, and it must not be empty.</td></tr>
+<tr><td><code>terms</code></td><td>Optional glossary: an object whose keys are term ids and whose values are <code>["Term", "Meaning"]</code>. A question lists the term ids it uses.</td></tr>
+</tbody>
+</table>
+
+<h2>Every question</h2>
+<p>Every question is an object with a <code>type</code> (one of the nine below) and an <code>ask</code>. Only <code>ask</code> is required.</p>
+<table>
+<thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>type</code></td><td>Required. One of <code>single</code>, <code>priority</code>, <code>sata</code>, <code>highlight</code>, <code>order</code>, <code>match</code>, <code>matrix</code>, <code>matrixmulti</code>, <code>cloze</code>.</td></tr>
+<tr><td><code>ask</code></td><td>Required. The question itself, as text. A missing or blank <code>ask</code> is refused.</td></tr>
+<tr><td><code>stem</code></td><td>Optional. The scenario or context before the ask. Missing is fine; it is kept as empty text, and the screen hides it.</td></tr>
+<tr><td><code>rationale</code></td><td>Optional. The explanation shown after the answer. Missing is fine.</td></tr>
+<tr><td><code>takeaway</code></td><td>Optional. A one-line lesson. Missing is fine.</td></tr>
+<tr><td><code>id</code></td><td>Optional. A short text or number that names the question in messages and in <code>twinOf</code>. Questions without one are numbered Q1, Q2, &hellip; by position.</td></tr>
+<tr><td><code>topic</code>, <code>wk</code></td><td>Optional text: a topic label and a week label.</td></tr>
+<tr><td><code>cj</code>, <code>need</code>, <code>src</code></td><td>Optional text labels: <code>cj</code> and <code>need</code> are free-form tags, and <code>src</code> names where the question came from.</td></tr>
+<tr><td><code>diff</code></td><td>Optional whole number (a difficulty).</td></tr>
+<tr><td><code>terms</code></td><td>Optional list of term ids from the file&rsquo;s <code>terms</code>. An id with no definition is skipped, with a warning.</td></tr>
+<tr><td><code>twinOf</code></td><td>Optional, in an exam set only: the <code>id</code> of the practice question this one is the exam twin of.</td></tr>
+<tr><td><code>table</code>, <code>images</code></td><td>Optional. A table or pictures shown with the question. See below.</td></tr>
+</tbody>
+</table>
+<p><code>stem</code>, <code>rationale</code> and <code>takeaway</code> must be text when they are present. A section written as a number or a list is refused.</p>
+<p>Any other field you add is kept with the question and otherwise ignored.</p>
+
+<h2>The nine question formats</h2>
+<p>Where a format lists <code>why</code>, it is an optional short explanation for that choice, shown after the answer.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Type</th><th>Shows as</th><th>Fields and rules</th></tr></thead>
+<tbody>
+<tr><td><code>single</code></td><td>Single answer</td><td><code>options</code>: at least 2, each <code>{"t": "text", "ok": true, "why": "..."}</code>. Exactly one option has <code>"ok": true</code>.</td></tr>
+<tr><td><code>priority</code></td><td>Priority / first action</td><td>The same as <code>single</code>: at least 2 <code>options</code>, exactly one with <code>"ok": true</code>.</td></tr>
+<tr><td><code>sata</code></td><td>Select all that apply</td><td>At least 2 <code>options</code>, at least one with <code>"ok": true</code>. Every option may be correct.</td></tr>
+<tr><td><code>order</code></td><td>Ordered response</td><td><code>items</code>: at least 3, each <code>{"t": "text"}</code>, written in the correct order.</td></tr>
+<tr><td><code>match</code></td><td>Matching</td><td><code>pairs</code>: at least 2, each <code>{"l": "left", "r": "right"}</code>. Optional <code>extra</code>: right-hand choices that match nothing, each <code>{"r": "text"}</code>.</td></tr>
+<tr><td><code>matrix</code></td><td>Matrix</td><td><code>columns</code>: at least 2 different names. <code>rows</code>: at least 1, each <code>{"t": "text", "ans": "column name"}</code> with exactly one right column. A column such as &ldquo;Both&rdquo; or &ldquo;All of the above&rdquo; gives a warning: use <code>matrixmulti</code> instead.</td></tr>
+<tr><td><code>matrixmulti</code></td><td>Matrix, check all that fit</td><td><code>columns</code>: at least 2 different names. <code>rows</code>: at least 1, each <code>{"t": "text", "ans": ["column", "column"]}</code> with at least one right column, each named once. Not every box of the table may be right. A warning if the <code>ask</code> does not say a row can fit &ldquo;more than one&rdquo; column.</td></tr>
+<tr><td><code>highlight</code></td><td>Highlight</td><td><code>segments</code>: at least 3 phrases, in reading order, each <code>{"t": "text", "ok": true}</code>. Some segments are correct and some are not.</td></tr>
+<tr><td><code>cloze</code></td><td>Drop-down</td><td><code>cloze</code>: <code>{"text": "... {0} ... {1} ...", "blanks": [...]}</code> with one <code>{0}</code>, <code>{1}</code>, &hellip; placeholder per blank. Each blank is <code>{"opts": ["a", "b"], "ans": 0}</code>: at least 2 options, and <code>ans</code> is the index of the right one.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Tables and pictures</h2>
+<p><code>table</code> is <code>{"caption": "...", "head": ["A", "B"], "rows": [["1", "2"]]}</code>. <code>rows</code> is required and must hold at least one row; <code>caption</code> and <code>head</code> are optional. Cells are text, numbers or true/false, and short rows are padded.</p>
+<p><code>images</code> is a list of at most 4 pictures per question. Each is an object with:</p>
+<ul>
+<li><code>alt</code>: required, a short description of what the picture shows.</li>
+<li>Exactly one of <code>src</code> (a base64 data URL of a PNG, JPEG, WebP or SVG image) or <code>svg</code> (SVG markup as text).</li>
+<li><code>caption</code>: optional text.</li>
+<li><code>at</code>: <code>"stem"</code> (the default, shown under the question) or <code>"rationale"</code> (shown after the answer).</li>
+</ul>
+<p>An image may be at most 300 KB after decoding. An SVG may not hold a script, an event handler or a link to another file. A table or picture the app cannot draw is refused, so a file never imports something you cannot see.</p>
+
+<h2>Warnings and errors</h2>
+<p>Errors block the import, and nothing is saved until you fix them. Each error starts with the question&rsquo;s position and id, for example <code>Question 3 (q3): missing ask</code>. Warnings do not block the import. They tell you about, for example, a term with no definition, a <code>twinOf</code> outside an exam set, or a question that lacks <code>cj</code>, <code>need</code>, <code>diff</code> or <code>src</code> when other questions in the file use that field.</p>
+
+<h2>An example</h2>
+<pre><code>{
+  "title": "Basic geography",
+  "desc": "Capitals and a little more.",
+  "questions": [
+    {
+      "id": "g1",
+      "type": "single",
+      "ask": "What is the capital of France?",
+      "options": [
+        { "t": "Paris", "ok": true },
+        { "t": "Lyon", "why": "A large city, but not the capital." },
+        { "t": "Marseille" }
+      ],
+      "rationale": "Paris has been the capital for centuries."
+    },
+    {
+      "id": "g2",
+      "type": "single",
+      "ask": "The Nile flows north.",
+      "options": [
+        { "t": "True", "ok": true },
+        { "t": "False" }
+      ]
+    },
+    {
+      "id": "g3",
+      "type": "order",
+      "ask": "Put these in order from smallest to largest.",
+      "items": [
+        { "t": "Pond" },
+        { "t": "Lake" },
+        { "t": "Sea" }
+      ]
+    }
+  ]
+}</code></pre>
+</main>
+<footer>
+<p>Questions: <a href="mailto:dimitrygallego@gmail.com">dimitrygallego@gmail.com</a></p>
+</footer>
+</body>
+</html>
