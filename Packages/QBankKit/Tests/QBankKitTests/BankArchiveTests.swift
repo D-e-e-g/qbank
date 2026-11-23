@@ -32,6 +32,22 @@ import Testing
         #expect(try ArchiveWorld.isEmpty(fresh))
     }
 
+    @Test func aSetWithOneTermKeyTwiceRoundTripsWithBothTerms() async throws {
+        let world = try await ArchiveWorld.make()
+        // The format and the server's term table name no unique key in a set, so a second definition of a key is a row like any other.
+        try world.store.run(
+            "INSERT INTO term (id, set_id, key, term, meaning) SELECT 'ffffffff-0000-4000-8000-000000000001', set_id, key, term || ' again', meaning FROM term LIMIT 1")
+        let twice = try world.store.run("SELECT count(*) AS n FROM term GROUP BY set_id, key HAVING count(*) > 1")
+        #expect(twice.count == 1)
+
+        let archive = try BankArchive.write(from: world.store, at: ArchiveWorld.date)
+        let fresh = try ArchiveWorld.empty()
+        let stored = try BankArchive.read(archive, into: fresh)
+
+        #expect(try stored == BankArchive.counts(of: world.store))
+        #expect(try ArchiveWorld.dump(fresh) == ArchiveWorld.dump(world.store))
+    }
+
     @Test func jsonAndTextComeBackExactlyAsStored() async throws {
         let world = try await ArchiveWorld.make()
         // Spelling a value's own form: whitespace, an escape, a slash, a trailing zero, a big number, text with quotes and a line break.

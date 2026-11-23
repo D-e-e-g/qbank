@@ -15,7 +15,6 @@ struct ArchiveRules {
         try courses()
         try semesters()
         try folders()
-        try terms()
         try answers()
     }
 
@@ -110,16 +109,6 @@ struct ArchiveRules {
             guard seen.insert(list).inserted else {
                 throw BankArchiveError.invalid("folders: two folders in one list of course \(list[0]) are named \"\(list[2])\".")
             }
-        }
-    }
-
-    /// A set's terms name each key once.
-    private func terms() throws {
-        let (table, list) = table("terms")
-        var seen = Set<[String]>()
-        for row in list {
-            let key = [text(row, table, "setId") ?? "", text(row, table, "key") ?? ""]
-            guard seen.insert(key).inserted else { throw BankArchiveError.invalid("terms: set \(key[0]) has the key \"\(key[1])\" more than once.") }
         }
     }
 

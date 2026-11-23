@@ -159,7 +159,6 @@ import Testing
         let topic = try #require(rows(sample, "courses").first { $0["kind"] as? String == "topic" && $0["deletedAt"] is NSNull })
         let folder = try #require(rows(sample, "folders").first)
         let attempt = try #require(rows(sample, "attempts").first)
-        let term = try #require(rows(sample, "terms").first)
         let semester = try #require(rows(sample, "semesters").first)
         let spare = { (number: Int) in Self.spare + String(format: "%02d", number) }
 
@@ -182,12 +181,6 @@ import Testing
                 "a semester number twice",
                 try edited {
                     var copy = semester; copy["id"] = spare(2); self.adding(&$0, "semesters", copy)
-                }
-            ),
-            (
-                "a term key twice in a set",
-                try edited {
-                    var copy = term; copy["id"] = spare(3); self.adding(&$0, "terms", copy)
                 }
             ),
             (
