@@ -29,6 +29,8 @@ struct SettingsView: View {
     @State private var savedCourses: [SavedCourse]?
     /// Whether the server lets this account make questions, which is what Anthropic's row is for.
     @State private var maker: QuestionMakerStatus?
+    /// The policy or terms page open over Settings, if one is.
+    @State private var openPage: URL?
 
     init(app: AppModel) {
         self.app = app
@@ -49,6 +51,7 @@ struct SettingsView: View {
                     }
                     look
                     onThisPhone
+                    about
                     Text(Self.version)
                         .qbankFont(.footnote)
                         .foregroundStyle(.qbank(.text3))
@@ -80,6 +83,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .webPageSheet($openPage)
         .task {
             guard catalog.isEditable else { return }
             await catalog.load()
@@ -372,6 +376,26 @@ struct SettingsView: View {
             .buttonStyle(.qbankRow)
             .accessibilityIdentifier("settings.savedForOffline")
         }
+    }
+
+    /// Where the policies are: the privacy policy and help on QBank's site, and Apple's standard
+    /// terms of use, each in the system browser view.
+    private var about: some View {
+        QBankListGroup(header: "About") {
+            aboutRow("Privacy policy", LegalLinks.privacyPolicy, id: "settings.privacy")
+            aboutRow("Help", LegalLinks.help, id: "settings.help")
+            aboutRow("Terms of use", LegalLinks.termsOfUse, id: "settings.terms")
+        }
+    }
+
+    private func aboutRow(_ title: String, _ url: URL, id: String) -> some View {
+        Button {
+            openPage = url
+        } label: {
+            QBankListRow(title, systemImage: "arrow.up.right", showsChevron: false)
+        }
+        .buttonStyle(.qbankRow)
+        .accessibilityIdentifier(id)
     }
 
     /// "QBank 0.1.0 (1)": the version and build, as Settings shows it.
