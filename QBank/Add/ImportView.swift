@@ -16,11 +16,8 @@ struct ImportView: View {
 
     private enum Field: Hashable {
         case paste
-        case code
-        case courseName
-        case topicName
-        case folderName
         case title
+        case destination(DestinationField)
     }
 
     /// - Parameters:
@@ -91,15 +88,7 @@ struct ImportView: View {
             case .file: filePick
             case .paste: pasteField
             }
-            CourseMenu(destination: model.destination)
-            if model.destination.courses != nil {
-                if model.destination.makesTopic {
-                    newTopicField
-                } else if model.destination.makesCourse {
-                    newCourseFields
-                }
-            }
-            FolderPicker(destination: model.destination, focus: $focus, nameField: .folderName)
+            DestinationFields(destination: model.destination, focus: $focus, field: Field.destination)
             LabeledField(label: "Set name", hint: "Filled from the file’s title. You can change it.") {
                 TextField("Set name", text: Binding(get: { model.title }, set: { model.setTitle($0) }))
                     .focused($focus, equals: .title)
@@ -182,53 +171,6 @@ struct ImportView: View {
                 .accessibilityLabel("Paste JSON")
                 .accessibilityIdentifier("import.paste")
             FieldHint(Wording.questionFileHint)
-        }
-    }
-
-    /// A new topic needs only its name.
-    private var newTopicField: some View {
-        @Bindable var destination = model.destination
-        return LabeledField(label: "Topic name") {
-            TextField("Spanish verbs", text: $destination.newTopicName)
-                .textInputAutocapitalization(.words)
-                .focused($focus, equals: .topicName)
-                .accessibilityLabel("Topic name")
-                .accessibilityIdentifier("import.newTopicName")
-        }
-    }
-
-    private var newCourseFields: some View {
-        @Bindable var destination = model.destination
-        return VStack(alignment: .leading, spacing: QBankSpacing.space5) {
-            LabeledField(label: "Course code") {
-                TextField("BIO 101", text: $destination.newCode)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .focused($focus, equals: .code)
-                    .accessibilityLabel("Course code")
-                    .accessibilityIdentifier("import.newCode")
-            }
-            LabeledField(label: "Course name") {
-                TextField("Cell Biology", text: $destination.newTitle)
-                    .textInputAutocapitalization(.words)
-                    .focused($focus, equals: .courseName)
-                    .accessibilityLabel("Course name")
-                    .accessibilityIdentifier("import.newTitle")
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                FieldTitle("Semester")
-                Menu {
-                    Picker("Semester", selection: $destination.semesterNumber) {
-                        ForEach(1...3, id: \.self) { number in
-                            Text("Semester \(number)").tag(number)
-                        }
-                    }
-                } label: {
-                    MenuField(text: "Semester \(destination.semesterNumber)")
-                }
-                .accessibilityLabel("Semester: Semester \(destination.semesterNumber)")
-                .accessibilityIdentifier("import.semester")
-            }
         }
     }
 
@@ -412,7 +354,7 @@ struct FolderPicker<Field: Hashable>: View {
 
 /// The check's answer: Ready with the format counts, the errors that block the file with a way to
 /// copy them, and warnings.
-private struct ReportView: View {
+struct ReportView: View {
     let report: ImportReport
     let copied: Bool
     let copy: () -> Void
@@ -474,7 +416,7 @@ private struct ReportView: View {
 }
 
 /// A bulleted list of the importer's lines.
-private struct Issues: View {
+struct Issues: View {
     let items: [String]
 
     var body: some View {
@@ -494,7 +436,7 @@ private struct Issues: View {
 }
 
 /// The web's replace question: Replace, Import as a separate set, or Cancel, all always visible.
-private struct ReplaceSheet: View {
+struct ReplaceSheet: View {
     let conflict: ImportConflict
     let answer: (ImportRequest.Decision?) -> Void
     @State private var height: CGFloat = 340
@@ -541,15 +483,18 @@ private struct ReplaceSheet: View {
 }
 
 /// Imported or Replaced: where the set went, Open its folder, and Import another file.
-private struct DoneView: View {
+struct DoneView: View {
     let done: ImportModel.Done
+    /// What a new set is called when it is done: "Imported" for a file, "Saved" for a set she wrote.
+    var addedTitle = "Imported"
+    var anotherTitle = "Import another file"
     let open: () -> Void
     let another: () -> Void
 
     var body: some View {
         VStack(spacing: QBankSpacing.space3) {
             DoneMark(systemImage: done.set.kind == .replaced ? "arrow.counterclockwise" : "checkmark")
-            Text(done.set.kind == .replaced ? "Replaced" : "Imported")
+            Text(done.set.kind == .replaced ? "Replaced" : addedTitle)
                 .qbankFont(.title1)
                 .foregroundStyle(.qbank(.text1))
                 .accessibilityAddTraits(.isHeader)
@@ -564,7 +509,7 @@ private struct DoneView: View {
                 Button("Open \(done.set.folderName)", action: open)
                     .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
                     .accessibilityIdentifier("import.done.open")
-                Button("Import another file", action: another)
+                Button(anotherTitle, action: another)
                     .buttonStyle(.qbank(.plain, size: .large, fullWidth: true))
                     .accessibilityIdentifier("import.done.another")
             }

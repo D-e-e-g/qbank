@@ -53,6 +53,8 @@ final class AppModel {
     let highlighter: HighlighterStore
     /// Whether she allowed her material to go to Anthropic, kept on this phone.
     let aiConsent: AIConsentStore
+    /// The sets she has begun writing by hand and not saved, kept on this phone.
+    let drafts: WriteDraftStore
     /// Whether the phone has a network path. Always up when the bank is on this phone.
     private(set) var connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
@@ -78,6 +80,7 @@ final class AppModel {
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
         aiConsent: AIConsentStore = AIConsentStore(),
+        drafts: WriteDraftStore = WriteDraftStore(),
         storage: PhoneStorage,
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
@@ -88,6 +91,7 @@ final class AppModel {
         self.lock = lock
         self.highlighter = highlighter
         self.aiConsent = aiConsent
+        self.drafts = drafts
         self.storage = storage
         server = client
         network = connection

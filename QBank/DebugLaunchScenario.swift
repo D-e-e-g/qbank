@@ -287,6 +287,7 @@ nonisolated enum DebugLaunchScenario {
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),
             aiConsent: AIConsentStore(defaults: context.defaults),
+            drafts: WriteDraftStore(defaults: context.defaults),
             storage: context.storage,
             connection: connection
         )
