@@ -10,7 +10,10 @@
 // Every call a scenario makes is also kept, in order, as the world's transcript: the exchanges a
 // fixture is made from and the setup calls between them, with the same rewrites, and each write a
 // scenario makes straight to the database to let time pass. Replaying the transcript's requests,
-// and its writes where they fall, brings a fresh server to the state the recording had.
+// and its writes where they fall, brings a fresh server to the state the recording had. A replay
+// sets the engine's clock to the time each call was taken and matches a time only within
+// TIME_TOLERANCE_MS of the recorded one, so the server answers each call with its clock held at the
+// time the call was taken, and a call in which it still stamped a later time fails the recording.
 
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -32,6 +35,62 @@ export const STUDENT: AccountSpec = { email: "student@example.com", password: "s
 export const ADMIN: AccountSpec = { email: "owner@example.com", password: "synthetic-admin-pass", name: "Owner", role: "admin" };
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+
+/**
+ * How long after taking a request the server may stamp a time in its answer. A replay sets the
+ * engine's clock to the time each request was taken and matches a time only within this of the
+ * recorded one, so it must stay equal to `TranscriptReplay.timeTolerance` in QBankKit's tests.
+ */
+const TIME_TOLERANCE_MS = 25;
+
+const TIME = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2}(?:\.\d+)?)(Z|[+-]\d{2}(?::?\d{2})?)$/;
+
+/** The time in a string the API sends as one (`2026-11-22T14:37:05.123Z`, or Postgres's `2026-11-22 14:37:05.123-05`), or null for any other string. */
+function timeOf(text: string): number | null {
+  const match = TIME.exec(text);
+  if (match === null) return null;
+  const [, day = "", clock = "", zone = ""] = match;
+  const offset = zone === "Z" ? zone : zone.length === 3 ? `${zone}:00` : `${zone.slice(0, 3)}:${zone.slice(-2)}`;
+  const time = Date.parse(`${day}T${clock}${offset}`);
+  return Number.isNaN(time) ? null : time;
+}
+
+/**
+ * Runs `answer` with the clock held at `time`: every `Date.now()` and `new Date()` made meanwhile,
+ * the server's and PGlite's `now()` alike, reads `time`. How long the host takes to answer then
+ * leaves no lag between a call and the times it stamps, which a replay could not tell from a wrong time.
+ */
+async function heldAt<T>(time: number, answer: () => T | Promise<T>): Promise<T> {
+  const real = globalThis.Date;
+  globalThis.Date = new Proxy(real, {
+    construct: (target, args, newTarget) => Reflect.construct(target, args.length === 0 ? [time] : args, newTarget) as object,
+    apply: (target, self, args) => (args.length === 0 ? new target(time).toString() : Reflect.apply(target, self, args)) as unknown,
+    get: (target, key, receiver) => (key === "now" ? () => time : Reflect.get(target, key, receiver)) as unknown,
+  });
+  try {
+    return await answer();
+  } finally {
+    globalThis.Date = real;
+  }
+}
+
+/** Every string in a value, keys included. */
+function strings(value: Json): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(strings);
+  if (value !== null && typeof value === "object") return Object.entries(value).flatMap(([key, inner]) => [key, ...strings(inner)]);
+  return [];
+}
+
+/** Fails the recording when the server stamped a time in its answer more than TIME_TOLERANCE_MS after it took the request. */
+function expectStampedPromptly(what: string, answer: Json, took: number, answered: number): void {
+  for (const text of strings(answer)) {
+    const time = timeOf(text);
+    if (time === null || time < took || time > answered) continue;
+    const lag = time - took;
+    expect(lag <= TIME_TOLERANCE_MS, `${what} stamped ${text} ${String(lag)} ms after the server took it, and a replay matches a time only within ${String(TIME_TOLERANCE_MS)} ms. Record again on a less busy machine`);
+  }
+}
 
 /** A JSON value read from a response, which says where it came from when it is not what the scenario expects. */
 export class Doc {
@@ -283,14 +342,18 @@ export class World {
     const method = init.method ?? "GET";
     const body = init.json ?? null;
     this.#see(JSON.stringify([path, query, body]), false);
-    const at = new Date().toISOString();
-    const response = await this.app.request(search === "" ? path : `${path}?${search}`, {
-      method,
-      headers,
-      body: init.json === undefined ? null : JSON.stringify(init.json),
-    });
-    const text = await response.text();
+    const took = Date.now();
+    const response = await heldAt(took, () =>
+      this.app.request(search === "" ? path : `${path}?${search}`, {
+        method,
+        headers,
+        body: init.json === undefined ? null : JSON.stringify(init.json),
+      }),
+    );
+    const text = await heldAt(took, () => response.text());
     const parsed = text.length > 0 ? (JSON.parse(text) as Json) : null;
+    expectStampedPromptly(`${method} ${path}`, parsed, took, Date.now());
+    const at = new Date(took).toISOString();
     this.#see(text, true);
     const kept: Record<string, string> = {};
     const retryAfter = response.headers.get("retry-after");

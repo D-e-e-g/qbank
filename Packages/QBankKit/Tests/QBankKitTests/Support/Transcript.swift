@@ -38,6 +38,14 @@ struct Transcript: Decodable {
     enum Step {
         case request(Exchange)
         case write(Write)
+
+        /// When the step happened.
+        var at: Date {
+            switch self {
+            case .request(let exchange): exchange.at
+            case .write(let write): write.at
+            }
+        }
     }
 
     let recordedFrom: String
