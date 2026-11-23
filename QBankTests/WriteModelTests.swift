@@ -96,12 +96,13 @@ struct WriteModelTests {
         draft.questions.append(QuestionDraft())
         let (server, model) = Self.app(draft)
         await Self.save(model, on: server)
-        #expect(model.problems == [
-            "Question 2: mark the right answer",
-            "Question 3: write the question",
-            "Question 3: write at least two choices",
-            "Question 3: mark the right answer",
-        ])
+        #expect(
+            model.problems == [
+                "Question 2: mark the right answer",
+                "Question 3: write the question",
+                "Question 3: write at least two choices",
+                "Question 3: mark the right answer",
+            ])
         #expect(model.problems(inQuestion: draft.questions[0].id).isEmpty)
     }
 
