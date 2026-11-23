@@ -52,7 +52,7 @@ struct StudySet {
         try harness.store.run("SELECT count(*) AS n FROM \(table) WHERE \(condition)")[0].int("n") ?? 0
     }
 
-    /// An exam row the way an exam leaves it: answers read it, and starting one belongs to the exam rule family.
+    /// An exam row of a given length, written straight to the store, for a test of answers that needs no Start.
     func insertExam(id: String, questions: [Int], startedAt: String, limit: Int, finished: Bool = false) throws {
         let ids = JS.stringify(.array(questions.map { JSNode.string(self.questions[$0]) }))
         try harness.store.run(
