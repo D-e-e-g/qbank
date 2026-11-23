@@ -1,0 +1,154 @@
+{
+  "title": "General knowledge sampler",
+  "desc": "A short set to try QBank: single answer, select all that apply, and true or false.",
+  "questions": [
+    {
+      "id": "G1",
+      "type": "single",
+      "topic": "Science",
+      "stem": "Our solar system has eight planets that orbit the Sun.",
+      "ask": "Which planet is closest to the Sun?",
+      "options": [
+        { "t": "Venus" },
+        { "t": "Mercury", "ok": true },
+        { "t": "Mars" },
+        { "t": "Earth" }
+      ],
+      "rationale": "Mercury orbits closest to the Sun, about 58 million kilometers away. Venus is second, then Earth and Mars.",
+      "takeaway": "The order from the Sun is Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune."
+    },
+    {
+      "id": "G2",
+      "type": "single",
+      "topic": "Science",
+      "stem": "Water boils at 100 degrees Celsius at sea level.",
+      "ask": "Is the statement true or false?",
+      "options": [
+        { "t": "True", "ok": true },
+        { "t": "False" }
+      ],
+      "rationale": "At standard sea-level air pressure, pure water boils at 100 degrees Celsius. Where the air pressure is lower, such as on a high mountain, it boils at a lower temperature.",
+      "takeaway": "The boiling point of water depends on air pressure."
+    },
+    {
+      "id": "G3",
+      "type": "single",
+      "topic": "Math",
+      "stem": "A shop takes 15% off an item that costs 80 dollars.",
+      "ask": "How many dollars does the discount take off?",
+      "options": [
+        { "t": "8" },
+        { "t": "10" },
+        { "t": "12", "ok": true },
+        { "t": "15" }
+      ],
+      "rationale": "10% of 80 is 8 and 5% of 80 is 4, so 15% is 8 + 4 = 12.",
+      "takeaway": "Build a percentage from easy pieces: 10%, then half of that for 5%."
+    },
+    {
+      "id": "G4",
+      "type": "sata",
+      "topic": "Science",
+      "stem": "Mammals are warm-blooded animals that feed their young with milk.",
+      "ask": "Which of these animals are mammals? Select all that apply.",
+      "options": [
+        { "t": "Dolphin", "ok": true },
+        { "t": "Shark" },
+        { "t": "Bat", "ok": true },
+        { "t": "Penguin" },
+        { "t": "Kangaroo", "ok": true }
+      ],
+      "rationale": "Dolphins, bats and kangaroos are mammals. Sharks are fish and penguins are birds, and neither feeds its young with milk.",
+      "takeaway": "Living in the sea or flying does not decide the group; feeding young with milk does."
+    },
+    {
+      "id": "G5",
+      "type": "single",
+      "topic": "Geography",
+      "stem": "The Earth's surface is mostly water, divided into five named oceans.",
+      "ask": "Which ocean is the largest by area?",
+      "options": [
+        { "t": "Atlantic" },
+        { "t": "Indian" },
+        { "t": "Arctic" },
+        { "t": "Pacific", "ok": true }
+      ],
+      "rationale": "The Pacific Ocean covers about a third of the Earth's surface, more than all of the land together.",
+      "takeaway": "Largest to smallest: Pacific, Atlantic, Indian, Southern, Arctic."
+    },
+    {
+      "id": "G6",
+      "type": "single",
+      "topic": "Science",
+      "stem": "Lightning never strikes the same place twice.",
+      "ask": "Is the statement true or false?",
+      "options": [
+        { "t": "True" },
+        { "t": "False", "ok": true }
+      ],
+      "rationale": "Lightning often strikes the same place again. Tall, pointed structures are hit many times a year.",
+      "takeaway": "A saying can sound sure and still be wrong; check the facts."
+    },
+    {
+      "id": "G7",
+      "type": "single",
+      "topic": "Language",
+      "stem": "A synonym is a word with nearly the same meaning as another word.",
+      "ask": "Which word is a synonym of \"brief\"?",
+      "options": [
+        { "t": "Lengthy" },
+        { "t": "Loud" },
+        { "t": "Short", "ok": true },
+        { "t": "Early" }
+      ],
+      "rationale": "\"Brief\" means lasting a short time, so \"short\" is the closest match. \"Lengthy\" is its opposite.",
+      "takeaway": "Test a synonym by swapping it into the sentence and checking the meaning holds."
+    },
+    {
+      "id": "G8",
+      "type": "sata",
+      "topic": "Study skills",
+      "stem": "Research on learning compares many ways of studying.",
+      "ask": "Which habits help you remember what you study? Select all that apply.",
+      "options": [
+        { "t": "Spreading study sessions over several days", "ok": true },
+        { "t": "Testing yourself without looking at your notes", "ok": true },
+        { "t": "Rereading the same page again and again in one sitting" },
+        { "t": "Highlighting every line of a page" },
+        { "t": "Explaining an idea in your own words", "ok": true }
+      ],
+      "rationale": "Spacing sessions, testing yourself and explaining ideas in your own words all make memories stronger. Rereading and highlighting feel productive, but they do much less.",
+      "takeaway": "Practicing questions, as in this app, is itself one of the best ways to learn."
+    },
+    {
+      "id": "G9",
+      "type": "single",
+      "topic": "History",
+      "stem": "In the 15th century, printing with movable metal type spread across Europe.",
+      "ask": "Which person is best known for introducing it there?",
+      "options": [
+        { "t": "Johannes Gutenberg", "ok": true },
+        { "t": "Galileo Galilei" },
+        { "t": "Isaac Newton" },
+        { "t": "Christopher Columbus" }
+      ],
+      "rationale": "Johannes Gutenberg built a printing press with movable metal type in the 1450s, which made books far cheaper to produce.",
+      "takeaway": "Cheaper books helped ideas spread to many more readers."
+    },
+    {
+      "id": "G10",
+      "type": "single",
+      "topic": "Study skills",
+      "stem": "Spaced repetition is a way of reviewing material.",
+      "ask": "What does spaced repetition mean?",
+      "options": [
+        { "t": "Reviewing the same material again after longer and longer gaps", "ok": true },
+        { "t": "Reading all of the material once, very slowly" },
+        { "t": "Studying only on the night before a test" },
+        { "t": "Leaving a blank line between every note" }
+      ],
+      "rationale": "Each review comes just as the memory starts to fade, so every pass makes it last longer.",
+      "takeaway": "Short reviews spread over time beat one long session."
+    }
+  ]
+}

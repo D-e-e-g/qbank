@@ -19,6 +19,7 @@ nonisolated enum DebugScenarioCatalog {
         .matrixMulti,
         .sataAllCorrect,
         .freeNewBank,
+        .freeFirstLaunch,
     ]
 
     /// The scenario named `name`, or nil when none is.

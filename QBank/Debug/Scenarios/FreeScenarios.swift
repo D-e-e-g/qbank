@@ -11,5 +11,13 @@ nonisolated extension DebugScenario {
         guard let store = try? LocalStore.inMemory() else { fatalError("An in-memory bank always opens.") }
         return DebugFreeMode.model(context: context, bank: LocalBank(store: store))
     }
+
+    /// A free account's first launch: a new, empty bank given the sample set the app ships with, as
+    /// the app does for a new bank of a free account. Otherwise the same as `freeNewBank`.
+    static let freeFirstLaunch = DebugScenario("free-first-launch") { context in
+        guard let store = try? LocalStore.inMemory() else { fatalError("An in-memory bank always opens.") }
+        guard let sample = SampleSet.bundledSource() else { fatalError("The app ships with its sample set.") }
+        return DebugFreeMode.model(context: context, bank: LocalBank(store: store), sampleSet: sample)
+    }
 }
 #endif

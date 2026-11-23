@@ -75,11 +75,15 @@ final class AppModel {
     private let networkWatcher: NetworkWatcher?
 
     /// `client` talks to the server. A free account is given its `bank` on this phone, which answers
-    /// the bank's requests, and only a free account is.
+    /// the bank's requests, and only a free account is. A free account's bank that is new, with
+    /// nothing ever in it, is given `sampleSet`, a question file, as the first set of a topic made
+    /// for it; a bank that is not new is left as it is, and an account whose bank is on the server
+    /// has no bank here to give it to.
     init(
         client: QBankClient,
         kind: AccountKind = .invited,
         bank: LocalBank? = nil,
+        sampleSet: String? = nil,
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
@@ -102,6 +106,10 @@ final class AppModel {
         network = connection
         self.networkWatcher = networkWatcher
         self.client = bank.map(client.routingBank(to:)) ?? client
+        if let bank, let sampleSet {
+            // The sample is a nicety: a bank that refuses it simply starts empty.
+            _ = try? bank.fileSampleSet(sampleSet, inTopic: SampleSet.topic)
+        }
         // A bank on this phone is always reachable, so no network path is followed for it.
         self.connection = bank == nil ? connection : Connection.onThisPhone()
         let stored = try? client.storedSession()

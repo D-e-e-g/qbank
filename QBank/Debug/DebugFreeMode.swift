@@ -18,7 +18,7 @@ nonisolated enum DebugFreeMode {
     /// The fake server stands in for the network the account's requests would reach; the free
     /// account is the one it already knows, signed in from an earlier launch.
     @MainActor
-    static func model(context: DebugScenarioContext, bank: LocalBank) -> AppModel {
+    static func model(context: DebugScenarioContext, bank: LocalBank, sampleSet: String? = nil) -> AppModel {
         let server = FakeQBankServer(signedIn: true, answersFile: context.answersFile)
         let connection = Connection(isOnline: context.isOnline)
         let network = DebugNetwork(server: server, connection: connection, isOnline: context.isOnline)
@@ -38,6 +38,7 @@ nonisolated enum DebugFreeMode {
             client: client,
             kind: .free,
             bank: bank,
+            sampleSet: sampleSet,
             look: lookStore,
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),
