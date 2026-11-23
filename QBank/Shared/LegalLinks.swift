@@ -7,7 +7,14 @@ import Foundation
 nonisolated enum LegalLinks {
     static let siteHost = "qbank-app.dimitrygallego.com"
 
-    static let privacyPolicy = URL(string: "https://\(siteHost)/privacy")!
-    static let help = URL(string: "https://\(siteHost)/support")!
-    static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    static let privacyPolicy = address("https://\(siteHost)/privacy")
+    static let help = address("https://\(siteHost)/support")
+    static let termsOfUse = address("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+
+    /// A fixed address above, which the unit tests prove well formed; a malformed one stops the app
+    /// at launch rather than leaving a row that opens nothing.
+    private static func address(_ text: String) -> URL {
+        guard let url = URL(string: text) else { preconditionFailure("Not an address: \(text)") }
+        return url
+    }
 }
