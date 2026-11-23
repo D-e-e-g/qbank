@@ -19,9 +19,8 @@ Each step carries one tag:
 
 A step can carry two tags (text prepared by a worker, clicked by the owner).
 
-Two things are still open and are named wherever they bite:
+One thing is still open and is named wherever it bites:
 
-- **OD1, the pages' address.** Where the privacy and support pages live is not decided. Steps 12 and 16 need it.
 - **Later pull requests.** The notification route (S-08), the privacy answers (I-43) and the listing text (I-44) do not exist yet. Steps 10, 12 and 13 name which one they wait on.
 
 ## The names, in one place
@@ -62,7 +61,7 @@ Type these exactly. A mistake in a product id cannot be undone.
 | 13 | Age rating and content rights | Owner click, worker-prepared text | Before submission |
 | 14 | Countries and regions | Owner click | Before submission |
 | 15 | Price, copyright, review contact | Owner click | Before submission |
-| 16 | Privacy policy, support and terms addresses | Owner click, **waiting** | Before submission |
+| 16 | Privacy policy, support and terms addresses | Owner click | Before submission |
 | 17 | Release option | Owner click | At submission |
 | 18 | Attach the subscriptions to the version | Owner click | At submission |
 | 19 | Optional keys and notices | Owner click, owner vault step | Only if S-12 or S-13 is taken |
@@ -229,7 +228,7 @@ Apple: [Create a sandbox Apple Account](https://developer.apple.com/help/app-sto
 
 ### 12. App Privacy
 
-**Owner click, worker-prepared text. Waiting** on I-43 (the privacy answers and the policy that match the build) and OD1 (the policy's address). Apple has no way to enter these by script, and incomplete answers blocked another app's first submission.
+**Owner click, worker-prepared text. Waiting** on I-43 (the privacy answers and the policy that match the build). Apple has no way to enter these by script, and incomplete answers blocked another app's first submission.
 
 - [ ] App Store Connect > QBank > **App Privacy** > **Get Started**. Choose **Yes, we collect data from this app**. **Next**. Select each type below, then open each one under **Data Types** and answer; **Save**. Then **Publish** and confirm **Publish Your App Privacy Responses?** Answers can be edited and published again at any time.
 - [ ] **Privacy Policy** > **Edit**: the policy's address (step 16). Apple requires it for iOS.
@@ -292,7 +291,7 @@ Apple: [Set a price](https://developer.apple.com/help/app-store-connect/manage-a
 
 ### 16. Privacy policy, support and terms addresses
 
-**Owner click. Waiting** on OD1: where the privacy and support pages live, and the public contact email on them (I-41). The address goes into shipped builds, so it must stay put.
+**Owner click.** The addresses are in [app-store-listing.md](app-store-listing.md); the pages must answer first ([ci.md](ci.md#public-pages-pagesyml)). The address goes into shipped builds, so it must stay put.
 
 - [ ] **App Privacy** > **Privacy Policy** > **Edit** (step 12): the privacy address.
 - [ ] **App Information**, the version's **Support URL**: the support address.
@@ -337,7 +336,6 @@ Apple: [About Sign in with Apple](https://developer.apple.com/help/account/capab
 
 ## What is still open
 
-- **OD1**, the pages' address: steps 12 and 16, and through them the privacy policy, the support page and the app's own links.
 - **S-08**, the notification route: step 10.
 - **I-43 and I-44**, the privacy answers, the age-rating answers and the review notes: steps 12, 13 and 15.
 

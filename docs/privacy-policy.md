@@ -102,4 +102,4 @@ This is planned and is not in the app yet. It updates this policy before it ship
 
 ## Contact
 
-For privacy questions or to delete your account, email PRIVACY_CONTACT_EMAIL (the owner fills this in before the policy is published; see [release.md](release.md)). For questions about the source code, open an issue at https://github.com/D-e-e-g/qbank/issues; never put personal data in a public issue.
+For privacy questions or to delete your account, email dimitrygallego@gmail.com. For questions about the source code, open an issue at https://github.com/D-e-e-g/qbank/issues; never put personal data in a public issue.

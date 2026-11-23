@@ -1,0 +1,176 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --text: #1c1c1e;
+  --muted: #5c5c61;
+  --rule: #d8d8dc;
+  --link: #0a5bd3;
+  --code-bg: #f2f2f5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101012;
+    --text: #f0f0f3;
+    --muted: #a3a3aa;
+    --rule: #34343a;
+    --link: #7db0ff;
+    --code-bg: #1c1c20;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+header,
+main,
+footer {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+header {
+  padding-top: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+header .brand {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav a[aria-current="page"] {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+main {
+  padding-top: 8px;
+  padding-bottom: 32px;
+}
+
+footer {
+  padding-top: 16px;
+  padding-bottom: 32px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 15px;
+}
+
+h1 {
+  margin: 28px 0 8px;
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+h2 {
+  margin: 36px 0 8px;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+h3 {
+  margin: 24px 0 6px;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 14px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+a {
+  color: var(--link);
+}
+
+code,
+pre {
+  font: 0.9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--code-bg);
+  border-radius: 4px;
+}
+
+code {
+  padding: 1px 4px;
+  overflow-wrap: anywhere;
+}
+
+/* A field or type name in a table's first column stays whole, so a narrow
+   screen does not shrink that column below the width of one name. */
+td:first-child code {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+pre {
+  margin: 0 0 16px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  overflow-wrap: normal;
+}
+
+table {
+  width: 100%;
+  margin: 0 0 16px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.lede {
+  color: var(--muted);
+}
+
+.note {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QBank privacy policy</title>
+<meta name="description" content="What the QBank app and its server keep, why, and how to delete your data.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header>
+<a class="brand" href="../">QBank</a>
+<nav aria-label="Pages"><ul>
+<li><a href="../privacy/" aria-current="page">Privacy</a></li>
+<li><a href="../support/">Support</a></li>
+<li><a href="../format/">Question file format</a></li>
+</ul></nav>
+</header>
+<main>
+<h1>QBank privacy policy</h1>
+<p class="note"><strong>Status:</strong> draft, written before the app&#39;s code. Before the first TestFlight build reaches anyone but the owner, a worker re-reads every claim below against the app and the server, fixes what changed, and sets the date on the next line. See <a href="https://github.com/D-e-e-g/qbank/blob/main/docs/release.md">release.md</a>.</p>
+<p><strong>Last updated</strong> (last reviewed against the code): not yet.</p>
+<h2>What this app is</h2>
+<p>QBank is an iPhone and iPad app for practicing nursing exam questions (NCLEX style). It is the phone and tablet version of the QBank web app. Both talk to the same private QBank server, which one person runs for himself and a few invited users. You sign in with the account the owner set up for you, or sign up in the app or on the web with an email he added; no other email can make an account.</p>
+<h2>What we do not do</h2>
+<ul>
+<li>No advertising, ad networks, or advertising identifiers.</li>
+<li>No tracking. Nothing about you is shared with data brokers or used across other companies&#39; apps or websites.</li>
+<li>We do not sell, rent, or share your data with anyone.</li>
+<li>No analytics or crash-reporting services. The app bundles no third-party code that collects data.</li>
+<li>No access to your contacts, location, microphone, health data, or other apps. The camera and your photos are used only to make questions, and only for the photos you take or pick (see section 4).</li>
+<li>No chat, public profiles, or feeds.</li>
+</ul>
+<h2>What the app and the server keep</h2>
+<h3>1. Your account</h3>
+<ul>
+<li><strong>Email address and password.</strong> You sign in with the email address and password of your QBank account. The server stores the email address and a one-way hash of the password, never the password itself. The app sends your password only to the QBank server, over HTTPS, at sign-up and sign-in, and does not store it. iOS may offer to save it in your own Passwords app; that is Apple&#39;s feature and under your control.</li>
+<li><strong>Passkeys saved earlier.</strong> The app does not save passkeys or sign in with them. If you saved a passkey for your account before, its private key stays in your Passwords app, or the passkey app you chose, until you delete it there, and the server keeps what it kept when you saved it (its public key and id, a name such as &quot;iPhone&quot;, when it was saved, and whether it syncs between your devices) until you delete your account. The app never reads or sends any of it.</li>
+<li><strong>Agent keys.</strong> If you use your own AI agent with QBank, it asks to pair and shows you a short code; in <strong>Settings &gt; Connect an agent</strong>, in the app or on the web, you type or paste the code, see the agent&#39;s name and what it asks to do, and approve or deny it. The app sends only the code and your answer. An approved agent picks its key up from the server itself, so the key never reaches the app. The server keeps each key&#39;s name (the one the agent gave), what it may do, when it was made, last used, and revoked, and which sets it imported. Settings lists your keys and revokes one; a revoked key never works again, and what it imported or changed stays.</li>
+<li><strong>Display name.</strong> Your account has a name: the one the owner set when he made the account, or, when you signed up, the part of your email address before the @. The app may show it; it does not ask you for one.</li>
+<li><strong>Account role.</strong> Whether the account is a user account or the owner&#39;s admin account, and whether you must choose a new password at your next sign-in.</li>
+<li><strong>Sign-up list.</strong> The email addresses the owner adds so their people can sign up, with when he added each. The server keeps each until he removes it; removing one does not delete an account made with it.</li>
+</ul>
+<h3>2. Your sign-in session</h3>
+<ul>
+<li>When you sign in, the server creates a session and the app receives a session token. The app stores the token in the iOS Keychain on that device only, and sends it with every request so you stay signed in.</li>
+<li>With each session the server stores when it was created and expires, the IP address the sign-in came from, and the device description the app sends (its user agent). The sign-in library records these by default; QBank does not use them, and never uses them to work out where you are.</li>
+<li>Sessions expire on their own after a long period of no use. Signing out removes the token from the device and ends the session on the server when the device can reach it.</li>
+<li>After 5 wrong passwords in a row the server locks sign-in for that email address for a short time, and after 5 refused sign-ups it locks sign-up for that email the same way. For that it keeps the email address, a count of failed tries, and when the lock ends.</li>
+</ul>
+<h3>3. Your answers and progress</h3>
+<p>This is what the app is for. For your account the server keeps:</p>
+<ul>
+<li>every answer you submit: which question, your response, whether you marked it as a guess, its score, and when you answered;</li>
+<li>your progress per question (how many tries, how many fully right, the latest result) and which questions are on your Review list, including ones you cleared by hand;</li>
+<li>your study sessions: practice sets, Review runs, and exams, with when they started and ended, the folders and question pool you picked for an exam, the time limit, and the score;</li>
+<li>the course you opened most recently, so the app and the web app open where you left off.</li>
+</ul>
+<p>Your answers and progress are yours alone among users: other users cannot see them. Every semester, course, topic, page, folder, set, question, and term belongs to your account. The server keeps that study content with your account, and another account cannot see or reach it. There is no shared question bank.</p>
+<p><strong>The owner can see your progress.</strong> The server&#39;s admin account can look at a user&#39;s own study content, answers, and progress (to help with studying) and can set a temporary password for a user who forgot theirs. He looks at one account at a time, and his changes apply only to that account. No email is sent; the owner gives you the temporary password himself.</p>
+<h3>4. Importing and making questions</h3>
+<ul>
+<li><strong>Importing a question file.</strong> The file you choose or paste is sent to the server and checked. If you import it, it becomes a set in the course and folder you pick. The set is your account&#39;s own study content, kept on the server with your account.</li>
+<li><strong>Making questions</strong> (only on the accounts the owner turns it on for). The first time you use Making questions or exam twins on a device, the app asks whether it may send your material to Anthropic, naming what is sent (the notes you paste, your photos, a file you choose, or the practice questions you pick for exam twins), to whom, and why. Nothing is sent until you choose Allow; Not now leaves both unused, and the app asks again next time. The choice is kept on that device only, is not sent to the server, and you can change it in Settings. The notes you paste, the photos you take or pick, or the file you choose are sent to the server with the course, folder, and choices you make. The server deletes the photos and files once it has read them. It keeps the text of your material (what you pasted, and what it read from your photos and files) in the record of that set, with the questions it wrote, so the set can carry on where it stopped; the record is deleted with your account. To read your material and to write and check the questions, the server sends it to Anthropic&#39;s Claude API under the owner&#39;s own Anthropic account; the app never contacts Anthropic itself and holds no key. The questions become a set in the course and folder you pick, your account&#39;s own study content like an imported file. The server also keeps a record of each set you start (when, for which course and folder, how far it got, and how much of the AI service it used), to show your recent sets and to keep to a daily limit. <strong>Exam twins</strong> work the same way: Write exam twins on Exam setup sends the course, the folders you tick, and whether to use only the questions you last got wrong; the server sends those practice questions, already in QBank, to Anthropic&#39;s Claude API to write a new exam question for each, files them in the same folders, and keeps a record of the job like a set&#39;s.</li>
+<li><strong>Camera and photos.</strong> The app uses the camera only when you tap Take photo while making questions. The photo picker gives the app only the photos you pick; the app cannot see the rest of your photo library.</li>
+</ul>
+<h3>5. What stays on your device</h3>
+<ul>
+<li><strong>Saved for offline.</strong> So you can practice without a signal, the app keeps a copy of the courses on your Home screen, with their sets and questions, and your recent progress, plus the Review list and terms of each course you open, in its own storage on the device. It saves them by itself while it is online. Answers you give without a connection are scored on the device and wait there until they can be sent. The server ignores an answer it already has, so nothing is counted twice. Exams need a connection and are not kept for offline use.</li>
+<li><strong>Settings on the device.</strong> Your light or dark look choice and whether the Face ID lock is on are stored on the device.</li>
+<li><strong>The Face ID lock.</strong> When you turn it on, iOS checks your face, fingerprint, or passcode and tells the app only whether it matched. The app never receives or stores any biometric data, and nothing about the lock is sent to the server.</li>
+<li><strong>Signing out</strong> removes the session token, the offline copy, and any answers still waiting to send. The app warns you before it removes answers that have not been sent.</li>
+<li>Deleting the app removes everything it stored on that device.</li>
+</ul>
+<h3>6. Exporting your data</h3>
+<p>Settings has <strong>Export my progress</strong>, which asks the server for your answers, progress, Review list, scores, and study sessions as one JSON file and hands it to the iOS share sheet. Where the file goes from there (Files, AirDrop, another app) is your choice; QBank keeps no record of it.</p>
+<h3>7. TestFlight</h3>
+<p>While the app is tested through Apple&#39;s TestFlight, Apple may share with the owner the feedback, screenshots, and crash reports you choose to send from the TestFlight app, plus basic information Apple attaches to them (device model, iOS version). That is Apple&#39;s service, covered by Apple&#39;s privacy policy. The app itself sends nothing to Apple.</p>
+<h2>Where the data lives and who handles it</h2>
+<ul>
+<li>The QBank server runs on a rented server in the United States. All traffic between the app and the server is encrypted with HTTPS.</li>
+<li>The server&#39;s database is backed up so it can be restored after a failure. Backup copies are kept in private storage that only the owner can read, and are deleted automatically after about 30 days.</li>
+<li>The hosting and backup storage companies store the server&#39;s data on the owner&#39;s behalf and do not use it for anything else. No other company receives your data from QBank, except Anthropic, which receives the material you send to make questions, and the practice questions you pick for exam twins (section 4), and processes them under Anthropic&#39;s own commercial terms and privacy policy.</li>
+</ul>
+<h2>How long data is kept</h2>
+<ul>
+<li><strong>On the server:</strong> your account, study content, answers, and progress are kept until the account is deleted. Expired sessions stop working; their records are removed with the account. Photos and files sent to make questions are deleted once the server has read them; the text of your material stays in the record of that set until the account is deleted. Deleting a course or study topic, a page, a set, a folder, or a past exam in the app hides it everywhere, and Undo can bring it back as it was for 30 days; the server keeps it, with your answers to it, until the account is deleted, and nothing is ever deleted unless you confirm it.</li>
+<li><strong>In backups:</strong> up to about 30 days after deletion from the live server.</li>
+<li><strong>On your iPhone or iPad:</strong> until you sign out, delete your account, or delete the app.</li>
+</ul>
+<h2>Deleting your account and data</h2>
+<p>To delete your account, open <strong>Settings &gt; Delete account</strong> in the app and enter your password. The server deletes the account for good, and with it everything linked to it: sign-in, sessions on every device, passkeys, agent keys, your study content (semesters, courses, topics, pages, folders, sets, questions, and terms), answers, progress, Review list, exams, the records of the sets you made questions for, and your last-opened course. Nothing goes to Recently deleted and there is no Undo. The app then signs out and deletes what it kept on your device, including answers not yet sent. Your email stays on the owner&#39;s sign-up list until he removes it. Backup copies age out within about 30 days. You can also ask the owner to delete your account (contact below). To remove only the copy on your device, sign out or delete the app.</p>
+<p>If you only want a copy of your data, use <strong>Export my progress</strong> first.</p>
+<h2>Children</h2>
+<p>QBank is made for nursing students preparing for licensing exams. It is not directed at children, and accounts are only made for people the owner knows and adds.</p>
+<h2>Features that will change this policy</h2>
+<p>This is planned and is not in the app yet. It updates this policy before it ships:</p>
+<ul>
+<li><strong>Using the app on this device without an account:</strong> courses, answers, and progress would stay only on the device and nothing would be sent to the server.</li>
+</ul>
+<h2>Contact</h2>
+<p>For privacy questions or to delete your account, email <a href="mailto:dimitrygallego@gmail.com">dimitrygallego@gmail.com</a>. For questions about the source code, open an issue at <a href="https://github.com/D-e-e-g/qbank/issues">https://github.com/D-e-e-g/qbank/issues</a>; never put personal data in a public issue.</p>
+</main>
+<footer>
+<p>Questions: <a href="mailto:dimitrygallego@gmail.com">dimitrygallego@gmail.com</a></p>
+</footer>
+</body>
+</html>

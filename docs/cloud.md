@@ -4,7 +4,7 @@ The design record for who is signed in, where their question bank lives, and how
 
 This is a record to build to, not a description of shipped code. Nothing here exists yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`).
 
-Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name questions that are still the owner's. The maintainers keep that plan outside this repository, and a worker's brief says where.
+Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name owner questions. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
 ## The model in one paragraph
 
@@ -137,11 +137,7 @@ An invited account keeps everything it has today, and a build for the App Store 
 
 ## Still open
 
-Two questions are the owner's and are not decided. Nothing here assumes an answer.
-
-### OD1. The address of the privacy and support pages
-
-The pages are served by GitHub Pages from this repository. Their address is still open: the default GitHub address, which follows the GitHub account's name, or a subdomain of a domain the owner holds. The address is built into the app (Settings, the first screen, the plans sheet) and cannot be changed in a build that has shipped. I-41, and through it I-42, I-30 and I-33, wait for it.
+One question is the owner's and is not decided. Nothing here assumes an answer. OD1, the address of the privacy and support pages, is decided: https://qbank-app.dimitrygallego.com, served from `site/` ([ci.md](ci.md#public-pages-pagesyml)).
 
 ### OD2. The server's copy of a bank after a subscription ends
 

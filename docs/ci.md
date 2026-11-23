@@ -1,6 +1,6 @@
 # CI
 
-Two workflows run, with a trust boundary between them. `test/release-checks.sh` enforces every rule on this page that a file can show.
+Three workflows run; two of them have a trust boundary between them, and the third only publishes static pages. `test/release-checks.sh` enforces every rule on this page that a file can show.
 
 ## Pull requests and `main`: `ci.yml`
 
@@ -9,7 +9,7 @@ Every pull request and every push to `main` runs two Linux jobs on GitHub-hosted
 `Linux checks`:
 
 - `shellcheck` over `test/*.sh` and `scripts/*.sh`
-- `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git), and the 1,000 code-line limit (`test/max-lines.conf`)
+- `test/release-checks.sh`: workflow pins and triggers, the time limit on every test-result upload, project settings, the privacy manifest (it exists, lints, matches [privacy-manifest.md](privacy-manifest.md), and the app target's synchronized `QBank` group includes it), the Debug-only launch seam, the frontend-only rule, the TestFlight upload script's rules (the key read only in its upload step, its cleanup traps, the export options, and no key or team ID in Git), the public site and its Pages workflow (`test/site-checks.sh`, see [Public pages](#public-pages-pagesyml)), and the 1,000 code-line limit (`test/max-lines.conf`)
 - SwiftLint 0.65.1 over shipping code. A hit fails the job. See [SwiftLint](#swiftlint).
 - `swift format lint` over the whole tree, using the pinned Swift 6.4.3 toolchain. A hit fails the job. See [Swift format](#swift-format).
 
@@ -123,6 +123,24 @@ These, not an absence of secrets, keep fork code off the Mac: `xcode.yml` refere
 ### Package hosts
 
 Every package declares a `.macOS` platform next to `.iOS(.v18)` so `swift test` can run on the Mac host.
+
+## Public pages: `pages.yml`
+
+`site/` holds the plain static pages the App Store listing and the app link to: `/privacy`, `/support`, and `/format` at https://qbank-app.dimitrygallego.com. No framework, no script, no third-party font or tracker. `pages.yml` publishes `site/` with GitHub Pages on a push to `main` that changes `site/` or the workflow, and on a manual run. It runs on a hosted Linux machine, never a Mac, with actions pinned by commit SHA, `pages: write` and `id-token: write` as its only permissions, and no secret.
+
+`test/site-checks.sh`, run by `test/release-checks.sh`, enforces: the three pages, the 404 page and the style sheet exist; `site/CNAME` is `qbank-app.dimitrygallego.com`; the contact address is on `/support` and `/privacy`; the pages load no script and nothing from another host; no secret is in `site/`; `/privacy` is the policy rendered; `/format` lists the API's nine question types and the importer's image limits, and its example is valid JSON whose questions each have an `ask`; the workflow's permissions, triggers, runner and upload path, and that it uses no secret.
+
+How the pages stay in step:
+
+- `/privacy` is `docs/privacy-policy.md` rendered by `scripts/render-privacy-page.rb`. Change the policy, run the script, commit both; the check fails when the page and the policy differ.
+- `/format` describes the import check of the QBank API (`packages/questions` in the private server repository), which is the single source of truth for the format and which this repository cannot read. The page carries a date it was last checked against the importer. The check compares the page's question types with the `DraftQuestion` type enum of the pinned OpenAPI fixture (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json`), so re-pinning that fixture brings a type change into the check; the image limits (4 pictures, 300 KB each) are the only values kept in `test/site-checks.sh`. When the server's import rules change, update `site/format/index.html`, the date on it, and, for a limit change, those values in `test/site-checks.sh` in the same change.
+
+Turning Pages on and the DNS record are owner steps; no workflow or script here changes repository settings or DNS:
+
+1. Settings > Pages > Build and deployment > Source: **GitHub Actions**. Do this before the first run on `main`, or that run fails at its Configure Pages step; re-run it afterwards.
+2. In the DNS zone of `dimitrygallego.com`, add `qbank-app` as a CNAME record pointing to `d-e-e-g.github.io`.
+3. Settings > Pages > Custom domain: `qbank-app.dimitrygallego.com`, Save. When the DNS check passes and the certificate is issued, tick **Enforce HTTPS**.
+4. Check that `https://qbank-app.dimitrygallego.com/privacy`, `/support` and `/format` answer 200.
 
 ## Repository settings that back this
 

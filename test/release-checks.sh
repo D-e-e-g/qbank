@@ -481,6 +481,17 @@ else
   fail "the simulator slot makes a second run wait and CI skip it"
 fi
 
+# --- Public site ------------------------------------------------------------------
+#
+# site/ holds the privacy, support, and question-file-format pages that GitHub
+# Pages serves. test/site-checks.sh reads the pages and the Pages workflow.
+
+if ./test/site-checks.sh; then
+  pass "site/ and its Pages workflow follow the rules in docs/ci.md"
+else
+  fail "site/ and its Pages workflow follow the rules in docs/ci.md"
+fi
+
 # --- Xcode project ------------------------------------------------------------
 
 PBXPROJ=QBank.xcodeproj/project.pbxproj
