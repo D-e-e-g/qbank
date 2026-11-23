@@ -403,6 +403,11 @@ final class ExamSetupModel {
     func writeTwins() async -> TwinJob? {
         guard canTwin, !picked.isEmpty, !isStarting, !isTwinning, !needsConnection else { return nil }
         let pick = pick
+        // Her questions do not go to Anthropic before she allows it, whatever screen got here.
+        guard app.aiConsent.isAllowed else {
+            twinRefusal = (pick, AIConsentWording.needed)
+            return nil
+        }
         let folderIDs = picked.map(\.id)
         isTwinning = true
         twinRefusal = nil

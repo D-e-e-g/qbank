@@ -32,9 +32,79 @@ final class MakeQuestionsUITests: XCTestCase {
         attachLooks(app, "Q-1 add, not set up")
     }
 
+    // The permission screen is a sheet over the Add tab and a toggle in Settings, so only the running
+    // app can show that nothing opens before Allow, that Not now leaves the screen as it was, and
+    // that the choice survives a relaunch. The model's refusal to send without it is a unit test's.
+    @MainActor
+    func testMakeQuestionsAsksBeforeItIsFirstUsed() throws {
+        let app = launch("maker")
+        openAdd(app)
+        let make = app.buttons["add.make"]
+        XCTAssertTrue(make.appears(timeout: 5))
+        make.tap()
+
+        let title = app.staticTexts["ai.permission.title"]
+        XCTAssertTrue(title.appears(timeout: 5))
+        XCTAssertEqual(title.label, "Share your material with Anthropic?")
+        let message = app.staticTexts["ai.permission.message"].label
+        for part in ["Anthropic's Claude", "the notes you paste", "your photos", "a file you choose", "the QBank server", "Nothing is sent until you allow it", "in Settings"] {
+            XCTAssertTrue(message.contains(part), "the screen says \"\(part)\"")
+        }
+        XCTAssertFalse(app.navigationBars["Your material"].exists, "nothing opens before Allow")
+        attachLooks(app, "ai-1 permission")
+
+        // Not now leaves Make questions unused, and asks again next time.
+        tapWhenStill(app.buttons["ai.permission.cancel"])
+        XCTAssertTrue(title.disappears(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Add questions"].exists)
+        XCTAssertFalse(app.navigationBars["Your material"].exists)
+        make.tap()
+        XCTAssertTrue(title.appears(timeout: 5), "asked again")
+
+        tapWhenStill(app.buttons["ai.permission.confirm"])
+        XCTAssertTrue(app.navigationBars["Your material"].appears(timeout: 5), "Allow opens what she asked for")
+
+        // Remembered: the next time goes straight in.
+        goBack(app, from: "Your material")
+        make.tap()
+        XCTAssertTrue(app.navigationBars["Your material"].appears(timeout: 5))
+        XCTAssertFalse(title.exists, "asked once")
+    }
+
+    @MainActor
+    func testTheChoiceSurvivesARelaunchAndIsRevisitedInSettings() throws {
+        let first = launch("maker")
+        openAdd(first)
+        first.buttons["add.make"].tap()
+        tapWhenStill(first.buttons["ai.permission.confirm"])
+        XCTAssertTrue(first.navigationBars["Your material"].appears(timeout: 5))
+        first.terminate()
+
+        let app = launch("maker", keepPhoneSettings: true)
+        openAdd(app)
+        app.buttons["add.make"].tap()
+        XCTAssertTrue(app.navigationBars["Your material"].appears(timeout: 5), "remembered on this phone")
+        XCTAssertFalse(app.staticTexts["ai.permission.title"].exists)
+        goBack(app, from: "Your material")
+
+        openTab(app, "Settings")
+        let toggle = app.switches["settings.anthropic"]
+        reveal(toggle, in: app)
+        waitForValue(toggle, "1")
+        attachLooks(app, "ai-2 settings, allowed")
+        flip(toggle)
+        waitForValue(toggle, "0")
+
+        // Off again: Make questions asks once more.
+        openTab(app, "Add")
+        app.buttons["add.make"].tap()
+        XCTAssertTrue(app.staticTexts["ai.permission.title"].appears(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Your material"].exists)
+    }
+
     @MainActor
     func testMakeASetFromPastedNotes() throws {
-        let app = launch("maker")
+        let app = launch("maker", aiAllowed: true)
         openAdd(app)
         let make = app.buttons["add.make"]
         XCTAssertTrue(make.appears(timeout: 5))
@@ -137,7 +207,16 @@ final class MakeQuestionsUITests: XCTestCase {
         let add = app.buttons["make.addCopies"]
         reveal(add, in: app)
         XCTAssertEqual(add.label, "Add 2 questions to Week 3")
+        // A set started before she was asked: her checked copies wait for Allow, as a new set does.
         add.tap()
+        let permission = app.staticTexts["ai.permission.title"]
+        XCTAssertTrue(permission.appears(timeout: 5))
+        tapWhenStill(app.buttons["ai.permission.cancel"])
+        XCTAssertTrue(permission.disappears(timeout: 5))
+        XCTAssertTrue(add.exists, "Not now sends nothing")
+        XCTAssertFalse(app.staticTexts["make.done.title"].exists)
+        add.tap()
+        tapWhenStill(app.buttons["ai.permission.confirm"])
         let done = app.staticTexts["make.done.title"]
         XCTAssertTrue(done.appears(timeout: 30))
         XCTAssertTrue(app.staticTexts["2 questions checked by you"].exists)
@@ -167,5 +246,19 @@ final class MakeQuestionsUITests: XCTestCase {
     private func openAdd(_ app: XCUIApplication) {
         openTab(app, "Add", timeout: 10)
         XCTAssertTrue(app.navigationBars["Add questions"].appears(timeout: 5))
+    }
+
+    /// Taps a SwiftUI toggle's switch, not its label, which does nothing on a tap.
+    @MainActor
+    private func flip(_ toggle: XCUIElement) {
+        let control = toggle.switches.firstMatch
+        (control.exists ? control : toggle).tap()
+    }
+
+    @MainActor
+    private func waitForValue(_ element: XCUIElement, _ value: String) {
+        let predicate = NSPredicate(format: "value == %@", value)
+        let result = XCTWaiter.wait(for: [expectation(for: predicate, evaluatedWith: element)], timeout: 5)
+        XCTAssertEqual(result, .completed, "\(element) never had the value \(value)")
     }
 }

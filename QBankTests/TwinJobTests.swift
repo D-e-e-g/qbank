@@ -125,7 +125,7 @@ struct TwinJobTests {
             "GET /api/courses/c1/exams": .ok(StudyBodies.setup(folders: StudyBodies.threePools)),
             "GET /api/question-maker": .ok(Self.status(available: false)),
         ])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let setup = ExamSetupModel(app: app, route: ExamSetupRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics")))
         await setup.load()
         #expect(!setup.canTwin)
@@ -153,7 +153,7 @@ struct TwinJobTests {
             "GET /api/twin-jobs": .ok(#"{"jobs":[]}"#),
         ])
         server["POST /api/twin-jobs"] = StubServer.Reply(status: 202, body: Self.jobBody(status: "running"))
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let setup = ExamSetupModel(app: app, route: ExamSetupRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics")))
         await setup.load()
         #expect(setup.canTwin)
@@ -260,7 +260,7 @@ struct TwinJobTests {
         let server = StubServer(["GET /api/twin-jobs/j1": .ok(Self.jobBody(status: "done"))])
         server.script("GET /api/courses/c1/exams", [.offline])
         server["GET /api/courses/c1/exams"] = .ok(StudyBodies.setup(folders: StudyBodies.threePools, inProgress: running))
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let twins = TwinJobModel(
             app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero,
             now: { QBankJSON.parseDate("2026-10-12T00:05:00.000Z")! }
@@ -338,7 +338,7 @@ struct TwinJobTests {
 
     @Test func aFailedJobSaysWhyAndOffersNoExam() async {
         let server = StubServer(["GET /api/twin-jobs/j1": .ok(Self.jobBody(status: "failed", failure: "These exam twins were not written. Start them again."))])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
         #expect(model.job?.status == .failed)
@@ -351,7 +351,7 @@ struct TwinJobTests {
 
     @Test func aJobThatIsNotHersIsGone() async {
         let server = StubServer(["GET /api/twin-jobs/j1": .error(404, "not_found", "Those exam twins are not in QBank.")])
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
         #expect(model.isGone)
@@ -363,7 +363,7 @@ struct TwinJobTests {
         let server = StubServer(["GET /api/twin-jobs/j1": .ok(Self.jobBody(status: "done"))])
         server.script("GET /api/twin-jobs/j1", [.offline])
         server["GET /api/courses/c1/exams"] = .ok(StudyBodies.setup(folders: StudyBodies.threePools))
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
         await model.readRunningExam()
@@ -379,7 +379,7 @@ struct TwinJobTests {
             "GET /api/courses/c1/exams": .ok(StudyBodies.setup(folders: StudyBodies.threePools)),
         ])
         server["POST /api/courses/c1/exams"] = StubServer.Reply(status: 201, body: StudyBodies.exam())
-        let (app, _) = TestApp.make(server, account: .student())
+        let (app, _) = TestApp.make(server, account: .student(), aiAllowed: true)
         let model = TwinJobModel(app: app, route: TwinJobRoute(course: CourseRef(id: "c1", code: "NURS 101", title: "Invented Basics"), jobID: "j1"), pollInterval: .zero)
         await model.follow()
         await model.readRunningExam()

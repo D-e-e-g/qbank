@@ -22,6 +22,8 @@ struct ExamSetupView: View {
     let app: AppModel
     @State private var model: ExamSetupModel
     @State private var running: ExamRoute?
+    /// The one-time permission screen, shown before exam twins are first written.
+    @State private var asksAIPermission = false
     @State private var exit: ExamExit?
     /// The past exam she asked to delete, while its warning is open.
     @State private var deleting: DeleteRequest?
@@ -270,10 +272,10 @@ struct ExamSetupView: View {
             ProblemText(text: problem)
         }
         Button {
-            Task {
-                if let job = await model.writeTwins() {
-                    navigator?.open(StudyRoute.twinJob(TwinJobRoute(course: model.course, jobID: job.id, seed: job)))
-                }
+            if app.aiConsent.isAllowed {
+                writeTwins()
+            } else {
+                asksAIPermission = true
             }
         } label: {
             ButtonLabel(text: "Write exam twins", isBusy: model.isTwinning)
@@ -281,6 +283,15 @@ struct ExamSetupView: View {
         .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
         .disabled(model.picked.isEmpty || model.isStarting || model.isTwinning || model.needsConnection)
         .accessibilityIdentifier("exam.twins.write")
+        .aiPermissionSheet(isPresented: $asksAIPermission, store: app.aiConsent, onAllow: writeTwins)
+    }
+
+    private func writeTwins() {
+        Task {
+            if let job = await model.writeTwins() {
+                navigator?.open(StudyRoute.twinJob(TwinJobRoute(course: model.course, jobID: job.id, seed: job)))
+            }
+        }
     }
 
     /// Her exam twins over this course, newest first, so a job is found again after she leaves it.
