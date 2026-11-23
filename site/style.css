@@ -126,6 +126,13 @@ code {
   overflow-wrap: anywhere;
 }
 
+/* A field or type name in a table's first column stays whole, so a narrow
+   screen does not shrink that column below the width of one name. */
+td:first-child code {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
 pre {
   margin: 0 0 16px;
   padding: 12px;
