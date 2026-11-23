@@ -44,9 +44,8 @@ enum CourseView {
         }
     }
 
-    /// The time an exam over that many questions gets (`planExam`'s time): 90 seconds each up to 40
-    /// questions, and an hour for a full exam of 40 drawn from more. The exam family ports the whole plan.
-    static func examTimeLimitSeconds(poolSize: Int) -> Int { poolSize <= 40 ? poolSize * 90 : 3600 }
+    /// The time an exam over that many questions gets.
+    static func examTimeLimitSeconds(poolSize: Int) -> Int { ExamPlanner.plan([ExamPlanner.Pool(label: "", questionCount: poolSize)]).timeLimitSeconds }
 
     /// The terms of the sets in force, each key once.
     private static func termCount(_ tx: StoreTransaction, courseID: String) throws -> Int {

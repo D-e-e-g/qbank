@@ -6,6 +6,8 @@ struct BankCall {
     /// The path's `:name` parts.
     let params: [String: String]
     let query: [String: String]
+    /// Every value of each query name, in the order sent: a name repeated (`folderIds=a&folderIds=b`) lists them all.
+    let queryLists: [String: [String]]
     /// The JSON body, or nil when the request sent none.
     let body: JSONValue?
     let tx: StoreTransaction
@@ -14,11 +16,12 @@ struct BankCall {
     private let random: @Sendable (Int) -> Int
 
     init(
-        params: [String: String], query: [String: String], body: JSONValue?, tx: StoreTransaction, now: Date, ids: @escaping @Sendable () -> String,
-        random: @escaping @Sendable (Int) -> Int = { Int.random(in: 0..<$0) }
+        params: [String: String], query: [String: String], queryLists: [String: [String]] = [:], body: JSONValue?, tx: StoreTransaction, now: Date,
+        ids: @escaping @Sendable () -> String, random: @escaping @Sendable (Int) -> Int = { Int.random(in: 0..<$0) }
     ) {
         self.params = params
         self.query = query
+        self.queryLists = queryLists
         self.body = body
         self.tx = tx
         self.now = now
@@ -73,7 +76,8 @@ struct BankRoute: Sendable {
 struct BankRouter: Sendable {
     private(set) var routes: [BankRoute] = []
 
-    mutating func get(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("GET", pattern, writes: false, handler) }
+    /// A GET reads, unless `writes` says it also records something, as an exam read records the end of an exam whose time is up.
+    mutating func get(_ pattern: String, writes: Bool = false, _ handler: @escaping BankRoute.Handler) { add("GET", pattern, writes: writes, handler) }
     /// A POST that changes nothing, such as a check: it runs in a read, not a transaction that could commit.
     mutating func post(_ pattern: String, writes: Bool = true, _ handler: @escaping BankRoute.Handler) { add("POST", pattern, writes: writes, handler) }
     mutating func put(_ pattern: String, _ handler: @escaping BankRoute.Handler) { add("PUT", pattern, writes: true, handler) }

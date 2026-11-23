@@ -259,15 +259,22 @@ enum TranscriptReplay {
         }
 
         /// A list of questions the server drew in a random order, read in the order of the questions' own names.
+        /// An exam's result lists its marks in the same order, so they follow the questions.
         private static func inNameOrder(_ body: JSONValue) -> JSONValue {
             guard case .object(var fields) = body, case .array(let questions)? = fields["questions"] else { return body }
-            let ordered = questions.sorted { ($0["publicId"]?.stringValue ?? "") < ($1["publicId"]?.stringValue ?? "") }
+            // A question's name repeats across sets, so its stem tells two of one name apart.
+            let key = { (index: Int) in (questions[index]["publicId"]?.stringValue ?? "") + "\u{0}" + (questions[index]["stem"]?.stringValue ?? "") }
+            let order = questions.indices.sorted { key($0) < key($1) }
             fields["questions"] = .array(
-                ordered.map { question in
-                    guard case .object(var one) = question else { return question }
+                order.map { index in
+                    guard case .object(var one) = questions[index] else { return questions[index] }
                     one["position"] = .null
                     return .object(one)
                 })
+            if case .object(var result)? = fields["result"], case .array(let items)? = result["items"], items.count == questions.count {
+                result["items"] = .array(order.map { items[$0] })
+                fields["result"] = .object(result)
+            }
             return .object(fields)
         }
 
