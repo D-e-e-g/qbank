@@ -115,11 +115,11 @@ final class AddUITests: XCTestCase {
         let app = launch("signed-in")
         openImport(app)
         app.buttons["Paste JSON"].tap()
-        paste(#"{"title":"Broken","questions":[{"id":"B1","type":"single","stem":"Invented.","ask":"Which?","options":[{"t":"One","ok":true},{"t":"Two","ok":true},{"t":"Three"}],"rationale":"Invented."}]}"#, in: app)
+        paste(#"{"title":"Broken","questions":[{"id":"B1","type":"single","stem":"Invented.","ask":"Which?","options":[{"t":"One","ok":true},{"t":"Two","ok":true},{"t":"Three"}],"rationale":"Invented."},{"id":"B2","type":"fill","stem":"Invented.","ask":"Which?"}]}"#, in: app)
         tapVisible(app.buttons["import.check"], in: app)
         let errors = app.descendants(matching: .any)["import.errors"]
         XCTAssertTrue(errors.appears(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Question 1 (B1): missing takeaway"].exists)
+        XCTAssertTrue(app.staticTexts["Question 2 (B2): unknown type \"fill\""].exists)
         XCTAssertTrue(app.staticTexts["Question 1 (B1): needs exactly one option with \"ok\": true (found 2)"].exists)
         XCTAssertFalse(app.buttons["import.commit"].exists, "a file with errors cannot be imported")
         tapVisible(app.buttons["import.copyErrors"], in: app)

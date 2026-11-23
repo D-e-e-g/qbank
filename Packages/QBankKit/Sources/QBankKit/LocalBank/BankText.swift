@@ -5,7 +5,7 @@ import Foundation
 enum BankText {
     /// The text trimmed, refused when blank (`<label> is required.`) or past `maxLength` (`<label> is too long.`).
     static func required(_ value: String, _ label: String, _ maxLength: Int) throws -> String {
-        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = JS.trim(value)
         if text.isEmpty { throw BankRefusal.refused(400, "\(label) is required.") }
         if text.utf16.count > maxLength { throw BankRefusal.refused(400, "\(label) is too long.") }
         return text

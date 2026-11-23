@@ -79,6 +79,23 @@ struct Transcript: Decodable {
         return try JSONDecoder().decode(Transcript.self, from: Data(contentsOf: url))
     }
 
+    /// The transcript of the world `name` with the answers the server has since changed taken from `Fixtures/import-drift.json`: the
+    /// question-file rules changed after the pinned commit, so a recorded import check no longer says what the server says. The
+    /// recorded request and status stay, and every answer not listed is the recording's own. A re-record at a newer commit drops the file.
+    static func loadWithImportDrift(_ name: String) throws -> Transcript {
+        var transcript = try load(name)
+        let url = try #require(Bundle.module.url(forResource: "import-drift", withExtension: "json", subdirectory: "Fixtures"))
+        let file = try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: url))
+        for drift in file["steps"]?.arrayValue ?? [] where drift["transcript"]?.stringValue == name {
+            guard let index = drift["step"].flatMap({ if case .number(let n) = $0 { Int(n) } else { nil } }), let body = drift["body"],
+                case .request(let exchange) = transcript.steps[index]
+            else { continue }
+            let response = Fixture.Response(status: exchange.response.status, headers: exchange.response.headers, body: body)
+            transcript.steps[index] = .request(Exchange(name: exchange.name, at: exchange.at, request: exchange.request, response: response))
+        }
+        return transcript
+    }
+
     /// The name of every recorded world, in order.
     static func names() throws -> [String] {
         let directory = try #require(Bundle.module.url(forResource: "transcripts", withExtension: nil, subdirectory: "Fixtures"))

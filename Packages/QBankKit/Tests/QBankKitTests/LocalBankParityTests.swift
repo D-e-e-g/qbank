@@ -7,11 +7,12 @@ import Testing
 /// every answer matches in status, header and body, with times within the replay's tolerance and
 /// ids bound one to one (`TranscriptReplay`).
 ///
-/// This slice serves the catalog: semesters, courses, topics, pages and folders. A transcript is
-/// proven whole when every bank request in it is one this slice serves. One that also holds a
-/// request a later slice serves (import, answers, exams, deletion, the place, the archive) is
-/// proven up to that request, and the request is named in `waiting`, so the day a slice serves it
-/// the transcript moves to the whole list.
+/// The bank serves the catalog (semesters, courses, topics, pages and folders) and the sets (import, replace, restore, a set's questions
+/// and a course's terms). A transcript is proven whole when every bank request in it is one the bank serves. One that also holds a
+/// request a later slice serves (answers, exams, deletion, the place, the archive) is proven up to that request, and the request is
+/// named in `waiting`, so the day a slice serves it the transcript moves to the whole list. Import answers the server has changed since
+/// the recording come from `Fixtures/import-drift.json` (`Transcript.loadWithImportDrift`). An agent's imports and the admin's reads are
+/// not the bank's to answer, so those transcripts are not listed.
 @Suite struct LocalBankParityTests {
     /// The paths of the bank, which the phone answers. Everything else is the account, which stays on the server.
     static func isBank(_ request: Fixture.Request) -> Bool {
@@ -22,19 +23,23 @@ import Testing
     }
 
     /// Transcripts that replay whole: every bank request in them is served by this slice.
-    static let whole = ["organize-catalog"]
+    static let whole = ["organize-catalog", "organize-imports", "practice-restoring"]
 
     /// Transcripts that hold a request of a later slice: how many steps come before the first such
     /// request, and what it is. Those steps replay now.
     static let waiting: [String: (step: Int, request: String)] = [
-        "organize-folders": (3, "POST /api/imports"),
-        "organize-imports": (6, "POST /api/imports/check"),
-        "topics": (6, "POST /api/imports"),
+        "organize-folders": (13, "GET /api/course-exams/ce000000-0000-4000-8000-000000000002/delete-preview"),
+        "topics": (10, "POST /api/attempts"),
+        "practice-continuing": (5, "POST /api/attempts"),
+        "deletion-contents": (10, "POST /api/attempts"),
+        "deletion-courses": (6, "POST /api/attempts"),
+        "deletion-pages": (12, "POST /api/attempts"),
+        "twins": (8, "POST /api/attempts"),
     ]
 
     @Test(arguments: whole)
     func replaysWhole(_ name: String) async throws {
-        let transcript = try Transcript.load(name)
+        let transcript = try Transcript.loadWithImportDrift(name)
         let harness = try LocalBankHarness()
         let differences = try await TranscriptReplay.run(transcript, over: harness.bank, hooks: harness.hooks(serves: Self.isBank))
         #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
@@ -43,7 +48,7 @@ import Testing
 
     @Test(arguments: waiting.keys.sorted())
     func replaysUpToTheFirstRequestOfALaterSlice(_ name: String) async throws {
-        let transcript = try Transcript.load(name)
+        let transcript = try Transcript.loadWithImportDrift(name)
         let harness = try LocalBankHarness()
         let expected = try #require(Self.waiting[name])
         let first = try #require(

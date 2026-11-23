@@ -272,8 +272,8 @@ struct FakeServerRoutesTests {
         let invalid = try await calls.call("POST", "/api/imports", ["source": "not json", "courseId": Self.mentalHealth])
         #expect(invalid.status == 400)
         #expect(invalid.error == "invalid_import")
-        #expect(invalid.message == "This is not valid JSON. Ask your AI chat to resend only the JSON block.")
-        #expect(invalid["errors"] as? [String] == ["This is not valid JSON. Ask your AI chat to resend only the JSON block."])
+        #expect(invalid.message == "This is not valid JSON: Unexpected token 'o', \"not json\" is not valid JSON. Ask your AI chat to resend only the JSON block.")
+        #expect(invalid["errors"] as? [String] == ["This is not valid JSON: Unexpected token 'o', \"not json\" is not valid JSON. Ask your AI chat to resend only the JSON block."])
         #expect(invalid["warnings"] as? [String] == [])
 
         let after = try await calls.catalog()

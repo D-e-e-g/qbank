@@ -150,7 +150,7 @@ enum CatalogRules {
     // MARK: Shared rules
 
     /// A course's code is unique among the semester's courses that are not deleted, ignoring case.
-    private static func assertCodeFree(_ tx: StoreTransaction, _ semesterId: String, _ code: String, except id: String?) throws {
+    static func assertCodeFree(_ tx: StoreTransaction, _ semesterId: String, _ code: String, except id: String?) throws {
         let rows = try tx.rows("SELECT id, code FROM course WHERE semester_id = ? AND deleted_at IS NULL", [.text(semesterId)])
         if rows.contains(where: { $0.string("id") != id && BankText.sameName($0.string("code"), code) }) {
             throw BankRefusal.refused(409, "This semester already has a course with the code \(code).")
@@ -158,14 +158,14 @@ enum CatalogRules {
     }
 
     /// The topics' names are unique among the topics that are not deleted, ignoring case.
-    private static func assertTopicTitleFree(_ tx: StoreTransaction, _ title: String, except id: String?) throws {
+    static func assertTopicTitleFree(_ tx: StoreTransaction, _ title: String, except id: String?) throws {
         let rows = try tx.rows("SELECT id, title FROM course WHERE kind = 'topic' AND deleted_at IS NULL")
         if let taken = rows.first(where: { $0.string("id") != id && BankText.sameName($0.string("title"), title) }) {
             throw BankRefusal.refused(409, "You already have a topic named \(taken.string("title")).")
         }
     }
 
-    private static func nextSort(_ tx: StoreTransaction, _ sql: String, _ bindings: [StoreValue] = []) throws -> Int {
+    static func nextSort(_ tx: StoreTransaction, _ sql: String, _ bindings: [StoreValue] = []) throws -> Int {
         guard case .integer(let top)? = try tx.value(sql, bindings) else { return 1 }
         return Int(top) + 1
     }

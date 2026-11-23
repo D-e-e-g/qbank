@@ -84,7 +84,7 @@ struct FolderContent {
 
     // MARK: Sets
 
-    private static func summary(_ set: SetRow, lineage: [SetRow], questions: Int, ids: [String], study: SetProgress?) -> JSONValue {
+    static func summary(_ set: SetRow, lineage: [SetRow], questions: Int, ids: [String], study: SetProgress?) -> JSONValue {
         let others = lineage.filter { $0.id != set.id }
         let newest = lineage.allSatisfy { $0.importedAt <= set.importedAt }
         let status = others.isEmpty ? "imported" : (newest ? "replaced" : "restored")
@@ -104,7 +104,7 @@ struct FolderContent {
         var lastAnsweredAt: String?
     }
 
-    private static func counts(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: Int] {
+    static func counts(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: Int] {
         var counts: [String: Int] = [:]
         for row in try tx.rows(
             "SELECT q.set_id AS set_id, count(*) AS n FROM question q JOIN practice_set ps ON ps.id = q.set_id WHERE ps.course_id = ? GROUP BY q.set_id",
@@ -115,7 +115,7 @@ struct FolderContent {
         return counts
     }
 
-    private static func questionIDs(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: [String]] {
+    static func questionIDs(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: [String]] {
         var ids: [String: [String]] = [:]
         for row in try tx.rows(
             "SELECT q.id AS id, q.set_id AS set_id FROM question q JOIN practice_set ps ON ps.id = q.set_id WHERE ps.course_id = ? ORDER BY q.position, q.id",
@@ -126,7 +126,7 @@ struct FolderContent {
         return ids
     }
 
-    private static func progress(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: SetProgress] {
+    static func progress(_ tx: StoreTransaction, courseID: String, setIds: Set<String>) throws -> [String: SetProgress] {
         var result: [String: SetProgress] = [:]
         for row in try tx.rows(
             """
