@@ -2,7 +2,7 @@
 
 The design record for the bank that lives on the iPhone or iPad: how the screens reach it, what it stores, and the one file format that carries a whole bank between the phone and the server. [cloud.md](cloud.md) is its other half: who has which bank, and the rules for moving one.
 
-This is a record to build to, not a description of shipped code. Nothing here exists yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is older, server commit `6acfbcf` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`).
+This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) exists so far, and nothing in the app uses it yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is older, server commit `6acfbcf` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`).
 
 Ids such as A1, I-11 and S-09 name calls and pull requests in the App Store release plan. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -68,7 +68,7 @@ SQLite through the system library, with no third-party code (A2). One file holds
 - **It is the only copy** of a free user's bank, so it is kept in the device's own backup, with file protection on (A12). The saved copies of server mode are the opposite: left out of backups because the server has it all (`Packages/QBankKit/Sources/QBankKit/Offline/ContentCache.swift:72`).
 - **Sign-out must not remove it.** Today sign-out erases `Accounts/<account id>/` under `Application Support/QBankKit` (`QBank/Offline/PhoneStorage.swift:40-42`, called from `AppModel.swift:183-190`). The bank and its safety copies live in a folder of their own that sign-out never touches, for example `Application Support/QBankKit/Banks/<key>/`. Only Delete account erases it (I-32).
 - **The key is known without the server.** I-30 opens the bank when the server cannot be reached after Apple says yes, and the account id comes from the server (`Packages/QBankKit/Sources/QBankKit/Models/Account.swift`). Apple's user identifier is known at every Sign in with Apple; the server's account id is not. The store itself takes any folder-safe key (I-11).
-- **Schema steps are Swift source.** They are numbered, as the server's are, and live in a folder whose name is not `migrations`: `test/release-checks.sh:1047` refuses that name and any `.sql` file.
+- **Schema steps are Swift source.** They are numbered, as the server's are, and live in `Store/Schema`, a folder whose name is not `migrations`: `test/release-checks.sh:1047` refuses that name and any `.sql` file.
 
 ### How values are stored
 
@@ -107,6 +107,8 @@ Notes for I-11:
 
 - A folder's name is unique within its list, counting each delete apart: the server's constraint is `unique nulls not distinct (course_id, course_exam_id, name, deletion_id)` (`apps/api/src/db/deletion-migration.ts:19`). SQLite treats nulls as distinct, so the phone needs a unique index over expressions that fold null to a fixed value.
 - A topic's title is unique ignoring case among topics that are not deleted (`deletion-migration.ts:35`).
+- As built, beyond the table: the tables are `STRICT`, and each column carries a `CHECK` that its text has its kind's exact form (lowercase UUID, the API's time and date forms, `0` or `1`, JSON of the stated shape), that an enum column holds one of the listed values, that a deletable row's two marks are both null or both set, and that a course has a semester exactly when its kind is `course`. `folder.course_exam_id` is `ON DELETE SET NULL`, as on the server. `study_place` holds at most one row through a unique index over a constant. The server defers its folder-name rule to the end of a transaction so two folders can swap names; SQLite checks a unique index at each statement, so the engine swaps through a temporary name. SQLite's `lower()` folds ASCII only, so the topic-title index is a floor and the engine checks the full rule.
+- The file is `Banks/<key>/bank.sqlite` with the default rollback journal, so it is one file with no side files left at rest. The file and its folder are set to `completeUntilFirstUserAuthentication` and to be kept in the backup every time the store opens. The schema version is SQLite's `user_version`; a file from a newer step than the app knows is refused and left alone. Each step runs with foreign keys off, as SQLite's table rebuild needs, and commits only when `foreign_key_check` finds no broken reference. A transaction that SQLite rolls back on its own (a full disk, an I/O error) runs no further statement and fails its commit, so nothing of it is kept.
 - Stored rows are as written, not as read. An exam whose time ran out keeps a null `finishedAt` until something ends it; the engine works out its end at the read, as the server does.
 
 ### What is not on the phone
