@@ -246,6 +246,26 @@ struct WriteEditTests {
         #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
     }
 
+    @Test func openingASetRecordsTheVersionTheCourseSaysIsCurrentNotTheFolderRows() async throws {
+        let (server, _, app) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
+        server["GET /api/practice-sets/s1"] = .ok(Self.savedSetBody())
+        let draft = try await WriteEdit.open(setID: "s1", courseID: "c1", folderID: "f1", client: app.client).get()
+        #expect(draft.editing == EditedSet(setID: "s1", courseID: "c1", folderID: "f1", activeSince: Self.newerVersion))
+        let reads = server.calls.filter { $0 == "GET /api/courses/c1" || $0 == "GET /api/practice-sets/s1" }
+        #expect(reads == ["GET /api/courses/c1", "GET /api/practice-sets/s1"], "the version is read before the questions")
+        let model = WriteModel(app: app, draft: draft)
+        let current = await model.checkEdited()
+        #expect(current)
+        #expect(model.outdated == nil, "a set opened as it is now is not said to have changed since")
+    }
+
+    @Test func aSetNoLongerInItsCourseIsNotOpened() async throws {
+        let (server, _, app) = try Self.editing(course: StudyBodies.course(), imports: [])
+        let opened = try await WriteEdit.open(setID: "s1", courseID: "c1", folderID: "f1", client: app.client)
+        #expect(opened.failure?.message == WriteEdit.missing)
+        #expect(!server.calls.contains("GET /api/practice-sets/s1"))
+    }
+
     @Test func aKeptEditComesBackForTheSameSetAndIsListedWithAChangesNote() throws {
         let (_, model, app) = try Self.editing(conflictSetID: "s1")
         model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Changed" }

@@ -112,7 +112,7 @@ struct FolderView: View {
                             selection = nil
                         }
                     case .edit(let set):
-                        EditSetSheet(app: app, set: set, folderID: folder.id) { _ in
+                        EditSetSheet(app: app, set: set, courseID: model.id, folderID: folder.id) { _ in
                             Task { await model.load() }
                         }
                     case .importHere:

@@ -158,8 +158,7 @@ final class WriteModel {
     func checkEdited() async -> Bool {
         guard let edited = draft.editing else { return true }
         do {
-            let course = try await app.client.course(id: edited.courseID)
-            if let current = course.folders.flatMap(\.sets).first(where: { $0.id == edited.setID }) {
+            if let current = WriteEdit.row(of: edited.setID, in: try await app.client.course(id: edited.courseID)) {
                 outdated = current.activeSince == edited.activeSince ? nil : .changed(activeSince: current.activeSince)
             } else {
                 outdated = .deleted
@@ -193,12 +192,11 @@ final class WriteModel {
     /// The set has another version than she opened: her changes are discarded and the set is opened
     /// as it is now. A version the editor cannot keep whole is not opened, and her changes stay.
     func openCurrent() async {
-        guard !isBusy, case .changed(let activeSince) = outdated, let edited = draft.editing else { return }
+        guard !isBusy, case .changed = outdated, let edited = draft.editing else { return }
         isReading = true
         defer { isReading = false }
         do {
-            let current = try await app.client.practiceSet(id: edited.setID)
-            switch WriteEdit.draft(editing: current, folderID: edited.folderID, activeSince: activeSince) {
+            switch try await WriteEdit.open(setID: edited.setID, courseID: edited.courseID, folderID: edited.folderID, client: app.client) {
             case .success(var opened):
                 opened.id = draft.id
                 app.drafts.discard(id: draft.id)

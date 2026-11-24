@@ -9,6 +9,7 @@ import SwiftUI
 struct EditSetSheet: View {
     let app: AppModel
     let set: PracticeSetSummary
+    let courseID: String
     let folderID: String
     let finished: (ImportedSet) -> Void
     @State private var phase: Phase = .loading
@@ -60,8 +61,7 @@ struct EditSetSheet: View {
             return
         }
         do {
-            let loaded = try await app.client.practiceSet(id: set.id)
-            switch WriteEdit.draft(editing: loaded, folderID: folderID, activeSince: set.activeSince) {
+            switch try await WriteEdit.open(setID: set.id, courseID: courseID, folderID: folderID, client: app.client) {
             case .success(let draft): phase = .open(draft)
             case .failure(let refusal): phase = .refused(refusal.message)
             }
