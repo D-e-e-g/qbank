@@ -56,8 +56,9 @@ final class SetDestination {
     private let app: AppModel
     /// The course, and the folder or exam page, the page she opened it from has.
     private let preset: (courseID: String, folderID: String?, examPageID: String?)?
-    /// The preset course stays picked even when her lists leave it out, as an archived one.
-    private let pinsCourse: Bool
+    /// The preset course stays picked even when her lists leave it out, as an archived one, until
+    /// a set is filed: the next set goes into one of hers.
+    private var pinsCourse: Bool
     private var detailLoads = 0
 
     /// - Parameters:
@@ -213,6 +214,7 @@ final class SetDestination {
     /// Back to a course or topic after a set was filed, with Unsorted picked, or what its page picked.
     /// One the import made is hers now, so the list is read again.
     func restart(on courseID: String) async {
+        pinsCourse = false
         folder = preset.flatMap { $0.courseID == courseID ? Self.startFolder(folderID: $0.folderID, examPageID: $0.examPageID) : nil } ?? .unsorted
         newFolderName = ""
         newTopicName = ""

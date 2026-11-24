@@ -188,6 +188,9 @@ struct WriteEditTests {
         #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
         #expect(try Self.importBodies(server).allSatisfy { $0["courseId"] as? String == "c1" && $0["folderId"] as? String == "f1" && $0["newCourse"] == nil })
         #expect(model.importing.done?.set.kind == .replaced)
+        await model.startAnother()
+        #expect(model.importing.destination.courseID == nil, "a new set is not filed into the archived course")
+        #expect(model.importing.destination.menuChoice == .new)
     }
 
     @Test func anotherSetOfTheSameNameIsNeverReplaced() async throws {
