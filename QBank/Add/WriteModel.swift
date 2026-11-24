@@ -165,6 +165,7 @@ final class WriteModel {
             } else {
                 outdated = .deleted
             }
+            editProblem = nil
             return outdated == nil
         } catch {
             if !app.handle(error) {

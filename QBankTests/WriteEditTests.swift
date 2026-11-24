@@ -251,6 +251,17 @@ struct WriteEditTests {
         #expect(current.outdated == nil, "the version she opened is still the set's current one")
     }
 
+    @Test func aFailedReadOfTheSetIsNoLongerSaidOnceTheSetIsRead() async throws {
+        let (server, model, _) = try Self.editing(conflictSetID: "s1")
+        server.script("GET /api/courses/c1", [StubServer.Reply(status: 500, body: "{}"), .ok(Self.courseWithSavedSet(version: "2026-10-01T00:00:00.000Z"))])
+        let failed = await model.checkEdited()
+        #expect(!failed)
+        #expect(model.problem != nil, "the failed read is said")
+        let read = await model.checkEdited()
+        #expect(read)
+        #expect(model.problem == nil, "the set was read, so the failed read is no longer said")
+    }
+
     @Test func openingTheCurrentVersionDiscardsHerChangesAndEditsWhatTheSetIsNow() async throws {
         let (server, model, app) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
         model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Her change" }

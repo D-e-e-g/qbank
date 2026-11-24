@@ -185,6 +185,7 @@ final class WriteQuestionsUITests: XCTestCase {
         XCTAssertFalse(app.buttons["write.q2.right.2"].isSelected)
         attachLooks(app, "edit, a saved set")
         type(" tonight", into: "write.q2.ask", in: app)
+        XCTAssertTrue((app.descendants(matching: .any)["write.q2.ask"].value as? String ?? "").contains("tonight"))
         tapVisible(app.buttons["write.q2.right.2"], in: app)
         XCTAssertEqual(app.buttons["write.save"].label, "Save new version")
         tapVisible(app.buttons["write.save"], in: app)
@@ -210,6 +211,17 @@ final class WriteQuestionsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("2 of 2"), "picks up at the second question")
         app.buttons["practice.close"].tap()
+
+        // The restored set is the one she wrote before the edit.
+        XCTAssertTrue(app.navigationBars["Unsorted"].appears(timeout: 5))
+        set.press(forDuration: 1.2)
+        chooseFromMenu(menuItem(app, "edit.Invented Sleep Habits", "Edit questions"))
+        XCTAssertTrue(app.navigationBars["Edit questions"].appears(timeout: 5))
+        XCTAssertEqual(app.descendants(matching: .any)["write.q2.ask"].value as? String, "Which habits help sleep?")
+        XCTAssertTrue(app.buttons["write.q2.right.1"].isSelected)
+        XCTAssertFalse(app.buttons["write.q2.right.2"].isSelected, "the earlier version did not mark coffee right")
+        app.buttons["edit.close"].tap()
+        XCTAssertTrue(app.navigationBars["Unsorted"].appears(timeout: 5))
     }
 
     /// Types into one of the editor's fields: scrolls it into view, taps it, and types.
