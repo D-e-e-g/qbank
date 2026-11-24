@@ -149,7 +149,7 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
 nonisolated struct EditedSet: Codable, Equatable, Sendable {
     let setID: String
     let courseID: String
-    let folderID: String
+    var folderID: String
     /// When the version she is editing became the set's current one: the set row's `activeSince`.
     var activeSince: Date
 }

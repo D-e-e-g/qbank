@@ -11,17 +11,21 @@ nonisolated enum WriteEdit {
     static let unsupported = "This set has a part the editor cannot keep yet, such as a picture, a table, a term, a step note or a format other than single answer, select all and true or false. It is left as it is."
     static let missing = "This set is no longer in its course."
 
-    /// The set's row in `course`, which says which version of it is current: its `activeSince`.
-    static func row(of setID: String, in course: CourseDetail) -> PracticeSetSummary? {
-        course.folders.flatMap(\.sets).first { $0.id == setID }
+    /// The set's row in `course`, which says which version of it is current (its `activeSince`),
+    /// and the folder it is in now.
+    static func row(of setID: String, in course: CourseDetail) -> (set: PracticeSetSummary, folderID: String)? {
+        for folder in course.folders {
+            if let set = folder.sets.first(where: { $0.id == setID }) { return (set, folder.id) }
+        }
+        return nil
     }
 
     /// Reads the set with this id as it is now and opens it, or says why it cannot be opened. Its
     /// row is read before its questions, so the version the draft records is never newer than the
-    /// questions it holds.
-    static func open(setID: String, courseID: String, folderID: String, client: QBankClient) async throws(QBankError) -> Result<SetDraft, Refusal> {
+    /// questions it holds, and the draft files into the folder the set is in now.
+    static func open(setID: String, courseID: String, client: QBankClient) async throws(QBankError) -> Result<SetDraft, Refusal> {
         guard let row = row(of: setID, in: try await client.course(id: courseID)) else { return .failure(Refusal(message: missing)) }
-        return draft(editing: try await client.practiceSet(id: setID), folderID: folderID, activeSince: row.activeSince)
+        return draft(editing: try await client.practiceSet(id: setID), folderID: row.folderID, activeSince: row.set.activeSince)
     }
 
     /// The draft that edits `set`, or why it cannot be opened. The draft takes the set's name, which

@@ -25,9 +25,10 @@ final class WriteModel {
     enum Outdated: Equatable {
         /// The set was deleted: she saves her questions as a new set, or discards them.
         case deleted
-        /// The set was replaced or restored since: its current version became current at
-        /// `activeSince`. She opens that version instead, or saves hers over it.
-        case changed(activeSince: Date)
+        /// The set was replaced or restored since, or moved: its current version became current at
+        /// `activeSince`, and it is in the folder `folderID`. She opens it as it is now instead, or
+        /// saves hers over it there.
+        case changed(activeSince: Date, folderID: String)
     }
 
     private let app: AppModel
@@ -159,7 +160,8 @@ final class WriteModel {
         guard let edited = draft.editing else { return true }
         do {
             if let current = WriteEdit.row(of: edited.setID, in: try await app.client.course(id: edited.courseID)) {
-                outdated = current.activeSince == edited.activeSince ? nil : .changed(activeSince: current.activeSince)
+                let same = current.set.activeSince == edited.activeSince && current.folderID == edited.folderID
+                outdated = same ? nil : .changed(activeSince: current.set.activeSince, folderID: current.folderID)
             } else {
                 outdated = .deleted
             }
@@ -183,9 +185,13 @@ final class WriteModel {
     /// The set has another version than she opened: hers is saved over it as a new version.
     /// Restore in the folder brings the other one back.
     func saveAnyway() async {
-        guard !isBusy, case .changed(let activeSince) = outdated else { return }
+        guard !isBusy, case .changed(let activeSince, let folderID) = outdated else { return }
         outdated = nil
-        edit { $0.editing?.activeSince = activeSince }
+        edit {
+            $0.editing?.activeSince = activeSince
+            $0.editing?.folderID = folderID
+        }
+        importing.destination.folder = .folder(folderID)
         await save()
     }
 
@@ -196,11 +202,12 @@ final class WriteModel {
         isReading = true
         defer { isReading = false }
         do {
-            switch try await WriteEdit.open(setID: edited.setID, courseID: edited.courseID, folderID: edited.folderID, client: app.client) {
+            switch try await WriteEdit.open(setID: edited.setID, courseID: edited.courseID, client: app.client) {
             case .success(var opened):
                 opened.id = draft.id
                 app.drafts.discard(id: draft.id)
                 draft = opened
+                if let folderID = opened.editing?.folderID { importing.destination.folder = .folder(folderID) }
                 outdated = nil
                 editProblem = nil
                 importing.setSource(draft.file())
@@ -235,7 +242,7 @@ nonisolated enum WriteWording {
     static let draftNote = "Kept on this phone until you save it. Nothing is sent before then."
     static let editedTitleHint = "A saved set keeps its name."
     static let editHint = "Change the questions and save. Saving keeps the earlier version, and Restore in the folder brings it back. Questions you leave alone keep their answers."
-    static let setChanged = "This set was replaced or restored after you opened it, so its current version is not the one you changed. Your changes are kept here."
+    static let setChanged = "This set was replaced, restored or moved to another folder after you opened it. Your changes are kept here."
     static let setDeleted = "This set was deleted after you opened it. Your changes are kept here."
     static let otherSetNamed = "Another set has this name, so nothing was saved. Your changes are kept here."
     static let editNote = "Your changes are kept on this phone until you save them. The saved set stays as it is until then."

@@ -211,7 +211,7 @@ struct WriteEditTests {
         model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps sleep best?" }
         await Self.save(model, on: server)
         #expect(try Self.importBodies(server).isEmpty, "the newer version is left as it is")
-        #expect(model.outdated == .changed(activeSince: Self.newerVersion))
+        #expect(model.outdated == .changed(activeSince: Self.newerVersion, folderID: "f1"))
         #expect(app.drafts.draft(id: model.draft.id) != nil, "her changes are kept")
         await model.saveAnyway()
         #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
@@ -220,11 +220,31 @@ struct WriteEditTests {
         #expect(app.drafts.draft(id: model.draft.id) == nil)
     }
 
+    @Test func anEditOfASetMovedSinceIsNotSavedAsANewSetInTheFolderItLeft() async throws {
+        let (server, model, app) = try Self.editing(conflictSetID: "s1", folder: "f2")
+        model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps sleep best?" }
+        await Self.save(model, on: server)
+        #expect(try Self.importBodies(server).isEmpty, "nothing is filed in the folder the set left")
+        #expect(model.outdated == .changed(activeSince: Self.openedVersion, folderID: "f2"))
+        #expect(app.drafts.draft(id: model.draft.id) != nil, "her changes are kept")
+        await model.saveAnyway()
+        #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
+        #expect(try Self.importBodies(server).allSatisfy { $0["folderId"] as? String == "f2" }, "saved where the set is now")
+        #expect(model.importing.done?.set.kind == .replaced)
+    }
+
+    @Test func aMovedSetOpensIntoTheFolderItIsInNow() async throws {
+        let (server, _, app) = try Self.editing(conflictSetID: "s1", folder: "f2")
+        server["GET /api/practice-sets/s1"] = .ok(Self.savedSetBody())
+        let draft = try await WriteEdit.open(setID: "s1", courseID: "c1", client: app.client).get()
+        #expect(draft.editing?.folderID == "f2")
+    }
+
     @Test func aKeptEditOfASetReplacedSinceIsToldWhenItOpens() async throws {
         let (_, model, _) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
         let replaced = await model.checkEdited()
         #expect(!replaced)
-        #expect(model.outdated == .changed(activeSince: Self.newerVersion))
+        #expect(model.outdated == .changed(activeSince: Self.newerVersion, folderID: "f1"))
         let (_, current, _) = try Self.editing(conflictSetID: "s1")
         let unchanged = await current.checkEdited()
         #expect(unchanged)
@@ -249,7 +269,7 @@ struct WriteEditTests {
     @Test func openingASetRecordsTheVersionTheCourseSaysIsCurrentNotTheFolderRows() async throws {
         let (server, _, app) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
         server["GET /api/practice-sets/s1"] = .ok(Self.savedSetBody())
-        let draft = try await WriteEdit.open(setID: "s1", courseID: "c1", folderID: "f1", client: app.client).get()
+        let draft = try await WriteEdit.open(setID: "s1", courseID: "c1", client: app.client).get()
         #expect(draft.editing == EditedSet(setID: "s1", courseID: "c1", folderID: "f1", activeSince: Self.newerVersion))
         let reads = server.calls.filter { $0 == "GET /api/courses/c1" || $0 == "GET /api/practice-sets/s1" }
         #expect(reads == ["GET /api/courses/c1", "GET /api/practice-sets/s1"], "the version is read before the questions")
@@ -261,7 +281,7 @@ struct WriteEditTests {
 
     @Test func aSetNoLongerInItsCourseIsNotOpened() async throws {
         let (server, _, app) = try Self.editing(course: StudyBodies.course(), imports: [])
-        let opened = try await WriteEdit.open(setID: "s1", courseID: "c1", folderID: "f1", client: app.client)
+        let opened = try await WriteEdit.open(setID: "s1", courseID: "c1", client: app.client)
         #expect(opened.failure?.message == WriteEdit.missing)
         #expect(!server.calls.contains("GET /api/practice-sets/s1"))
     }
@@ -332,10 +352,11 @@ struct WriteEditTests {
     static let openedVersion = Date(timeIntervalSince1970: 1_790_812_800)
     static let newerVersion = Date(timeIntervalSince1970: 1_791_158_400)
 
-    /// `GET /api/courses/c1` with the saved set in Week 1, current since `version`.
-    private static func courseWithSavedSet(version: String) -> String {
+    /// `GET /api/courses/c1` with the saved set current since `version`, in Week 1 (`f1`) or in
+    /// Week 2 (`f2`).
+    private static func courseWithSavedSet(version: String, folder: String = "f1") -> String {
         StudyBodies.course()
-            .replacingOccurrences(of: #""id":"w1""#, with: #""id":"s1""#)
+            .replacingOccurrences(of: folder == "f1" ? #""id":"w1""# : #""id":"w2a""#, with: #""id":"s1""#)
             .replacingOccurrences(of: #""activeSince":"2026-10-01T00:00:00.000Z""#, with: #""activeSince":"\#(version)""#)
     }
 
@@ -351,10 +372,10 @@ struct WriteEditTests {
 
     /// A model editing the saved set, which the course has current since `version`. The first
     /// import answers with a conflict naming `conflictSetID`; the second replaces.
-    private static func editing(conflictSetID: String, version: String = "2026-10-01T00:00:00.000Z") throws -> (StubServer, WriteModel, AppModel) {
+    private static func editing(conflictSetID: String, version: String = "2026-10-01T00:00:00.000Z", folder: String = "f1") throws -> (StubServer, WriteModel, AppModel) {
         let conflict = ImportModelTests.conflict.replacingOccurrences(of: "\"old1\"", with: "\"\(conflictSetID)\"")
         return try editing(
-            course: courseWithSavedSet(version: version),
+            course: courseWithSavedSet(version: version, folder: folder),
             imports: [StubServer.Reply(status: 409, body: conflict), StubServer.Reply(status: 201, body: ImportModelTests.imported(kind: "replaced", folder: "f1", folderName: "Week 1"))]
         )
     }

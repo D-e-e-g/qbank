@@ -10,7 +10,6 @@ struct EditSetSheet: View {
     let app: AppModel
     let set: PracticeSetSummary
     let courseID: String
-    let folderID: String
     let finished: (ImportedSet) -> Void
     @State private var phase: Phase = .loading
     @Environment(\.dismiss) private var dismiss
@@ -61,7 +60,7 @@ struct EditSetSheet: View {
             return
         }
         do {
-            switch try await WriteEdit.open(setID: set.id, courseID: courseID, folderID: folderID, client: app.client) {
+            switch try await WriteEdit.open(setID: set.id, courseID: courseID, client: app.client) {
             case .success(let draft): phase = .open(draft)
             case .failure(let refusal): phase = .refused(refusal.message)
             }
