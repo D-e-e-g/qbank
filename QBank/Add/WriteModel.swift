@@ -36,8 +36,8 @@ final class WriteModel {
     init(app: AppModel, draft: SetDraft = SetDraft()) {
         self.app = app
         self.draft = draft
-        // A draft that edits a saved set files into that set's own course and folder.
-        importing = ImportModel(app: app, courseID: draft.editing?.courseID, folderID: draft.editing?.folderID)
+        // A draft that edits a saved set files into that set's own course and folder, archived or not.
+        importing = ImportModel(app: app, courseID: draft.editing?.courseID, folderID: draft.editing?.folderID, pinsCourse: draft.editing != nil)
         importing.setSource(draft.file())
     }
 

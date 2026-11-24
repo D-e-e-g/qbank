@@ -180,6 +180,16 @@ struct WriteEditTests {
         #expect(app.drafts.draft(id: model.draft.id) == nil)
     }
 
+    @Test func anEditOfASetInAnArchivedCourseIsSavedInThatCourse() async throws {
+        let (server, model, _) = try Self.editing(conflictSetID: "s1")
+        server["GET /api/semesters"] = .ok(Bodies.semesters([Bodies.course(id: "c1", code: "NURS 101", archived: true)]))
+        model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps sleep best?" }
+        await Self.save(model, on: server)
+        #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
+        #expect(try Self.importBodies(server).allSatisfy { $0["courseId"] as? String == "c1" && $0["folderId"] as? String == "f1" && $0["newCourse"] == nil })
+        #expect(model.importing.done?.set.kind == .replaced)
+    }
+
     @Test func anotherSetOfTheSameNameIsNeverReplaced() async throws {
         let (server, model, app) = try Self.editing(conflictSetID: "someone-elses")
         await Self.save(model, on: server)
