@@ -5,6 +5,8 @@ import SwiftUI
 /// Where a row of the Add tab leads.
 enum AddRoute: Hashable {
     case importFile
+    /// The set editor, on the draft with this id (a new one when none is kept).
+    case write(UUID)
     /// Your material (Q-2).
     case material
     /// Level and count (Q-3).
@@ -40,6 +42,9 @@ struct AddView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: QBankSpacing.space7) {
                     ways
+                    if !app.drafts.drafts.isEmpty {
+                        drafts
+                    }
                     if !model.inProgress.isEmpty {
                         inProgress
                     }
@@ -76,6 +81,10 @@ struct AddView: View {
         switch route {
         case .importFile:
             ImportView(app: app) { done in
+                tabs.openFolder(courseID: done.set.courseID, name: done.courseName, folderID: done.set.folderID)
+            }
+        case .write(let id):
+            WriteView(app: app, draft: app.drafts.draft(id: id) ?? SetDraft(id: id)) { done in
                 tabs.openFolder(courseID: done.set.courseID, name: done.courseName, folderID: done.set.folderID)
             }
         case .material:
@@ -157,6 +166,28 @@ struct AddView: View {
             }
             .buttonStyle(.qbankRow)
             .accessibilityIdentifier("add.import")
+            NavigationLink(value: AddRoute.write(UUID())) {
+                WayRow(
+                    title: "Write questions",
+                    detail: "Type a question, its choices and the right answer. Single answer and true or false.",
+                    systemImage: "square.and.pencil"
+                )
+            }
+            .buttonStyle(.qbankRow)
+            .accessibilityIdentifier("add.write")
+        }
+    }
+
+    /// The sets she began writing and has not saved, on this phone only.
+    private var drafts: some View {
+        QBankListGroup(header: "Drafts", footer: WriteWording.draftNote) {
+            ForEach(app.drafts.drafts) { draft in
+                NavigationLink(value: AddRoute.write(draft.id)) {
+                    QBankListRow(WriteWording.name(draft), detail: WriteWording.detail(draft), showsChevron: true)
+                }
+                .buttonStyle(.qbankRow)
+                .accessibilityIdentifier("add.draft.\(WriteWording.name(draft))")
+            }
         }
     }
 

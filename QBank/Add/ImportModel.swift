@@ -113,8 +113,10 @@ final class ImportModel {
         copied = false
         isBusy = true
         defer { isBusy = false }
+        let checked = source
         do {
-            let next = try await app.client.checkImport(source: source)
+            let next = try await app.client.checkImport(source: checked)
+            guard source == checked else { return }
             report = next
             if !titleEdited, let fileTitle = next.title {
                 title = fileTitle

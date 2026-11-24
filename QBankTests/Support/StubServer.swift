@@ -127,6 +127,7 @@ enum TestApp {
             lock: lock ?? AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
             highlighter: HighlighterStore(defaults: defaults),
             aiConsent: AIConsentStore(defaults: defaults),
+            drafts: WriteDraftStore(defaults: defaults),
             storage: storage,
             connection: connection
         )

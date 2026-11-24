@@ -22,6 +22,7 @@ final class AppModel {
     private(set) var route: Route {
         didSet {
             openOffline()
+            drafts.open(accountID: account?.id)
             frozen.isOn = account?.role == .admin
         }
     }
@@ -53,6 +54,8 @@ final class AppModel {
     let highlighter: HighlighterStore
     /// Whether she allowed her material to go to Anthropic, kept on this phone.
     let aiConsent: AIConsentStore
+    /// The sets the account signed in has begun writing by hand and not saved, kept on this phone.
+    let drafts: WriteDraftStore
     /// Whether the phone has a network path. Always up when the bank is on this phone.
     private(set) var connection: Connection
     /// Her last delete, offered for Undo, and a count the screens follow after a delete or Undo.
@@ -78,6 +81,7 @@ final class AppModel {
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
         aiConsent: AIConsentStore = AIConsentStore(),
+        drafts: WriteDraftStore = WriteDraftStore(),
         storage: PhoneStorage,
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
@@ -88,6 +92,7 @@ final class AppModel {
         self.lock = lock
         self.highlighter = highlighter
         self.aiConsent = aiConsent
+        self.drafts = drafts
         self.storage = storage
         server = client
         network = connection
@@ -98,6 +103,7 @@ final class AppModel {
         let stored = try? client.storedSession()
         route = stored?.account.map(Self.route(for:)) ?? .signedOut
         openOffline()
+        drafts.open(accountID: account?.id)
         frozen.isOn = account?.role == .admin
         network.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
@@ -203,9 +209,11 @@ final class AppModel {
 
     /// Deletes her user account on the server, for good, checked with her password. Once it is
     /// gone the phone forgets it as a sign-out does, with the courses it saved and any answers still
-    /// waiting. A refusal deletes nothing, keeps her signed in, and is thrown for the screen to say.
+    /// waiting, and deletes the sets she was writing. A refusal deletes nothing, keeps her signed in,
+    /// and is thrown for the screen to say.
     func deleteAccount(password: String) async throws(QBankError) {
         try await client.deleteAccount(password: password)
+        if let account { drafts.erase(accountID: account.id) }
         await eraseAccount()
     }
 
