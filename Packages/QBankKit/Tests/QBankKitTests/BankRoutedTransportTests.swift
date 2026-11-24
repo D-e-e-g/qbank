@@ -49,7 +49,7 @@ import Testing
         }
         let accountPaths = [
             "GET /health", "POST /api/sign-in/password", "POST /api/sign-out", "POST /api/sign-out/everywhere", "GET /api/session",
-            "DELETE /api/me", "PUT /api/me/palette", "GET /api/me/export", "GET /api/me/standing", "GET /api/question-maker",
+            "DELETE /api/me", "PUT /api/me/palette", "GET /api/me/export", "GET /api/me/bank", "GET /api/me/standing", "GET /api/question-maker",
             "POST /api/account/password", "GET /api/agent-keys", "GET /api/admin/students", "POST /api/sign-up",
             "GET /api/me/place/extra", "GET /api",
         ]

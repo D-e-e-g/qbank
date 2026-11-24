@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "practice-restoring",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:32.356Z",
+      "at": "2026-11-24T01:48:44.055Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:32.430Z"
+          "expiresAt": "2027-12-29T01:48:44.055Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:32.430Z",
+      "at": "2026-11-24T01:48:44.106Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:32.446Z",
+      "at": "2026-11-24T01:48:44.113Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -99,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:32.453Z",
+      "at": "2026-11-24T01:48:44.117Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -136,7 +144,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:32.466Z",
+      "at": "2026-11-24T01:48:44.126Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -173,7 +181,7 @@
     {
       "step": "request",
       "name": "practice-set-restore",
-      "at": "2026-11-22T20:05:32.477Z",
+      "at": "2026-11-24T01:48:44.132Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",
@@ -189,8 +197,8 @@
           "title": "Week 1 - Set 1: Invented basics",
           "description": "Invented practice questions.",
           "questionCount": 2,
-          "importedAt": "2026-11-22T20:05:32.463Z",
-          "activeSince": "2026-11-22T20:05:32.488Z",
+          "importedAt": "2026-11-24T01:48:44.117Z",
+          "activeSince": "2026-11-24T01:48:44.132Z",
           "status": "restored",
           "canRestore": true,
           "answeredCount": 0,
@@ -209,7 +217,7 @@
     {
       "step": "request",
       "name": "practice-set-restore-not-current",
-      "at": "2026-11-22T20:05:32.499Z",
+      "at": "2026-11-24T01:48:44.140Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",

@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "session-palette",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:16.574Z",
+      "at": "2026-11-24T01:48:37.626Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:16.748Z"
+          "expiresAt": "2027-12-29T01:48:37.626Z"
         }
       }
     },
     {
       "step": "request",
       "name": "palette",
-      "at": "2026-11-22T20:05:16.749Z",
+      "at": "2026-11-24T01:48:37.675Z",
       "request": {
         "method": "PUT",
         "path": "/api/me/palette",
@@ -55,14 +63,22 @@
           "name": "Sam Student",
           "role": "student",
           "mustChangePassword": false,
-          "palette": "slate"
+          "palette": "slate",
+          "origin": "invited",
+          "cloud": {
+            "active": true,
+            "expiresAt": null
+          },
+          "signInWith": [
+            "password"
+          ]
         }
       }
     },
     {
       "step": "request",
       "name": "session-slate",
-      "at": "2026-11-22T20:05:16.753Z",
+      "at": "2026-11-24T01:48:37.678Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -80,9 +96,17 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "slate"
+            "palette": "slate",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:16.740Z"
+          "expiresAt": "2027-12-29T01:48:37.626Z"
         }
       }
     }

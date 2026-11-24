@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "POST",
     "path": "/api/sign-in/password",
@@ -21,9 +21,17 @@
         "name": "Sam Student",
         "role": "student",
         "mustChangePassword": false,
-        "palette": "dusk"
+        "palette": "dusk",
+        "origin": "invited",
+        "cloud": {
+          "active": true,
+          "expiresAt": null
+        },
+        "signInWith": [
+          "password"
+        ]
       },
-      "expiresAt": "2027-12-19T02:55:45.354Z"
+      "expiresAt": "2027-12-29T01:48:35.660Z"
     }
   }
 }

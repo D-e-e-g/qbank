@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "account-unavailable",
   "steps": [
     {
       "step": "request",
       "name": "account-delete-unavailable",
-      "at": "2026-11-22T20:05:28.106Z",
+      "at": "2026-11-24T01:48:41.604Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",

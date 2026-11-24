@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "agents",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.388Z",
+      "at": "2026-11-24T01:48:42.226Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Owner",
             "role": "admin",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:29.467Z"
+          "expiresAt": "2027-12-29T01:48:42.226Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.467Z",
+      "at": "2026-11-24T01:48:42.274Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -58,16 +66,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:29.563Z"
+          "expiresAt": "2027-12-29T01:48:42.274Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-keys-empty",
-      "at": "2026-11-22T20:05:29.563Z",
+      "at": "2026-11-24T01:48:42.319Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -86,7 +102,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-not-found",
-      "at": "2026-11-22T20:05:29.578Z",
+      "at": "2026-11-24T01:48:42.321Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -108,7 +124,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.587Z",
+      "at": "2026-11-24T01:48:42.324Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -126,9 +142,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "eKT4r0a89d9FGFIl7n4OAdw1Pur_wla0rPV_oJgjAc0",
+          "deviceCode": "gdEtBpsCV1ZUy24iTmqhf63uojNdZ1DVGYOWI4vItaI",
           "userCode": "MNQT-XPJQ",
-          "expiresAt": "2026-11-22T20:15:29.587Z",
+          "expiresAt": "2026-11-24T01:58:42.324Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -137,7 +153,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup",
-      "at": "2026-11-22T20:05:29.596Z",
+      "at": "2026-11-24T01:48:42.326Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -167,15 +183,15 @@
             }
           ],
           "status": "pending",
-          "createdAt": "2026-11-22T20:05:29.587Z",
-          "expiresAt": "2026-11-22T20:15:29.587Z"
+          "createdAt": "2026-11-24T01:48:42.324Z",
+          "expiresAt": "2026-11-24T01:58:42.324Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-approve",
-      "at": "2026-11-22T20:05:29.603Z",
+      "at": "2026-11-24T01:48:42.328Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -205,22 +221,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-22T20:05:29.587Z",
-          "expiresAt": "2026-11-22T20:15:29.587Z"
+          "createdAt": "2026-11-24T01:48:42.324Z",
+          "expiresAt": "2026-11-24T01:58:42.324Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.616Z",
+      "at": "2026-11-24T01:48:42.330Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "eKT4r0a89d9FGFIl7n4OAdw1Pur_wla0rPV_oJgjAc0"
+          "deviceCode": "gdEtBpsCV1ZUy24iTmqhf63uojNdZ1DVGYOWI4vItaI"
         }
       },
       "response": {
@@ -235,7 +251,7 @@
               "import",
               "read"
             ],
-            "createdAt": "2026-11-22T20:05:29.617Z",
+            "createdAt": "2026-11-24T01:48:42.330Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -245,7 +261,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.620Z",
+      "at": "2026-11-24T01:48:42.332Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -263,9 +279,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "Haasvx5t2-J-gyppsPW7L6shdEk2zTyNeIDyYMAz47E",
+          "deviceCode": "n0c1fXyA6aV82MS_56jRBLRgz9Q_q0rPgkQG33-IUF0",
           "userCode": "WHWP-QSTD",
-          "expiresAt": "2026-11-22T20:15:29.620Z",
+          "expiresAt": "2026-11-24T01:58:42.332Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -274,7 +290,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-manage",
-      "at": "2026-11-22T20:05:29.627Z",
+      "at": "2026-11-24T01:48:42.333Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -304,15 +320,15 @@
             }
           ],
           "status": "pending",
-          "createdAt": "2026-11-22T20:05:29.620Z",
-          "expiresAt": "2026-11-22T20:15:29.620Z"
+          "createdAt": "2026-11-24T01:48:42.332Z",
+          "expiresAt": "2026-11-24T01:58:42.332Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-deny",
-      "at": "2026-11-22T20:05:29.635Z",
+      "at": "2026-11-24T01:48:42.335Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/deny",
@@ -342,15 +358,15 @@
             }
           ],
           "status": "denied",
-          "createdAt": "2026-11-22T20:05:29.620Z",
-          "expiresAt": "2026-11-22T20:15:29.620Z"
+          "createdAt": "2026-11-24T01:48:42.332Z",
+          "expiresAt": "2026-11-24T01:58:42.332Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-approve-answered",
-      "at": "2026-11-22T20:05:29.649Z",
+      "at": "2026-11-24T01:48:42.337Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -372,7 +388,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.657Z",
+      "at": "2026-11-24T01:48:42.339Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -390,9 +406,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "6d8jJzoAQ3hp_aZ6vkJA0JBy36C-7QcHXkrEM4Fdjy8",
+          "deviceCode": "taNjdVJTZ2hScKe6QYYLSeEKo7EXgnPTMetBVGvha8Y",
           "userCode": "KLMN-PQRS",
-          "expiresAt": "2026-11-22T20:15:29.657Z",
+          "expiresAt": "2026-11-24T01:58:42.339Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -401,7 +417,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.661Z",
+      "at": "2026-11-24T01:48:42.340Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -431,22 +447,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-22T20:05:29.657Z",
-          "expiresAt": "2026-11-22T20:15:29.657Z"
+          "createdAt": "2026-11-24T01:48:42.339Z",
+          "expiresAt": "2026-11-24T01:58:42.339Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.671Z",
+      "at": "2026-11-24T01:48:42.343Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "6d8jJzoAQ3hp_aZ6vkJA0JBy36C-7QcHXkrEM4Fdjy8"
+          "deviceCode": "taNjdVJTZ2hScKe6QYYLSeEKo7EXgnPTMetBVGvha8Y"
         }
       },
       "response": {
@@ -461,7 +477,7 @@
               "import",
               "manage"
             ],
-            "createdAt": "2026-11-22T20:05:29.671Z",
+            "createdAt": "2026-11-24T01:48:42.343Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -471,7 +487,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.682Z",
+      "at": "2026-11-24T01:48:42.344Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -488,9 +504,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "Z6UM132qQkWFt1BFzscE-SwCxLB7sLUNzZ2Bln0zE8c",
+          "deviceCode": "cMmY5HGBa4lLlgzg6gpMMUwjbxhfPyNfqwRx6YLTjn4",
           "userCode": "TVWX-ZBCD",
-          "expiresAt": "2026-11-22T20:15:29.683Z",
+          "expiresAt": "2026-11-24T01:58:42.344Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -499,7 +515,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.688Z",
+      "at": "2026-11-24T01:48:42.345Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -524,22 +540,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-22T20:05:29.683Z",
-          "expiresAt": "2026-11-22T20:15:29.683Z"
+          "createdAt": "2026-11-24T01:48:42.344Z",
+          "expiresAt": "2026-11-24T01:58:42.344Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.696Z",
+      "at": "2026-11-24T01:48:42.347Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "Z6UM132qQkWFt1BFzscE-SwCxLB7sLUNzZ2Bln0zE8c"
+          "deviceCode": "cMmY5HGBa4lLlgzg6gpMMUwjbxhfPyNfqwRx6YLTjn4"
         }
       },
       "response": {
@@ -553,7 +569,7 @@
             "scopes": [
               "import"
             ],
-            "createdAt": "2026-11-22T20:05:29.696Z",
+            "createdAt": "2026-11-24T01:48:42.347Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -563,7 +579,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.699Z",
+      "at": "2026-11-24T01:48:42.348Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -590,7 +606,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.721Z",
+      "at": "2026-11-24T01:48:42.355Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -626,7 +642,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.739Z",
+      "at": "2026-11-24T01:48:42.359Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -663,7 +679,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.770Z",
+      "at": "2026-11-24T01:48:42.367Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -703,7 +719,7 @@
     {
       "step": "request",
       "name": "course-imported-by-agent",
-      "at": "2026-11-22T20:05:29.789Z",
+      "at": "2026-11-24T01:48:42.372Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
@@ -745,8 +761,8 @@
                   "title": "Week 1 - Set 1: Her own set",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:29.762Z",
-                  "activeSince": "2026-11-22T20:05:29.762Z",
+                  "importedAt": "2026-11-24T01:48:42.359Z",
+                  "activeSince": "2026-11-24T01:48:42.359Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -766,8 +782,8 @@
                   "title": "Week 1 - Set 2: From her agent",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:29.784Z",
-                  "activeSince": "2026-11-22T20:05:29.784Z",
+                  "importedAt": "2026-11-24T01:48:42.367Z",
+                  "activeSince": "2026-11-24T01:48:42.367Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -801,8 +817,8 @@
                   "title": "Week 1 - Set 1: Her own set",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:29.762Z",
-                  "activeSince": "2026-11-22T20:05:29.762Z",
+                  "importedAt": "2026-11-24T01:48:42.359Z",
+                  "activeSince": "2026-11-24T01:48:42.359Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -822,8 +838,8 @@
                   "title": "Week 1 - Set 2: From her agent",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:29.784Z",
-                  "activeSince": "2026-11-22T20:05:29.784Z",
+                  "importedAt": "2026-11-24T01:48:42.367Z",
+                  "activeSince": "2026-11-24T01:48:42.367Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -853,7 +869,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.833Z",
+      "at": "2026-11-24T01:48:42.388Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -872,7 +888,7 @@
               "scopes": [
                 "import"
               ],
-              "createdAt": "2026-11-22T20:05:29.696Z",
+              "createdAt": "2026-11-24T01:48:42.347Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -883,7 +899,7 @@
                 "import",
                 "manage"
               ],
-              "createdAt": "2026-11-22T20:05:29.671Z",
+              "createdAt": "2026-11-24T01:48:42.343Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -894,8 +910,8 @@
                 "import",
                 "read"
               ],
-              "createdAt": "2026-11-22T20:05:29.617Z",
-              "lastUsedAt": "2026-11-22T20:05:29.770Z",
+              "createdAt": "2026-11-24T01:48:42.330Z",
+              "lastUsedAt": "2026-11-24T01:48:42.367Z",
               "revokedAt": null
             }
           ]
@@ -905,7 +921,7 @@
     {
       "step": "request",
       "name": "agent-key-revoke",
-      "at": "2026-11-22T20:05:29.839Z",
+      "at": "2026-11-24T01:48:42.390Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-keys/c925031b-bff0-4153-aca1-ab8ff8648f21/revoke",
@@ -922,16 +938,16 @@
           "scopes": [
             "import"
           ],
-          "createdAt": "2026-11-22T20:05:29.696Z",
+          "createdAt": "2026-11-24T01:48:42.347Z",
           "lastUsedAt": null,
-          "revokedAt": "2026-11-22T20:05:29.844Z"
+          "revokedAt": "2026-11-24T01:48:42.390Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-keys",
-      "at": "2026-11-22T20:05:29.845Z",
+      "at": "2026-11-24T01:48:42.392Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -950,9 +966,9 @@
               "scopes": [
                 "import"
               ],
-              "createdAt": "2026-11-22T20:05:29.696Z",
+              "createdAt": "2026-11-24T01:48:42.347Z",
               "lastUsedAt": null,
-              "revokedAt": "2026-11-22T20:05:29.844Z"
+              "revokedAt": "2026-11-24T01:48:42.390Z"
             },
             {
               "id": "00000000-0000-4000-8009-000000000002",
@@ -961,7 +977,7 @@
                 "import",
                 "manage"
               ],
-              "createdAt": "2026-11-22T20:05:29.671Z",
+              "createdAt": "2026-11-24T01:48:42.343Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -972,8 +988,8 @@
                 "import",
                 "read"
               ],
-              "createdAt": "2026-11-22T20:05:29.617Z",
-              "lastUsedAt": "2026-11-22T20:05:29.770Z",
+              "createdAt": "2026-11-24T01:48:42.330Z",
+              "lastUsedAt": "2026-11-24T01:48:42.367Z",
               "revokedAt": null
             }
           ]
@@ -983,7 +999,7 @@
     {
       "step": "request",
       "name": "agent-key-revoke-not-found",
-      "at": "2026-11-22T20:05:29.848Z",
+      "at": "2026-11-24T01:48:42.394Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-keys/4d1c3f8e-0000-4000-8000-000000000404/revoke",
@@ -1003,7 +1019,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.853Z",
+      "at": "2026-11-24T01:48:42.395Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1025,7 +1041,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.862Z",
+      "at": "2026-11-24T01:48:42.398Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1047,7 +1063,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.869Z",
+      "at": "2026-11-24T01:48:42.400Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1069,7 +1085,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.878Z",
+      "at": "2026-11-24T01:48:42.404Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1091,7 +1107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.886Z",
+      "at": "2026-11-24T01:48:42.406Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1116,7 +1132,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-locked",
-      "at": "2026-11-22T20:05:29.893Z",
+      "at": "2026-11-24T01:48:42.408Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1141,7 +1157,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.900Z",
+      "at": "2026-11-24T01:48:42.410Z",
       "request": {
         "method": "POST",
         "path": "/api/admin/student-password",
@@ -1163,7 +1179,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:29.973Z",
+      "at": "2026-11-24T01:48:42.455Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -1185,16 +1201,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": true,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:30.034Z"
+          "expiresAt": "2027-12-29T01:48:42.455Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-lookup-temporary-password",
-      "at": "2026-11-22T20:05:30.035Z",
+      "at": "2026-11-24T01:48:42.501Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",

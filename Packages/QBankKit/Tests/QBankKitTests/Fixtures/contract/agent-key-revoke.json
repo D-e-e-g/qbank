@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "POST",
     "path": "/api/agent-keys/c925031b-bff0-4153-aca1-ab8ff8648f21/revoke",
@@ -16,9 +16,9 @@
       "scopes": [
         "import"
       ],
-      "createdAt": "2026-11-14T02:55:51.512Z",
+      "createdAt": "2026-11-24T01:48:42.347Z",
       "lastUsedAt": null,
-      "revokedAt": "2026-11-14T02:55:51.544Z"
+      "revokedAt": "2026-11-24T01:48:42.390Z"
     }
   }
 }

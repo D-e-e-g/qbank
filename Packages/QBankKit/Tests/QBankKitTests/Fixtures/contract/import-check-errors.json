@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "POST",
     "path": "/api/imports/check",
@@ -21,15 +21,9 @@
       "termCount": 0,
       "formats": [],
       "errors": [
-        "Question 1 (Q1): missing takeaway",
         "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
       ],
-      "warnings": [
-        "Question 1 (Q1): missing cj",
-        "Question 1 (Q1): missing need",
-        "Question 1 (Q1): missing diff",
-        "Question 1 (Q1): missing src"
-      ]
+      "warnings": []
     }
   }
 }

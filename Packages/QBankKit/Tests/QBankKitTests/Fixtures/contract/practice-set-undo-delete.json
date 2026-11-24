@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "POST",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702/undo-delete",
@@ -21,13 +21,13 @@
           "title": "Heart A",
           "description": "Invented set.",
           "questionCount": 4,
-          "importedAt": "2026-11-14T02:55:56.426Z",
-          "activeSince": "2026-11-14T02:55:56.426Z",
+          "importedAt": "2026-11-24T01:48:47.800Z",
+          "activeSince": "2026-11-24T01:48:47.800Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 3,
           "fullyRightCount": 2,
-          "lastAnsweredAt": "2026-11-14T02:55:56.479Z",
+          "lastAnsweredAt": "2026-11-24T01:48:47.862Z",
           "run": "midway",
           "sitting": {
             "answeredCount": 3
@@ -45,13 +45,13 @@
           "title": "Heart B",
           "description": "Invented set.",
           "questionCount": 3,
-          "importedAt": "2026-11-14T02:55:56.431Z",
-          "activeSince": "2026-11-14T02:55:56.431Z",
+          "importedAt": "2026-11-24T01:48:47.807Z",
+          "activeSince": "2026-11-24T01:48:47.807Z",
           "status": "imported",
           "canRestore": false,
           "answeredCount": 1,
           "fullyRightCount": 0,
-          "lastAnsweredAt": "2026-11-14T02:55:56.488Z",
+          "lastAnsweredAt": "2026-11-24T01:48:47.874Z",
           "run": "midway",
           "sitting": {
             "answeredCount": 1

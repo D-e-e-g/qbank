@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "make-questions",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:44.589Z",
+      "at": "2026-11-24T01:48:50.874Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:44.656Z"
+          "expiresAt": "2027-12-29T01:48:50.874Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:44.657Z",
+      "at": "2026-11-24T01:48:50.922Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:44.662Z",
+      "at": "2026-11-24T01:48:50.927Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -99,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:44.667Z",
+      "at": "2026-11-24T01:48:50.932Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -135,7 +143,7 @@
     {
       "step": "request",
       "name": "question-maker",
-      "at": "2026-11-22T20:05:44.677Z",
+      "at": "2026-11-24T01:48:50.938Z",
       "request": {
         "method": "GET",
         "path": "/api/question-maker",
@@ -197,7 +205,7 @@
     {
       "step": "request",
       "name": "question-job-start",
-      "at": "2026-11-22T20:05:44.682Z",
+      "at": "2026-11-24T01:48:50.941Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -295,8 +303,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.689-05",
-          "updatedAt": "2026-11-22 15:05:44.689-05",
+          "createdAt": "2026-11-23 20:48:50.941-05",
+          "updatedAt": "2026-11-23 20:48:50.941-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -313,7 +321,7 @@
     {
       "step": "request",
       "name": "question-job-samples",
-      "at": "2026-11-22T20:05:44.705Z",
+      "at": "2026-11-24T01:48:50.957Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401",
@@ -400,8 +408,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.689-05",
-          "updatedAt": "2026-11-22 15:05:44.704-05",
+          "createdAt": "2026-11-23 20:48:50.941-05",
+          "updatedAt": "2026-11-23 20:48:50.956-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -418,7 +426,7 @@
     {
       "step": "request",
       "name": "question-samples",
-      "at": "2026-11-22T20:05:44.711Z",
+      "at": "2026-11-24T01:48:50.960Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/samples",
@@ -631,7 +639,7 @@
     {
       "step": "request",
       "name": "question-samples-revise",
-      "at": "2026-11-22T20:05:44.718Z",
+      "at": "2026-11-24T01:48:50.963Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/samples/revise",
@@ -725,8 +733,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.689-05",
-          "updatedAt": "2026-11-22 15:05:44.722-05",
+          "createdAt": "2026-11-23 20:48:50.941-05",
+          "updatedAt": "2026-11-23 20:48:50.963-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -743,7 +751,7 @@
     {
       "step": "request",
       "name": "question-samples-revised",
-      "at": "2026-11-22T20:05:44.731Z",
+      "at": "2026-11-24T01:48:50.971Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/samples",
@@ -956,7 +964,7 @@
     {
       "step": "request",
       "name": "question-result-not-finished",
-      "at": "2026-11-22T20:05:44.736Z",
+      "at": "2026-11-24T01:48:50.974Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/result",
@@ -976,7 +984,7 @@
     {
       "step": "request",
       "name": "question-samples-accept",
-      "at": "2026-11-22T20:05:44.740Z",
+      "at": "2026-11-24T01:48:50.976Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/samples/accept",
@@ -1065,8 +1073,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.689-05",
-          "updatedAt": "2026-11-22 15:05:44.744-05",
+          "createdAt": "2026-11-23 20:48:50.941-05",
+          "updatedAt": "2026-11-23 20:48:50.976-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1083,7 +1091,7 @@
     {
       "step": "request",
       "name": "question-job-done",
-      "at": "2026-11-22T20:05:44.800Z",
+      "at": "2026-11-24T01:48:51.011Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401",
@@ -1181,9 +1189,9 @@
               "kind": "exam"
             }
           ],
-          "createdAt": "2026-11-22 15:05:44.689-05",
-          "updatedAt": "2026-11-22 15:05:44.799-05",
-          "finishedAt": "2026-11-22 15:05:44.799-05",
+          "createdAt": "2026-11-23 20:48:50.941-05",
+          "updatedAt": "2026-11-23 20:48:51.011-05",
+          "finishedAt": "2026-11-23 20:48:51.011-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -1199,7 +1207,7 @@
     {
       "step": "request",
       "name": "question-result",
-      "at": "2026-11-22T20:05:44.807Z",
+      "at": "2026-11-24T01:48:51.017Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/result",
@@ -1373,7 +1381,7 @@
     {
       "step": "request",
       "name": "question-job-file-start",
-      "at": "2026-11-22T20:05:44.812Z",
+      "at": "2026-11-24T01:48:51.020Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -1464,8 +1472,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.821-05",
-          "updatedAt": "2026-11-22 15:05:44.821-05",
+          "createdAt": "2026-11-23 20:48:51.02-05",
+          "updatedAt": "2026-11-23 20:48:51.02-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1482,7 +1490,7 @@
     {
       "step": "request",
       "name": "question-job-copy-start",
-      "at": "2026-11-22T20:05:44.828Z",
+      "at": "2026-11-24T01:48:51.029Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -1562,8 +1570,8 @@
           "title": null,
           "photoCount": 2,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.841-05",
-          "updatedAt": "2026-11-22 15:05:44.841-05",
+          "createdAt": "2026-11-23 20:48:51.029-05",
+          "updatedAt": "2026-11-23 20:48:51.029-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1580,7 +1588,7 @@
     {
       "step": "request",
       "name": "question-job-copies",
-      "at": "2026-11-22T20:05:44.849Z",
+      "at": "2026-11-24T01:48:51.038Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000403",
@@ -1643,8 +1651,8 @@
           "title": null,
           "photoCount": 2,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.841-05",
-          "updatedAt": "2026-11-22 15:05:44.848-05",
+          "createdAt": "2026-11-23 20:48:51.029-05",
+          "updatedAt": "2026-11-23 20:48:51.037-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1661,7 +1669,7 @@
     {
       "step": "request",
       "name": "question-copies",
-      "at": "2026-11-22T20:05:44.856Z",
+      "at": "2026-11-24T01:48:51.041Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000403/copies",
@@ -1930,7 +1938,7 @@
     {
       "step": "request",
       "name": "question-copies-accept-invalid",
-      "at": "2026-11-22T20:05:44.863Z",
+      "at": "2026-11-24T01:48:51.044Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000403/copies/accept",
@@ -1964,14 +1972,14 @@
         "headers": {},
         "body": {
           "error": "invalid_request",
-          "message": "Question 1 (P01): needs at least 3 options"
+          "message": "Question 1 (P01): needs at least 2 options"
         }
       }
     },
     {
       "step": "request",
       "name": "question-copies-accept",
-      "at": "2026-11-22T20:05:44.867Z",
+      "at": "2026-11-24T01:48:51.047Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000403/copies/accept",
@@ -2076,8 +2084,8 @@
           "title": null,
           "photoCount": 2,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.841-05",
-          "updatedAt": "2026-11-22 15:05:44.872-05",
+          "createdAt": "2026-11-23 20:48:51.029-05",
+          "updatedAt": "2026-11-23 20:48:51.047-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -2094,7 +2102,7 @@
     {
       "step": "request",
       "name": "question-result-copies",
-      "at": "2026-11-22T20:05:44.898Z",
+      "at": "2026-11-24T01:48:51.065Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000403/result",
@@ -2155,7 +2163,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:44.902Z",
+      "at": "2026-11-24T01:48:51.068Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -2246,8 +2254,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.911-05",
-          "updatedAt": "2026-11-22 15:05:44.911-05",
+          "createdAt": "2026-11-23 20:48:51.068-05",
+          "updatedAt": "2026-11-23 20:48:51.068-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -2264,7 +2272,7 @@
     {
       "step": "request",
       "name": "question-job-cancel",
-      "at": "2026-11-22T20:05:44.914Z",
+      "at": "2026-11-24T01:48:51.075Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000404/cancel",
@@ -2348,9 +2356,9 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-22 15:05:44.911-05",
-          "updatedAt": "2026-11-22 15:05:44.918-05",
-          "finishedAt": "2026-11-22 15:05:44.918-05",
+          "createdAt": "2026-11-23 20:48:51.068-05",
+          "updatedAt": "2026-11-23 20:48:51.075-05",
+          "finishedAt": "2026-11-23 20:48:51.075-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -2366,7 +2374,7 @@
     {
       "step": "request",
       "name": "question-job-cancel-finished",
-      "at": "2026-11-22T20:05:44.920Z",
+      "at": "2026-11-24T01:48:51.079Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000404/cancel",
@@ -2386,7 +2394,7 @@
     {
       "step": "request",
       "name": "question-jobs",
-      "at": "2026-11-22T20:05:44.924Z",
+      "at": "2026-11-24T01:48:51.082Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs",
@@ -2472,9 +2480,9 @@
               "title": null,
               "photoCount": 0,
               "sets": [],
-              "createdAt": "2026-11-22 15:05:44.911-05",
-              "updatedAt": "2026-11-22 15:05:44.918-05",
-              "finishedAt": "2026-11-22 15:05:44.918-05",
+              "createdAt": "2026-11-23 20:48:51.068-05",
+              "updatedAt": "2026-11-23 20:48:51.075-05",
+              "finishedAt": "2026-11-23 20:48:51.075-05",
               "failure": null,
               "warnings": [],
               "usage": {
@@ -2548,9 +2556,9 @@
                   "kind": "exam"
                 }
               ],
-              "createdAt": "2026-11-22 15:05:44.841-05",
-              "updatedAt": "2026-11-22 15:05:44.897-05",
-              "finishedAt": "2026-11-22 15:05:44.897-05",
+              "createdAt": "2026-11-23 20:48:51.029-05",
+              "updatedAt": "2026-11-23 20:48:51.065-05",
+              "finishedAt": "2026-11-23 20:48:51.065-05",
               "failure": null,
               "warnings": [],
               "usage": {
@@ -2627,8 +2635,8 @@
               "title": null,
               "photoCount": 0,
               "sets": [],
-              "createdAt": "2026-11-22 15:05:44.821-05",
-              "updatedAt": "2026-11-22 15:05:44.828-05",
+              "createdAt": "2026-11-23 20:48:51.02-05",
+              "updatedAt": "2026-11-23 20:48:51.029-05",
               "finishedAt": null,
               "failure": null,
               "warnings": [
@@ -2733,9 +2741,9 @@
                   "kind": "exam"
                 }
               ],
-              "createdAt": "2026-11-22 15:05:44.689-05",
-              "updatedAt": "2026-11-22 15:05:44.799-05",
-              "finishedAt": "2026-11-22 15:05:44.799-05",
+              "createdAt": "2026-11-23 20:48:50.941-05",
+              "updatedAt": "2026-11-23 20:48:51.011-05",
+              "finishedAt": "2026-11-23 20:48:51.011-05",
               "failure": null,
               "warnings": [],
               "usage": {
@@ -2753,7 +2761,7 @@
     {
       "step": "request",
       "name": "question-job-daily-limit",
-      "at": "2026-11-22T20:05:44.933Z",
+      "at": "2026-11-24T01:48:51.086Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -2776,14 +2784,14 @@
         "body": {
           "error": "daily_limit",
           "message": "You have started 4 sets in the last 24 hours, the most for one day. You can start another in 24 hours.",
-          "availableAt": "2026-11-23T20:05:44.689Z"
+          "availableAt": "2026-11-25T01:48:50.941Z"
         }
       }
     },
     {
       "step": "request",
       "name": "question-maker-daily-limit",
-      "at": "2026-11-22T20:05:44.941Z",
+      "at": "2026-11-24T01:48:51.090Z",
       "request": {
         "method": "GET",
         "path": "/api/question-maker",
@@ -2799,7 +2807,7 @@
           "reason": "You have started 4 sets in the last 24 hours, the most for one day.",
           "dailyLimit": 4,
           "startedToday": 4,
-          "nextAvailableAt": "2026-11-23T20:05:44.689Z",
+          "nextAvailableAt": "2026-11-25T01:48:50.941Z",
           "levels": [
             {
               "level": "exam",
@@ -2845,7 +2853,7 @@
     {
       "step": "request",
       "name": "question-job-not-found",
-      "at": "2026-11-22T20:05:44.946Z",
+      "at": "2026-11-24T01:48:51.092Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000499",

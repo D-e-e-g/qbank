@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "GET",
     "path": "/api/admin/students",
@@ -16,13 +16,13 @@
           "id": "synthetic-user-2",
           "email": "student@example.com",
           "name": "Sam Student",
-          "createdAt": "2026-11-14T02:55:44.528Z"
+          "createdAt": "2026-11-24T01:48:34.831Z"
         },
         {
           "id": "synthetic-user-3",
           "email": "second.user@example.com",
           "name": "Second User",
-          "createdAt": "2026-11-14T02:55:44.620Z"
+          "createdAt": "2026-11-24T01:48:34.922Z"
         }
       ],
       "viewingId": "synthetic-user-2"

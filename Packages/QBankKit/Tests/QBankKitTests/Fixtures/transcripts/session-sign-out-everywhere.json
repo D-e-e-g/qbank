@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "session-sign-out-everywhere",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:14.996Z",
+      "at": "2026-11-24T01:48:36.868Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:15.067Z"
+          "expiresAt": "2027-12-29T01:48:36.868Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:15.067Z",
+      "at": "2026-11-24T01:48:36.923Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -58,16 +66,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:15.133Z"
+          "expiresAt": "2027-12-29T01:48:36.923Z"
         }
       }
     },
     {
       "step": "request",
       "name": "sign-out-everywhere",
-      "at": "2026-11-22T20:05:15.133Z",
+      "at": "2026-11-24T01:48:36.973Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-out/everywhere",
@@ -86,7 +102,7 @@
     {
       "step": "request",
       "name": "session-after-sign-out-everywhere",
-      "at": "2026-11-22T20:05:15.148Z",
+      "at": "2026-11-24T01:48:36.980Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -106,7 +122,7 @@
     {
       "step": "request",
       "name": "sign-out-everywhere-signed-out",
-      "at": "2026-11-22T20:05:15.151Z",
+      "at": "2026-11-24T01:48:36.981Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-out/everywhere",

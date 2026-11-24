@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "organize-catalog",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:35.048Z",
+      "at": "2026-11-24T01:48:45.513Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:35.118Z"
+          "expiresAt": "2027-12-29T01:48:45.513Z"
         }
       }
     },
     {
       "step": "request",
       "name": "semester-create",
-      "at": "2026-11-22T20:05:35.119Z",
+      "at": "2026-11-24T01:48:45.562Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": "semester-create-taken",
-      "at": "2026-11-22T20:05:35.127Z",
+      "at": "2026-11-24T01:48:45.568Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -85,7 +93,7 @@
     {
       "step": "request",
       "name": "semester-create-out-of-range",
-      "at": "2026-11-22T20:05:35.132Z",
+      "at": "2026-11-24T01:48:45.572Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -107,7 +115,7 @@
     {
       "step": "request",
       "name": "semester-update",
-      "at": "2026-11-22T20:05:35.135Z",
+      "at": "2026-11-24T01:48:45.574Z",
       "request": {
         "method": "PATCH",
         "path": "/api/semesters/5e000000-0000-4000-8000-000000000001",
@@ -136,7 +144,7 @@
     {
       "step": "request",
       "name": "semester-update-blank",
-      "at": "2026-11-22T20:05:35.146Z",
+      "at": "2026-11-24T01:48:45.581Z",
       "request": {
         "method": "PATCH",
         "path": "/api/semesters/5e000000-0000-4000-8000-000000000001",
@@ -158,7 +166,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:35.149Z",
+      "at": "2026-11-24T01:48:45.585Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -185,7 +193,7 @@
     {
       "step": "request",
       "name": "course-create",
-      "at": "2026-11-22T20:05:35.157Z",
+      "at": "2026-11-24T01:48:45.590Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -221,7 +229,7 @@
     {
       "step": "request",
       "name": "course-create-taken",
-      "at": "2026-11-22T20:05:35.163Z",
+      "at": "2026-11-24T01:48:45.593Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -245,7 +253,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:35.168Z",
+      "at": "2026-11-24T01:48:45.596Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -281,7 +289,7 @@
     {
       "step": "request",
       "name": "course-update",
-      "at": "2026-11-22T20:05:35.172Z",
+      "at": "2026-11-24T01:48:45.600Z",
       "request": {
         "method": "PATCH",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
@@ -317,7 +325,7 @@
     {
       "step": "request",
       "name": "course-update-blank",
-      "at": "2026-11-22T20:05:35.186Z",
+      "at": "2026-11-24T01:48:45.606Z",
       "request": {
         "method": "PATCH",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
@@ -339,7 +347,7 @@
     {
       "step": "request",
       "name": "course-archive",
-      "at": "2026-11-22T20:05:35.189Z",
+      "at": "2026-11-24T01:48:45.608Z",
       "request": {
         "method": "PATCH",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
@@ -358,7 +366,7 @@
           "code": "NURS 111",
           "title": "Invented Basics II",
           "sortOrder": 1,
-          "archivedAt": "2026-11-22T20:05:35.192Z",
+          "archivedAt": "2026-11-24T01:48:45.608Z",
           "questionCount": 0,
           "weekCount": 0,
           "folderCount": 0,
@@ -373,7 +381,7 @@
     {
       "step": "request",
       "name": "semesters-edited",
-      "at": "2026-11-22T20:05:35.195Z",
+      "at": "2026-11-24T01:48:45.614Z",
       "request": {
         "method": "GET",
         "path": "/api/semesters",
@@ -426,7 +434,7 @@
                   "code": "NURS 111",
                   "title": "Invented Basics II",
                   "sortOrder": 1,
-                  "archivedAt": "2026-11-22T20:05:35.192Z",
+                  "archivedAt": "2026-11-24T01:48:45.608Z",
                   "questionCount": 0,
                   "weekCount": 0,
                   "folderCount": 0,

@@ -431,7 +431,9 @@ struct SettingsView: View {
             do {
                 exported = SharedFile(url: try await app.exportBank())
             } catch let error as QBankError {
-                exportProblem = Wording.problem(error) ?? "The bank could not be exported. Try again."
+                if !app.handle(error) {
+                    exportProblem = Wording.problem(error) ?? "The bank could not be exported. Try again."
+                }
             } catch {
                 exportProblem = "The bank could not be exported. Try again."
             }

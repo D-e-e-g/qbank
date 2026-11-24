@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "organize-imports",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.819Z",
+      "at": "2026-11-24T01:48:47.014Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:37.877Z"
+          "expiresAt": "2027-12-29T01:48:47.014Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.877Z",
+      "at": "2026-11-24T01:48:47.067Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.885Z",
+      "at": "2026-11-24T01:48:47.073Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -99,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.897Z",
+      "at": "2026-11-24T01:48:47.078Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -126,7 +134,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.904Z",
+      "at": "2026-11-24T01:48:47.085Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -153,7 +161,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:37.915Z",
+      "at": "2026-11-24T01:48:47.090Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/course-exams",
@@ -187,7 +195,7 @@
     {
       "step": "request",
       "name": "import-check",
-      "at": "2026-11-22T20:05:37.921Z",
+      "at": "2026-11-24T01:48:47.098Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -227,7 +235,7 @@
     {
       "step": "request",
       "name": "import-check-errors",
-      "at": "2026-11-22T20:05:37.928Z",
+      "at": "2026-11-24T01:48:47.102Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -249,22 +257,16 @@
           "termCount": 0,
           "formats": [],
           "errors": [
-            "Question 1 (Q1): missing takeaway",
             "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
           ],
-          "warnings": [
-            "Question 1 (Q1): missing cj",
-            "Question 1 (Q1): missing need",
-            "Question 1 (Q1): missing diff",
-            "Question 1 (Q1): missing src"
-          ]
+          "warnings": []
         }
       }
     },
     {
       "step": "request",
       "name": "import-check-not-json",
-      "at": "2026-11-22T20:05:37.931Z",
+      "at": "2026-11-24T01:48:47.105Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -295,7 +297,7 @@
     {
       "step": "request",
       "name": "import-check-exam",
-      "at": "2026-11-22T20:05:37.937Z",
+      "at": "2026-11-24T01:48:47.108Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -330,7 +332,7 @@
     {
       "step": "request",
       "name": "import",
-      "at": "2026-11-22T20:05:37.942Z",
+      "at": "2026-11-24T01:48:47.111Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -366,7 +368,7 @@
     {
       "step": "request",
       "name": "import-folder",
-      "at": "2026-11-22T20:05:37.951Z",
+      "at": "2026-11-24T01:48:47.118Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -404,7 +406,7 @@
     {
       "step": "request",
       "name": "import-new-folder",
-      "at": "2026-11-22T20:05:37.961Z",
+      "at": "2026-11-24T01:48:47.124Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -441,7 +443,7 @@
     {
       "step": "request",
       "name": "import-new-course",
-      "at": "2026-11-22T20:05:37.969Z",
+      "at": "2026-11-24T01:48:47.130Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -481,7 +483,7 @@
     {
       "step": "request",
       "name": "import-conflict",
-      "at": "2026-11-22T20:05:37.977Z",
+      "at": "2026-11-24T01:48:47.138Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -515,7 +517,7 @@
     {
       "step": "request",
       "name": "import-replace",
-      "at": "2026-11-22T20:05:37.984Z",
+      "at": "2026-11-24T01:48:47.143Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -552,7 +554,7 @@
     {
       "step": "request",
       "name": "import-separate",
-      "at": "2026-11-22T20:05:38.000Z",
+      "at": "2026-11-24T01:48:47.149Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -589,7 +591,7 @@
     {
       "step": "request",
       "name": "import-invalid",
-      "at": "2026-11-22T20:05:38.014Z",
+      "at": "2026-11-24T01:48:47.157Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -606,24 +608,18 @@
         "headers": {},
         "body": {
           "error": "invalid_import",
-          "message": "Question 1 (Q1): missing takeaway",
+          "message": "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)",
           "errors": [
-            "Question 1 (Q1): missing takeaway",
             "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
           ],
-          "warnings": [
-            "Question 1 (Q1): missing cj",
-            "Question 1 (Q1): missing need",
-            "Question 1 (Q1): missing diff",
-            "Question 1 (Q1): missing src"
-          ]
+          "warnings": []
         }
       }
     },
     {
       "step": "request",
       "name": "import-exam",
-      "at": "2026-11-22T20:05:38.017Z",
+      "at": "2026-11-24T01:48:47.160Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
