@@ -15,7 +15,7 @@ enum SettingsRoute: Hashable {
 /// of here or on every device, or delete, with her agent keys, her semesters by name and dates, and
 /// Look and Color, then what is saved on this phone.
 /// Home's + adds a semester, a course or a topic, and holding one on Home renames, moves or
-/// archives it. Export stays on the web.
+/// archives it. Export my bank shares the whole bank as one file.
 struct SettingsView: View {
     let app: AppModel
     @State private var catalog: CatalogModel
@@ -31,6 +31,11 @@ struct SettingsView: View {
     @State private var maker: QuestionMakerStatus?
     /// The policy or terms page open over Settings, if one is.
     @State private var openPage: URL?
+    @State private var isExporting = false
+    /// Said under Export my bank when the file could not be made, so nothing was shared.
+    @State private var exportProblem: String?
+    /// The bank's file, while the share sheet is open over Settings.
+    @State private var exported: SharedFile?
 
     init(app: AppModel) {
         self.app = app
@@ -51,6 +56,7 @@ struct SettingsView: View {
                     }
                     look
                     onThisPhone
+                    yourBank
                     about
                     Text(Self.version)
                         .qbankFont(.footnote)
@@ -84,6 +90,9 @@ struct SettingsView: View {
             }
         }
         .webPageSheet($openPage)
+        .sheet(item: $exported) { file in
+            ShareSheet(file: file.url).ignoresSafeArea()
+        }
         .task {
             guard catalog.isEditable else { return }
             await catalog.load()
@@ -385,6 +394,48 @@ struct SettingsView: View {
             }
             .buttonStyle(.qbankRow)
             .accessibilityIdentifier("settings.savedForOffline")
+        }
+    }
+
+    /// Export my bank: the whole bank as one file in the share sheet, whichever side holds it. It
+    /// only reads, so the bank is as it was after.
+    private var yourBank: some View {
+        VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+            QBankListGroup(
+                header: "Your bank",
+                footer: "Shares every question and all your progress as one file, to keep or to move."
+            ) {
+                Button(action: exportBank) {
+                    QBankListRow("Export my bank", systemImage: "square.and.arrow.up", showsChevron: false) {
+                        if isExporting {
+                            ProgressView()
+                        }
+                    }
+                }
+                .buttonStyle(.qbankRow)
+                .disabled(isExporting)
+                .accessibilityIdentifier("settings.exportBank")
+            }
+            if let problem = exportProblem {
+                ProblemText(text: problem)
+                    .padding(.horizontal, QBankSpacing.space5)
+                    .accessibilityIdentifier("settings.exportBank.problem")
+            }
+        }
+    }
+
+    private func exportBank() {
+        isExporting = true
+        exportProblem = nil
+        Task {
+            do {
+                exported = SharedFile(url: try await app.exportBank())
+            } catch let error as QBankError {
+                exportProblem = Wording.problem(error) ?? "The bank could not be exported. Try again."
+            } catch {
+                exportProblem = "The bank could not be exported. Try again."
+            }
+            isExporting = false
         }
     }
 

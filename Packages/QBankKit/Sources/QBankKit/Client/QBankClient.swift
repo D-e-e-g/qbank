@@ -639,6 +639,11 @@ public struct QBankClient: Sendable {
         try await sendForData(Request(.get, "/api/me/export"))
     }
 
+    /// The whole bank on the server as bank archive v1, the file Settings > Export my bank shares.
+    public func downloadBank() async throws(QBankError) -> Data {
+        try await sendForData(Request(.get, "/api/me/bank"))
+    }
+
     // MARK: Agents
 
     /// The agent waiting under the code her agent shows her, before she answers: its name and what

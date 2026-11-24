@@ -5,7 +5,8 @@ import Foundation
 /// phone and Cloud in both directions, and it is the file Settings > Export shares.
 ///
 /// `write` reads the whole bank in one consistent snapshot and `read` stores a document into an
-/// empty bank, whole or not at all. Nothing in the app uses either yet.
+/// empty bank, whole or not at all. Only Settings > Export my bank uses `write` so far, through
+/// `LocalBank.exportArchive()` and `QBankClient.downloadBank()`.
 public enum BankArchive {
     /// The text that names the document.
     public static let format = "qbank-bank-archive"

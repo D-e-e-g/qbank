@@ -555,3 +555,94 @@ struct CalendarDayTests {
         #expect(CalendarDay.date(from: text) == nil)
     }
 }
+
+/// Export my bank: one bank archive file, from the phone's bank for a free account and from the server
+/// for the others, named for what it is and the day. Invented data only.
+@MainActor
+struct BankExportTests {
+    private let day = Date(timeIntervalSince1970: 1_795_000_000)
+    private var utc: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    private func folder() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("bank-export-tests-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func freeApp(_ bank: LocalBank, network: StubServer = StubServer()) -> AppModel {
+        let store = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
+        let client = QBankClient(
+            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: network, sessionStore: store
+        )
+        let defaults = TestApp.freshDefaults()
+        return AppModel(
+            client: client, kind: .free, bank: bank, look: LookStore(defaults: defaults),
+            lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
+            aiConsent: AIConsentStore(defaults: defaults), storage: .memory()
+        )
+    }
+
+    @Test func theFileNameSaysWhatItIsAndTheDay() {
+        #expect(BankExport.fileName(on: day, calendar: utc) == "qbank-bank-2026-11-18.json")
+    }
+
+    @Test func aFreeAccountSharesTheArchiveOfItsBankOnThePhone() async throws {
+        let store = try LocalStore.inMemory()
+        let bank = LocalBank(store: store, clock: { Date(timeIntervalSince1970: 1_795_000_000) })
+        let network = StubServer()
+        let app = freeApp(bank, network: network)
+        _ = try await app.client.createTopic(title: "Invented Sleep Notes")
+        let before = try BankArchive.counts(of: store)
+        let directory = folder()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let file = try await app.exportBank(in: directory, now: day)
+
+        #expect(file.lastPathComponent == BankExport.fileName(on: day))
+        let data = try Data(contentsOf: file)
+        let text = String(decoding: data, as: UTF8.self)
+        #expect(text.contains(#""format": "qbank-bank-archive""#))
+        #expect(text.contains(#""writtenBy": "phone""#))
+        #expect(text.contains("Invented Sleep Notes"))
+        let fresh = try LocalStore.inMemory()
+        #expect(try BankArchive.read(data, into: fresh) == before)
+        #expect(network.calls.isEmpty, "a bank on the phone is written from the phone")
+        #expect(try BankArchive.counts(of: store) == before, "exporting reads the bank and changes nothing")
+    }
+
+    @Test func anAccountWithItsBankOnTheServerSharesTheFileTheServerWrites() async throws {
+        let document = #"{"format":"qbank-bank-archive","version":1}"#
+        let server = StubServer(["GET /api/me/bank": .ok(document)])
+        let (app, _) = TestApp.make(server, account: .student())
+        let directory = folder()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let file = try await app.exportBank(in: directory, now: day)
+
+        #expect(server.calls == ["GET /api/me/bank"])
+        #expect(try String(contentsOf: file, encoding: .utf8) == document)
+        #expect(file.lastPathComponent == BankExport.fileName(on: day))
+    }
+
+    @Test func aServerThatCannotBeReachedLeavesNoFile() async throws {
+        let server = StubServer(["GET /api/me/bank": .error(503, "unavailable", "QBank is busy.")])
+        let (app, _) = TestApp.make(server, account: .student())
+        let directory = folder()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        await #expect(throws: QBankError.self) { try await app.exportBank(in: directory, now: day) }
+        #expect(!FileManager.default.fileExists(atPath: directory.path))
+    }
+
+    @Test func aNewExportReplacesTheLastOneWaitingToBeShared() throws {
+        let directory = folder()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        _ = try BankExport.write(Data("one".utf8), on: day, in: directory, calendar: utc)
+        let next = day.addingTimeInterval(86_400)
+        _ = try BankExport.write(Data("two".utf8), on: next, in: directory, calendar: utc)
+        let waiting = try FileManager.default.contentsOfDirectory(atPath: directory.appendingPathComponent("BankExport").path)
+        #expect(waiting == ["qbank-bank-2026-11-19.json"])
+    }
+}
