@@ -13,18 +13,41 @@ final class WriteModel {
     let importing: ImportModel
     /// The one thing the check cannot say: the set has no name yet.
     private(set) var titleProblem: String?
+    /// Why an edit could not be saved as a new version of its set, when the check and the filing
+    /// are not what went wrong.
+    private(set) var editProblem: String?
+    /// What became of the saved set since she opened it, when saving would no longer make a new
+    /// version of the version she edited. Nothing is saved until she answers it.
+    private(set) var outdated: Outdated?
+    /// The set this edits is being read.
+    private var isReading = false
+
+    enum Outdated: Equatable {
+        /// The set was deleted: she saves her questions as a new set, or discards them.
+        case deleted
+        /// The set was replaced or restored since, or moved: its current version became current at
+        /// `activeSince`, and it is in the folder `folderID`. She opens it as it is now instead, or
+        /// saves hers over it there.
+        case changed(activeSince: Date, folderID: String)
+    }
 
     private let app: AppModel
 
     init(app: AppModel, draft: SetDraft = SetDraft()) {
         self.app = app
         self.draft = draft
-        importing = ImportModel(app: app)
+        // A draft that edits a saved set files into that set's own course and folder, archived or not.
+        importing = ImportModel(app: app, courseID: draft.editing?.courseID, folderID: draft.editing?.folderID, pinsCourse: draft.editing != nil)
         importing.setSource(draft.file())
     }
 
+    /// Whether this edits a saved set rather than writing a new one.
+    var isEditing: Bool {
+        draft.editing != nil
+    }
+
     var isBusy: Bool {
-        importing.isBusy
+        importing.isBusy || isReading
     }
 
     /// The check's answer for the draft as it stands. Nil before a check, and after any change.
@@ -50,7 +73,7 @@ final class WriteModel {
 
     /// What she can fix: a problem with the course or the connection.
     var problem: String? {
-        importing.problem
+        editProblem ?? importing.problem
     }
 
     var canSave: Bool {
@@ -63,6 +86,7 @@ final class WriteModel {
         guard !isBusy else { return }
         change(&draft)
         titleProblem = nil
+        editProblem = nil
         importing.setSource(draft.file())
         app.drafts.keep(draft)
     }
@@ -94,10 +118,15 @@ final class WriteModel {
             return
         }
         guard canSave else { return }
+        isReading = true
+        let current = await checkEdited()
+        isReading = false
+        guard current else { return }
         importing.setTitle(name)
         await importing.check()
         guard importing.canImport else { return }
         await commit(.import)
+        await replaceWhatIsEdited()
     }
 
     /// Files the checked set, as she answered when a set of the same name was there.
@@ -106,6 +135,89 @@ final class WriteModel {
         await importing.commit(decision)
         if importing.done != nil {
             app.drafts.discard(id: draft.id)
+        }
+    }
+
+    /// An edit meets the set of its name, and only that set, with the import's replace: the same
+    /// path the server takes, so the old version stays restorable and the questions she did not
+    /// change keep their answers. Another set of the same name is never replaced: it is left alone
+    /// and she is told.
+    private func replaceWhatIsEdited() async {
+        guard let edited = draft.editing, let conflict = importing.conflict else { return }
+        importing.conflict = nil
+        guard conflict.setID == edited.setID else {
+            editProblem = WriteWording.otherSetNamed
+            return
+        }
+        await commit(.replace)
+    }
+
+    /// Reads the set this draft edits as it is now, and says in `outdated` when it was deleted or
+    /// has another version than the one she opened. True when saving makes a new version of the
+    /// version she edited, and for a draft that edits no set.
+    @discardableResult
+    func checkEdited() async -> Bool {
+        guard let edited = draft.editing else { return true }
+        do {
+            if let current = WriteEdit.row(of: edited.setID, in: try await app.client.course(id: edited.courseID)) {
+                let same = current.set.activeSince == edited.activeSince && current.folderID == edited.folderID
+                outdated = same ? nil : .changed(activeSince: current.set.activeSince, folderID: current.folderID)
+            } else {
+                outdated = .deleted
+            }
+            editProblem = nil
+            return outdated == nil
+        } catch {
+            if !app.handle(error) {
+                editProblem = importing.isOnline ? Wording.problem(error) ?? "Could not read the set." : nil
+            }
+            return false
+        }
+    }
+
+    /// The set she edited was deleted: her questions are saved as a new set, filed where it was.
+    func saveAsNewSet() async {
+        guard !isBusy, outdated == .deleted else { return }
+        outdated = nil
+        edit { $0.editing = nil }
+        await save()
+    }
+
+    /// The set has another version than she opened: hers is saved over it as a new version.
+    /// Restore in the folder brings the other one back.
+    func saveAnyway() async {
+        guard !isBusy, case .changed(let activeSince, let folderID) = outdated else { return }
+        outdated = nil
+        edit {
+            $0.editing?.activeSince = activeSince
+            $0.editing?.folderID = folderID
+        }
+        importing.destination.folder = .folder(folderID)
+        await save()
+    }
+
+    /// The set has another version than she opened: her changes are discarded and the set is opened
+    /// as it is now. A version the editor cannot keep whole is not opened, and her changes stay.
+    func openCurrent() async {
+        guard !isBusy, case .changed = outdated, let edited = draft.editing else { return }
+        isReading = true
+        defer { isReading = false }
+        do {
+            switch try await WriteEdit.open(setID: edited.setID, courseID: edited.courseID, client: app.client) {
+            case .success(var opened):
+                opened.id = draft.id
+                app.drafts.discard(id: draft.id)
+                draft = opened
+                if let folderID = opened.editing?.folderID { importing.destination.folder = .folder(folderID) }
+                outdated = nil
+                editProblem = nil
+                importing.setSource(draft.file())
+            case .failure(let refusal):
+                editProblem = refusal.message
+            }
+        } catch {
+            if app.handle(error) { return }
+            editProblem = Wording.problem(error) ?? "Could not open that set."
         }
     }
 
@@ -118,6 +230,7 @@ final class WriteModel {
     func startAnother() async {
         draft = SetDraft()
         titleProblem = nil
+        outdated = nil
         await importing.startOver()
         importing.setSource(draft.file())
     }
@@ -128,11 +241,18 @@ nonisolated enum WriteWording {
     static let hint = "Write the question, word its choices and mark the right one. Saving checks the set as Import checks a file."
     static let titleHint = "What the set is called in its folder."
     static let draftNote = "Kept on this phone until you save it. Nothing is sent before then."
+    static let editedTitleHint = "A saved set keeps its name."
+    static let editHint = "Change the questions and save. Saving keeps the earlier version, and Restore in the folder brings it back. Questions you leave alone keep their answers."
+    static let setChanged = "This set was replaced, restored or moved to another folder after you opened it. Your changes are kept here."
+    static let setDeleted = "This set was deleted after you opened it. Your changes are kept here."
+    static let otherSetNamed = "Another set has this name, so nothing was saved. Your changes are kept here."
+    static let editNote = "Your changes are kept on this phone until you save them. The saved set stays as it is until then."
 
     /// "3 questions", or "No questions yet", for a draft's row.
     static func detail(_ draft: SetDraft) -> String {
         let written = draft.questions.filter { !$0.isBlank }.count
-        return written == 0 ? "No questions yet" : Wording.count(written, "question")
+        let count = written == 0 ? "No questions yet" : Wording.count(written, "question")
+        return draft.editing == nil ? count : "Changes to a saved set · \(count)"
     }
 
     static func name(_ draft: SetDraft) -> String {

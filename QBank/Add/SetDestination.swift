@@ -56,15 +56,20 @@ final class SetDestination {
     private let app: AppModel
     /// The course, and the folder or exam page, the page she opened it from has.
     private let preset: (courseID: String, folderID: String?, examPageID: String?)?
+    /// The preset course stays picked even when her lists leave it out, as an archived one, until
+    /// a set is filed: the next set goes into one of hers.
+    private var pinsCourse: Bool
     private var detailLoads = 0
 
     /// - Parameters:
     ///   - courseID: The course or topic whose page opened it, picked when it opens.
     ///   - folderID: Its folder to pick, else Unsorted, or with `examPageID` a new folder.
     ///   - examPageID: The exam page it was opened from, whose folders come first.
-    init(app: AppModel, courseID: String? = nil, folderID: String? = nil, examPageID: String? = nil, allowsNewCourse: Bool) {
+    ///   - pinsCourse: Whether `courseID` stays picked when her lists leave it out.
+    init(app: AppModel, courseID: String? = nil, folderID: String? = nil, examPageID: String? = nil, allowsNewCourse: Bool, pinsCourse: Bool = false) {
         self.app = app
         self.allowsNewCourse = allowsNewCourse
+        self.pinsCourse = pinsCourse && courseID != nil
         if let courseID {
             preset = (courseID, folderID, examPageID)
             course = .existing(courseID)
@@ -84,6 +89,7 @@ final class SetDestination {
         guard case .existing(let id) = course else { return nil }
         // Before her lists load, the one its page opened it with.
         guard courses != nil else { return id }
+        if pinsCourse, id == preset?.courseID { return id }
         return summary(id) == nil ? nil : id
     }
 
@@ -184,6 +190,7 @@ final class SetDestination {
         let load = detailLoads
         guard let id = courseID else {
             detail = nil
+            if case .folder = folder { folder = .unsorted }
             return
         }
         let read = try? await app.load(.course(id)) { () async throws(QBankError) in try await app.client.course(id: id) }.value
@@ -208,6 +215,7 @@ final class SetDestination {
     /// Back to a course or topic after a set was filed, with Unsorted picked, or what its page picked.
     /// One the import made is hers now, so the list is read again.
     func restart(on courseID: String) async {
+        pinsCourse = false
         folder = preset.flatMap { $0.courseID == courseID ? Self.startFolder(folderID: $0.folderID, examPageID: $0.examPageID) : nil } ?? .unsorted
         newFolderName = ""
         newTopicName = ""

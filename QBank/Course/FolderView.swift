@@ -30,6 +30,7 @@ struct FolderView: View {
         case move([PracticeSetSummary])
         case deleteSets([PracticeSetSummary])
         case importHere
+        case edit(PracticeSetSummary)
 
         var id: String {
             switch self {
@@ -38,6 +39,7 @@ struct FolderView: View {
             case .move: "move"
             case .deleteSets: "deleteSets"
             case .importHere: "import"
+            case .edit(let set): "edit.\(set.id)"
             }
         }
     }
@@ -108,6 +110,10 @@ struct FolderView: View {
                     case .deleteSets(let sets):
                         DeleteSetsSheet(app: app, sets: sets) {
                             selection = nil
+                        }
+                    case .edit(let set):
+                        EditSetSheet(app: app, set: set, courseID: model.id) { _ in
+                            Task { await model.load() }
                         }
                     case .importHere:
                         ImportHereSheet(app: app, courseID: model.id, folderID: folder.id) { set in
@@ -212,7 +218,12 @@ struct FolderView: View {
                             } restore: {
                                 Task { await model.restore(set) }
                             }
-                            .deletable(set.title, isEnabled: model.offersEditing) {
+                            .deletable(
+                                set.title, isEnabled: model.offersEditing,
+                                edit: {
+                                    app.frozen.perform { sheet = .edit(set) }
+                                }
+                            ) {
                                 app.frozen.perform { deleting = DeleteRequest(target: .set(id: set.id, title: set.title)) }
                             }
                         }
@@ -228,7 +239,7 @@ struct FolderView: View {
                     }
                 }
                 if selection == nil, model.offersEditing {
-                    Text("Touch and hold a set to delete it.")
+                    Text("Touch and hold a set to edit or delete it.")
                         .qbankFont(.footnote)
                         .foregroundStyle(.qbank(.text3))
                         .padding(.horizontal, QBankSpacing.space5)
@@ -442,10 +453,17 @@ private struct ExamSetRow: View {
 }
 
 extension View {
-    /// Offers Delete when she touches and holds the row, and to VoiceOver as an action.
-    func deletable(_ name: String, isEnabled: Bool, delete: @escaping () -> Void) -> some View {
+    /// Offers Delete when she touches and holds the row, and to VoiceOver as an action, and Edit
+    /// questions before it for a row that can be written in the set editor.
+    func deletable(_ name: String, isEnabled: Bool, edit: (() -> Void)? = nil, delete: @escaping () -> Void) -> some View {
         contextMenu {
             if isEnabled {
+                if let edit {
+                    Button(action: edit) {
+                        Label("Edit questions", systemImage: "square.and.pencil")
+                    }
+                    .accessibilityIdentifier("edit.\(name)")
+                }
                 Button(role: .destructive, action: delete) {
                     Label("Delete", systemImage: "trash")
                 }
@@ -454,6 +472,9 @@ extension View {
         }
         .accessibilityActions {
             if isEnabled {
+                if let edit {
+                    Button("Edit questions", action: edit)
+                }
                 Button("Delete", action: delete)
             }
         }

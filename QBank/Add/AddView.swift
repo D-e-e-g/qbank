@@ -169,7 +169,7 @@ struct AddView: View {
             NavigationLink(value: AddRoute.write(UUID())) {
                 WayRow(
                     title: "Write questions",
-                    detail: "Type a question, its choices and the right answer. Single answer and true or false.",
+                    detail: "Type a question, its choices and the right answer. Single answer, select all and true or false.",
                     systemImage: "square.and.pencil"
                 )
             }

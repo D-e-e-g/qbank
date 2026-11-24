@@ -48,9 +48,9 @@ final class ImportModel {
 
     private let app: AppModel
 
-    init(app: AppModel, courseID: String? = nil, folderID: String? = nil, examPageID: String? = nil) {
+    init(app: AppModel, courseID: String? = nil, folderID: String? = nil, examPageID: String? = nil, pinsCourse: Bool = false) {
         self.app = app
-        destination = SetDestination(app: app, courseID: courseID, folderID: folderID, examPageID: examPageID, allowsNewCourse: true)
+        destination = SetDestination(app: app, courseID: courseID, folderID: folderID, examPageID: examPageID, allowsNewCourse: true, pinsCourse: pinsCourse)
     }
 
     var isOnline: Bool {
