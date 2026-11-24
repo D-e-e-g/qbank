@@ -626,6 +626,25 @@ struct BankExportTests {
         #expect(file.lastPathComponent == BankExport.fileName(on: day))
     }
 
+    @Test func anInvitedSignInAfterAFreeAccountSharesTheServersFileNotThePhonesBank() async throws {
+        let document = #"{"format":"qbank-bank-archive","version":1}"#
+        let network = StubServer(["POST /api/sign-in/password": .ok(Bodies.signedIn()), "GET /api/me/bank": .ok(document)])
+        let app = freeApp(LocalBank(store: try LocalStore.inMemory()), network: network)
+        _ = try await app.client.createTopic(title: "Invented Free Notes")
+        let signIn = SignInModel(app: app)
+        signIn.email = "student@example.com"
+        signIn.password = "synthetic-pass-1"
+        await signIn.signIn()
+        #expect(app.route == .signedIn(.student()))
+        let directory = folder()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let file = try await app.exportBank(in: directory, now: day)
+
+        #expect(network.calls == ["POST /api/sign-in/password", "GET /api/me/bank"])
+        #expect(try String(contentsOf: file, encoding: .utf8) == document)
+    }
+
     @Test func aServerThatCannotBeReachedLeavesNoFile() async throws {
         let server = StubServer(["GET /api/me/bank": .error(503, "unavailable", "QBank is busy.")])
         let (app, _) = TestApp.make(server, account: .student())

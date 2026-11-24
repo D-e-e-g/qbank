@@ -66,8 +66,9 @@ final class AppModel {
     private(set) var offline: OfflineStore?
 
     private let storage: PhoneStorage
-    /// The bank on this phone, for a free account only.
-    let bank: LocalBank?
+    /// The bank on this phone, while a free account is signed in and only then.
+    var bank: LocalBank? { kind.bankIsOnPhone ? phoneBank : nil }
+    private let phoneBank: LocalBank?
     /// The client that talks to the server, and the phone's network path it follows.
     private let server: QBankClient
     private let network: Connection
@@ -96,7 +97,7 @@ final class AppModel {
         self.aiConsent = aiConsent
         self.drafts = drafts
         self.storage = storage
-        self.bank = bank
+        phoneBank = bank
         server = client
         network = connection
         self.networkWatcher = networkWatcher
