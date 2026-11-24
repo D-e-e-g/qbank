@@ -1,19 +1,25 @@
 import Foundation
 import Observation
 
-/// One question she is writing by hand: its text, its choices, which one is right, and an optional
-/// explanation. Single answer has two to six choices she words; true or false always has the two.
+/// One question she is writing by hand: its text, its choices, which one is right (or which ones, for
+/// select all that apply), and an optional explanation. Single answer and select all have two to six
+/// choices she words; true or false always has the two.
 nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     enum Kind: String, Codable, CaseIterable, Sendable {
         case single
+        case selectAll
         case trueFalse
 
         var label: String {
             switch self {
             case .single: "Single answer"
+            case .selectAll: "Select all"
             case .trueFalse: "True or false"
             }
         }
+
+        /// The type the question file names.
+        var fileType: String { self == .selectAll ? "sata" : "single" }
     }
 
     struct Choice: Codable, Equatable, Identifiable, Sendable {
@@ -25,6 +31,10 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     static let choiceRange = 2...6
 
     var id = UUID()
+    /// The id the question has in the question file. It stays with the question for as long as it
+    /// is kept, through every edit of its set, so the answers given to it stay with it. Nil in a
+    /// draft kept before ids were kept: the file then numbers it by its place.
+    var fileID: String? = Self.newFileID()
     var kind: Kind = .single
     /// The question itself, what the file calls `ask`.
     var ask = ""
@@ -33,27 +43,72 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     var rightChoice: Int?
     /// The right answer of a true-or-false question: 0 for True, 1 for False. Nil until she marks one.
     var rightTrueFalse: Int?
+    /// The right choices of a select-all question, by position. At least one must be marked.
+    var rightChoices: Set<Int> = []
     var explanation = ""
+
+    static func newFileID() -> String {
+        "W" + UUID().uuidString.prefix(8).lowercased()
+    }
+
+    init() {}
+
+    init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        fileID = try values.decodeIfPresent(String.self, forKey: .fileID)
+        kind = try values.decode(Kind.self, forKey: .kind)
+        ask = try values.decode(String.self, forKey: .ask)
+        choices = try values.decode([Choice].self, forKey: .choices)
+        rightChoice = try values.decodeIfPresent(Int.self, forKey: .rightChoice)
+        rightTrueFalse = try values.decodeIfPresent(Int.self, forKey: .rightTrueFalse)
+        rightChoices = try values.decodeIfPresent(Set<Int>.self, forKey: .rightChoices) ?? []
+        explanation = try values.decode(String.self, forKey: .explanation)
+    }
 
     /// The choices as she sees them: her own, or True and False.
     var choiceTexts: [String] {
-        kind == .single ? choices.map(\.text) : Self.trueFalseChoices
+        kind == .trueFalse ? Self.trueFalseChoices : choices.map(\.text)
     }
 
-    /// The marked choice of the kind she is writing.
+    /// The one marked choice of a single-answer or true-or-false question. For select all, the first
+    /// marked one; setting it marks just that one.
     var right: Int? {
-        get { kind == .single ? rightChoice : rightTrueFalse }
+        get { rightPositions.min() }
         set {
-            if kind == .single { rightChoice = newValue } else { rightTrueFalse = newValue }
+            switch kind {
+            case .single: rightChoice = newValue
+            case .selectAll: rightChoices = newValue.map { [$0] } ?? []
+            case .trueFalse: rightTrueFalse = newValue
+            }
+        }
+    }
+
+    /// The positions marked right: one, or any number for select all.
+    var rightPositions: Set<Int> {
+        switch kind {
+        case .single: rightChoice.map { [$0] } ?? []
+        case .selectAll: rightChoices
+        case .trueFalse: rightTrueFalse.map { [$0] } ?? []
+        }
+    }
+
+    /// Marks a choice. Single answer and true or false keep one right choice; select all toggles it.
+    mutating func mark(_ position: Int) {
+        switch kind {
+        case .single: rightChoice = position
+        case .selectAll:
+            if !rightChoices.insert(position).inserted { rightChoices.remove(position) }
+        case .trueFalse: rightTrueFalse = position
         }
     }
 
     var canAddChoice: Bool {
-        kind == .single && choices.count < Self.choiceRange.upperBound
+        kind != .trueFalse && choices.count < Self.choiceRange.upperBound
     }
 
     var canRemoveChoice: Bool {
-        kind == .single && choices.count > Self.choiceRange.lowerBound
+        kind != .trueFalse && choices.count > Self.choiceRange.lowerBound
     }
 
     var isBlank: Bool {
@@ -64,7 +119,7 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     /// one, so the blank rows she left unused are dropped. True or false always has its two.
     var fileChoices: [(position: Int, text: String)] {
         choiceTexts.enumerated()
-            .filter { kind == .trueFalse || !Self.isEmpty($0.element) || $0.offset == right }
+            .filter { kind == .trueFalse || !Self.isEmpty($0.element) || rightPositions.contains($0.offset) }
             .map { ($0.offset, $0.element.trimmingCharacters(in: .whitespacesAndNewlines)) }
     }
 
@@ -73,11 +128,13 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     var problems: [String] {
         var found: [String] = []
         if Self.isEmpty(ask) { found.append("write the question") }
-        if kind == .single {
+        if kind != .trueFalse {
             if choices.filter({ !Self.isEmpty($0.text) }).count < Self.choiceRange.lowerBound { found.append("write at least two choices") }
-            if let right, choices.indices.contains(right), Self.isEmpty(choices[right].text) { found.append("the right choice is empty") }
+            if rightPositions.contains(where: { choices.indices.contains($0) && Self.isEmpty(choices[$0].text) }) {
+                found.append(kind == .selectAll ? "a right choice is empty" : "the right choice is empty")
+            }
         }
-        if right == nil { found.append("mark the right answer") }
+        if rightPositions.isEmpty { found.append(kind == .selectAll ? "mark at least one right answer" : "mark the right answer") }
         return found
     }
 
@@ -90,23 +147,29 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
         choices.append(Choice())
     }
 
-    /// Removes a choice. The mark follows the choice it was on, and goes with it.
+    /// Removes a choice. The marks follow the choices they were on, and the removed one's goes with it.
     mutating func removeChoice(at index: Int) {
         guard canRemoveChoice, choices.indices.contains(index) else { return }
         choices.remove(at: index)
-        guard let marked = rightChoice else { return }
-        if marked == index {
-            rightChoice = nil
-        } else if marked > index {
-            rightChoice = marked - 1
-        }
+        func moved(_ marked: Int) -> Int? { marked == index ? nil : marked > index ? marked - 1 : marked }
+        rightChoice = rightChoice.flatMap(moved)
+        rightChoices = Set(rightChoices.compactMap(moved))
     }
 }
 
+/// The saved set a draft edits: where it is, so saving files the new version in its place.
+nonisolated struct EditedSet: Codable, Equatable, Sendable {
+    let setID: String
+    let courseID: String
+    let folderID: String
+}
+
 /// A set she is writing: its name and its questions. It is kept on this phone until it is saved.
+/// A draft that edits a saved set carries it in `editing`: saving then saves a new version of that set.
 nonisolated struct SetDraft: Codable, Equatable, Identifiable, Sendable {
     var id = UUID()
     var title = ""
+    var editing: EditedSet?
     var questions: [QuestionDraft] = [QuestionDraft()]
     var updatedAt = Date()
 
@@ -120,10 +183,11 @@ nonisolated struct SetDraft: Codable, Equatable, Identifiable, Sendable {
     func file() -> String {
         let items = questions.enumerated().map { index, question in
             File.Question(
-                id: "W\(index + 1)",
+                id: question.fileID ?? "W\(index + 1)",
+                type: question.kind.fileType,
                 ask: question.ask.trimmingCharacters(in: .whitespacesAndNewlines),
                 options: question.fileChoices.map { position, text in
-                    File.Option(t: text, ok: question.right == position ? true : nil)
+                    File.Option(t: text, ok: question.rightPositions.contains(position) ? true : nil)
                 },
                 rationale: Self.nonEmpty(question.explanation)
             )
@@ -149,7 +213,7 @@ nonisolated struct SetDraft: Codable, Equatable, Identifiable, Sendable {
 
         struct Question: Encodable {
             let id: String
-            let type = "single"
+            let type: String
             let ask: String
             let options: [Option]
             let rationale: String?

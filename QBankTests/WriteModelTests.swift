@@ -23,7 +23,8 @@ struct WriteModelTests {
         let file = try Self.parsed(Self.written().file())
         #expect(file["title"] as? String == "Invented Sleep")
         let questions = try #require(file["questions"] as? [[String: Any]])
-        #expect(questions.map { $0["id"] as? String } == ["W1", "W2"])
+        let ids = questions.compactMap { $0["id"] as? String }
+        #expect(ids.count == 2 && Set(ids).count == 2, "each question has its own id")
         #expect(questions.map { $0["type"] as? String } == ["single", "single"])
         #expect(questions[0]["ask"] as? String == "Which habit helps sleep?")
         let options = try #require(questions[0]["options"] as? [[String: Any]])

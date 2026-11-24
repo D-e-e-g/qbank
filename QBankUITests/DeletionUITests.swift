@@ -54,7 +54,7 @@ final class DeletionUITests: XCTestCase {
         let app = launch("signed-in")
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
         openFolder(app, "Weeks 1-3")
-        XCTAssertTrue(app.staticTexts["Touch and hold a set to delete it."].exists)
+        XCTAssertTrue(app.staticTexts["Touch and hold a set to edit or delete it."].exists)
         let row = app.buttons["course.set.Mixed Clinical Judgment"]
         XCTAssertTrue(row.appears(timeout: 5))
         row.press(forDuration: 1.2)

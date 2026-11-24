@@ -48,7 +48,7 @@ struct WriteQuestionEditor: View {
             VStack(alignment: .leading, spacing: 6) {
                 FieldTitle("Choices")
                 VStack(spacing: QBankSpacing.space2) {
-                    if question.kind == .single {
+                    if question.kind != .trueFalse {
                         ForEach(Array(question.choices.enumerated()), id: \.element.id) { position, choice in
                             choiceRow(position: position, choice: choice)
                         }
@@ -67,7 +67,7 @@ struct WriteQuestionEditor: View {
                     .buttonStyle(.qbank(.plain, size: .medium))
                     .accessibilityIdentifier("\(prefix).addChoice")
                 }
-                FieldHint(question.kind == .single ? "Tap the circle beside the right choice. Empty choices are left out." : "Tap the circle beside the right answer.")
+                FieldHint(hint)
             }
             LabeledField(label: "Explanation (optional)", hint: "Shown after the answer.") {
                 TextField("Why the right choice is right", text: Binding(get: { question.explanation }, set: { text in edit { $0.explanation = text } }), axis: .vertical)
@@ -86,19 +86,28 @@ struct WriteQuestionEditor: View {
         .accessibilityIdentifier(prefix)
     }
 
+    private var hint: String {
+        switch question.kind {
+        case .single: "Tap the circle beside the right choice. Empty choices are left out."
+        case .selectAll: "Tap the box beside every right choice, at least one. Empty choices are left out."
+        case .trueFalse: "Tap the circle beside the right answer."
+        }
+    }
+
     private func mark(_ position: Int) -> some View {
-        let isRight = question.right == position
+        let isRight = question.rightPositions.contains(position)
+        let selectsMany = question.kind == .selectAll
         return Button {
-            edit { $0.right = position }
+            edit { $0.mark(position) }
         } label: {
-            Image(systemName: isRight ? "checkmark.circle.fill" : "circle")
+            Image(systemName: isRight ? (selectsMany ? "checkmark.square.fill" : "checkmark.circle.fill") : (selectsMany ? "square" : "circle"))
                 .font(.title2)
                 .foregroundStyle(.qbank(isRight ? .correct : .text3))
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Choice \(MakeWording.letter(position)) is the right one")
+        .accessibilityLabel(selectsMany ? "Choice \(MakeWording.letter(position)) is a right one" : "Choice \(MakeWording.letter(position)) is the right one")
         .accessibilityAddTraits(isRight ? [.isSelected, .isButton] : .isButton)
         .accessibilityIdentifier("\(prefix).right.\(position)")
     }
