@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "session-sign-up",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:19.976Z",
+      "at": "2026-11-24T01:48:38.293Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Owner",
             "role": "admin",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:20.060Z"
+          "expiresAt": "2027-12-29T01:48:38.293Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.060Z",
+      "at": "2026-11-24T01:48:38.345Z",
       "request": {
         "method": "POST",
         "path": "/api/admin/sign-up-emails",
@@ -53,7 +61,7 @@
           "emails": [
             {
               "email": "new.user@example.com",
-              "addedAt": "2026-11-22T20:05:20.066Z",
+              "addedAt": "2026-11-24T01:48:38.345Z",
               "hasAccount": false
             }
           ]
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": "sign-up-short-password",
-      "at": "2026-11-22T20:05:20.068Z",
+      "at": "2026-11-24T01:48:38.348Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -86,7 +94,7 @@
     {
       "step": "request",
       "name": "sign-up-refused",
-      "at": "2026-11-22T20:05:20.068Z",
+      "at": "2026-11-24T01:48:38.349Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -109,7 +117,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.070Z",
+      "at": "2026-11-24T01:48:38.350Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -132,7 +140,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.072Z",
+      "at": "2026-11-24T01:48:38.351Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -155,7 +163,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.090Z",
+      "at": "2026-11-24T01:48:38.353Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -178,7 +186,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.112Z",
+      "at": "2026-11-24T01:48:38.354Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -201,7 +209,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:20.114Z",
+      "at": "2026-11-24T01:48:38.355Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -227,7 +235,7 @@
     {
       "step": "request",
       "name": "sign-up-locked",
-      "at": "2026-11-22T20:05:20.119Z",
+      "at": "2026-11-24T01:48:38.357Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -253,7 +261,7 @@
     {
       "step": "request",
       "name": "sign-up",
-      "at": "2026-11-22T20:05:20.121Z",
+      "at": "2026-11-24T01:48:38.357Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -275,9 +283,17 @@
             "name": "new.user",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:20.223Z"
+          "expiresAt": "2027-12-29T01:48:38.357Z"
         }
       }
     }

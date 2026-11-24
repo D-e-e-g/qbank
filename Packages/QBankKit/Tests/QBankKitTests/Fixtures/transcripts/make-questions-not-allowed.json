@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "make-questions-not-allowed",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:45.828Z",
+      "at": "2026-11-24T01:48:51.672Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:45.887Z"
+          "expiresAt": "2027-12-29T01:48:51.672Z"
         }
       }
     },
     {
       "step": "request",
       "name": "question-maker-not-allowed",
-      "at": "2026-11-22T20:05:45.887Z",
+      "at": "2026-11-24T01:48:51.720Z",
       "request": {
         "method": "GET",
         "path": "/api/question-maker",
@@ -98,7 +106,7 @@
     {
       "step": "request",
       "name": "question-jobs-not-allowed",
-      "at": "2026-11-22T20:05:45.891Z",
+      "at": "2026-11-24T01:48:51.723Z",
       "request": {
         "method": "GET",
         "path": "/api/question-jobs",

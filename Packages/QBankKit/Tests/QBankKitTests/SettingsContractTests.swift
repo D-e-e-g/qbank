@@ -40,4 +40,15 @@ struct SettingsContractTests {
         try expectRequest(transport.requests.first, matches: fixture)
         #expect(try JSONDecoder().decode(JSONValue.self, from: data) == fixture.response.body)
     }
+
+    @Test func downloadedBankIsTheServersArchiveAndReadsIntoAFreshBank() async throws {
+        let fixture = try Fixture.load("bank")
+        let transport = try FixtureTransport([fixture])
+        let (client, _) = TestClient.make(transport)
+        let data = try await client.downloadBank()
+        try expectRequest(transport.requests.first, matches: fixture)
+        #expect(try JSONDecoder().decode(JSONValue.self, from: data) == fixture.response.body)
+        let written = try JSONDecoder().decode(BankCounts.self, from: JSONEncoder().encode(fixture.response.body["counts"]))
+        #expect(try BankArchive.read(data, into: LocalStore.inMemory()) == written)
+    }
 }

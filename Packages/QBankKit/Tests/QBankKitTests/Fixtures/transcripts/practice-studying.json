@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "practice-studying",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:30.901Z",
+      "at": "2026-11-24T01:48:43.085Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:30.968Z"
+          "expiresAt": "2027-12-29T01:48:43.085Z"
         }
       }
     },
     {
       "step": "request",
       "name": "place-empty",
-      "at": "2026-11-22T20:05:30.969Z",
+      "at": "2026-11-24T01:48:43.134Z",
       "request": {
         "method": "GET",
         "path": "/api/me/place",
@@ -55,7 +63,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:30.973Z",
+      "at": "2026-11-24T01:48:43.137Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -82,7 +90,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:30.980Z",
+      "at": "2026-11-24T01:48:43.143Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -118,7 +126,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:30.992Z",
+      "at": "2026-11-24T01:48:43.147Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -147,32 +155,7 @@
           "examPageId": null,
           "questionCount": 8,
           "termCount": 1,
-          "warnings": [
-            "Question 1 (Q1): missing need",
-            "Question 1 (Q1): missing diff",
-            "Question 1 (Q1): missing src",
-            "Question 2 (Q2): missing need",
-            "Question 2 (Q2): missing diff",
-            "Question 2 (Q2): missing src",
-            "Question 3 (Q3): missing need",
-            "Question 3 (Q3): missing diff",
-            "Question 3 (Q3): missing src",
-            "Question 4 (Q4): missing need",
-            "Question 4 (Q4): missing diff",
-            "Question 4 (Q4): missing src",
-            "Question 5 (Q5): missing need",
-            "Question 5 (Q5): missing diff",
-            "Question 5 (Q5): missing src",
-            "Question 6 (Q6): missing need",
-            "Question 6 (Q6): missing diff",
-            "Question 6 (Q6): missing src",
-            "Question 7 (Q7): missing need",
-            "Question 7 (Q7): missing diff",
-            "Question 7 (Q7): missing src",
-            "Question 8 (Q8): missing need",
-            "Question 8 (Q8): missing diff",
-            "Question 8 (Q8): missing src"
-          ],
+          "warnings": [],
           "importedByAgent": null
         }
       }
@@ -180,7 +163,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:31.008Z",
+      "at": "2026-11-24T01:48:43.156Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -209,14 +192,7 @@
           "examPageId": null,
           "questionCount": 2,
           "termCount": 0,
-          "warnings": [
-            "Question 1 (E1): missing need",
-            "Question 1 (E1): missing diff",
-            "Question 1 (E1): missing src",
-            "Question 2 (E2): missing need",
-            "Question 2 (E2): missing diff",
-            "Question 2 (E2): missing src"
-          ],
+          "warnings": [],
           "importedByAgent": null
         }
       }
@@ -224,7 +200,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:31.017Z",
+      "at": "2026-11-24T01:48:43.162Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -253,14 +229,7 @@
           "examPageId": null,
           "questionCount": 2,
           "termCount": 0,
-          "warnings": [
-            "Question 1 (R1): missing need",
-            "Question 1 (R1): missing diff",
-            "Question 1 (R1): missing src",
-            "Question 2 (R2): missing need",
-            "Question 2 (R2): missing diff",
-            "Question 2 (R2): missing src"
-          ],
+          "warnings": [],
           "importedByAgent": null
         }
       }
@@ -268,7 +237,7 @@
     {
       "step": "request",
       "name": "semesters",
-      "at": "2026-11-22T20:05:31.025Z",
+      "at": "2026-11-24T01:48:43.167Z",
       "request": {
         "method": "GET",
         "path": "/api/semesters",
@@ -315,7 +284,7 @@
     {
       "step": "request",
       "name": "course",
-      "at": "2026-11-22T20:05:31.033Z",
+      "at": "2026-11-24T01:48:43.171Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201",
@@ -357,8 +326,8 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions, one per format.",
                   "questionCount": 8,
-                  "importedAt": "2026-11-22T20:05:31.000Z",
-                  "activeSince": "2026-11-22T20:05:31.000Z",
+                  "importedAt": "2026-11-24T01:48:43.147Z",
+                  "activeSince": "2026-11-24T01:48:43.147Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -389,8 +358,8 @@
                   "title": "Week 2 - Set 1: Invented follow-up",
                   "description": "Two more invented questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-22T20:05:31.024Z",
-                  "activeSince": "2026-11-22T20:05:31.024Z",
+                  "importedAt": "2026-11-24T01:48:43.162Z",
+                  "activeSince": "2026-11-24T01:48:43.162Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -420,8 +389,8 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions, one per format.",
                   "questionCount": 8,
-                  "importedAt": "2026-11-22T20:05:31.000Z",
-                  "activeSince": "2026-11-22T20:05:31.000Z",
+                  "importedAt": "2026-11-24T01:48:43.147Z",
+                  "activeSince": "2026-11-24T01:48:43.147Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -463,8 +432,8 @@
                   "title": "Week 2 - Set 1: Invented follow-up",
                   "description": "Two more invented questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-22T20:05:31.024Z",
-                  "activeSince": "2026-11-22T20:05:31.024Z",
+                  "importedAt": "2026-11-24T01:48:43.162Z",
+                  "activeSince": "2026-11-24T01:48:43.162Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -490,7 +459,7 @@
     {
       "step": "request",
       "name": "practice-set",
-      "at": "2026-11-22T20:05:31.052Z",
+      "at": "2026-11-24T01:48:43.181Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000201",
@@ -858,7 +827,7 @@
     {
       "step": "request",
       "name": "terms",
-      "at": "2026-11-22T20:05:31.059Z",
+      "at": "2026-11-24T01:48:43.187Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/terms",
@@ -887,7 +856,7 @@
     {
       "step": "request",
       "name": "attempt-saved",
-      "at": "2026-11-22T20:05:31.067Z",
+      "at": "2026-11-24T01:48:43.191Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -922,7 +891,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.076Z",
+          "answeredAt": "2026-11-24T01:48:43.191Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -934,7 +903,7 @@
     {
       "step": "request",
       "name": "attempt-partial",
-      "at": "2026-11-22T20:05:31.086Z",
+      "at": "2026-11-24T01:48:43.199Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -973,7 +942,7 @@
           "points": 0,
           "maxPoints": 3,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.092Z",
+          "answeredAt": "2026-11-24T01:48:43.199Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": "0 of 3 points",
@@ -985,7 +954,7 @@
     {
       "step": "request",
       "name": "attempt-guessed",
-      "at": "2026-11-22T20:05:31.101Z",
+      "at": "2026-11-24T01:48:43.207Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1020,7 +989,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": true,
-          "answeredAt": "2026-11-22T20:05:31.106Z",
+          "answeredAt": "2026-11-24T01:48:43.207Z",
           "inReview": true,
           "label": "Correct",
           "pointsText": null,
@@ -1032,7 +1001,7 @@
     {
       "step": "request",
       "name": "attempt-highlight",
-      "at": "2026-11-22T20:05:31.112Z",
+      "at": "2026-11-24T01:48:43.213Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1065,7 +1034,7 @@
           "points": 2,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.121Z",
+          "answeredAt": "2026-11-24T01:48:43.213Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": "2 of 2 points",
@@ -1077,7 +1046,7 @@
     {
       "step": "request",
       "name": "attempt-order",
-      "at": "2026-11-22T20:05:31.127Z",
+      "at": "2026-11-24T01:48:43.222Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1116,7 +1085,7 @@
           "points": 1,
           "maxPoints": 3,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.132Z",
+          "answeredAt": "2026-11-24T01:48:43.222Z",
           "inReview": true,
           "label": "Partly correct",
           "pointsText": "1 of 3 points",
@@ -1128,7 +1097,7 @@
     {
       "step": "request",
       "name": "attempt-match",
-      "at": "2026-11-22T20:05:31.140Z",
+      "at": "2026-11-24T01:48:43.229Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1166,7 +1135,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.145Z",
+          "answeredAt": "2026-11-24T01:48:43.229Z",
           "inReview": true,
           "label": "Partly correct",
           "pointsText": "1 of 2 points",
@@ -1178,7 +1147,7 @@
     {
       "step": "request",
       "name": "attempt-matrix",
-      "at": "2026-11-22T20:05:31.152Z",
+      "at": "2026-11-24T01:48:43.237Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1211,7 +1180,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.166Z",
+          "answeredAt": "2026-11-24T01:48:43.237Z",
           "inReview": true,
           "label": "Partly correct",
           "pointsText": "1 of 2 points",
@@ -1223,7 +1192,7 @@
     {
       "step": "request",
       "name": "attempt-cloze",
-      "at": "2026-11-22T20:05:31.172Z",
+      "at": "2026-11-24T01:48:43.244Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1267,7 +1236,7 @@
           "points": 1,
           "maxPoints": 2,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.179Z",
+          "answeredAt": "2026-11-24T01:48:43.244Z",
           "inReview": true,
           "label": "Partly correct",
           "pointsText": "1 of 2 points",
@@ -1279,7 +1248,7 @@
     {
       "step": "request",
       "name": "attempt-replayed",
-      "at": "2026-11-22T20:05:31.185Z",
+      "at": "2026-11-24T01:48:43.252Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1314,7 +1283,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.076Z",
+          "answeredAt": "2026-11-24T01:48:43.191Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -1326,7 +1295,7 @@
     {
       "step": "request",
       "name": "attempt-conflict",
-      "at": "2026-11-22T20:05:31.191Z",
+      "at": "2026-11-24T01:48:43.257Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1354,7 +1323,7 @@
     {
       "step": "request",
       "name": "attempt-invalid",
-      "at": "2026-11-22T20:05:31.197Z",
+      "at": "2026-11-24T01:48:43.262Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1384,7 +1353,7 @@
     {
       "step": "request",
       "name": "attempt-signed-out",
-      "at": "2026-11-22T20:05:31.201Z",
+      "at": "2026-11-24T01:48:43.266Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1412,7 +1381,7 @@
     {
       "step": "request",
       "name": "review",
-      "at": "2026-11-22T20:05:31.202Z",
+      "at": "2026-11-24T01:48:43.266Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review",
@@ -1441,7 +1410,7 @@
               "format": "Drop-down cloze",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.179Z",
+              "answeredAt": "2026-11-24T01:48:43.244Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1453,7 +1422,7 @@
               "format": "Matrix",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.166Z",
+              "answeredAt": "2026-11-24T01:48:43.237Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1465,7 +1434,7 @@
               "format": "Matching",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.145Z",
+              "answeredAt": "2026-11-24T01:48:43.229Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1477,7 +1446,7 @@
               "format": "Ordered response",
               "status": "partial",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.132Z",
+              "answeredAt": "2026-11-24T01:48:43.222Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1489,7 +1458,7 @@
               "format": "Priority / first action",
               "status": "correct",
               "guessed": true,
-              "answeredAt": "2026-11-22T20:05:31.106Z",
+              "answeredAt": "2026-11-24T01:48:43.207Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1501,7 +1470,7 @@
               "format": "Select all that apply",
               "status": "incorrect",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.092Z",
+              "answeredAt": "2026-11-24T01:48:43.199Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             },
             {
@@ -1513,7 +1482,7 @@
               "format": "Single answer",
               "status": "incorrect",
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.076Z",
+              "answeredAt": "2026-11-24T01:48:43.191Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             }
           ]
@@ -1523,7 +1492,7 @@
     {
       "step": "request",
       "name": "review-guessed",
-      "at": "2026-11-22T20:05:31.214Z",
+      "at": "2026-11-24T01:48:43.273Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review",
@@ -1554,7 +1523,7 @@
               "format": "Priority / first action",
               "status": "correct",
               "guessed": true,
-              "answeredAt": "2026-11-22T20:05:31.106Z",
+              "answeredAt": "2026-11-24T01:48:43.207Z",
               "setTitle": "Week 1 - Set 1: Invented basics"
             }
           ]
@@ -1564,7 +1533,7 @@
     {
       "step": "request",
       "name": "review-practice",
-      "at": "2026-11-22T20:05:31.223Z",
+      "at": "2026-11-24T01:48:43.279Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/practice",
@@ -1586,47 +1555,9 @@
           "kind": "practice",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000004",
-              "publicId": "Q3",
-              "position": 1,
-              "type": "sata",
-              "topic": "Invented select-all topic",
-              "cj": "Analyze cues",
-              "stem": "An invented finding.",
-              "ask": "Select all that apply.",
-              "rationale": "Three are right.",
-              "takeaway": "Count the right ones.",
-              "body": {
-                "options": [
-                  {
-                    "t": "Right one",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Right two",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Wrong one",
-                    "why": "No."
-                  },
-                  {
-                    "t": "Right three",
-                    "ok": true,
-                    "why": "Yes."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": []
-            },
-            {
               "id": "00000000-0000-4000-8010-000000000002",
               "publicId": "Q1",
-              "position": 2,
+              "position": 1,
               "type": "single",
               "topic": "Invented single topic",
               "cj": "Analyze cues",
@@ -1697,6 +1628,44 @@
                   "meaning": "An invented definition of a fast heart rate."
                 }
               ]
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000004",
+              "publicId": "Q3",
+              "position": 2,
+              "type": "sata",
+              "topic": "Invented select-all topic",
+              "cj": "Analyze cues",
+              "stem": "An invented finding.",
+              "ask": "Select all that apply.",
+              "rationale": "Three are right.",
+              "takeaway": "Count the right ones.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right one",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Right two",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong one",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Right three",
+                    "ok": true,
+                    "why": "Yes."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": []
             }
           ],
           "sitting": null,
@@ -1707,7 +1676,7 @@
     {
       "step": "request",
       "name": "review-practice-one",
-      "at": "2026-11-22T20:05:31.233Z",
+      "at": "2026-11-24T01:48:43.288Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/practice",
@@ -1812,7 +1781,7 @@
     {
       "step": "request",
       "name": "exam-setup",
-      "at": "2026-11-22T20:05:31.239Z",
+      "at": "2026-11-24T01:48:43.293Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -1872,7 +1841,7 @@
     {
       "step": "request",
       "name": "exam-start-no-wrong",
-      "at": "2026-11-22T20:05:31.247Z",
+      "at": "2026-11-24T01:48:43.299Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -1898,7 +1867,7 @@
     {
       "step": "request",
       "name": "exam-start",
-      "at": "2026-11-22T20:05:31.254Z",
+      "at": "2026-11-24T01:48:43.303Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -1934,81 +1903,17 @@
             "Week 2"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-22T20:05:31.259Z",
-          "endsAt": "2026-11-22T20:11:31.259Z",
+          "startedAt": "2026-11-24T01:48:43.303Z",
+          "endsAt": "2026-11-24T01:54:43.303Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-22T20:05:31.259Z",
+          "serverNow": "2026-11-24T01:48:43.303Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000010",
-              "publicId": "R1",
-              "position": 1,
-              "type": "single",
-              "topic": "Invented week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented rationale.",
-              "takeaway": "Invented takeaway.",
-              "body": {
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true
-                  },
-                  {
-                    "t": "Wrong"
-                  },
-                  {
-                    "t": "Also wrong"
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8010-000000000012",
-              "publicId": "E2",
-              "position": 2,
-              "type": "single",
-              "topic": "Invented exam topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented exam stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented exam rationale.",
-              "takeaway": "Invented exam takeaway.",
-              "body": {
-                "twinOf": "Q2",
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Wrong",
-                    "why": "No."
-                  },
-                  {
-                    "t": "Also wrong",
-                    "why": "No."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 1"
-            },
-            {
-              "id": "00000000-0000-4000-8010-000000000013",
               "publicId": "E1",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Invented exam topic 1",
               "cj": "Analyze cues",
@@ -2040,9 +1945,39 @@
               "weekLabel": "Week 1"
             },
             {
+              "id": "00000000-0000-4000-8010-000000000010",
+              "publicId": "R1",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
               "id": "00000000-0000-4000-8010-000000000011",
               "publicId": "R2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "Invented week 2 topic 2",
               "cj": "Analyze cues",
@@ -2068,6 +2003,40 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000013",
+              "publicId": "E2",
+              "position": 4,
+              "type": "single",
+              "topic": "Invented exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "body": {
+                "twinOf": "Q2",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 1"
             }
           ],
           "answeredQuestionIds": [],
@@ -2078,7 +2047,7 @@
     {
       "step": "request",
       "name": "exam-setup-in-progress",
-      "at": "2026-11-22T20:05:31.266Z",
+      "at": "2026-11-24T01:48:43.311Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -2141,8 +2110,8 @@
             ],
             "questionCount": 4,
             "timeLimitSeconds": 360,
-            "startedAt": "2026-11-22T20:05:31.259Z",
-            "endsAt": "2026-11-22T20:11:31.259Z",
+            "startedAt": "2026-11-24T01:48:43.303Z",
+            "endsAt": "2026-11-24T01:54:43.303Z",
             "status": "running",
             "finishedAt": null,
             "endReason": null,
@@ -2166,7 +2135,7 @@
     {
       "step": "request",
       "name": "exam-attempt",
-      "at": "2026-11-22T20:05:31.277Z",
+      "at": "2026-11-24T01:48:43.317Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2202,7 +2171,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:31.283Z",
+          "answeredAt": "2026-11-24T01:48:43.317Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -2214,7 +2183,7 @@
     {
       "step": "request",
       "name": "exam-attempt-again",
-      "at": "2026-11-22T20:05:31.285Z",
+      "at": "2026-11-24T01:48:43.323Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2243,7 +2212,7 @@
     {
       "step": "request",
       "name": "exam-running",
-      "at": "2026-11-22T20:05:31.290Z",
+      "at": "2026-11-24T01:48:43.327Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
@@ -2272,81 +2241,17 @@
             "Week 2"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-22T20:05:31.259Z",
-          "endsAt": "2026-11-22T20:11:31.259Z",
+          "startedAt": "2026-11-24T01:48:43.303Z",
+          "endsAt": "2026-11-24T01:54:43.303Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-22T20:05:31.294Z",
+          "serverNow": "2026-11-24T01:48:43.327Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000010",
-              "publicId": "R1",
-              "position": 1,
-              "type": "single",
-              "topic": "Invented week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented rationale.",
-              "takeaway": "Invented takeaway.",
-              "body": {
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true
-                  },
-                  {
-                    "t": "Wrong"
-                  },
-                  {
-                    "t": "Also wrong"
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8010-000000000012",
-              "publicId": "E2",
-              "position": 2,
-              "type": "single",
-              "topic": "Invented exam topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented exam stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented exam rationale.",
-              "takeaway": "Invented exam takeaway.",
-              "body": {
-                "twinOf": "Q2",
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Wrong",
-                    "why": "No."
-                  },
-                  {
-                    "t": "Also wrong",
-                    "why": "No."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 1"
-            },
-            {
-              "id": "00000000-0000-4000-8010-000000000013",
               "publicId": "E1",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Invented exam topic 1",
               "cj": "Analyze cues",
@@ -2378,9 +2283,39 @@
               "weekLabel": "Week 1"
             },
             {
+              "id": "00000000-0000-4000-8010-000000000010",
+              "publicId": "R1",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
               "id": "00000000-0000-4000-8010-000000000011",
               "publicId": "R2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "Invented week 2 topic 2",
               "cj": "Analyze cues",
@@ -2406,6 +2341,40 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000013",
+              "publicId": "E2",
+              "position": 4,
+              "type": "single",
+              "topic": "Invented exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "body": {
+                "twinOf": "Q2",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 1"
             }
           ],
           "answeredQuestionIds": [
@@ -2418,7 +2387,7 @@
     {
       "step": "request",
       "name": "exam-finish",
-      "at": "2026-11-22T20:05:31.301Z",
+      "at": "2026-11-24T01:48:43.332Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000201/finish",
@@ -2449,81 +2418,17 @@
             "Week 2"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-22T20:05:31.259Z",
-          "endsAt": "2026-11-22T20:11:31.259Z",
+          "startedAt": "2026-11-24T01:48:43.303Z",
+          "endsAt": "2026-11-24T01:54:43.303Z",
           "status": "ended",
-          "finishedAt": "2026-11-22T20:05:31.305Z",
+          "finishedAt": "2026-11-24T01:48:43.332Z",
           "endReason": "finished",
-          "serverNow": "2026-11-22T20:05:31.305Z",
+          "serverNow": "2026-11-24T01:48:43.332Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000010",
-              "publicId": "R1",
-              "position": 1,
-              "type": "single",
-              "topic": "Invented week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented rationale.",
-              "takeaway": "Invented takeaway.",
-              "body": {
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true
-                  },
-                  {
-                    "t": "Wrong"
-                  },
-                  {
-                    "t": "Also wrong"
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8010-000000000012",
-              "publicId": "E2",
-              "position": 2,
-              "type": "single",
-              "topic": "Invented exam topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented exam stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented exam rationale.",
-              "takeaway": "Invented exam takeaway.",
-              "body": {
-                "twinOf": "Q2",
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Wrong",
-                    "why": "No."
-                  },
-                  {
-                    "t": "Also wrong",
-                    "why": "No."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 1"
-            },
-            {
-              "id": "00000000-0000-4000-8010-000000000013",
               "publicId": "E1",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Invented exam topic 1",
               "cj": "Analyze cues",
@@ -2555,9 +2460,39 @@
               "weekLabel": "Week 1"
             },
             {
+              "id": "00000000-0000-4000-8010-000000000010",
+              "publicId": "R1",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
               "id": "00000000-0000-4000-8010-000000000011",
               "publicId": "R2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "Invented week 2 topic 2",
               "cj": "Analyze cues",
@@ -2583,6 +2518,40 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000013",
+              "publicId": "E2",
+              "position": 4,
+              "type": "single",
+              "topic": "Invented exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "body": {
+                "twinOf": "Q2",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 1"
             }
           ],
           "answeredQuestionIds": [
@@ -2636,6 +2605,16 @@
             ],
             "items": [
               {
+                "questionId": "00000000-0000-4000-8010-000000000012",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
                 "questionId": "00000000-0000-4000-8010-000000000010",
                 "status": "correct",
                 "label": "Correct",
@@ -2656,7 +2635,7 @@
                 }
               },
               {
-                "questionId": "00000000-0000-4000-8010-000000000012",
+                "questionId": "00000000-0000-4000-8010-000000000011",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -2674,16 +2653,6 @@
                 "guessed": false,
                 "response": null,
                 "shuffle": null
-              },
-              {
-                "questionId": "00000000-0000-4000-8010-000000000011",
-                "status": "unanswered",
-                "label": "Not answered",
-                "points": 0,
-                "maxPoints": 1,
-                "guessed": false,
-                "response": null,
-                "shuffle": null
               }
             ]
           }
@@ -2693,7 +2662,7 @@
     {
       "step": "request",
       "name": "exam-ended",
-      "at": "2026-11-22T20:05:31.310Z",
+      "at": "2026-11-24T01:48:43.339Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000201",
@@ -2722,81 +2691,17 @@
             "Week 2"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-22T20:05:31.259Z",
-          "endsAt": "2026-11-22T20:11:31.259Z",
+          "startedAt": "2026-11-24T01:48:43.303Z",
+          "endsAt": "2026-11-24T01:54:43.303Z",
           "status": "ended",
-          "finishedAt": "2026-11-22T20:05:31.305Z",
+          "finishedAt": "2026-11-24T01:48:43.332Z",
           "endReason": "finished",
-          "serverNow": "2026-11-22T20:05:31.318Z",
+          "serverNow": "2026-11-24T01:48:43.339Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000010",
-              "publicId": "R1",
-              "position": 1,
-              "type": "single",
-              "topic": "Invented week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented rationale.",
-              "takeaway": "Invented takeaway.",
-              "body": {
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true
-                  },
-                  {
-                    "t": "Wrong"
-                  },
-                  {
-                    "t": "Also wrong"
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8010-000000000012",
-              "publicId": "E2",
-              "position": 2,
-              "type": "single",
-              "topic": "Invented exam topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented exam stem.",
-              "ask": "Which is right?",
-              "rationale": "Invented exam rationale.",
-              "takeaway": "Invented exam takeaway.",
-              "body": {
-                "twinOf": "Q2",
-                "options": [
-                  {
-                    "t": "Right",
-                    "ok": true,
-                    "why": "Yes."
-                  },
-                  {
-                    "t": "Wrong",
-                    "why": "No."
-                  },
-                  {
-                    "t": "Also wrong",
-                    "why": "No."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 1"
-            },
-            {
-              "id": "00000000-0000-4000-8010-000000000013",
               "publicId": "E1",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Invented exam topic 1",
               "cj": "Analyze cues",
@@ -2828,9 +2733,39 @@
               "weekLabel": "Week 1"
             },
             {
+              "id": "00000000-0000-4000-8010-000000000010",
+              "publicId": "R1",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
               "id": "00000000-0000-4000-8010-000000000011",
               "publicId": "R2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "Invented week 2 topic 2",
               "cj": "Analyze cues",
@@ -2856,6 +2791,40 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000013",
+              "publicId": "E2",
+              "position": 4,
+              "type": "single",
+              "topic": "Invented exam topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "body": {
+                "twinOf": "Q2",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 1"
             }
           ],
           "answeredQuestionIds": [
@@ -2909,6 +2878,16 @@
             ],
             "items": [
               {
+                "questionId": "00000000-0000-4000-8010-000000000012",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
+              },
+              {
                 "questionId": "00000000-0000-4000-8010-000000000010",
                 "status": "correct",
                 "label": "Correct",
@@ -2929,7 +2908,7 @@
                 }
               },
               {
-                "questionId": "00000000-0000-4000-8010-000000000012",
+                "questionId": "00000000-0000-4000-8010-000000000011",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -2947,16 +2926,6 @@
                 "guessed": false,
                 "response": null,
                 "shuffle": null
-              },
-              {
-                "questionId": "00000000-0000-4000-8010-000000000011",
-                "status": "unanswered",
-                "label": "Not answered",
-                "points": 0,
-                "maxPoints": 1,
-                "guessed": false,
-                "response": null,
-                "shuffle": null
               }
             ]
           }
@@ -2966,7 +2935,7 @@
     {
       "step": "request",
       "name": "exam-attempt-after-end",
-      "at": "2026-11-22T20:05:31.321Z",
+      "at": "2026-11-24T01:48:43.345Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2995,7 +2964,7 @@
     {
       "step": "request",
       "name": "exam-start-wrong",
-      "at": "2026-11-22T20:05:31.328Z",
+      "at": "2026-11-24T01:48:43.349Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -3026,15 +2995,15 @@
           "pool": "wrong",
           "practiceWeeks": [],
           "timeLimitSeconds": 90,
-          "startedAt": "2026-11-22T20:05:31.332Z",
-          "endsAt": "2026-11-22T20:07:01.332Z",
+          "startedAt": "2026-11-24T01:48:43.349Z",
+          "endsAt": "2026-11-24T01:50:13.349Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-22T20:05:31.332Z",
+          "serverNow": "2026-11-24T01:48:43.349Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000013",
+              "id": "00000000-0000-4000-8010-000000000012",
               "publicId": "E1",
               "position": 1,
               "type": "single",
@@ -3076,7 +3045,7 @@
     {
       "step": "request",
       "name": "exam-setup-after",
-      "at": "2026-11-22T20:05:31.342Z",
+      "at": "2026-11-24T01:48:43.357Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -3135,8 +3104,8 @@
             "practiceWeeks": [],
             "questionCount": 1,
             "timeLimitSeconds": 90,
-            "startedAt": "2026-11-22T20:05:31.332Z",
-            "endsAt": "2026-11-22T20:07:01.332Z",
+            "startedAt": "2026-11-24T01:48:43.349Z",
+            "endsAt": "2026-11-24T01:50:13.349Z",
             "status": "running",
             "finishedAt": null,
             "endReason": null,
@@ -3165,10 +3134,10 @@
               ],
               "questionCount": 4,
               "timeLimitSeconds": 360,
-              "startedAt": "2026-11-22T20:05:31.259Z",
-              "endsAt": "2026-11-22T20:11:31.259Z",
+              "startedAt": "2026-11-24T01:48:43.303Z",
+              "endsAt": "2026-11-24T01:54:43.303Z",
               "status": "ended",
-              "finishedAt": "2026-11-22T20:05:31.305Z",
+              "finishedAt": "2026-11-24T01:48:43.332Z",
               "endReason": "finished",
               "answeredCount": 1,
               "fullyRight": 1,
@@ -3190,7 +3159,7 @@
     {
       "step": "request",
       "name": "exam-start-in-progress",
-      "at": "2026-11-22T20:05:31.350Z",
+      "at": "2026-11-24T01:48:43.363Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -3225,8 +3194,8 @@
             "practiceWeeks": [],
             "questionCount": 1,
             "timeLimitSeconds": 90,
-            "startedAt": "2026-11-22T20:05:31.332Z",
-            "endsAt": "2026-11-22T20:07:01.332Z",
+            "startedAt": "2026-11-24T01:48:43.349Z",
+            "endsAt": "2026-11-24T01:50:13.349Z",
             "status": "running",
             "finishedAt": null,
             "endReason": null,
@@ -3241,16 +3210,16 @@
     },
     {
       "step": "write",
-      "at": "2026-11-22T20:05:31.361Z",
+      "at": "2026-11-24T01:48:43.370Z",
       "table": "study_session",
       "id": "e0000000-0000-4000-8000-000000000202",
       "column": "started_at",
-      "value": "2026-11-22T20:03:51.360Z"
+      "value": "2026-11-24T01:47:03.370Z"
     },
     {
       "step": "request",
       "name": "exam-grace",
-      "at": "2026-11-22T20:05:31.361Z",
+      "at": "2026-11-24T01:48:43.371Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000202",
@@ -3275,15 +3244,15 @@
           "pool": "wrong",
           "practiceWeeks": [],
           "timeLimitSeconds": 90,
-          "startedAt": "2026-11-22T20:03:51.360Z",
-          "endsAt": "2026-11-22T20:05:21.360Z",
+          "startedAt": "2026-11-24T01:47:03.370Z",
+          "endsAt": "2026-11-24T01:48:33.370Z",
           "status": "grace",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-22T20:05:31.364Z",
+          "serverNow": "2026-11-24T01:48:43.371Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000013",
+              "id": "00000000-0000-4000-8010-000000000012",
               "publicId": "E1",
               "position": 1,
               "type": "single",
@@ -3325,7 +3294,7 @@
     {
       "step": "request",
       "name": "exam-setup-grace",
-      "at": "2026-11-22T20:05:31.367Z",
+      "at": "2026-11-24T01:48:43.375Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -3384,8 +3353,8 @@
             "practiceWeeks": [],
             "questionCount": 1,
             "timeLimitSeconds": 90,
-            "startedAt": "2026-11-22T20:03:51.360Z",
-            "endsAt": "2026-11-22T20:05:21.360Z",
+            "startedAt": "2026-11-24T01:47:03.370Z",
+            "endsAt": "2026-11-24T01:48:33.370Z",
             "status": "grace",
             "finishedAt": null,
             "endReason": null,
@@ -3414,10 +3383,10 @@
               ],
               "questionCount": 4,
               "timeLimitSeconds": 360,
-              "startedAt": "2026-11-22T20:05:31.259Z",
-              "endsAt": "2026-11-22T20:11:31.259Z",
+              "startedAt": "2026-11-24T01:48:43.303Z",
+              "endsAt": "2026-11-24T01:54:43.303Z",
               "status": "ended",
-              "finishedAt": "2026-11-22T20:05:31.305Z",
+              "finishedAt": "2026-11-24T01:48:43.332Z",
               "endReason": "finished",
               "answeredCount": 1,
               "fullyRight": 1,
@@ -3438,16 +3407,16 @@
     },
     {
       "step": "write",
-      "at": "2026-11-22T20:05:31.378Z",
+      "at": "2026-11-24T01:48:43.381Z",
       "table": "study_session",
       "id": "e0000000-0000-4000-8000-000000000202",
       "column": "started_at",
-      "value": "2026-11-22T20:02:01.377Z"
+      "value": "2026-11-24T01:45:13.381Z"
     },
     {
       "step": "request",
       "name": "exam-time-up",
-      "at": "2026-11-22T20:05:31.378Z",
+      "at": "2026-11-24T01:48:43.381Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000202",
@@ -3472,15 +3441,15 @@
           "pool": "wrong",
           "practiceWeeks": [],
           "timeLimitSeconds": 90,
-          "startedAt": "2026-11-22T20:02:01.377Z",
-          "endsAt": "2026-11-22T20:03:31.377Z",
+          "startedAt": "2026-11-24T01:45:13.381Z",
+          "endsAt": "2026-11-24T01:46:43.381Z",
           "status": "ended",
-          "finishedAt": "2026-11-22T20:03:31.377Z",
+          "finishedAt": "2026-11-24T01:46:43.381Z",
           "endReason": "timeout",
-          "serverNow": "2026-11-22T20:05:31.384Z",
+          "serverNow": "2026-11-24T01:48:43.381Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8010-000000000013",
+              "id": "00000000-0000-4000-8010-000000000012",
               "publicId": "E1",
               "position": 1,
               "type": "single",
@@ -3552,7 +3521,7 @@
             ],
             "items": [
               {
-                "questionId": "00000000-0000-4000-8010-000000000013",
+                "questionId": "00000000-0000-4000-8010-000000000012",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -3569,7 +3538,7 @@
     {
       "step": "request",
       "name": "exam-setup-time-up",
-      "at": "2026-11-22T20:05:31.392Z",
+      "at": "2026-11-24T01:48:43.387Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -3634,10 +3603,10 @@
               ],
               "questionCount": 4,
               "timeLimitSeconds": 360,
-              "startedAt": "2026-11-22T20:05:31.259Z",
-              "endsAt": "2026-11-22T20:11:31.259Z",
+              "startedAt": "2026-11-24T01:48:43.303Z",
+              "endsAt": "2026-11-24T01:54:43.303Z",
               "status": "ended",
-              "finishedAt": "2026-11-22T20:05:31.305Z",
+              "finishedAt": "2026-11-24T01:48:43.332Z",
               "endReason": "finished",
               "answeredCount": 1,
               "fullyRight": 1,
@@ -3659,10 +3628,10 @@
               "practiceWeeks": [],
               "questionCount": 1,
               "timeLimitSeconds": 90,
-              "startedAt": "2026-11-22T20:02:01.377Z",
-              "endsAt": "2026-11-22T20:03:31.377Z",
+              "startedAt": "2026-11-24T01:45:13.381Z",
+              "endsAt": "2026-11-24T01:46:43.381Z",
               "status": "ended",
-              "finishedAt": "2026-11-22T20:03:31.377Z",
+              "finishedAt": "2026-11-24T01:46:43.381Z",
               "endReason": "timeout",
               "answeredCount": 0,
               "fullyRight": 0,
@@ -3684,7 +3653,7 @@
     {
       "step": "request",
       "name": "place-put",
-      "at": "2026-11-22T20:05:31.407Z",
+      "at": "2026-11-24T01:48:43.393Z",
       "request": {
         "method": "PUT",
         "path": "/api/me/place",
@@ -3705,7 +3674,7 @@
     {
       "step": "request",
       "name": "place",
-      "at": "2026-11-22T20:05:31.411Z",
+      "at": "2026-11-24T01:48:43.396Z",
       "request": {
         "method": "GET",
         "path": "/api/me/place",
@@ -3724,7 +3693,7 @@
     {
       "step": "request",
       "name": "export",
-      "at": "2026-11-22T20:05:31.414Z",
+      "at": "2026-11-24T01:48:43.399Z",
       "request": {
         "method": "GET",
         "path": "/api/me/export",
@@ -3738,7 +3707,7 @@
         "body": {
           "format": "nclex-qbank-progress",
           "version": 1,
-          "exportedAt": "2026-11-22T20:05:31.420Z",
+          "exportedAt": "2026-11-24T01:48:43.399Z",
           "account": {
             "id": "synthetic-user-1",
             "name": "Sam Student",
@@ -3773,7 +3742,7 @@
                   "format": "Drop-down cloze",
                   "status": "partial",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.179Z",
+                  "answeredAt": "2026-11-24T01:48:43.244Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3785,7 +3754,7 @@
                   "format": "Matrix",
                   "status": "partial",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.166Z",
+                  "answeredAt": "2026-11-24T01:48:43.237Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3797,7 +3766,7 @@
                   "format": "Matching",
                   "status": "partial",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.145Z",
+                  "answeredAt": "2026-11-24T01:48:43.229Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3809,7 +3778,7 @@
                   "format": "Ordered response",
                   "status": "partial",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.132Z",
+                  "answeredAt": "2026-11-24T01:48:43.222Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3821,7 +3790,7 @@
                   "format": "Priority / first action",
                   "status": "correct",
                   "guessed": true,
-                  "answeredAt": "2026-11-22T20:05:31.106Z",
+                  "answeredAt": "2026-11-24T01:48:43.207Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3833,7 +3802,7 @@
                   "format": "Select all that apply",
                   "status": "incorrect",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.092Z",
+                  "answeredAt": "2026-11-24T01:48:43.199Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 },
                 {
@@ -3845,7 +3814,7 @@
                   "format": "Single answer",
                   "status": "incorrect",
                   "guessed": false,
-                  "answeredAt": "2026-11-22T20:05:31.076Z",
+                  "answeredAt": "2026-11-24T01:48:43.191Z",
                   "setTitle": "Week 1 - Set 1: Invented basics"
                 }
               ]
@@ -3989,7 +3958,7 @@
               "topic": "Invented cloze topic"
             },
             {
-              "id": "00000000-0000-4000-8010-000000000013",
+              "id": "00000000-0000-4000-8010-000000000012",
               "lineageId": "00000000-0000-4000-8010-000000000022",
               "publicId": "E1",
               "courseId": "c0000000-0000-4000-8000-000000000201",
@@ -4006,7 +3975,7 @@
               "topic": "Invented exam topic 1"
             },
             {
-              "id": "00000000-0000-4000-8010-000000000012",
+              "id": "00000000-0000-4000-8010-000000000013",
               "lineageId": "00000000-0000-4000-8010-000000000023",
               "publicId": "E2",
               "courseId": "c0000000-0000-4000-8000-000000000201",
@@ -4064,7 +4033,7 @@
               "mode": "exam",
               "setId": null,
               "questionIds": [
-                "00000000-0000-4000-8010-000000000013"
+                "00000000-0000-4000-8010-000000000012"
               ],
               "examWeeks": [
                 "Week 1"
@@ -4076,8 +4045,8 @@
               "examPracticeWeeks": [],
               "seededQuestionIds": null,
               "timeLimitSeconds": 90,
-              "startedAt": "2026-11-22T20:02:01.377Z",
-              "finishedAt": "2026-11-22T20:03:31.377Z",
+              "startedAt": "2026-11-24T01:45:13.381Z",
+              "finishedAt": "2026-11-24T01:46:43.381Z",
               "score": {
                 "points": 0,
                 "answered": 0,
@@ -4102,8 +4071,8 @@
               "examPracticeWeeks": null,
               "seededQuestionIds": [],
               "timeLimitSeconds": null,
-              "startedAt": "2026-11-22T20:05:31.076Z",
-              "finishedAt": "2026-11-22T20:05:31.179Z",
+              "startedAt": "2026-11-24T01:48:43.191Z",
+              "finishedAt": "2026-11-24T01:48:43.244Z",
               "score": null,
               "endReason": "finished",
               "deletedAt": null
@@ -4114,10 +4083,10 @@
               "mode": "exam",
               "setId": null,
               "questionIds": [
-                "00000000-0000-4000-8010-000000000010",
                 "00000000-0000-4000-8010-000000000012",
-                "00000000-0000-4000-8010-000000000013",
-                "00000000-0000-4000-8010-000000000011"
+                "00000000-0000-4000-8010-000000000010",
+                "00000000-0000-4000-8010-000000000011",
+                "00000000-0000-4000-8010-000000000013"
               ],
               "examWeeks": [
                 "Week 1",
@@ -4133,8 +4102,8 @@
               ],
               "seededQuestionIds": null,
               "timeLimitSeconds": 360,
-              "startedAt": "2026-11-22T20:05:31.259Z",
-              "finishedAt": "2026-11-22T20:05:31.305Z",
+              "startedAt": "2026-11-24T01:48:43.303Z",
+              "finishedAt": "2026-11-24T01:48:43.332Z",
               "score": {
                 "points": 1,
                 "answered": 1,
@@ -4170,7 +4139,7 @@
               "points": 0,
               "maxPoints": 1,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.076Z"
+              "answeredAt": "2026-11-24T01:48:43.191Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000028",
@@ -4197,7 +4166,7 @@
               "points": 0,
               "maxPoints": 3,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.092Z"
+              "answeredAt": "2026-11-24T01:48:43.199Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000029",
@@ -4220,7 +4189,7 @@
               "points": 1,
               "maxPoints": 1,
               "guessed": true,
-              "answeredAt": "2026-11-22T20:05:31.106Z"
+              "answeredAt": "2026-11-24T01:48:43.207Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000030",
@@ -4241,7 +4210,7 @@
               "points": 2,
               "maxPoints": 2,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.121Z"
+              "answeredAt": "2026-11-24T01:48:43.213Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000031",
@@ -4268,7 +4237,7 @@
               "points": 1,
               "maxPoints": 3,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.132Z"
+              "answeredAt": "2026-11-24T01:48:43.222Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000032",
@@ -4294,7 +4263,7 @@
               "points": 1,
               "maxPoints": 2,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.145Z"
+              "answeredAt": "2026-11-24T01:48:43.229Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000033",
@@ -4315,7 +4284,7 @@
               "points": 1,
               "maxPoints": 2,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.166Z"
+              "answeredAt": "2026-11-24T01:48:43.237Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000034",
@@ -4347,7 +4316,7 @@
               "points": 1,
               "maxPoints": 2,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.179Z"
+              "answeredAt": "2026-11-24T01:48:43.244Z"
             },
             {
               "id": "00000000-0000-4000-8010-000000000035",
@@ -4370,69 +4339,33 @@
               "points": 1,
               "maxPoints": 1,
               "guessed": false,
-              "answeredAt": "2026-11-22T20:05:31.283Z"
+              "answeredAt": "2026-11-24T01:48:43.317Z"
             }
           ],
           "questionProgress": [
-            {
-              "questionLineageId": "00000000-0000-4000-8010-000000000018",
-              "attempts": 1,
-              "correctAttempts": 0,
-              "lastStatus": "partial",
-              "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.132Z",
-              "lastPoints": 1,
-              "lastMaxPoints": 3,
-              "inReview": true,
-              "lastAttemptId": "00000000-0000-4000-8010-000000000031"
-            },
-            {
-              "questionLineageId": "00000000-0000-4000-8010-000000000017",
-              "attempts": 1,
-              "correctAttempts": 1,
-              "lastStatus": "correct",
-              "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.121Z",
-              "lastPoints": 2,
-              "lastMaxPoints": 2,
-              "inReview": false,
-              "lastAttemptId": "00000000-0000-4000-8010-000000000030"
-            },
             {
               "questionLineageId": "00000000-0000-4000-8010-000000000020",
               "attempts": 1,
               "correctAttempts": 0,
               "lastStatus": "partial",
               "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.166Z",
+              "lastAnsweredAt": "2026-11-24T01:48:43.237Z",
               "lastPoints": 1,
               "lastMaxPoints": 2,
               "inReview": true,
               "lastAttemptId": "00000000-0000-4000-8010-000000000033"
             },
             {
-              "questionLineageId": "00000000-0000-4000-8010-000000000016",
+              "questionLineageId": "00000000-0000-4000-8010-000000000018",
               "attempts": 1,
               "correctAttempts": 0,
-              "lastStatus": "incorrect",
+              "lastStatus": "partial",
               "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.092Z",
-              "lastPoints": 0,
+              "lastAnsweredAt": "2026-11-24T01:48:43.222Z",
+              "lastPoints": 1,
               "lastMaxPoints": 3,
               "inReview": true,
-              "lastAttemptId": "00000000-0000-4000-8010-000000000028"
-            },
-            {
-              "questionLineageId": "00000000-0000-4000-8010-000000000015",
-              "attempts": 1,
-              "correctAttempts": 1,
-              "lastStatus": "correct",
-              "lastGuessed": true,
-              "lastAnsweredAt": "2026-11-22T20:05:31.106Z",
-              "lastPoints": 1,
-              "lastMaxPoints": 1,
-              "inReview": true,
-              "lastAttemptId": "00000000-0000-4000-8010-000000000029"
+              "lastAttemptId": "00000000-0000-4000-8010-000000000031"
             },
             {
               "questionLineageId": "00000000-0000-4000-8010-000000000019",
@@ -4440,23 +4373,11 @@
               "correctAttempts": 0,
               "lastStatus": "partial",
               "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.145Z",
+              "lastAnsweredAt": "2026-11-24T01:48:43.229Z",
               "lastPoints": 1,
               "lastMaxPoints": 2,
               "inReview": true,
               "lastAttemptId": "00000000-0000-4000-8010-000000000032"
-            },
-            {
-              "questionLineageId": "00000000-0000-4000-8010-000000000021",
-              "attempts": 1,
-              "correctAttempts": 0,
-              "lastStatus": "partial",
-              "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.179Z",
-              "lastPoints": 1,
-              "lastMaxPoints": 2,
-              "inReview": true,
-              "lastAttemptId": "00000000-0000-4000-8010-000000000034"
             },
             {
               "questionLineageId": "00000000-0000-4000-8010-000000000014",
@@ -4464,11 +4385,47 @@
               "correctAttempts": 0,
               "lastStatus": "incorrect",
               "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.076Z",
+              "lastAnsweredAt": "2026-11-24T01:48:43.191Z",
               "lastPoints": 0,
               "lastMaxPoints": 1,
               "inReview": true,
               "lastAttemptId": "00000000-0000-4000-8010-000000000027"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000021",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "partial",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.244Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 2,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000034"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000016",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "incorrect",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.199Z",
+              "lastPoints": 0,
+              "lastMaxPoints": 3,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000028"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000017",
+              "attempts": 1,
+              "correctAttempts": 1,
+              "lastStatus": "correct",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.213Z",
+              "lastPoints": 2,
+              "lastMaxPoints": 2,
+              "inReview": false,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000030"
             },
             {
               "questionLineageId": "00000000-0000-4000-8010-000000000024",
@@ -4476,11 +4433,23 @@
               "correctAttempts": 1,
               "lastStatus": "correct",
               "lastGuessed": false,
-              "lastAnsweredAt": "2026-11-22T20:05:31.283Z",
+              "lastAnsweredAt": "2026-11-24T01:48:43.317Z",
               "lastPoints": 1,
               "lastMaxPoints": 1,
               "inReview": false,
               "lastAttemptId": "00000000-0000-4000-8010-000000000035"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000015",
+              "attempts": 1,
+              "correctAttempts": 1,
+              "lastStatus": "correct",
+              "lastGuessed": true,
+              "lastAnsweredAt": "2026-11-24T01:48:43.207Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 1,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000029"
             }
           ],
           "reviewClears": []
@@ -4489,8 +4458,1146 @@
     },
     {
       "step": "request",
+      "name": "bank",
+      "at": "2026-11-24T01:48:43.410Z",
+      "request": {
+        "method": "GET",
+        "path": "/api/me/bank",
+        "query": {},
+        "authorization": "Bearer synthetic-session-token",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {},
+        "body": {
+          "format": "qbank-bank-archive",
+          "version": 1,
+          "exportedAt": "2026-11-24T01:48:43.410Z",
+          "writtenBy": "server",
+          "complete": true,
+          "counts": {
+            "semesters": 1,
+            "courses": 1,
+            "courseExams": 0,
+            "folders": 2,
+            "practiceSets": 3,
+            "questions": 12,
+            "terms": 1,
+            "studySessions": 3,
+            "attempts": 9,
+            "questionProgress": 9,
+            "reviewClears": 0,
+            "studyPlace": 1
+          },
+          "semesters": [
+            {
+              "id": "5e000000-0000-4000-8000-000000000201",
+              "number": 1,
+              "name": "Semester 1",
+              "startsOn": null,
+              "endsOn": null,
+              "archivedAt": null,
+              "createdAt": "2026-11-24T01:48:43.137Z"
+            }
+          ],
+          "courses": [
+            {
+              "id": "c0000000-0000-4000-8000-000000000201",
+              "semesterId": "5e000000-0000-4000-8000-000000000201",
+              "kind": "course",
+              "code": "NURS 101",
+              "title": "Invented Nursing Basics",
+              "sortOrder": 1,
+              "archivedAt": null,
+              "createdAt": "2026-11-24T01:48:43.143Z",
+              "deletedAt": null,
+              "deletionId": null
+            }
+          ],
+          "courseExams": [],
+          "folders": [
+            {
+              "id": "f0000000-0000-4000-8000-000000000201",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "name": "Week 1",
+              "courseExamId": null,
+              "sortOrder": 1,
+              "createdAt": "2026-11-24T01:48:43.147Z",
+              "deletedAt": null,
+              "deletionId": null
+            },
+            {
+              "id": "f0000000-0000-4000-8000-000000000202",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "name": "Week 2",
+              "courseExamId": null,
+              "sortOrder": 2,
+              "createdAt": "2026-11-24T01:48:43.162Z",
+              "deletedAt": null,
+              "deletionId": null
+            }
+          ],
+          "practiceSets": [
+            {
+              "id": "00000000-0000-4000-8010-000000000001",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000001",
+              "title": "Week 1 exam bank",
+              "description": "Invented exam questions.",
+              "weekLabel": "Week 1",
+              "folderId": "f0000000-0000-4000-8000-000000000201",
+              "sortOrder": 2,
+              "importedAt": "2026-11-24T01:48:43.156Z",
+              "fileHash": "c40aa5ad26e9229e9bc80e7135aa64d77d7f0bf77478576e96bb547d120fff60",
+              "stats": {
+                "byCj": {
+                  "Analyze cues": 2
+                },
+                "byNeed": {},
+                "byType": {
+                  "single": 2
+                },
+                "termCount": 0,
+                "byDifficulty": {},
+                "questionCount": 2
+              },
+              "isCurrent": true,
+              "replacedAt": null,
+              "kind": "exam",
+              "deletedAt": null,
+              "deletionId": null
+            },
+            {
+              "id": "5e700000-0000-4000-8000-000000000201",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "lineageId": "5e700000-0000-4000-8000-000000000201",
+              "title": "Week 1 - Set 1: Invented basics",
+              "description": "Invented practice questions, one per format.",
+              "weekLabel": "Week 1",
+              "folderId": "f0000000-0000-4000-8000-000000000201",
+              "sortOrder": 1,
+              "importedAt": "2026-11-24T01:48:43.147Z",
+              "fileHash": "432e63c2d74c40c9f1e0d5f85abf046dbe846fdb3ba0115b6e84ed15aa44b35a",
+              "stats": {
+                "byCj": {
+                  "Analyze cues": 8
+                },
+                "byNeed": {},
+                "byType": {
+                  "sata": 1,
+                  "cloze": 1,
+                  "match": 1,
+                  "order": 1,
+                  "matrix": 1,
+                  "single": 1,
+                  "priority": 1,
+                  "highlight": 1
+                },
+                "termCount": 1,
+                "byDifficulty": {},
+                "questionCount": 8
+              },
+              "isCurrent": true,
+              "replacedAt": null,
+              "kind": "practice",
+              "deletedAt": null,
+              "deletionId": null
+            },
+            {
+              "id": "5e700000-0000-4000-8000-000000000202",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "lineageId": "5e700000-0000-4000-8000-000000000202",
+              "title": "Week 2 - Set 1: Invented follow-up",
+              "description": "Two more invented questions.",
+              "weekLabel": "Week 2",
+              "folderId": "f0000000-0000-4000-8000-000000000202",
+              "sortOrder": 3,
+              "importedAt": "2026-11-24T01:48:43.162Z",
+              "fileHash": "8f6daa699fb28fa8e54ac7e1a3b023e47aa8de2cfdc2ba36aa911236893cb5eb",
+              "stats": {
+                "byCj": {
+                  "Analyze cues": 2
+                },
+                "byNeed": {},
+                "byType": {
+                  "single": 2
+                },
+                "termCount": 0,
+                "byDifficulty": {},
+                "questionCount": 2
+              },
+              "isCurrent": true,
+              "replacedAt": null,
+              "kind": "practice",
+              "deletedAt": null,
+              "deletionId": null
+            }
+          ],
+          "questions": [
+            {
+              "id": "00000000-0000-4000-8010-000000000009",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000021",
+              "publicId": "Q8",
+              "position": 8,
+              "type": "cloze",
+              "topic": "Invented cloze topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented client.",
+              "ask": "Complete the sentence.",
+              "body": {
+                "cloze": {
+                  "text": "The client is most at risk for {0} because of {1}.",
+                  "blanks": [
+                    {
+                      "ans": 1,
+                      "why": "Invented reason.",
+                      "opts": [
+                        "bleeding",
+                        "infection",
+                        "falls"
+                      ]
+                    },
+                    {
+                      "ans": 0,
+                      "opts": [
+                        "the wound",
+                        "the diet"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "rationale": "Infection because of the wound.",
+              "takeaway": "Link risk to cause.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "cb10c5e81bf8eccca36de28bf792ddfd989899e0da672a4fd056290dc4a81e47",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000003",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000015",
+              "publicId": "Q2",
+              "position": 2,
+              "type": "priority",
+              "topic": "Invented priority topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "Four invented clients.",
+              "ask": "Whom does the nurse see first?",
+              "body": {
+                "images": [
+                  {
+                    "alt": "An invented one-pixel image",
+                    "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                    "caption": "Invented caption"
+                  },
+                  {
+                    "at": "rationale",
+                    "alt": "An invented grey box",
+                    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 10\"><rect width=\"20\" height=\"10\" fill=\"#ccc\"/></svg>"
+                  }
+                ],
+                "options": [
+                  {
+                    "t": "The unstable client",
+                    "ok": true,
+                    "why": "Airway first."
+                  },
+                  {
+                    "t": "The stable client",
+                    "why": "Can wait."
+                  },
+                  {
+                    "t": "The sleeping client",
+                    "why": "Can wait too."
+                  }
+                ]
+              },
+              "rationale": "Unstable before stable.",
+              "takeaway": "Airway, breathing, circulation.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "40f9571704d34190150f5a6619af26d3d33c3eed6dc7bb23912bef44eaf101b7",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000004",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000016",
+              "publicId": "Q3",
+              "position": 3,
+              "type": "sata",
+              "topic": "Invented select-all topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented finding.",
+              "ask": "Select all that apply.",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right one",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Right two",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong one",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Right three",
+                    "ok": true,
+                    "why": "Yes."
+                  }
+                ]
+              },
+              "rationale": "Three are right.",
+              "takeaway": "Count the right ones.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "766707bbb4642c2ef5fc1b0ae7d7e27c9f064636cf84759188136c28c1e92217",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000007",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000019",
+              "publicId": "Q6",
+              "position": 6,
+              "type": "match",
+              "topic": "Invented match topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "Invented drugs.",
+              "ask": "Match each drug to its class.",
+              "body": {
+                "extra": [
+                  {
+                    "r": "Class C",
+                    "why": "Matches nothing."
+                  }
+                ],
+                "pairs": [
+                  {
+                    "l": "Drug A",
+                    "r": "Class A",
+                    "why": "A goes with A."
+                  },
+                  {
+                    "l": "Drug B",
+                    "r": "Class B"
+                  }
+                ]
+              },
+              "rationale": "A to A, B to B.",
+              "takeaway": "Classes.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "d0ebd5aae02dc5f9a2abc55469c8510538265c95c42a001b93dd84979553c9b6",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000010",
+              "setId": "5e700000-0000-4000-8000-000000000202",
+              "lineageId": "00000000-0000-4000-8010-000000000024",
+              "publicId": "R1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented week 2 topic 1",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 2",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "96755365eab5536dff6072d92eb60a87ad43d83157eeae2b893839c526292792",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000011",
+              "setId": "5e700000-0000-4000-8000-000000000202",
+              "lineageId": "00000000-0000-4000-8010-000000000025",
+              "publicId": "R2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented week 2 topic 2",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 2",
+              "stem": "An invented stem.",
+              "ask": "Which is right?",
+              "body": {
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true
+                  },
+                  {
+                    "t": "Wrong"
+                  },
+                  {
+                    "t": "Also wrong"
+                  }
+                ]
+              },
+              "rationale": "Invented rationale.",
+              "takeaway": "Invented takeaway.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "7f65f7e17a15f30b72d34621028f806da04030df686704fa6161adaf0d25e873",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000005",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000017",
+              "publicId": "Q4",
+              "position": 4,
+              "type": "highlight",
+              "topic": "Invented highlight topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented note.",
+              "ask": "Highlight the findings that need follow-up.",
+              "body": {
+                "segments": [
+                  {
+                    "t": "The client is alert.",
+                    "why": "Expected."
+                  },
+                  {
+                    "t": "Heart rate 128.",
+                    "ok": true,
+                    "why": "Too fast."
+                  },
+                  {
+                    "t": "Skin is cool and clammy.",
+                    "ok": true,
+                    "why": "Poor perfusion."
+                  },
+                  {
+                    "t": "Ate breakfast.",
+                    "why": "Expected."
+                  }
+                ]
+              },
+              "rationale": "Two findings need follow-up.",
+              "takeaway": "Look for change.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "0cf94667203aa1b71689ddfc7b3117d8d3e0a7a09fb8ac45c4f3bd735718effb",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000006",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000018",
+              "publicId": "Q5",
+              "position": 5,
+              "type": "order",
+              "topic": "Invented order topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented procedure.",
+              "ask": "Put the steps in order.",
+              "body": {
+                "items": [
+                  {
+                    "t": "Step one",
+                    "why": "First."
+                  },
+                  {
+                    "t": "Step two"
+                  },
+                  {
+                    "t": "Step three"
+                  }
+                ]
+              },
+              "rationale": "One, two, three.",
+              "takeaway": "Order matters.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "1fbcb382aa6d36d2b146f67ade09dac02623136ce53faddd3aa5e0a626dc117c",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000002",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000014",
+              "publicId": "Q1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented single topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented client has an invented finding.",
+              "ask": "Which action comes first?",
+              "body": {
+                "table": {
+                  "head": [
+                    "Time",
+                    "HR"
+                  ],
+                  "rows": [
+                    [
+                      "0900",
+                      82
+                    ],
+                    [
+                      "0915",
+                      "94",
+                      "extra"
+                    ]
+                  ],
+                  "caption": "Invented readings"
+                },
+                "options": [
+                  {
+                    "t": "The useful action",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "A distractor",
+                    "why": "It does not change the finding."
+                  },
+                  {
+                    "t": "Another distractor",
+                    "why": "Neither does this."
+                  }
+                ]
+              },
+              "rationale": "The useful action matches the finding.",
+              "takeaway": "Match the action to the finding.",
+              "termKeys": [
+                "tachy"
+              ],
+              "source": null,
+              "contentHash": "cc5b44c6ee83c616a31e8f5a754e0bdc35bba9509d2e0cb15dfb1ea825eb8e31",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000012",
+              "setId": "00000000-0000-4000-8010-000000000001",
+              "lineageId": "00000000-0000-4000-8010-000000000022",
+              "publicId": "E1",
+              "position": 1,
+              "type": "single",
+              "topic": "Invented exam topic 1",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "body": {
+                "twinOf": "Q1",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "4f13207dab83b3764a789acbc20e47189718b96799c2cd358b84c752f7a37be9",
+              "twinOf": "Q1",
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000008",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "lineageId": "00000000-0000-4000-8010-000000000020",
+              "publicId": "Q7",
+              "position": 7,
+              "type": "matrix",
+              "topic": "Invented matrix topic",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "Invented orders.",
+              "ask": "Is each order indicated or not?",
+              "body": {
+                "rows": [
+                  {
+                    "t": "Order one",
+                    "ans": "Indicated",
+                    "why": "Helps."
+                  },
+                  {
+                    "t": "Order two",
+                    "ans": "Not indicated"
+                  }
+                ],
+                "columns": [
+                  "Indicated",
+                  "Not indicated"
+                ]
+              },
+              "rationale": "One helps, one does not.",
+              "takeaway": "Think it through.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "5ed7f475c4e35f9c597a688d3e6b007cc31f642d4cb59635aa75c7e7f0599c86",
+              "twinOf": null,
+              "twinOfLineageId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000013",
+              "setId": "00000000-0000-4000-8010-000000000001",
+              "lineageId": "00000000-0000-4000-8010-000000000023",
+              "publicId": "E2",
+              "position": 2,
+              "type": "single",
+              "topic": "Invented exam topic 2",
+              "cj": "Analyze cues",
+              "clientNeed": null,
+              "difficulty": null,
+              "weekLabel": "Week 1",
+              "stem": "An invented exam stem.",
+              "ask": "Which is right?",
+              "body": {
+                "twinOf": "Q2",
+                "options": [
+                  {
+                    "t": "Right",
+                    "ok": true,
+                    "why": "Yes."
+                  },
+                  {
+                    "t": "Wrong",
+                    "why": "No."
+                  },
+                  {
+                    "t": "Also wrong",
+                    "why": "No."
+                  }
+                ]
+              },
+              "rationale": "Invented exam rationale.",
+              "takeaway": "Invented exam takeaway.",
+              "termKeys": [],
+              "source": null,
+              "contentHash": "51176649e6f8e9d506291cc22aa488d13d74d2eb4867abe6e5a80aea8a616f69",
+              "twinOf": "Q2",
+              "twinOfLineageId": null
+            }
+          ],
+          "terms": [
+            {
+              "id": "00000000-0000-4000-8010-000000000036",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "key": "tachy",
+              "term": "Tachycardia",
+              "meaning": "An invented definition of a fast heart rate."
+            }
+          ],
+          "studySessions": [
+            {
+              "id": "e0000000-0000-4000-8000-000000000201",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "mode": "exam",
+              "setId": null,
+              "questionIds": [
+                "00000000-0000-4000-8010-000000000012",
+                "00000000-0000-4000-8010-000000000010",
+                "00000000-0000-4000-8010-000000000011",
+                "00000000-0000-4000-8010-000000000013"
+              ],
+              "examWeeks": [
+                "Week 1",
+                "Week 2"
+              ],
+              "examFolderIds": [
+                "f0000000-0000-4000-8000-000000000201",
+                "f0000000-0000-4000-8000-000000000202"
+              ],
+              "timeLimitSeconds": 360,
+              "startedAt": "2026-11-24T01:48:43.303Z",
+              "finishedAt": "2026-11-24T01:48:43.332Z",
+              "score": {
+                "points": 1,
+                "answered": 1,
+                "maxPoints": 4,
+                "fullyRight": 1,
+                "minutesUsed": 1,
+                "reviewCount": 0,
+                "questionCount": 4
+              },
+              "endReason": "finished",
+              "examPool": "all",
+              "examPracticeWeeks": [
+                "Week 2"
+              ],
+              "seededQuestionIds": null,
+              "deletedAt": null,
+              "deletionId": null
+            },
+            {
+              "id": "e0000000-0000-4000-8000-000000000202",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "mode": "exam",
+              "setId": null,
+              "questionIds": [
+                "00000000-0000-4000-8010-000000000012"
+              ],
+              "examWeeks": [
+                "Week 1"
+              ],
+              "examFolderIds": [
+                "f0000000-0000-4000-8000-000000000201"
+              ],
+              "timeLimitSeconds": 90,
+              "startedAt": "2026-11-24T01:45:13.381Z",
+              "finishedAt": "2026-11-24T01:46:43.381Z",
+              "score": {
+                "points": 0,
+                "answered": 0,
+                "maxPoints": 1,
+                "fullyRight": 0,
+                "minutesUsed": 2,
+                "reviewCount": 0,
+                "questionCount": 1
+              },
+              "endReason": "timeout",
+              "examPool": "wrong",
+              "examPracticeWeeks": [],
+              "seededQuestionIds": null,
+              "deletedAt": null,
+              "deletionId": null
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000026",
+              "courseId": "c0000000-0000-4000-8000-000000000201",
+              "mode": "practice",
+              "setId": "5e700000-0000-4000-8000-000000000201",
+              "questionIds": [],
+              "examWeeks": null,
+              "examFolderIds": null,
+              "timeLimitSeconds": null,
+              "startedAt": "2026-11-24T01:48:43.191Z",
+              "finishedAt": "2026-11-24T01:48:43.244Z",
+              "score": null,
+              "endReason": "finished",
+              "examPool": "all",
+              "examPracticeWeeks": null,
+              "seededQuestionIds": [],
+              "deletedAt": null,
+              "deletionId": null
+            }
+          ],
+          "attempts": [
+            {
+              "id": "00000000-0000-4000-8010-000000000033",
+              "clientAttemptId": "66666666-6666-4666-8666-000000000003",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000008",
+              "response": {
+                "type": "matrix",
+                "choices": [
+                  "Indicated",
+                  "Indicated"
+                ]
+              },
+              "shuffle": {
+                "kind": "plain"
+              },
+              "status": "partial",
+              "points": 1,
+              "maxPoints": 2,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.237Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000027",
+              "clientAttemptId": "11111111-1111-4111-8111-111111111111",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000002",
+              "response": {
+                "type": "single",
+                "choice": 1
+              },
+              "shuffle": {
+                "kind": "options",
+                "order": [
+                  2,
+                  0,
+                  1
+                ]
+              },
+              "status": "incorrect",
+              "points": 0,
+              "maxPoints": 1,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.191Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000028",
+              "clientAttemptId": "44444444-4444-4444-8444-444444444444",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000004",
+              "response": {
+                "type": "sata",
+                "picks": [
+                  0,
+                  2
+                ]
+              },
+              "shuffle": {
+                "kind": "options",
+                "order": [
+                  3,
+                  2,
+                  1,
+                  0
+                ]
+              },
+              "status": "incorrect",
+              "points": 0,
+              "maxPoints": 3,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.199Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000029",
+              "clientAttemptId": "55555555-5555-4555-8555-555555555555",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000003",
+              "response": {
+                "type": "priority",
+                "choice": 0
+              },
+              "shuffle": {
+                "kind": "options",
+                "order": [
+                  1,
+                  2,
+                  0
+                ]
+              },
+              "status": "correct",
+              "points": 1,
+              "maxPoints": 1,
+              "guessed": true,
+              "answeredAt": "2026-11-24T01:48:43.207Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000035",
+              "clientAttemptId": "77777777-7777-4777-8777-777777777777",
+              "studySessionId": "e0000000-0000-4000-8000-000000000201",
+              "questionId": "00000000-0000-4000-8010-000000000010",
+              "response": {
+                "type": "single",
+                "choice": 0
+              },
+              "shuffle": {
+                "kind": "options",
+                "order": [
+                  0,
+                  2,
+                  1
+                ]
+              },
+              "status": "correct",
+              "points": 1,
+              "maxPoints": 1,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.317Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000032",
+              "clientAttemptId": "66666666-6666-4666-8666-000000000002",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000007",
+              "response": {
+                "type": "match",
+                "choices": [
+                  "Class A",
+                  null
+                ]
+              },
+              "shuffle": {
+                "kind": "match",
+                "choices": [
+                  "Class C",
+                  "Class A",
+                  "Class B"
+                ]
+              },
+              "status": "partial",
+              "points": 1,
+              "maxPoints": 2,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.229Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000034",
+              "clientAttemptId": "66666666-6666-4666-8666-000000000004",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000009",
+              "response": {
+                "type": "cloze",
+                "choices": [
+                  1,
+                  null
+                ]
+              },
+              "shuffle": {
+                "kind": "cloze",
+                "blanks": [
+                  [
+                    2,
+                    0,
+                    1
+                  ],
+                  [
+                    1,
+                    0
+                  ]
+                ]
+              },
+              "status": "partial",
+              "points": 1,
+              "maxPoints": 2,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.244Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000030",
+              "clientAttemptId": "66666666-6666-4666-8666-000000000000",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000005",
+              "response": {
+                "type": "highlight",
+                "picks": [
+                  1,
+                  2
+                ]
+              },
+              "shuffle": {
+                "kind": "plain"
+              },
+              "status": "correct",
+              "points": 2,
+              "maxPoints": 2,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.213Z"
+            },
+            {
+              "id": "00000000-0000-4000-8010-000000000031",
+              "clientAttemptId": "66666666-6666-4666-8666-000000000001",
+              "studySessionId": "00000000-0000-4000-8010-000000000026",
+              "questionId": "00000000-0000-4000-8010-000000000006",
+              "response": {
+                "type": "order",
+                "positions": [
+                  0,
+                  2,
+                  1
+                ]
+              },
+              "shuffle": {
+                "kind": "order",
+                "start": [
+                  2,
+                  1,
+                  0
+                ]
+              },
+              "status": "partial",
+              "points": 1,
+              "maxPoints": 3,
+              "guessed": false,
+              "answeredAt": "2026-11-24T01:48:43.222Z"
+            }
+          ],
+          "questionProgress": [
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000020",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "partial",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.237Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 2,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000033"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000018",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "partial",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.222Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 3,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000031"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000019",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "partial",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.229Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 2,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000032"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000014",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "incorrect",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.191Z",
+              "lastPoints": 0,
+              "lastMaxPoints": 1,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000027"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000021",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "partial",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.244Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 2,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000034"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000016",
+              "attempts": 1,
+              "correctAttempts": 0,
+              "lastStatus": "incorrect",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.199Z",
+              "lastPoints": 0,
+              "lastMaxPoints": 3,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000028"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000017",
+              "attempts": 1,
+              "correctAttempts": 1,
+              "lastStatus": "correct",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.213Z",
+              "lastPoints": 2,
+              "lastMaxPoints": 2,
+              "inReview": false,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000030"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000024",
+              "attempts": 1,
+              "correctAttempts": 1,
+              "lastStatus": "correct",
+              "lastGuessed": false,
+              "lastAnsweredAt": "2026-11-24T01:48:43.317Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 1,
+              "inReview": false,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000035"
+            },
+            {
+              "questionLineageId": "00000000-0000-4000-8010-000000000015",
+              "attempts": 1,
+              "correctAttempts": 1,
+              "lastStatus": "correct",
+              "lastGuessed": true,
+              "lastAnsweredAt": "2026-11-24T01:48:43.207Z",
+              "lastPoints": 1,
+              "lastMaxPoints": 1,
+              "inReview": true,
+              "lastAttemptId": "00000000-0000-4000-8010-000000000029"
+            }
+          ],
+          "reviewClears": [],
+          "studyPlace": {
+            "courseId": "c0000000-0000-4000-8000-000000000201",
+            "updatedAt": "2026-11-24T01:48:43.393Z"
+          }
+        }
+      }
+    },
+    {
+      "step": "request",
       "name": "review-clear-unconfirmed",
-      "at": "2026-11-22T20:05:31.434Z",
+      "at": "2026-11-24T01:48:43.417Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/clear",
@@ -4512,7 +5619,7 @@
     {
       "step": "request",
       "name": "review-clear",
-      "at": "2026-11-22T20:05:31.440Z",
+      "at": "2026-11-24T01:48:43.423Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000201/review/clear",
@@ -4533,7 +5640,7 @@
     {
       "step": "request",
       "name": "course-not-found",
-      "at": "2026-11-22T20:05:31.448Z",
+      "at": "2026-11-24T01:48:43.429Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/00000000-0000-4000-8000-000000000000",

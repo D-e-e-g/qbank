@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "admin",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:11.885Z",
+      "at": "2026-11-24T01:48:34.776Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Owner",
             "role": "admin",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:11.965Z"
+          "expiresAt": "2027-12-29T01:48:34.776Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:12.018Z",
+      "at": "2026-11-24T01:48:34.875Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -58,16 +66,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:12.092Z"
+          "expiresAt": "2027-12-29T01:48:34.875Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:12.159Z",
+      "at": "2026-11-24T01:48:34.966Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -89,16 +105,24 @@
             "name": "Second User",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:12.221Z"
+          "expiresAt": "2027-12-29T01:48:34.966Z"
         }
       }
     },
     {
       "step": "request",
       "name": "admin-students",
-      "at": "2026-11-22T20:05:12.221Z",
+      "at": "2026-11-24T01:48:35.013Z",
       "request": {
         "method": "GET",
         "path": "/api/admin/students",
@@ -115,13 +139,13 @@
               "id": "synthetic-user-2",
               "email": "student@example.com",
               "name": "Sam Student",
-              "createdAt": "2026-11-22T20:05:11.967Z"
+              "createdAt": "2026-11-24T01:48:34.831Z"
             },
             {
               "id": "synthetic-user-3",
               "email": "second.user@example.com",
               "name": "Second User",
-              "createdAt": "2026-11-22T20:05:12.093Z"
+              "createdAt": "2026-11-24T01:48:34.922Z"
             }
           ],
           "viewingId": "synthetic-user-2"
@@ -131,7 +155,7 @@
     {
       "step": "request",
       "name": "admin-read-only",
-      "at": "2026-11-22T20:05:12.231Z",
+      "at": "2026-11-24T01:48:35.017Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",

@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "account-locked",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.370Z",
+      "at": "2026-11-24T01:48:40.797Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:26.459Z"
+          "expiresAt": "2027-12-29T01:48:40.797Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.461Z",
+      "at": "2026-11-24T01:48:40.848Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -58,7 +66,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.546Z",
+      "at": "2026-11-24T01:48:40.893Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -80,7 +88,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.626Z",
+      "at": "2026-11-24T01:48:40.938Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -102,7 +110,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.707Z",
+      "at": "2026-11-24T01:48:40.982Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -124,7 +132,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:26.801Z",
+      "at": "2026-11-24T01:48:41.027Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -149,7 +157,7 @@
     {
       "step": "request",
       "name": "account-delete-locked",
-      "at": "2026-11-22T20:05:26.879Z",
+      "at": "2026-11-24T01:48:41.072Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",

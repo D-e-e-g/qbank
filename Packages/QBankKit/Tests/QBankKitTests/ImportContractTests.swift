@@ -36,8 +36,8 @@ struct ImportContractTests {
         let (client, _) = TestClient.make(transport)
         let report = try await client.checkImport(source: try source(of: fixture))
         #expect(!report.ok)
-        #expect(report.errors == ["Question 1 (Q1): missing takeaway", "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"])
-        #expect(report.warnings.count == 4)
+        #expect(report.errors == ["Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"])
+        #expect(report.warnings.isEmpty)
         #expect(report.questionCount == 0)
     }
 
@@ -182,7 +182,7 @@ struct ImportContractTests {
         }
         #expect(server.status == 400)
         #expect(server.code == .invalidImport)
-        #expect(server.message == "Question 1 (Q1): missing takeaway")
+        #expect(server.message == "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)")
     }
 
     @Test func anExamSetGoesToItsFolder() async throws {

@@ -348,13 +348,13 @@ struct TranscriptReplayTests {
         #expect(events.withLock { $0 }.contains { $0.hasPrefix("write study_session ") })
     }
 
-    /// The engine does not serve a password sign-in or an export: those steps are not sent and their
+    /// The engine does not serve a password sign-in or an export of either kind: those steps are not sent and their
     /// answers not compared, but the clock still meets their times, in the recorded order.
     @Test func aStepTheEngineDoesNotServeIsSkippedAndKeepsItsPlaceOnTheClock() async throws {
         let transcript = try Transcript.load("practice-studying")
-        let serves: @Sendable (Fixture.Request) -> Bool = { !["/api/sign-in/password", "/api/me/export"].contains($0.path) }
+        let serves: @Sendable (Fixture.Request) -> Bool = { !["/api/sign-in/password", "/api/me/export", "/api/me/bank"].contains($0.path) }
         let skipped = transcript.exchanges.filter { !serves($0.request) }
-        #expect(skipped.count == 2)
+        #expect(skipped.count == 3)
         let events = Mutex<[String]>([])
         let hooks = TranscriptReplay.Hooks(
             clock: { time in events.withLock { $0.append("clock \(QBankJSON.formatDate(time))") } }, write: { _ in }, serves: serves)

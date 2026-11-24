@@ -120,4 +120,26 @@ final class FreeModeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["settings.savedForOffline"].exists)
         attach(app, "invited after free sign-out, settings")
     }
+
+    /// Export my bank opens the system share sheet with the bank's file, with no network at all. A
+    /// unit test cannot do this job: the sheet is the system's, over the real Settings screen, and
+    /// only a launch shows that the row is there and the sheet opens with a named file.
+    @MainActor
+    func testExportMyBankOpensTheShareSheetWithNoNetwork() throws {
+        try skipOnIPad()
+        let app = launch("free-new-bank", online: false)
+        XCTAssertTrue(app.buttons["home.add"].appears(timeout: 10))
+        openTab(app, "Settings")
+        XCTAssertTrue(app.navigationBars["Settings"].appears(timeout: 5))
+        let row = app.buttons["settings.exportBank"]
+        reveal(row, in: app)
+        attach(app, "free settings, export my bank")
+        row.tap()
+        let sheet = app.otherElements["ActivityListView"]
+        XCTAssertTrue(sheet.appears(timeout: 15), "the share sheet opens")
+        let named = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'qbank-bank-'")).firstMatch
+        XCTAssertTrue(named.appears(timeout: 5), app.debugDescription)
+        attach(app, "free settings, share sheet open")
+        XCTAssertFalse(app.staticTexts["settings.exportBank.problem"].exists)
+    }
 }

@@ -7,7 +7,7 @@
   "tags": [
     {
       "name": "Agents",
-      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key. A key the admin approved reaches nothing, whatever its scopes: the admin account has no content or answers of its own, and every operation answers the key with 403 `agent_key_not_allowed`.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `status` says where it stands: `running`, `grace` (its time has run out, and for 30 seconds a last answer may still be on its way) or `ended`. An exam whose time ran out reads as `ended` with its `result`, whether or not the user's app has opened it since, and the export lists it the same way.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
+      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key. A key the admin approved reaches nothing, whatever its scopes: the admin account has no content or answers of its own, and every operation answers the key with 403 `agent_key_not_allowed`.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `status` says where it stands: `running`, `grace` (its time has run out, and for 30 seconds a last answer may still be on its way) or `ended`. An exam whose time ran out reads as `ended` with its `result`, whether or not the user's app has opened it since, and the export lists it the same way.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`. Archiving a course or topic answers 409 `in_use` while QBank is still making a set or writing exam twins in it: nothing changed, so tell the user its `message` and archive once the job has filed or the user cancelled it.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
     },
     {
       "name": "Agent keys",
@@ -2010,6 +2010,19 @@
           },
           "palette": {
             "$ref": "#/components/schemas/Palette"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "cloud": {
+            "$ref": "#/components/schemas/Cloud"
+          },
+          "signInWith": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignInMethod"
+            },
+            "description": "The ways into the account now, each once, in the order password, passkey, apple. A store account has `apple`; an invited account has `password`, and `apple` once it links it."
           }
         },
         "required": [
@@ -2018,7 +2031,10 @@
           "name",
           "role",
           "mustChangePassword",
-          "palette"
+          "palette",
+          "origin",
+          "cloud",
+          "signInWith"
         ]
       },
       "Palette": {
@@ -2028,6 +2044,45 @@
           "slate"
         ],
         "description": "The account's color scheme. Every account is on dusk until it picks another with PUT /api/me/palette. More may be added later; show one you do not know as dusk."
+      },
+      "Origin": {
+        "type": "string",
+        "enum": [
+          "invited",
+          "store"
+        ],
+        "description": "Who set the account up: `invited` for an account the owner made or put on the sign-up list, `store` for one made by Sign in with Apple in the iPhone app. Every account that existed before this field is `invited`. More may be added later."
+      },
+      "Cloud": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "description": "Whether the account has Cloud now: its question bank lives on the server and every content, answer, exam and import route works. An invited account always has it."
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When the latest subscription that was not revoked ends, or ended. Null for an account that never had one, and for an invited account.",
+            "example": "2027-12-03T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "active",
+          "expiresAt"
+        ],
+        "description": "Whether an account has Cloud, which the server decides. A store account without it is refused with 403 `cloud_required` on every route that reads or writes the bank: courses, folders, imports, deletes, answers, Review, exams and progress. It may still sign in, read this, change its color scheme and delete its account."
+      },
+      "SignInMethod": {
+        "type": "string",
+        "enum": [
+          "password",
+          "passkey",
+          "apple"
+        ],
+        "description": "A way into an account: `password`, its email and password; `passkey`, one or more passkeys; `apple`, Sign in with Apple, which made a store account or which an account linked with POST /api/me/apple. More may be added later; leave out one you do not know."
       },
       "Error": {
         "type": "object",
@@ -2207,12 +2262,28 @@
           "password": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 128
+            "maxLength": 128,
+            "description": "The account's current password. Every account that has a password confirms with it."
+          },
+          "identityToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384,
+            "description": "For an account with no password, a store account: the identity token of a fresh Sign in with Apple, asked for just before the delete (the credential's `identityToken`, as UTF-8 text). It must name this account's Apple identity, have been issued in the last five minutes, and be used once."
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 256,
+            "description": "With `identityToken`: the nonce the app made for that Sign in with Apple, as it made it. The app asks Apple with its SHA-256 in lowercase hex."
+          },
+          "authorizationCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "With `identityToken`: the authorization code Apple gave in the same Sign in with Apple (the credential's `authorizationCode`, as UTF-8 text). The server exchanges it with Apple to revoke Apple's tokens. It is good once, for five minutes."
           }
-        },
-        "required": [
-          "password"
-        ]
+        }
       },
       "TemporaryPasswordSet": {
         "type": "object",
@@ -2374,6 +2445,79 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "AppleSignIn": {
+        "type": "object",
+        "properties": {
+          "identityToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384,
+            "description": "The identity token Apple gave the app for this sign-in (the credential's `identityToken`), as UTF-8 text."
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 256,
+            "description": "The nonce the app made for this sign-in, as it made it: random, and used once. The app asks Apple with its SHA-256 in lowercase hex, Apple writes that into the token, and the server checks that the two agree."
+          }
+        },
+        "required": [
+          "identityToken",
+          "nonce"
+        ]
+      },
+      "AppleLink": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AppleSignIn"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "password": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "description": "The account's current password, checked as sign-in checks it."
+              }
+            },
+            "required": [
+              "password"
+            ]
+          }
+        ]
+      },
+      "AppleSignInNotificationReceipt": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "repeat"
+            ],
+            "description": "`recorded`: the notification was taken now, with whatever it changes, which may be nothing (an email event, or an Apple identity no account has). `repeat`: it was taken before, and nothing was done again."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "What the server did with a notification about Sign in with Apple."
+      },
+      "AppleSignInNotification": {
+        "type": "object",
+        "properties": {
+          "payload": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384,
+            "description": "The notification as Apple signed it: a JWT."
+          }
+        },
+        "required": [
+          "payload"
         ]
       },
       "SignUpEmailList": {
@@ -3468,6 +3612,1168 @@
         },
         "required": [
           "confirmed"
+        ]
+      },
+      "BankArchive": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "qbank-bank-archive"
+            ]
+          },
+          "version": {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it was written."
+          },
+          "writtenBy": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "server"
+            ]
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "False when the writer had to leave a row out to keep every reference inside the document. A move takes only a complete archive."
+          },
+          "counts": {
+            "$ref": "#/components/schemas/BankCounts"
+          },
+          "semesters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankSemester"
+            }
+          },
+          "courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankCourse"
+            }
+          },
+          "courseExams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankCourseExam"
+            }
+          },
+          "folders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankFolder"
+            }
+          },
+          "practiceSets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankPracticeSet"
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankQuestion"
+            }
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankTerm"
+            }
+          },
+          "studySessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankStudySession"
+            }
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankAttempt"
+            }
+          },
+          "questionProgress": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankQuestionProgress"
+            }
+          },
+          "reviewClears": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankReviewClear"
+            }
+          },
+          "studyPlace": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BankStudyPlace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "format",
+          "version",
+          "exportedAt",
+          "writtenBy",
+          "complete",
+          "counts",
+          "semesters",
+          "courses",
+          "courseExams",
+          "folders",
+          "practiceSets",
+          "questions",
+          "terms",
+          "studySessions",
+          "attempts",
+          "questionProgress",
+          "reviewClears",
+          "studyPlace"
+        ],
+        "description": "Bank archive v1: one account's whole bank, as a row copy of the twelve tables it lives in, defined by the iPhone app's design record (docs/on-phone-bank.md in the qbank repository). Every row has every field, with null where a field may be null. Ids are kept on both sides of a move. Deleted rows are in it with their marks, so Undo still works after a move, and so is every version of a set. The owner of a row is not in it: the server fills it with the signed-in account. A field a reader does not know is ignored."
+      },
+      "BankCounts": {
+        "type": "object",
+        "properties": {
+          "semesters": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "courses": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "courseExams": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "folders": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "practiceSets": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "questions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "terms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "studySessions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "questionProgress": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "reviewClears": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "studyPlace": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "semesters",
+          "courses",
+          "courseExams",
+          "folders",
+          "practiceSets",
+          "questions",
+          "terms",
+          "studySessions",
+          "attempts",
+          "questionProgress",
+          "reviewClears",
+          "studyPlace"
+        ],
+        "description": "Rows in each table, deleted rows and earlier versions included; `studyPlace` is 1 or 0."
+      },
+      "BankSemester": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "name": {
+            "type": "string"
+          },
+          "startsOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "endsOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "name",
+          "startsOn",
+          "endsOn",
+          "archivedAt",
+          "createdAt"
+        ]
+      },
+      "BankCourse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "semesterId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "Null exactly for a study topic."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "course",
+              "topic"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "description": "Empty for a topic."
+          },
+          "title": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a delete hid the row, or null. Undo clears it."
+          },
+          "deletionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The delete that hid it: every row one delete hid carries its id. Null exactly when deletedAt is."
+          }
+        },
+        "required": [
+          "id",
+          "semesterId",
+          "kind",
+          "code",
+          "title",
+          "sortOrder",
+          "archivedAt",
+          "createdAt",
+          "deletedAt",
+          "deletionId"
+        ]
+      },
+      "BankCourseExam": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "courseId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "name": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "linkUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "badge": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "exam",
+              "concept",
+              "study",
+              null
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a delete hid the row, or null. Undo clears it."
+          },
+          "deletionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The delete that hid it: every row one delete hid carries its id. Null exactly when deletedAt is."
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "name",
+          "sortOrder",
+          "linkUrl",
+          "badge",
+          "createdAt",
+          "deletedAt",
+          "deletionId"
+        ],
+        "description": "A page of a course or topic."
+      },
+      "BankFolder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "courseId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "name": {
+            "type": "string"
+          },
+          "courseExamId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The page it is on, or null."
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a delete hid the row, or null. Undo clears it."
+          },
+          "deletionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The delete that hid it: every row one delete hid carries its id. Null exactly when deletedAt is."
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "name",
+          "courseExamId",
+          "sortOrder",
+          "createdAt",
+          "deletedAt",
+          "deletionId"
+        ]
+      },
+      "BankPracticeSet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "courseId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "lineageId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "Shared by every version of the set."
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "weekLabel": {
+            "type": "string"
+          },
+          "folderId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "sortOrder": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "importedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "fileHash": {
+            "type": "string"
+          },
+          "stats": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Counts kept with the set. On an upload the server works them out itself."
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "replacedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "practice",
+              "exam"
+            ]
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a delete hid the row, or null. Undo clears it."
+          },
+          "deletionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The delete that hid it: every row one delete hid carries its id. Null exactly when deletedAt is."
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "lineageId",
+          "title",
+          "description",
+          "weekLabel",
+          "folderId",
+          "sortOrder",
+          "importedAt",
+          "fileHash",
+          "stats",
+          "isCurrent",
+          "replacedAt",
+          "kind",
+          "deletedAt",
+          "deletionId"
+        ],
+        "description": "A set, of any version: every version of a set is in the archive."
+      },
+      "BankQuestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "setId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "lineageId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "publicId": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "description": "From 1, in the set's order."
+          },
+          "type": {
+            "type": "string",
+            "description": "The question format, such as single or sata. The import check refuses one it does not know."
+          },
+          "topic": {
+            "type": "string"
+          },
+          "cj": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clientNeed": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "difficulty": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "weekLabel": {
+            "type": "string"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "ask": {
+            "type": "string"
+          },
+          "body": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "The question's own fields, as the import check keeps them. Images ride here as data URLs."
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "takeaway": {
+            "type": "string"
+          },
+          "termKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contentHash": {
+            "type": "string",
+            "description": "On an upload the server works it out itself, byte for byte as an import does."
+          },
+          "twinOf": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "twinOfLineageId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          }
+        },
+        "required": [
+          "id",
+          "setId",
+          "lineageId",
+          "publicId",
+          "position",
+          "type",
+          "topic",
+          "cj",
+          "clientNeed",
+          "difficulty",
+          "weekLabel",
+          "stem",
+          "ask",
+          "body",
+          "rationale",
+          "takeaway",
+          "termKeys",
+          "source",
+          "contentHash",
+          "twinOf",
+          "twinOfLineageId"
+        ]
+      },
+      "BankTerm": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "setId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "key": {
+            "type": "string"
+          },
+          "term": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "setId",
+          "key",
+          "term",
+          "meaning"
+        ]
+      },
+      "BankStudySession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "courseId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "practice",
+              "exam",
+              "review"
+            ]
+          },
+          "setId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "questionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examWeeks": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "examFolderIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeLimitSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "finishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "As stored: an exam whose time ran out keeps null until something ends it."
+          },
+          "score": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {}
+          },
+          "endReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "finished",
+              "left",
+              "timeout",
+              null
+            ]
+          },
+          "examPool": {
+            "type": "string",
+            "enum": [
+              "all",
+              "wrong"
+            ]
+          },
+          "examPracticeWeeks": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "seededQuestionIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a delete hid the row, or null. Undo clears it."
+          },
+          "deletionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "The delete that hid it: every row one delete hid carries its id. Null exactly when deletedAt is."
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "mode",
+          "setId",
+          "questionIds",
+          "examWeeks",
+          "examFolderIds",
+          "timeLimitSeconds",
+          "startedAt",
+          "finishedAt",
+          "score",
+          "endReason",
+          "examPool",
+          "examPracticeWeeks",
+          "seededQuestionIds",
+          "deletedAt",
+          "deletionId"
+        ]
+      },
+      "BankAttempt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "clientAttemptId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "studySessionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "questionId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "description": "The answer, in the shape of its question's format."
+          },
+          "shuffle": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The order the options were shown in, or null."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "partial",
+              "incorrect"
+            ]
+          },
+          "points": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "maxPoints": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "guessed": {
+            "type": "boolean"
+          },
+          "answeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          }
+        },
+        "required": [
+          "id",
+          "clientAttemptId",
+          "studySessionId",
+          "questionId",
+          "response",
+          "shuffle",
+          "status",
+          "points",
+          "maxPoints",
+          "guessed",
+          "answeredAt"
+        ]
+      },
+      "BankQuestionProgress": {
+        "type": "object",
+        "properties": {
+          "questionLineageId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "correctAttempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "lastStatus": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "partial",
+              "incorrect"
+            ]
+          },
+          "lastGuessed": {
+            "type": "boolean"
+          },
+          "lastAnsweredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          },
+          "lastPoints": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "lastMaxPoints": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "inReview": {
+            "type": "boolean"
+          },
+          "lastAttemptId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          }
+        },
+        "required": [
+          "questionLineageId",
+          "attempts",
+          "correctAttempts",
+          "lastStatus",
+          "lastGuessed",
+          "lastAnsweredAt",
+          "lastPoints",
+          "lastMaxPoints",
+          "inReview",
+          "lastAttemptId"
+        ]
+      },
+      "BankReviewClear": {
+        "type": "object",
+        "properties": {
+          "questionLineageId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "lastAttemptId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "clearedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          }
+        },
+        "required": [
+          "questionLineageId",
+          "lastAttemptId",
+          "clearedAt"
+        ]
+      },
+      "BankStudyPlace": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "A lowercase UUID."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC with milliseconds: YYYY-MM-DDTHH:MM:SS.sssZ."
+          }
+        },
+        "required": [
+          "courseId",
+          "updatedAt"
+        ]
+      },
+      "BankError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "description": "A sentence to show as it is."
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "With `invalid_archive`: each thing wrong with the archive, as a sentence, at most 50; a last one says how many more there are."
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ]
+      },
+      "BankStored": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/BankCounts"
+          }
+        },
+        "required": [
+          "counts"
         ]
       },
       "ExamSetup": {
@@ -7218,6 +8524,76 @@
         "required": [
           "keys"
         ]
+      },
+      "CloudStatus": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Cloud"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "storeToken": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "The token a store account buys Cloud with: the app passes it to StoreKit as the purchase's appAccountToken, so the signed transaction names this account. Issued the first time it is read and the same ever after. Null for an invited account, which has Cloud without buying it.",
+                "example": "6f1c2a4e-3b7d-4c55-9e2a-0d8b1f6a7c90"
+              }
+            },
+            "required": [
+              "storeToken"
+            ]
+          }
+        ],
+        "description": "Whether the account has Cloud now, which the server decides, and the token it buys with. The same shape answers a purchase, so a purchase that was recorded reads as the state it left the account in."
+      },
+      "CloudTransaction": {
+        "type": "object",
+        "properties": {
+          "signedTransaction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32768,
+            "description": "The transaction as StoreKit signed it: a compact JWS."
+          }
+        },
+        "required": [
+          "signedTransaction"
+        ]
+      },
+      "AppStoreNotificationReceipt": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "repeat"
+            ],
+            "description": "`recorded`: the notification was taken now, with whatever it changes, which may be nothing (a token that names no store account, no Cloud subscription, or one Apple signed before what the subscription was last told). `repeat`: it was taken before, and nothing was done again."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "What the server did with an App Store Server Notification."
+      },
+      "AppStoreNotification": {
+        "type": "object",
+        "properties": {
+          "signedPayload": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 131072,
+            "description": "The notification as Apple signed it: a compact JWS."
+          }
+        },
+        "required": [
+          "signedPayload"
+        ]
       }
     },
     "parameters": {}
@@ -8243,7 +9619,7 @@
     "/api/courses/{id}": {
       "patch": {
         "summary": "Rename, move, archive, or unarchive a course or topic",
-        "description": "A topic takes `title` and `archived` only: `code` or `semesterId` for a topic is refused with 400. A course moves only to another of her semesters.",
+        "description": "A topic takes `title` and `archived` only: `code` or `semesterId` for a topic is refused with 400. A course moves only to another of her semesters. Archiving one that is not archived (`archived: true`) is refused with 409 `in_use`, and a sentence in `message`, while a Make questions or twin job is running or waiting in it: the job files its set there at its end, and filing refuses an archived course, so wait for the job or cancel it first. It is the sentence DELETE /api/courses/{id} answers for the same job. An exam in progress does not hold an archive, and unarchiving (`archived: false`) and every other change are not refused for a job.",
         "tags": [
           "Courses",
           "Agents"
@@ -10900,7 +12276,7 @@
           "Account"
         ],
         "summary": "Delete this user account",
-        "description": "Deletes the signed-in user account and everything it has, for good: its semesters, courses and study topics with their folders, pages, sets, questions and terms, its answers, progress, Review and past exams, its Make questions and exam twin jobs, its passkeys, and its agent keys and pairings. Nothing goes to Recently deleted and there is no Undo.\n\nThe account is always the one signed in: nothing in the request names another, and no other account's content or answers change. Send its current password, checked as sign-in checks it; a wrong one counts toward the same lock as sign-in from this address, and deletes nothing.\n\nOnce deleted, every session of the account ends, on every device, and every agent key it approved stops working (401 `invalid_agent_key`). The answer also clears this device's session cookie.\n\nThe admin account is refused, and so is any request that carries an agent key, whatever its scopes.",
+        "description": "Deletes the signed-in user account and everything it has, for good: its semesters, courses and study topics with their folders, pages, sets, questions and terms, its answers, progress, Review and past exams, its Make questions and exam twin jobs, its passkeys, and its agent keys and pairings. Nothing goes to Recently deleted and there is no Undo.\n\nThe account is always the one signed in: nothing in the request names another, and no other account's content or answers change. Send its current password, checked as sign-in checks it; a wrong one counts toward the same lock as sign-in from this address, and deletes nothing.\n\nAn account with no password, a store account, confirms with a fresh Sign in with Apple instead: it sends the `identityToken`, `nonce` and `authorizationCode` of a Sign in with Apple made just before the delete. The identity token is checked as POST /api/sign-in/apple checks it, and must also name this account's Apple identity and have been issued in the last five minutes; one that does not deletes nothing and counts toward the same lock as Sign in with Apple from this address. Then the server exchanges the code with Apple, revokes the tokens Apple issues for it, which ends the app's Sign in with Apple grant, and deletes the account; it keeps no Apple token. When nothing can be revoked (Apple refuses the code or is out of reach, the server has no Sign in with Apple key yet, or the revoke fails), the server logs it and the account is deleted all the same.\n\nOnce deleted, every session of the account ends, on every device, and every agent key it approved stops working (401 `invalid_agent_key`). The answer also clears this device's session cookie.\n\nThe admin account is refused, and so is any request that carries an agent key, whatever its scopes.",
         "requestBody": {
           "required": true,
           "content": {
@@ -10923,7 +12299,7 @@
             }
           },
           "400": {
-            "description": "The password is missing (`invalid_request`). Nothing was deleted.",
+            "description": "`invalid_request`: the password is missing, or for an account with no password, `identityToken`, `nonce` or `authorizationCode`. Nothing was deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10933,7 +12309,7 @@
             }
           },
           "401": {
-            "description": "`unauthenticated`: sign in. `invalid_credentials`: that password is not the account's. Nothing was deleted.",
+            "description": "`unauthenticated`: sign in. `invalid_credentials`: that password is not the account's. `invalid_apple_token`: the identity token is not Apple's, is for another app, has ended or is more than five minutes old, does not match the nonce, was used already, or names another Apple identity; sign in with Apple again. Nothing was deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10963,7 +12339,7 @@
             }
           },
           "429": {
-            "description": "Too many wrong passwords from this address (`too_many_attempts`). Nothing was deleted.",
+            "description": "Too many wrong passwords, or refused Sign in with Apple tokens, from this address (`too_many_attempts`). Nothing was deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10972,8 +12348,18 @@
               }
             }
           },
+          "502": {
+            "description": "`apple_unreachable`: Apple's keys could not be read, so the Sign in with Apple could not be checked; it does not count as refused. Nothing was deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
-            "description": "Sign-in is not configured.",
+            "description": "`auth_unavailable`: sign-in is not configured. `apple_sign_in_unavailable`: an account with no password cannot be deleted until Sign in with Apple is available on this server. Nothing was deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11409,6 +12795,355 @@
           },
           "503": {
             "description": "Sign-in is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sign-in/apple": {
+      "post": {
+        "tags": [
+          "Sign in"
+        ],
+        "summary": "Sign in with Apple",
+        "description": "For the iPhone app. Checks Apple's identity token: Apple's signature, by the keys Apple publishes; Apple as the issuer; the app's bundle id as the audience; not ended, and issued within the hour; and its nonce the SHA-256 of `nonce`. A token is taken once: sent again, it is refused.\n\nThe account is found by Apple's id of the person, never by email. An Apple identity that has an account signs in to it (200). A new one gets a new store account (201): `origin` `store`, no Cloud, and no password. Its email is the one Apple shares, the person's own or a private relay address; when Apple shares none, it is `<Apple's id>@apple.invalid`, which reaches no one. A new identity whose email already belongs to an account is refused and is never joined to it (409): an account with a password links Apple from its own session, with POST /api/me/apple.\n\nThe answer is the password sign-in's: a session that lasts until sign-out, its `token` for Authorization: Bearer, and the session cookie.\n\n5 refused tokens from one address lock Sign in with Apple, and linking it (POST /api/me/apple), from that address for 15 minutes; other addresses sign in as before, and a sign-in clears the count. Until the server is given the app's bundle id it answers 503 `apple_sign_in_unavailable` and makes nothing.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleSignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in to the account this Apple identity has.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new store account was made for this Apple identity, and signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The token or the nonce is missing (`invalid_request`). Nothing was made.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_apple_token`: the token is not Apple's, is for another app, has ended, does not match the nonce, or was used already. Nothing was made. Ask Apple again, with a new nonce.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The email Apple shares already belongs to an account, and nothing was made: `password_account` when that account has a password (sign in with email and password instead), `email_in_use` for any other.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many refused tokens from this address (`too_many_attempts`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Locked"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "`apple_unreachable`: Apple's keys could not be read, so the token could not be checked; it does not count as refused. `auth_failed`: the session could not be made. Try again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`apple_sign_in_unavailable`: Sign in with Apple is not available on this server yet. `auth_unavailable`: sign-in is not configured. Nothing was made.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/apple": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Link Sign in with Apple to this account",
+        "description": "For the iPhone app's Settings: the signed-in account links the Apple identity of a Sign in with Apple the app has just done, so Sign in with Apple lands in this account from then on, with the same courses, sets, answers and progress. The body is POST /api/sign-in/apple's with the account's current `password` beside it, and the token is checked the same way: Apple's signature, issuer, the app's bundle id, its time, and the nonce. A token is taken once, by either route.\n\nLinking adds the Apple identity to the account and changes nothing else: not its email, name, origin, role, Cloud, content or progress, and no session ends. The answer is the account, whose `signInWith` now has `apple`. Linking the identity the account has already changes nothing and answers the same.\n\nAn account has one Apple identity, and an Apple identity one account: one that is another account's, a store account Sign in with Apple made or another account that linked it, is refused, and so is a second identity for an account that has one. It needs a signed-in session: a request with an agent key is refused, and so is an account with a temporary password.\n\nThe password is checked first, as DELETE /api/me checks it: a wrong one counts toward the same lock as password sign-in for this email from this address, 5 lock it for 15 minutes, the right one clears that count, and a refused password links nothing and leaves the token unused. An account with no password cannot link.\n\nRefused tokens count toward Sign in with Apple's lock for the address: 5 lock both routes from it for 15 minutes. Until the server is given the app's bundle id it answers 503 `apple_sign_in_unavailable` and links nothing.",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "sessionToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleLink"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Apple identity is this account's. The account, with its ways in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The password, the token or the nonce is missing (`invalid_request`). Nothing was linked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`unauthenticated`: sign in. `invalid_credentials`: that password is not the account's; the token was not read. `invalid_apple_token`: the token is not Apple's, is for another app, has ended, does not match the nonce, or was used already; ask Apple again, with a new nonce. Nothing was linked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Nothing was linked: `agent_key_not_allowed` (the request carries an agent key) or `must_change_password` (choose a new password first).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nothing was linked: `apple_linked_elsewhere`, this Apple identity is another QBank account's; `apple_already_linked`, this account has another Apple identity (unlink it first).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many wrong passwords for this account, or refused tokens, from this address (`too_many_attempts`). Nothing was linked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Locked"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "`apple_unreachable`: Apple's keys could not be read, so the token could not be checked. Try again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`apple_sign_in_unavailable`: Sign in with Apple is not available on this server yet. `auth_unavailable`: sign-in is not configured. Nothing was linked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Unlink Sign in with Apple from this account",
+        "description": "The signed-in account's Apple identity is removed, so Sign in with Apple no longer lands in this account; the account signs in with its email and password. Nothing else changes, and sessions already signed in stay signed in (`POST /api/sign-out/everywhere` ends them). An account with no Apple identity is answered the same, and nothing changes.\n\nAn account with no password keeps its Apple identity: a store account, which Sign in with Apple made, is refused. It needs a signed-in session: a request with an agent key is refused, and so is an account with a temporary password.",
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "sessionToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "This account has no Apple identity. The account, with its ways in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in (`unauthenticated`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Nothing was unlinked: `agent_key_not_allowed` (the request carries an agent key) or `must_change_password` (choose a new password first).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`no_password`: the account has no password, so Sign in with Apple stays its way in. Nothing was unlinked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in is not configured (`auth_unavailable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sign-in/apple/notifications": {
+      "post": {
+        "tags": [
+          "Sign in"
+        ],
+        "summary": "Take a notification about Sign in with Apple",
+        "security": [],
+        "description": "For Apple, not the app: the server-to-server notification endpoint registered for the iPhone app's Sign in with Apple. Apple sends `{ \"payload\": \"<JWT>\" }` when a person changes how they use Sign in with Apple with the app. Nobody signs in: the JWT is checked exactly as Sign in with Apple checks an identity token, against the keys Apple publishes, with Apple as the issuer, the app's bundle id as the audience, and an issue time no later than now and within the hour. It must carry Apple's id of it (`jti`) and an event (`events`, JSON text of an object) that names its `type` and the person (`sub`).\n\nThe account is found by Apple's id of the person, as Sign in with Apple finds it, never by email. `consent-revoked` (the person stopped using Apple with the app) ends every session of the account, on every device; its Apple identity stays, so signing in with Apple again lands in the same account. `account-delete` (the person deleted their Apple Account; Apple's page on processing these changes writes it `account-deleted`) ends every session and removes the Apple identity. Nothing else of the account changes: an account that signs in with a password or a passkey keeps it, and an account Apple was the only way into keeps its bank, with no way in: it is not deleted here. `email-enabled`, `email-disabled`, any other type, and an Apple identity no account has change nothing.\n\nEach notification is taken once, by Apple's id of it, with its change, in one database transaction, and answered 200; a copy sent again changes nothing. Any other answer changes nothing: 400 when the body is not a notification or the notification does not verify, 413 for a body over 16 KiB (before it is read), 502 when Apple's keys could not be read, and 503 until the server is given the app's bundle id.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleSignInNotification"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The notification was taken now, or was already.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppleSignInNotificationReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nothing was changed. The body is not a notification (`invalid_request`), or the notification is not Apple's, is for another app, is more than an hour old, or names no id, event or person (`notification_unverified`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than any notification (`too_large`). Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "`apple_unreachable`: Apple's keys could not be read, so the notification could not be checked. Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`apple_sign_in_unavailable`: the server does not have the app's bundle id yet. `auth_unavailable`: it has no database. Nothing was changed.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12542,6 +14277,146 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProgressError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/bank": {
+      "get": {
+        "tags": [
+          "Bank"
+        ],
+        "summary": "The account's whole bank, as bank archive v1",
+        "description": "Every row the signed-in account has in the twelve tables of a bank, deleted rows and every version of a set included, read in one snapshot that writes nothing. Rows are listed by their key; rows are as stored, so an exam whose time ran out keeps a null finishedAt until something ends it. A row that names a row outside the account (an answer from before content was private to each account) is left out, then any row that named it, and `complete` is false. A store account keeps this without Cloud, so its bank comes back to the phone after Cloud ends. The admin has no bank of its own and is refused with `not_student`.",
+        "responses": {
+          "200": {
+            "description": "The bank.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankArchive"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`not_student` for the admin, `must_change_password`, or `agent_key_not_allowed` for an agent key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bank"
+        ],
+        "summary": "Store a bank archive as the account's bank",
+        "description": "Stores a whole bank into the signed-in account, which must have no bank: no row in any of the twelve tables, deleted rows included. It writes in one transaction, so it stores all of it or nothing, and answers the counts it then reads back from the account in that transaction. Needs Cloud. Every set, of every version and deleted ones too, is rebuilt as a question file and run through the import check POST /api/imports runs; a set it refuses refuses the whole archive. What the check returns is stored for each set, question and term, with the content hash and set counts the server works out itself, so a set made by the same rules is stored as sent; ids, lineages, positions, times, order, folders and version and delete marks are taken from the rows. Every row is the account's: an owner named in a row is ignored. A body over 64 MB is refused with 413: by its stated length before any of it is read, or, when sent in pieces, as soon as it passes the limit. The rest is not read and nothing is written.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankArchive"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stored. The counts are read back from the account, so they match the archive's.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankStored"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`invalid_archive`: the archive breaks a rule of the format, or a set fails the import check; `problems` says what. Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`cloud_required` for a store account without Cloud, `admin_read_only` for the admin, `must_change_password`, or `agent_key_not_allowed` for an agent key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`bank_not_empty` (\"This account already has a question bank on the server, so the upload was refused. Nothing was changed.\"), or `bank_ids_taken` when a row of the archive is already on the server, in another account. Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "`archive_too_large`: the body is over 64 MB, by its length or as it arrives. Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankError"
                 }
               }
             }
@@ -16166,6 +18041,210 @@
           },
           "503": {
             "description": "Sign-in is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/cloud": {
+      "get": {
+        "tags": [
+          "Cloud"
+        ],
+        "summary": "Read whether this account has Cloud",
+        "description": "Whether the signed-in account has Cloud now, as the server decides it, with the token a store account buys with. A store account without Cloud may read it: it is how the app learns what to offer, and that Cloud has ended.\n\nThe first read by a store account issues its token; every later read answers the same one. An invited account has Cloud without buying it, gets no token, and nothing of it is written.",
+        "responses": {
+          "200": {
+            "description": "How the account stands.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "An agent key can't do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/cloud/transactions": {
+      "post": {
+        "tags": [
+          "Cloud"
+        ],
+        "summary": "Record an App Store purchase of Cloud",
+        "description": "The app sends the signed transaction StoreKit gave it (its jwsRepresentation), after a purchase, a renewal or a restore. The server checks it offline, with no call to Apple: the signature chain to Apple's root certificate, the app's bundle id, that the product is a Cloud plan (com.dimitrygallego.qbank.cloud.monthly or com.dimitrygallego.qbank.cloud.yearly), that the App Store environment is one this server takes, and that the appAccountToken is this account's `storeToken` (GET /api/me/cloud). It then records the subscription and answers the whole Cloud state.\n\nThe app grants nothing from what StoreKit says: it finishes the transaction once this answers 200, and shows Cloud as on only when `active` is true. The server keeps the latest period of each subscription, by when the period began: a renewal, a resubscribe or a change of plan replaces the one before. The period recorded, sent again as it is, or an earlier one changes nothing and answers the same state, so sending a transaction again is harmless. For the recorded period, the transaction Apple signed last says whether it is refunded or revoked: a revoked period grants nothing, and one Apple signed since, and after the revocation, without it (a refund it took back) undoes it. A transaction Apple signed before the latest transaction or notification applied to the period (a copy kept from before a refund) is older news: it changes nothing and answers the state as it is. A period the account upgraded from (`isUpgraded`) is not recorded. A period that has ended is recorded and answers `active: false`.\n\nEvery refusal records nothing. An invited account has Cloud without buying it and is refused with 409 `cloud_included`. A body over 64 KiB is refused with 413 `too_large` before it is read.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudTransaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The transaction was recorded, or already was. The account's Cloud state now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is not a signed transaction (`invalid_request`), it does not verify against Apple's root certificate (`transaction_unverified`), it is another app's (`transaction_other_app`), it is not a Cloud plan (`transaction_not_cloud`), or it comes from an App Store environment this server does not take (`transaction_wrong_environment`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "An agent key can't do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account is invited and has Cloud already (`cloud_included`), or the subscription was bought for another account (`transaction_other_account`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than any purchase (`too_large`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sign-in is not configured, or this server is not set up to check App Store purchases (`store_not_set_up`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store/notifications": {
+      "post": {
+        "tags": [
+          "Cloud"
+        ],
+        "summary": "Take an App Store Server Notification",
+        "security": [],
+        "description": "For Apple, not the app: the address App Store Connect is given for App Store Server Notifications, version 2. Apple sends `{ \"signedPayload\": \"<JWS>\" }` when a Cloud subscription changes, such as a renewal while the app is closed, a payment that failed, a refund or an expiry. Nobody signs in: the server checks the notification offline, with no call to Apple, as it checks a purchase (POST /api/me/cloud/transactions): the notification, and the transaction and renewal info in it, each chain to Apple's root certificate. Then the notification's bundle id must be the app's, and its environment one this server takes.\n\nThe subscription is found by the transaction's appAccountToken, the store account's `storeToken`, and whatever the notification's type, its row follows Apple's latest word on it. The transaction is recorded as the purchase route records one: a renewal or a resubscribe replaces the period before (`SUBSCRIBED`, `DID_RENEW`), and for the recorded period its revocation revokes it (`REFUND`, `REVOKE`) and its absence undoes one (`REFUND_REVERSED`). The renewal info says whether the recorded period is in a billing grace period: a `gracePeriodExpiresDate` (as `DID_FAIL_TO_RENEW` with the subtype `GRACE_PERIOD` carries) keeps Cloud until the grace ends, and none (a billing retry with no grace, `GRACE_PERIOD_EXPIRED`, `EXPIRED`) ends it at the period's own end. A token that names no store account, a subscription recorded for another account, and a notification about no Cloud subscription (Apple's test, or another product) change nothing.\n\nApple may deliver notifications out of order. The subscription keeps when Apple signed the latest transaction and the latest renewal info applied to its period, and either one Apple signed before that is older news and changes nothing; a notification that is older news in both is recorded and answered 200. So a refund delivered after its reversal does not revoke Cloud again, and a grace delivered after the expiry does not lengthen it.\n\nEach notification is recorded by Apple's id of it, with its change, in one database transaction, and answered 200. Sent again, it is recognized and changes nothing. Any other answer records nothing, and Apple sends it again later: 400 when it does not verify or is for another app or environment, 413 for a body over 128 KiB (before it is read), and 503 while the server is not set up to check it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppStoreNotification"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The notification was recorded now, or was already.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppStoreNotificationReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nothing was recorded. The body is not a signed notification (`invalid_request`), the notification or something in it does not verify against Apple's root certificate (`notification_unverified`), it is another app's (`notification_other_app`), or it comes from an App Store environment this server does not take (`notification_wrong_environment`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The body is larger than any notification (`too_large`). Nothing was recorded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "This server is not set up to check App Store notifications (`store_not_set_up`), or has no database (`auth_unavailable`). Nothing was recorded.",
             "content": {
               "application/json": {
                 "schema": {

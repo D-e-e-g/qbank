@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "world": "practice-continuing",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.628Z",
+      "at": "2026-11-24T01:48:44.736Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -27,16 +27,24 @@
             "name": "Sam Student",
             "role": "student",
             "mustChangePassword": false,
-            "palette": "dusk"
+            "palette": "dusk",
+            "origin": "invited",
+            "cloud": {
+              "active": true,
+              "expiresAt": null
+            },
+            "signInWith": [
+              "password"
+            ]
           },
-          "expiresAt": "2027-12-27T20:05:33.690Z"
+          "expiresAt": "2027-12-29T01:48:44.736Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.691Z",
+      "at": "2026-11-24T01:48:44.784Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -63,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.700Z",
+      "at": "2026-11-24T01:48:44.790Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -99,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.710Z",
+      "at": "2026-11-24T01:48:44.793Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -128,17 +136,7 @@
           "examPageId": null,
           "questionCount": 3,
           "termCount": 0,
-          "warnings": [
-            "Question 1 (Q1): missing need",
-            "Question 1 (Q1): missing diff",
-            "Question 1 (Q1): missing src",
-            "Question 2 (Q2): missing need",
-            "Question 2 (Q2): missing diff",
-            "Question 2 (Q2): missing src",
-            "Question 3 (Q3): missing need",
-            "Question 3 (Q3): missing diff",
-            "Question 3 (Q3): missing src"
-          ],
+          "warnings": [],
           "importedByAgent": null
         }
       }
@@ -146,7 +144,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.720Z",
+      "at": "2026-11-24T01:48:44.801Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -261,7 +259,7 @@
     {
       "step": "request",
       "name": "attempt-from-review",
-      "at": "2026-11-22T20:05:33.731Z",
+      "at": "2026-11-24T01:48:44.806Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -297,7 +295,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.740Z",
+          "answeredAt": "2026-11-24T01:48:44.806Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -309,7 +307,7 @@
     {
       "step": "request",
       "name": "practice-set-sitting-day-one",
-      "at": "2026-11-22T20:05:33.747Z",
+      "at": "2026-11-24T01:48:44.812Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -431,7 +429,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-22T20:05:33.740Z",
+                "answeredAt": "2026-11-24T01:48:44.806Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -457,7 +455,7 @@
     {
       "step": "request",
       "name": "course-sitting-day-one",
-      "at": "2026-11-22T20:05:33.759Z",
+      "at": "2026-11-24T01:48:44.817Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
@@ -499,13 +497,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 1,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.740Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.806Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -533,13 +531,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 1,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.740Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.806Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -563,7 +561,7 @@
     {
       "step": "request",
       "name": "attempt-opens-sitting",
-      "at": "2026-11-22T20:05:33.775Z",
+      "at": "2026-11-24T01:48:44.825Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -598,7 +596,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.782Z",
+          "answeredAt": "2026-11-24T01:48:44.825Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -610,7 +608,7 @@
     {
       "step": "request",
       "name": "practice-set-sitting",
-      "at": "2026-11-22T20:05:33.787Z",
+      "at": "2026-11-24T01:48:44.833Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -720,7 +718,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8018-000000000005",
-            "startedAt": "2026-11-22T20:05:33.782Z",
+            "startedAt": "2026-11-24T01:48:44.825Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8018-000000000002",
               "00000000-0000-4000-8018-000000000003"
@@ -733,7 +731,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-22T20:05:33.740Z",
+                "answeredAt": "2026-11-24T01:48:44.806Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -758,7 +756,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-22T20:05:33.782Z",
+                "answeredAt": "2026-11-24T01:48:44.825Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -784,7 +782,7 @@
     {
       "step": "request",
       "name": "course-sitting",
-      "at": "2026-11-22T20:05:33.795Z",
+      "at": "2026-11-24T01:48:44.838Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
@@ -826,13 +824,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 2,
                   "fullyRightCount": 2,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.825Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 2
@@ -860,13 +858,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 2,
                   "fullyRightCount": 2,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.825Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 2
@@ -890,7 +888,7 @@
     {
       "step": "request",
       "name": "practice-set-start-over",
-      "at": "2026-11-22T20:05:33.810Z",
+      "at": "2026-11-24T01:48:44.845Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301/start-over",
@@ -909,7 +907,7 @@
     {
       "step": "request",
       "name": "practice-set-start-over-nothing",
-      "at": "2026-11-22T20:05:33.816Z",
+      "at": "2026-11-24T01:48:44.850Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301/start-over",
@@ -928,7 +926,7 @@
     {
       "step": "request",
       "name": "practice-set-start-over-not-found",
-      "at": "2026-11-22T20:05:33.822Z",
+      "at": "2026-11-24T01:48:44.854Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/00000000-0000-4000-8000-000000000000/start-over",
@@ -948,7 +946,7 @@
     {
       "step": "request",
       "name": "practice-set-after-start-over",
-      "at": "2026-11-22T20:05:33.832Z",
+      "at": "2026-11-24T01:48:44.858Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -1063,7 +1061,7 @@
     {
       "step": "request",
       "name": "course-after-start-over",
-      "at": "2026-11-22T20:05:33.837Z",
+      "at": "2026-11-24T01:48:44.862Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
@@ -1105,13 +1103,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 2,
                   "fullyRightCount": 2,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.825Z",
                   "run": "restarted",
                   "sitting": null,
                   "questionIds": [
@@ -1137,13 +1135,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 2,
                   "fullyRightCount": 2,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.782Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.825Z",
                   "run": "restarted",
                   "sitting": null,
                   "questionIds": [
@@ -1165,7 +1163,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.852Z",
+      "at": "2026-11-24T01:48:44.869Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1200,7 +1198,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.855Z",
+          "answeredAt": "2026-11-24T01:48:44.869Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -1212,7 +1210,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.865Z",
+      "at": "2026-11-24T01:48:44.876Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1247,7 +1245,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.872Z",
+          "answeredAt": "2026-11-24T01:48:44.876Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -1259,7 +1257,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.878Z",
+      "at": "2026-11-24T01:48:44.883Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1294,7 +1292,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.883Z",
+          "answeredAt": "2026-11-24T01:48:44.883Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -1306,7 +1304,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-22T20:05:33.893Z",
+      "at": "2026-11-24T01:48:44.890Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1341,7 +1339,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-22T20:05:33.899Z",
+          "answeredAt": "2026-11-24T01:48:44.890Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -1353,7 +1351,7 @@
     {
       "step": "request",
       "name": "practice-set-done-retake",
-      "at": "2026-11-22T20:05:33.904Z",
+      "at": "2026-11-24T01:48:44.897Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000301",
@@ -1468,7 +1466,7 @@
     {
       "step": "request",
       "name": "course-done-retake",
-      "at": "2026-11-22T20:05:33.915Z",
+      "at": "2026-11-24T01:48:44.901Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301",
@@ -1510,13 +1508,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 3,
                   "fullyRightCount": 3,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.899Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.890Z",
                   "run": "done",
                   "sitting": null,
                   "questionIds": [
@@ -1542,13 +1540,13 @@
                   "title": "Week 1 - Set 1: Invented basics",
                   "description": "Invented practice questions.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-22T20:05:33.717Z",
-                  "activeSince": "2026-11-22T20:05:33.717Z",
+                  "importedAt": "2026-11-24T01:48:44.793Z",
+                  "activeSince": "2026-11-24T01:48:44.793Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 3,
                   "fullyRightCount": 3,
-                  "lastAnsweredAt": "2026-11-22T20:05:33.899Z",
+                  "lastAnsweredAt": "2026-11-24T01:48:44.890Z",
                   "run": "done",
                   "sitting": null,
                   "questionIds": [

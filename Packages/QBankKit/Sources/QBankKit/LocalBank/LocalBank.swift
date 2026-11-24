@@ -52,6 +52,12 @@ public final class LocalBank: HTTPTransport {
         self.router = router
     }
 
+    /// The whole bank as bank archive v1, written at the bank's clock. It reads one snapshot and
+    /// changes nothing, so exporting leaves the bank as it was.
+    public func exportArchive() throws -> Data {
+        try BankArchive.write(from: store, at: clock())
+    }
+
     /// A random lowercase UUID. Swift's `uuidString` is uppercase.
     public static let randomID: IDGenerator = { UUID().uuidString.lowercased() }
 

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50",
+  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
@@ -30,60 +30,17 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-14T02:56:01.707Z",
-      "endsAt": "2026-11-14T03:00:31.707Z",
+      "startedAt": "2026-11-24T01:48:53.207Z",
+      "endsAt": "2026-11-24T01:53:23.207Z",
       "status": "running",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-14T02:56:01.707Z",
+      "serverNow": "2026-11-24T01:48:53.207Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8021-000000000009",
-          "publicId": "XB02",
-          "position": 1,
-          "type": "sata",
-          "topic": "Harder B 2",
-          "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
-          "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder B 2.",
-          "takeaway": "Report changes.",
-          "body": {
-            "twinOf": "B02",
-            "options": [
-              {
-                "t": "Heart rate of 124",
-                "ok": true,
-                "why": "Invented: fast."
-              },
-              {
-                "t": "New confusion",
-                "ok": true,
-                "why": "Invented: a change."
-              },
-              {
-                "t": "Mild thirst",
-                "why": "Invented: expected."
-              },
-              {
-                "t": "Soreness at the site",
-                "why": "Invented: expected."
-              },
-              {
-                "t": "Tired after walking",
-                "why": "Invented: expected."
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 5"
-        },
-        {
-          "id": "00000000-0000-4000-8021-000000000010",
           "publicId": "XA01",
-          "position": 2,
+          "position": 1,
           "type": "sata",
           "topic": "Harder A 1",
           "cj": "Recognize cues",
@@ -124,9 +81,9 @@
           "weekLabel": "Week 5"
         },
         {
-          "id": "00000000-0000-4000-8021-000000000011",
+          "id": "00000000-0000-4000-8021-000000000010",
           "publicId": "XA03",
-          "position": 3,
+          "position": 2,
           "type": "sata",
           "topic": "Harder A 3",
           "cj": "Recognize cues",
@@ -136,6 +93,49 @@
           "takeaway": "Report changes.",
           "body": {
             "twinOf": "A03",
+            "options": [
+              {
+                "t": "Heart rate of 124",
+                "ok": true,
+                "why": "Invented: fast."
+              },
+              {
+                "t": "New confusion",
+                "ok": true,
+                "why": "Invented: a change."
+              },
+              {
+                "t": "Mild thirst",
+                "why": "Invented: expected."
+              },
+              {
+                "t": "Soreness at the site",
+                "why": "Invented: expected."
+              },
+              {
+                "t": "Tired after walking",
+                "why": "Invented: expected."
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 5"
+        },
+        {
+          "id": "00000000-0000-4000-8021-000000000011",
+          "publicId": "XB02",
+          "position": 3,
+          "type": "sata",
+          "topic": "Harder B 2",
+          "cj": "Recognize cues",
+          "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+          "ask": "Which findings need a report? Select all that apply.",
+          "rationale": "Invented twin rationale for Harder B 2.",
+          "takeaway": "Report changes.",
+          "body": {
+            "twinOf": "B02",
             "options": [
               {
                 "t": "Heart rate of 124",

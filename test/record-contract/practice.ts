@@ -123,6 +123,7 @@ async function studying(): Promise<World> {
   await world.record("place-put", "/api/me/place", 200, { method: "PUT", json: { courseId } });
   await world.record("place", "/api/me/place", 200);
   await world.record("export", "/api/me/export", 200);
+  await world.record("bank", "/api/me/bank", 200);
   await world.record("review-clear-unconfirmed", `${review}/clear`, 400, { method: "POST", json: { confirmed: false } });
   await world.record("review-clear", `${review}/clear`, 200, { method: "POST", json: { confirmed: true } });
   await world.record("course-not-found", "/api/courses/00000000-0000-4000-8000-000000000000", 404);
