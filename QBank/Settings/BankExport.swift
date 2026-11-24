@@ -5,6 +5,11 @@ import QBankKit
 /// own questions and progress. A bank on this phone is written from the phone; a bank on the server
 /// is downloaded from it, and the file is the same either way. Neither changes the bank.
 nonisolated enum BankExport {
+    /// Settings offers it to a user account, whose bank it is; the admin has no bank of its own.
+    static func isOffered(to account: Account?) -> Bool {
+        account?.role == .student
+    }
+
     /// The file's name says what it is and the day it was made, in the phone's time zone.
     static func fileName(on date: Date, calendar: Calendar = .current) -> String {
         "qbank-bank-\(CalendarDay.text(from: date, calendar: calendar) ?? "export").json"

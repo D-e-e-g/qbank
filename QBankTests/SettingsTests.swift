@@ -584,6 +584,12 @@ struct BankExportTests {
         )
     }
 
+    @Test func onlyAUserAccountIsOfferedIt() {
+        #expect(BankExport.isOffered(to: .student()))
+        #expect(BankExport.isOffered(to: .admin) == false)
+        #expect(BankExport.isOffered(to: nil) == false)
+    }
+
     @Test func theFileNameSaysWhatItIsAndTheDay() {
         #expect(BankExport.fileName(on: day, calendar: utc) == "qbank-bank-2026-11-18.json")
     }

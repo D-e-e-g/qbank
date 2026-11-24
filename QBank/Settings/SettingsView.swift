@@ -56,7 +56,9 @@ struct SettingsView: View {
                     }
                     look
                     onThisPhone
-                    yourBank
+                    if BankExport.isOffered(to: app.account) {
+                        yourBank
+                    }
                     about
                     Text(Self.version)
                         .qbankFont(.footnote)
