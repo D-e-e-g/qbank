@@ -46,7 +46,7 @@ struct WriteModelTests {
         var draft = SetDraft(title: "  Invented \"Quoted\" Set  ")
         draft.questions[0].ask = "  Is \"rest\" good?\n"
         draft.questions[0].kind = .trueFalse
-        draft.questions[0].right = 0
+        draft.questions[0].rightTrueFalse = 0
         let file = try Self.parsed(draft.file())
         #expect(file["title"] as? String == "Invented \"Quoted\" Set")
         let questions = try #require(file["questions"] as? [[String: Any]])
@@ -93,7 +93,7 @@ struct WriteModelTests {
 
     @Test func theProblemsNameEachQuestionByItsNumber() async throws {
         var draft = Self.written()
-        draft.questions[1].right = nil
+        draft.questions[1].rightTrueFalse = nil
         draft.questions.append(QuestionDraft())
         let (server, model) = Self.app(draft)
         await Self.save(model, on: server)
@@ -126,7 +126,7 @@ struct WriteModelTests {
         server.hold("POST /api/imports")
         let saving = Task { await model.save() }
         while !server.calls.contains("POST /api/imports/check") { await Task.yield() }
-        model.editQuestion(id: written.questions[1].id) { $0.right = nil }
+        model.editQuestion(id: written.questions[1].id) { $0.rightTrueFalse = nil }
         model.edit { $0.title = "Invented edit while checking" }
         #expect(model.draft == written, "the check judges what she wrote")
         server.release("POST /api/imports/check")
@@ -227,21 +227,22 @@ struct WriteModelTests {
 
     @Test func theMarkFollowsItsChoiceWhenAnEarlierOneGoes() throws {
         var question = QuestionDraft()
-        question.right = 2
+        question.mark(2)
         question.removeChoice(at: 0)
-        #expect(question.right == 1)
+        #expect(question.rightChoice == 1)
         question.removeChoice(at: 1)
-        #expect(question.right == nil, "the marked choice is gone")
+        #expect(question.rightChoice == nil, "the marked choice is gone")
     }
 
     @Test func eachKindKeepsItsOwnRightAnswer() throws {
         var question = QuestionDraft()
-        question.right = 1
+        question.mark(1)
         question.kind = .trueFalse
-        #expect(question.right == nil)
-        question.right = 0
+        #expect(question.rightPositions.isEmpty)
+        question.mark(0)
+        #expect(question.rightTrueFalse == 0)
         question.kind = .single
-        #expect(question.right == 1)
+        #expect(question.rightPositions == [1])
         #expect(question.choiceTexts.count == 4)
         question.kind = .trueFalse
         #expect(question.choiceTexts == ["True", "False"])
@@ -355,8 +356,7 @@ struct WriteModelTests {
         for (position, text) in ["A regular bedtime", "An evening nap", "Coffee at night", "A late workout"].enumerated() {
             question.choices[position].text = text
         }
-        question.right = 0
-        if mistake == .nothingMarked { question.right = nil }
+        question.rightChoice = mistake == .nothingMarked ? nil : 0
         if mistake == .rightChoiceBlank { question.choices[0].text = " " }
         if mistake == .oneChoice {
             for position in 1..<question.choices.count { question.choices[position].text = "" }
@@ -369,12 +369,12 @@ struct WriteModelTests {
         var single = QuestionDraft()
         single.ask = "Which habit helps sleep?"
         single.choices = ["A regular bedtime", "An evening nap", "Coffee at night"].map { QuestionDraft.Choice(text: $0) }
-        single.right = 0
+        single.rightChoice = 0
         single.explanation = "A steady schedule sets the body clock."
         var trueFalse = QuestionDraft()
         trueFalse.kind = .trueFalse
         trueFalse.ask = "Naps at 6 PM make it easier to fall asleep."
-        trueFalse.right = 1
+        trueFalse.rightTrueFalse = 1
         draft.questions = [single, trueFalse]
         return draft
     }

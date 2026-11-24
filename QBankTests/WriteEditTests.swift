@@ -5,7 +5,7 @@ import Testing
 
 /// Select all that apply in the set editor, and a saved set opened in it: what the file says, what
 /// the check refuses in her words, which sets open, that a question keeps its id through an edit, and
-/// that saving replaces only the set that was opened. Invented sets only.
+/// that saving replaces only the version of the set that was opened. Invented sets only.
 @MainActor
 struct WriteEditTests {
     // MARK: Select all that apply
@@ -100,7 +100,7 @@ struct WriteEditTests {
 
     @Test func aDraftSurvivesBeingKeptAndReadAgain() throws {
         var draft = Self.selectAllSet()
-        draft.editing = EditedSet(setID: "s1", courseID: "c1", folderID: "f1")
+        draft.editing = EditedSet(setID: "s1", courseID: "c1", folderID: "f1", activeSince: Self.openedVersion)
         let kept = try JSONDecoder().decode(SetDraft.self, from: JSONEncoder().encode(draft))
         #expect(kept == draft)
     }
@@ -110,12 +110,12 @@ struct WriteEditTests {
     @Test func aSavedSetOpensWithItsIDsAndEveryRightChoice() throws {
         let draft = try Self.opened(Self.savedSet()).get()
         #expect(draft.title == "Invented Sleep")
-        #expect(draft.editing == EditedSet(setID: "s1", courseID: "c1", folderID: "f1"))
+        #expect(draft.editing == EditedSet(setID: "s1", courseID: "c1", folderID: "f1", activeSince: Self.openedVersion))
         #expect(draft.questions.map(\.fileID) == ["Q1", "Q2", "Q3"])
         #expect(draft.questions.map(\.kind) == [.single, .selectAll, .trueFalse])
         #expect(draft.questions[1].rightChoices == [0, 1])
         #expect(draft.questions[0].explanation == "A steady schedule sets the body clock.")
-        #expect(draft.questions[2].right == 1)
+        #expect(draft.questions[2].rightTrueFalse == 1)
     }
 
     @Test func aSetThatIsOpenedAndNotChangedMakesTheSameQuestionsItHad() throws {
@@ -184,10 +184,66 @@ struct WriteEditTests {
         let (server, model, app) = try Self.editing(conflictSetID: "someone-elses")
         await Self.save(model, on: server)
         #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import"], "nothing was written")
-        #expect(model.problem == WriteWording.setChanged)
+        #expect(model.problem == WriteWording.otherSetNamed)
         #expect(model.importing.done == nil)
         #expect(model.importing.conflict == nil)
         #expect(app.drafts.draft(id: model.draft.id) != nil, "her edits are kept")
+    }
+
+    @Test func anEditOfASetDeletedSinceSavesNothingUntilSheSavesItAsANewSet() async throws {
+        let (server, model, app) = try Self.editing(course: StudyBodies.course(), imports: [Self.importedNew])
+        model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps sleep best?" }
+        await Self.save(model, on: server)
+        #expect(try Self.importBodies(server).isEmpty, "no separate set is made unasked")
+        #expect(model.outdated == .deleted)
+        #expect(model.importing.done == nil)
+        #expect(app.drafts.draft(id: model.draft.id)?.editing != nil, "her changes are kept")
+        await model.saveAsNewSet()
+        #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import"])
+        #expect(try Self.importBodies(server).first?["folderId"] as? String == "f1", "filed where the set was")
+        #expect(model.importing.done?.set.kind == .imported)
+        #expect(model.outdated == nil)
+        #expect(app.drafts.draft(id: model.draft.id) == nil)
+    }
+
+    @Test func anEditOfASetReplacedSinceIsNotSavedOverItUnasked() async throws {
+        let (server, model, app) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
+        model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Which habit helps sleep best?" }
+        await Self.save(model, on: server)
+        #expect(try Self.importBodies(server).isEmpty, "the newer version is left as it is")
+        #expect(model.outdated == .changed(activeSince: Self.newerVersion))
+        #expect(app.drafts.draft(id: model.draft.id) != nil, "her changes are kept")
+        await model.saveAnyway()
+        #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
+        #expect(try Self.importBodies(server).last?["source"] as? String == model.draft.file())
+        #expect(model.importing.done?.set.kind == .replaced)
+        #expect(app.drafts.draft(id: model.draft.id) == nil)
+    }
+
+    @Test func aKeptEditOfASetReplacedSinceIsToldWhenItOpens() async throws {
+        let (_, model, _) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
+        let replaced = await model.checkEdited()
+        #expect(!replaced)
+        #expect(model.outdated == .changed(activeSince: Self.newerVersion))
+        let (_, current, _) = try Self.editing(conflictSetID: "s1")
+        let unchanged = await current.checkEdited()
+        #expect(unchanged)
+        #expect(current.outdated == nil, "the version she opened is still the set's current one")
+    }
+
+    @Test func openingTheCurrentVersionDiscardsHerChangesAndEditsWhatTheSetIsNow() async throws {
+        let (server, model, app) = try Self.editing(conflictSetID: "s1", version: "2026-10-05T00:00:00.000Z")
+        model.editQuestion(id: model.draft.questions[0].id) { $0.ask = "Her change" }
+        let id = model.draft.id
+        await model.checkEdited()
+        server["GET /api/practice-sets/s1"] = .ok(Self.savedSetBody(firstAsk: "Which habit helps sleep now?"))
+        await model.openCurrent()
+        #expect(model.outdated == nil)
+        #expect(model.draft.questions.map(\.ask) == ["Which habit helps sleep now?", "Which habits help sleep?", "Naps at 6 PM make it easier to fall asleep."])
+        #expect(model.draft.editing?.activeSince == Self.newerVersion)
+        #expect(app.drafts.draft(id: id) == nil, "her changes are discarded")
+        await Self.save(model, on: server)
+        #expect(try Self.importBodies(server).map { $0["decision"] as? String } == ["import", "replace"])
     }
 
     @Test func aKeptEditComesBackForTheSameSetAndIsListedWithAChangesNote() throws {
@@ -232,39 +288,66 @@ struct WriteEditTests {
     /// The set as `GET /api/practice-sets/{id}` serves it for the file above, with `first` as extra
     /// fields on its first question and `firstBody` as its body.
     private static func savedSet(first: String = "", type: String = "single", kind: String = "practice", firstBody: String? = nil) -> PracticeSet {
+        // swiftlint:disable:next force_try
+        try! QBankJSON.decoder.decode(PracticeSet.self, from: Data(savedSetBody(first: first, type: type, kind: kind, firstBody: firstBody).utf8))
+    }
+
+    private static func savedSetBody(
+        first: String = "", type: String = "single", kind: String = "practice", firstBody: String? = nil, firstAsk: String = "Which habit helps sleep?"
+    ) -> String {
         func question(_ id: String, _ position: Int, _ type: String, ask: String, rationale: String = "", extra: String = "", body: String) -> String {
             #"{"id":"\#(id.lowercased())","publicId":"\#(id)","position":\#(position),"type":"\#(type)","topic":"\#(extra.contains("\"topic\"") ? "Sleep" : "")","cj":\#(extra.contains("cj") ? "\"Analyze cues\"" : "null"),"stem":"\#(extra.contains("\"stem\"") ? "A client has a finding." : "")","ask":"\#(ask)","rationale":"\#(rationale)","takeaway":"\#(extra.contains("takeaway") ? "Keep a schedule." : "")","body":{\#(body)},"images":[],"terms":\#(extra.contains("terms") ? #"[{"key":"k","term":"T","meaning":"M"}]"# : "[]")}"#
         }
         let questions = [
             question(
-                "Q1", 1, type, ask: "Which habit helps sleep?", rationale: "A steady schedule sets the body clock.", extra: first,
+                "Q1", 1, type, ask: firstAsk, rationale: "A steady schedule sets the body clock.", extra: first,
                 body: firstBody ?? #""options":[{"t":"A regular bedtime","ok":true},{"t":"An evening nap"},{"t":"Coffee at night"}]"#),
             question("Q2", 2, "sata", ask: "Which habits help sleep?", body: #""options":[{"t":"A regular bedtime","ok":true},{"t":"A dark room","ok":true},{"t":"Coffee at night"}]"#),
             question("Q3", 3, "single", ask: "Naps at 6 PM make it easier to fall asleep.", body: #""options":[{"t":"True"},{"t":"False","ok":true}]"#),
         ]
-        let json = #"{"id":"s1","courseId":"c1","title":"Invented Sleep","weekLabel":"Unsorted","folderId":"f1","kind":"\#(kind)","questions":[\#(questions.joined(separator: ","))],"sitting":null,"run":"new"}"#
-        // swiftlint:disable:next force_try
-        return try! QBankJSON.decoder.decode(PracticeSet.self, from: Data(json.utf8))
+        return #"{"id":"s1","courseId":"c1","title":"Invented Sleep","weekLabel":"Unsorted","folderId":"f1","kind":"\#(kind)","questions":[\#(questions.joined(separator: ","))],"sitting":null,"run":"new"}"#
     }
 
+    /// The set row's `activeSince` when she opened it, 2026-10-01T00:00:00Z, and a later one.
+    static let openedVersion = Date(timeIntervalSince1970: 1_790_812_800)
+    static let newerVersion = Date(timeIntervalSince1970: 1_791_158_400)
+
+    /// `GET /api/courses/c1` with the saved set in Week 1, current since `version`.
+    private static func courseWithSavedSet(version: String) -> String {
+        StudyBodies.course()
+            .replacingOccurrences(of: #""id":"w1""#, with: #""id":"s1""#)
+            .replacingOccurrences(of: #""activeSince":"2026-10-01T00:00:00.000Z""#, with: #""activeSince":"\#(version)""#)
+    }
+
+    private static let importedNew = StubServer.Reply(status: 201, body: ImportModelTests.imported(kind: "imported", folder: "f1", folderName: "Week 1"))
+
     private static func opened(_ set: PracticeSet) -> Result<SetDraft, WriteEdit.Refusal> {
-        WriteEdit.draft(editing: set, folderID: "f1")
+        WriteEdit.draft(editing: set, folderID: "f1", activeSince: openedVersion)
     }
 
     private static func parsed(_ file: String) throws -> [String: Any] {
         try #require(try JSONSerialization.jsonObject(with: Data(file.utf8)) as? [String: Any])
     }
 
-    /// A model editing the saved set. The first import answers with a conflict naming `conflictSetID`; the second replaces.
-    private static func editing(conflictSetID: String) throws -> (StubServer, WriteModel, AppModel) {
-        let draft = try opened(savedSet()).get()
+    /// A model editing the saved set, which the course has current since `version`. The first
+    /// import answers with a conflict naming `conflictSetID`; the second replaces.
+    private static func editing(conflictSetID: String, version: String = "2026-10-01T00:00:00.000Z") throws -> (StubServer, WriteModel, AppModel) {
         let conflict = ImportModelTests.conflict.replacingOccurrences(of: "\"old1\"", with: "\"\(conflictSetID)\"")
+        return try editing(
+            course: courseWithSavedSet(version: version),
+            imports: [StubServer.Reply(status: 409, body: conflict), StubServer.Reply(status: 201, body: ImportModelTests.imported(kind: "replaced", folder: "f1", folderName: "Week 1"))]
+        )
+    }
+
+    /// A model editing the saved set, in the course `course` answers with, and the imports answered with `imports`.
+    private static func editing(course: String, imports: [StubServer.Reply]) throws -> (StubServer, WriteModel, AppModel) {
+        let draft = try opened(savedSet()).get()
         let server = StubServer([
             "GET /api/semesters": .ok(Bodies.semesters()),
             "GET /api/me/place": .ok(Bodies.place("c1")),
-            "GET /api/courses/c1": .ok(StudyBodies.course()),
+            "GET /api/courses/c1": .ok(course),
         ])
-        server.script("POST /api/imports", [StubServer.Reply(status: 409, body: conflict), StubServer.Reply(status: 201, body: ImportModelTests.imported(kind: "replaced", folder: "f1", folderName: "Week 1"))])
+        server.script("POST /api/imports", imports)
         let (app, _) = TestApp.make(server, account: .student(), defaults: TestApp.freshDefaults())
         app.drafts.keep(draft)
         let model = WriteModel(app: app, draft: draft)

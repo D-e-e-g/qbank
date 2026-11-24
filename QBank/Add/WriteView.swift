@@ -47,7 +47,10 @@ struct WriteView: View {
         .qbankScreenBackground()
         .navigationTitle(model.isEditing ? "Edit questions" : "Write questions")
         .screenColumnTitle()
-        .task { await model.importing.load() }
+        .task {
+            await model.importing.load()
+            if model.importing.isOnline { await model.checkEdited() }
+        }
         .sheet(item: Binding(get: { model.isEditing ? nil : model.importing.conflict }, set: { model.importing.conflict = $0 })) { conflict in
             ReplaceSheet(conflict: conflict) { decision in
                 model.importing.conflict = nil
@@ -69,6 +72,44 @@ struct WriteView: View {
         }
     }
 
+    /// The set she edited was deleted, or has another version than she opened: what she can do.
+    private func outdatedNotice(_ outdated: WriteModel.Outdated) -> some View {
+        VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+            Text(outdated == .deleted ? WriteWording.setDeleted : WriteWording.setChanged)
+                .qbankFont(.subheadline)
+                .foregroundStyle(.qbank(.text1))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("write.outdated.message")
+            if outdated == .deleted {
+                Button("Save as a new set") { Task { await model.saveAsNewSet() } }
+                    .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                    .disabled(!model.canSave)
+                    .answersWhenFrozen(app.frozen)
+                    .accessibilityIdentifier("write.outdated.saveNew")
+                Button("Discard changes") { asksToDiscard = true }
+                    .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
+                    .disabled(model.isBusy)
+                    .accessibilityIdentifier("write.outdated.discard")
+            } else {
+                Button("Discard my changes and open the current set") { Task { await model.openCurrent() } }
+                    .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                    .disabled(!model.canSave)
+                    .accessibilityIdentifier("write.outdated.openCurrent")
+                Button("Save my version anyway") { Task { await model.saveAnyway() } }
+                    .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
+                    .disabled(!model.canSave)
+                    .answersWhenFrozen(app.frozen)
+                    .accessibilityIdentifier("write.outdated.saveAnyway")
+            }
+        }
+        .padding(QBankSpacing.space3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.qbank(.partialSoft), in: .rect(cornerRadius: QBankRadius.md, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: QBankRadius.md, style: .continuous).strokeBorder(.qbank(.partialBorder), lineWidth: QBankBorder.regular))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("write.outdated")
+    }
+
     private var form: some View {
         VStack(alignment: .leading, spacing: QBankSpacing.space5) {
             if !model.importing.isOnline {
@@ -79,6 +120,9 @@ struct WriteView: View {
                 .qbankFont(.subheadline)
                 .foregroundStyle(.qbank(.text2))
                 .padding(.horizontal, QBankSpacing.space1)
+            if let outdated = model.outdated {
+                outdatedNotice(outdated)
+            }
             Group {
                 if model.isEditing {
                     // The name finds the set to replace, so it stays as it is.

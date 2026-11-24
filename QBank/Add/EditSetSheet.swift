@@ -3,8 +3,9 @@ import QBankKit
 import SwiftUI
 
 /// A saved set opened in the set editor, from its row in a folder. Her unsaved changes to this set
-/// come back if she left them; otherwise the set is read as it is now. A set the editor cannot keep
-/// whole is not opened, and the sheet says why.
+/// come back if she left them, and the editor says when the set has a newer version than they were
+/// made on; otherwise the set is read as it is now. A set the editor cannot keep whole is not
+/// opened, and the sheet says why.
 struct EditSetSheet: View {
     let app: AppModel
     let set: PracticeSetSummary
@@ -60,7 +61,7 @@ struct EditSetSheet: View {
         }
         do {
             let loaded = try await app.client.practiceSet(id: set.id)
-            switch WriteEdit.draft(editing: loaded, folderID: folderID) {
+            switch WriteEdit.draft(editing: loaded, folderID: folderID, activeSince: set.activeSince) {
             case .success(let draft): phase = .open(draft)
             case .failure(let refusal): phase = .refused(refusal.message)
             }

@@ -11,8 +11,9 @@ nonisolated enum WriteEdit {
     static let unsupported = "This set has a part the editor cannot keep yet, such as a picture, a table, a term, a step note or a format other than single answer, select all and true or false. It is left as it is."
 
     /// The draft that edits `set`, or why it cannot be opened. The draft takes the set's name, which
-    /// stays the same: saving replaces the set of that name with a new version.
-    static func draft(editing set: PracticeSet, folderID: String) -> Result<SetDraft, Refusal> {
+    /// stays the same: saving replaces the set of that name with a new version. `activeSince` is the
+    /// set row's, which says which version of the set this is.
+    static func draft(editing set: PracticeSet, folderID: String, activeSince: Date) -> Result<SetDraft, Refusal> {
         guard set.kind == .practice else { return .failure(Refusal(message: examSet)) }
         var questions: [QuestionDraft] = []
         for question in set.questions {
@@ -22,7 +23,7 @@ nonisolated enum WriteEdit {
         guard !questions.isEmpty else { return .failure(Refusal(message: unsupported)) }
         var draft = SetDraft(title: set.title)
         draft.questions = questions
-        draft.editing = EditedSet(setID: set.id, courseID: set.courseID, folderID: folderID)
+        draft.editing = EditedSet(setID: set.id, courseID: set.courseID, folderID: folderID, activeSince: activeSince)
         return .success(draft)
     }
 

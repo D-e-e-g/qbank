@@ -71,19 +71,6 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
         kind == .trueFalse ? Self.trueFalseChoices : choices.map(\.text)
     }
 
-    /// The one marked choice of a single-answer or true-or-false question. For select all, the first
-    /// marked one; setting it marks just that one.
-    var right: Int? {
-        get { rightPositions.min() }
-        set {
-            switch kind {
-            case .single: rightChoice = newValue
-            case .selectAll: rightChoices = newValue.map { [$0] } ?? []
-            case .trueFalse: rightTrueFalse = newValue
-            }
-        }
-    }
-
     /// The positions marked right: one, or any number for select all.
     var rightPositions: Set<Int> {
         switch kind {
@@ -157,11 +144,14 @@ nonisolated struct QuestionDraft: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// The saved set a draft edits: where it is, so saving files the new version in its place.
+/// The saved set a draft edits: where it is, so saving files the new version in its place, and
+/// which version of it she opened, so a set replaced or restored since is not overwritten unasked.
 nonisolated struct EditedSet: Codable, Equatable, Sendable {
     let setID: String
     let courseID: String
     let folderID: String
+    /// When the version she is editing became the set's current one: the set row's `activeSince`.
+    var activeSince: Date
 }
 
 /// A set she is writing: its name and its questions. It is kept on this phone until it is saved.
