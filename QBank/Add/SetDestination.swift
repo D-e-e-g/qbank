@@ -190,6 +190,7 @@ final class SetDestination {
         let load = detailLoads
         guard let id = courseID else {
             detail = nil
+            if case .folder = folder { folder = .unsorted }
             return
         }
         let read = try? await app.load(.course(id)) { () async throws(QBankError) in try await app.client.course(id: id) }.value

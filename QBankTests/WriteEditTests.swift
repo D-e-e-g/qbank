@@ -191,6 +191,7 @@ struct WriteEditTests {
         await model.startAnother()
         #expect(model.importing.destination.courseID == nil, "a new set is not filed into the archived course")
         #expect(model.importing.destination.menuChoice == .new)
+        #expect(model.importing.destination.folder == .unsorted, "a new course has no folder of the archived one")
     }
 
     @Test func anotherSetOfTheSameNameIsNeverReplaced() async throws {
