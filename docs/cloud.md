@@ -2,7 +2,7 @@
 
 The design record for who is signed in, where their question bank lives, and how a whole bank moves between the phone and the server. [on-phone-bank.md](on-phone-bank.md) is its other half: the bank on the phone and the bank archive format.
 
-This is a record to build to, not a description of shipped code. Only Getting in exists so far (I-30, and linking Apple in Settings, I-31), and its section says what was built. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`).
+This is a record to build to, not a description of shipped code. Only Getting in (I-30, and linking Apple in Settings, I-31) and the Cloud purchase (I-33) exist so far, and their sections say what was built. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`).
 
 Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name owner questions. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
