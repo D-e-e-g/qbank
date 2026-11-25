@@ -23,6 +23,7 @@ nonisolated enum DebugScenarioCatalog {
         .storedSessionBeforeUpdate,
         .cloudMoveLeftOpen,
         .cloudMoveRefused,
+        .freeDeleteDrops,
     ]
 
     /// The scenario named `name`, or nil when none is.

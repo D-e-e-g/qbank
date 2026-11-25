@@ -53,6 +53,11 @@ public final class LocalBank: HTTPTransport {
         self.router = router
     }
 
+    /// Closes the bank's file, so it can be erased. Every later request fails.
+    public func close() {
+        store.close()
+    }
+
     /// The whole bank as bank archive v1, written at the bank's clock. It reads one snapshot and
     /// changes nothing, so exporting leaves the bank as it was.
     public func exportArchive() throws -> Data {

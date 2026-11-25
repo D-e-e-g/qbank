@@ -21,6 +21,10 @@ import QBankKit
 /// state alone: a store account whose bank moved is `.store`, on the server, and the bank file on this
 /// phone stays as it was, a safety copy that is not even opened. A move the app was closed during is
 /// found at launch, with the bank's writes held, and finished before anything else.
+///
+/// A store account, free or Cloud, is deleted with a fresh Sign in with Apple, in a fixed order: this
+/// phone's copy is erased, then the account on the server, then the session (`deleteAccount(confirmedWith:nonce:)`).
+/// A delete that stopped after the erase opens as `finishingDeletion`, which offers only to finish it.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -29,6 +33,9 @@ final class AppModel {
         /// The owner reset her password: she chooses a new one before anything else.
         case choosingPassword(Account)
         case signedIn(Account)
+        /// A store account's delete that stopped once this phone's copy was erased, or while it was,
+        /// before the server deleted the account: finishing the delete is all that is offered.
+        case finishingDeletion(Account)
     }
 
     private(set) var route: Route {
@@ -65,6 +72,9 @@ final class AppModel {
     /// What the server answered, or why it could not, the last time it was sent a Sign in with Apple
     /// it has not confirmed. Nil when nothing was heard yet.
     private(set) var serverSignInProblem: String?
+    /// Why the last try to delete a store account stopped after this phone's copy was erased, for the
+    /// screen that finishes it. Nil when none did.
+    private(set) var deletionProblem: String?
     /// Who asks Apple to sign the person in.
     let appleSignIn: any AppleSignInProvider
     /// Light or dark, chosen in Settings and kept on this phone.
@@ -168,7 +178,11 @@ final class AppModel {
         var reason: String?
         var start = Route.signedOut
         if let stored, let account = stored.account {
-            if account.origin == .store {
+            if stored.deletion != nil {
+                // A delete that stopped part way: this phone's copy may be erased already, so nothing
+                // opens it again, and only finishing the delete is offered.
+                start = .finishingDeletion(account)
+            } else if account.origin == .store {
                 // A store account's bank is named by Apple's id of the person: on this phone, or in
                 // QBank Cloud. One that cannot open is not replaced by an empty one: signing in again
                 // finds it.
@@ -192,7 +206,7 @@ final class AppModel {
         }
         phoneBank = opened
         cloudBankKey = inCloud
-        kind = opened != nil ? .free : inCloud != nil ? .store : .invited
+        kind = opened != nil || stored?.deletion != nil ? .free : inCloud != nil ? .store : .invited
         let waiting = opened != nil && stored?.awaitsServer == true
         awaitsServer = waiting
         needsAppleSignInAgain = waiting && stored?.unsent == nil
@@ -222,8 +236,14 @@ final class AppModel {
     var account: Account? {
         switch route {
         case .signedOut: nil
-        case .choosingPassword(let account), .signedIn(let account): account
+        case .choosingPassword(let account), .signedIn(let account), .finishingDeletion(let account): account
         }
+    }
+
+    /// True while a store account's delete is to be finished: this phone's copy is erased, or being
+    /// erased, and the server has not deleted the account yet.
+    var isFinishingDeletion: Bool {
+        if case .finishingDeletion = route { true } else { false }
     }
 
     /// Who is signed in, as this phone keeps their things apart, such as the sets they are writing: for
@@ -283,8 +303,8 @@ final class AppModel {
             return
         }
         // A free account's session is checked with the server when it signs in; until then the
-        // phone's bank opens as it is.
-        guard account != nil, !kind.bankIsOnPhone else { return }
+        // phone's bank opens as it is. A delete to finish checks it itself.
+        guard account != nil, !kind.bankIsOnPhone, !isFinishingDeletion else { return }
         do {
             let session = try await client.session()
             route = Self.route(for: session.user)
@@ -579,6 +599,135 @@ final class AppModel {
         await eraseAccount()
     }
 
+    // MARK: Deleting a store account
+
+    /// Why deleting a store account stopped: the words to show, or nil when there is nothing more to
+    /// say, such as when the person closed Apple's sheet or the screen gave way to sign-in. Whether
+    /// this phone's copy is erased already is the route: `finishingDeletion` once it is.
+    struct DeletionStop: Error, Equatable {
+        let reason: String?
+    }
+
+    /// Checks, before Apple is asked, that QBank's server can take the delete: a Sign in with Apple it
+    /// has not confirmed is sent again first, and the session must still be the server's. Nothing is
+    /// erased here. A session the server ended signs the person out, as any ended session does; the
+    /// delete then never began, or, when this phone's copy is erased already, ends here.
+    func checkBeforeDeletingAccount() async throws(DeletionStop) {
+        if awaitsServer {
+            await sendAppleSignInAgain()
+            guard !awaitsServer else {
+                throw DeletionStop(reason: needsAppleSignInAgain ? AccountDeletionWording.needsAppleSignInAgain : AccountDeletionWording.awaitsServer)
+            }
+        }
+        do {
+            _ = try await server.session()
+        } catch {
+            guard error.needsSignIn else { throw DeletionStop(reason: Wording.problem(error) ?? AccountDeletionWording.tryAgain) }
+            try await sessionEndedWhileDeleting()
+        }
+    }
+
+    /// Deletes the store account signed in, free or Cloud, for good, once a fresh Sign in with Apple
+    /// confirmed it, in this order: this phone's copy is erased, then the server deletes the account
+    /// and revokes Apple's tokens, then the session is forgotten from the keychain. The person must be
+    /// the one signed in, or nothing is erased.
+    ///
+    /// Each step done is kept with the session before the next begins, so a delete that stops is
+    /// finished from where it stopped, even after a relaunch, and never deletes twice: the erase runs
+    /// until it is done once, and the server deletes only the account this phone's session is
+    /// signed in to, whose session goes with it. Once the erase began, a failure leaves only
+    /// `finishingDeletion`, and trying again finishes the delete.
+    func deleteAccount(confirmedWith credential: AppleCredential, nonce: AppleSignInNonce) async throws(DeletionStop) {
+        guard let account, !kind.deletesWithPassword, !awaitsServer, let kept = try? server.storedSession(), let appleUser = kept.appleUser
+        else { throw DeletionStop(reason: AccountDeletionWording.tryAgain) }
+        // Another Apple Account's yes deletes nothing: the server would refuse it after the erase.
+        guard credential.user == appleUser else { throw DeletionStop(reason: AccountDeletionWording.otherAppleAccount) }
+        guard let code = credential.authorizationCode, !code.isEmpty else { throw DeletionStop(reason: AppleSignInWording.appleDidNotFinish) }
+        deletionProblem = nil
+        if kept.deletion == nil {
+            // Kept before anything is erased, so from here on the delete is finished, never begun again.
+            do {
+                try server.recordAccountDeletion(.erasingPhone)
+            } catch {
+                throw DeletionStop(reason: AccountDeletionWording.notBegun)
+            }
+        }
+        if kept.deletion != .phoneErased {
+            try await erasePhoneCopy(of: account, appleUser: appleUser)
+        }
+        let request = AppleAccountDeletionRequest(identityToken: credential.identityToken, nonce: nonce.value, authorizationCode: code)
+        do {
+            try await server.deleteAccount(confirmedWithApple: request)
+        } catch {
+            guard error.needsSignIn else {
+                throw stopDeleting(account, reason: Wording.problem(error) ?? AccountDeletionWording.tryAgain)
+            }
+            // The server has no session for this phone: an earlier try deleted the account and its
+            // answer never came, or the session ended another way. Either way nothing more can be
+            // deleted from here.
+            try await sessionEndedWhileDeleting()
+            return
+        }
+        // Signed out with nothing more to say, as a password account's delete ends.
+        forgetDeletedAccount(reason: nil)
+    }
+
+    /// Erases what this phone keeps of the account: its bank and anything kept beside it, the saved
+    /// courses and waiting answers of an account whose bank is on the server, and the sets it was
+    /// writing. Nothing reaches the bank again. A failure leaves `finishingDeletion`, still at the
+    /// erase, so trying again erases again.
+    private func erasePhoneCopy(of account: Account, appleUser: String) async throws(DeletionStop) {
+        phoneBank?.bank.close()
+        phoneBank = nil
+        client = server
+        await offline?.close()
+        offline = nil
+        do {
+            try banks.erase(appleUser)
+        } catch {
+            throw stopDeleting(account, reason: AccountDeletionWording.phoneNotErased)
+        }
+        storage.erase(account.id)
+        drafts.erase(accountID: appleUser)
+        drafts.erase(accountID: account.id)
+        // Not kept, the erase simply runs again next time, and erases nothing more.
+        try? server.recordAccountDeletion(.phoneErased)
+    }
+
+    /// The server ended this phone's session while a delete was to be done. Before anything was
+    /// erased, the person is signed out with their bank kept, as from any ended session, and told
+    /// to sign in and delete again. After, this phone finishes erasing its copy and forgets the
+    /// session: the account is deleted already, or the person can sign in and delete it again.
+    private func sessionEndedWhileDeleting() async throws(DeletionStop) {
+        guard let account, let kept = try? server.storedSession(), let step = kept.deletion, let appleUser = kept.appleUser else {
+            try? server.sessionStore.clear()
+            forgetSession(reason: AccountDeletionWording.sessionEndedBeforeErasing)
+            throw DeletionStop(reason: nil)
+        }
+        if step != .phoneErased {
+            try await erasePhoneCopy(of: account, appleUser: appleUser)
+        }
+        forgetDeletedAccount(reason: AccountDeletionWording.sessionEndedAfterErasing)
+        throw DeletionStop(reason: nil)
+    }
+
+    /// The delete stopped once this phone's copy was erased, or while it was: only finishing it is
+    /// offered from here, and the reason is kept for that screen.
+    private func stopDeleting(_ account: Account, reason: String) -> DeletionStop {
+        deletionProblem = reason
+        client = server
+        connection = network
+        route = .finishingDeletion(account)
+        return DeletionStop(reason: reason)
+    }
+
+    /// The delete's last step: the session, and with it the record of the delete, leaves the
+    /// keychain. One that will not leave is finished at the next launch, which finds the account gone.
+    private func forgetDeletedAccount(reason: String?) {
+        try? server.sessionStore.clear()
+        forgetSession(reason: reason)
+    }
+
     /// Forgets the account signed in, and everything the phone kept for it.
     private func eraseAccount() async {
         if let account {
@@ -627,6 +776,7 @@ final class AppModel {
 
     private func forgetSession(reason: String?) {
         signedOutReason = reason
+        deletionProblem = nil
         pickedPalette = nil
         paletteProblem = nil
         temporaryPassword = nil
@@ -649,7 +799,7 @@ final class AppModel {
     /// Opens the phone's store for the account signed in, keeping it while the account stays. An
     /// ended session closes it but leaves its files, so waiting answers go once she signs in again.
     private func openOffline() {
-        guard kind.savesForOffline, let account else {
+        guard kind.savesForOffline, let account, !isFinishingDeletion else {
             offline?.stop()
             offline = nil
             return

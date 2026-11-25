@@ -100,7 +100,13 @@ struct SettingsView: View {
                 case .connectAgent:
                     ConnectAgentView(app: app)
                 case .deleteAccount:
-                    DeleteAccountView(app: app)
+                    // An invited account confirms with its password, as before; a store account,
+                    // which has none, with a fresh Sign in with Apple.
+                    if app.kind.deletesWithPassword {
+                        DeleteAccountView(app: app)
+                    } else {
+                        AppleDeleteAccountView(app: app)
+                    }
                 case .semester(let id):
                     SemesterView(catalog: catalog, id: id)
                 case .savedForOffline:
@@ -209,7 +215,7 @@ struct SettingsView: View {
             if !app.awaitsServer {
                 signOutEverywhereRow
             }
-            if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
+            if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) || AppleDeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
                 NavigationLink(value: SettingsRoute.deleteAccount) {
                     QBankListRow("Delete account", showsChevron: true, isDestructive: true)
                 }

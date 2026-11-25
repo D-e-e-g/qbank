@@ -155,6 +155,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     private let offline = Mutex(false)
     /// Requests to end an exam still to lose the connection.
     private let finishesToDrop: Mutex<Int>
+    /// Requests to delete the account still to lose the connection before they reach the server.
+    private let accountDeletesToDrop: Mutex<Int>
     /// How long the reply to an answer or a Start over takes to arrive.
     private let saveReplyDelay: Duration
     /// Review, Terms, exams and the course's exams.
@@ -185,6 +187,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     ///   - examEndsIn: That exam's time runs out this long after `now`.
     ///   - droppedFinishes: How many requests to end an exam lose the connection before one reaches
     ///     the server, as when the signal goes right after her last answer.
+    ///   - droppedAccountDeletes: How many requests to delete the account lose the connection before
+    ///     one reaches the server, so nothing is deleted by them.
     ///   - saveReplyDelay: How long the reply to a practice answer or a Start over takes to arrive, as
     ///     on a slow connection: the server has it at once, and the app hears back this much later.
     ///   - matrixMultiSet: Weeks 1-3 holds one matrixmulti question instead of the mixed set.
@@ -192,7 +196,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     init(
         signedIn: Bool, as account: Credentials = FakeQBankServer.student, makerIsSetUp: Bool = true,
         place: String? = FakeQBankServer.mentalHealthID, examInProgress: Bool = false, examLastQuestionOpen: Bool = false,
-        examEndsIn: TimeInterval? = nil, droppedFinishes: Int = 0, saveReplyDelay: Duration = .zero, matrixMultiSet: Bool = false,
+        examEndsIn: TimeInterval? = nil, droppedFinishes: Int = 0, droppedAccountDeletes: Int = 0, saveReplyDelay: Duration = .zero,
+        matrixMultiSet: Bool = false,
         sataAllCorrectSet: Bool = false, now: Date = .now, answersFile: URL? = nil
     ) {
         self.now = now
@@ -202,6 +207,7 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             matrixMultiSet: matrixMultiSet, sataAllCorrectSet: sataAllCorrectSet
         )
         finishesToDrop = Mutex(droppedFinishes)
+        accountDeletesToDrop = Mutex(droppedAccountDeletes)
         self.saveReplyDelay = saveReplyDelay
         questionMaker = FakeQuestionMaker(allowed: [Self.maker.email], isSetUp: makerIsSetUp, seededFor: Self.maker.email, now: now)
         twinJobs = FakeTwinJobs(maker: questionMaker, study: study)
@@ -291,6 +297,15 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         {
             throw URLError(.networkConnectionLost)
         }
+        if request.httpMethod == "DELETE", url.path() == "/api/me",
+            accountDeletesToDrop.withLock({ left in
+                guard left > 0 else { return false }
+                left -= 1
+                return true
+            })
+        {
+            throw URLError(.networkConnectionLost)
+        }
         // A repeated parameter, such as exam setup's folderIds, keeps every value, joined by commas:
         // no id has one.
         let query = (URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [])
@@ -346,6 +361,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         case ("POST", "/api/account/password"):
             return changePassword(account, token: token, current: body["currentPassword"] as? String ?? "", new: body["newPassword"] as? String ?? "")
         case ("DELETE", "/api/me"):
+            // An account with no password, a store account, confirms with a fresh Sign in with Apple.
+            if account.password == nil { return deleteAppleAccount(account, body: body) }
             return deleteAccount(account, password: body["password"] as? String ?? "")
         case ("POST", "/api/me/apple"):
             return linkApple(account, body: body)

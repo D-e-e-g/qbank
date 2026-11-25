@@ -8,7 +8,8 @@ import UIKit
 ///
 /// It answers at once, as Apple would after the person agreed, with an identity token the fake server
 /// reads (`FakeQBankServer.appleToken`): Apple's id of the person, the email Apple shares, and the
-/// nonce's hash the app asked with, so the fake server checks the nonce as the real one does.
+/// nonce's hash the app asked with, so the fake server checks the nonce as the real one does. Its
+/// authorization code is a stand-in too, which the fake server takes when a store account is deleted.
 /// `QB_UITEST_APPLE` picks who answers:
 /// - absent or `new-person`: someone new to QBank, whom the server gives a store account.
 /// - `returning-person`: the person who already has the fake server's store account,
@@ -64,7 +65,7 @@ final class DebugScriptedAppleSignIn: AppleSignInProvider {
             (user, email) = ("003579.fakeapple0000000000000000000003.0003", FakeQBankServer.student.email)
         }
         let token = FakeQBankServer.appleToken(user: user, email: email ?? FakeQBankServer.applePerson.email, hashedNonce: hashedNonce)
-        return AppleCredential(user: user, identityToken: token, email: email)
+        return AppleCredential(user: user, identityToken: token, email: email, authorizationCode: "fake-apple-code-\(asks)")
     }
 }
 #endif

@@ -109,7 +109,7 @@ public struct QBankClient: Sendable {
     /// when another session took the place of `kept`.
     public func forgetUnsentAppleSignIn(_ kept: StoredSession) throws(QBankError) {
         guard kept.unsent != nil, try loadSession() == kept else { return }
-        try save(StoredSession(token: kept.token, expiresAt: kept.expiresAt, account: kept.account, appleUser: kept.appleUser))
+        try save(StoredSession(token: kept.token, expiresAt: kept.expiresAt, account: kept.account, appleUser: kept.appleUser, deletion: kept.deletion))
     }
 
     /// Checks the stored session with the server and refreshes the stored account.
@@ -117,7 +117,11 @@ public struct QBankClient: Sendable {
     public func session() async throws(QBankError) -> Session {
         let session: Session = try await send(Request(.get, "/api/session"))
         if let stored = try loadSession() {
-            try save(StoredSession(token: stored.token, expiresAt: session.expiresAt, account: session.user, appleUser: stored.appleUser, unsent: stored.unsent))
+            try save(
+                StoredSession(
+                    token: stored.token, expiresAt: session.expiresAt, account: session.user, appleUser: stored.appleUser, unsent: stored.unsent,
+                    deletion: stored.deletion
+                ))
         }
         return session
     }
@@ -204,9 +208,42 @@ public struct QBankClient: Sendable {
     public func linkApple(_ request: AppleLinkRequest) async throws(QBankError) -> Account {
         let account: Account = try await send(Request(.post, "/api/me/apple", body: request))
         if let stored = try loadSession(), stored.account?.id == account.id {
-            try save(StoredSession(token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent))
+            try save(
+                StoredSession(
+                    token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent,
+                    deletion: stored.deletion
+                ))
         }
         return account
+    }
+
+    /// Deletes the signed-in account that has no password, a store account, confirmed with a fresh
+    /// Sign in with Apple, for good, with everything it has on the server. The server checks the
+    /// identity token, exchanges the authorization code with Apple and revokes Apple's tokens, then
+    /// deletes; a revoke that fails does not stop the delete. Every session of the account ends.
+    /// Any 2xx means it is gone. Unlike `deleteAccount(password:)` the stored session is left as it
+    /// is: the app forgets it itself, as the last step of a delete that erased the phone's copy first.
+    ///
+    /// Refusals delete nothing: 400 `invalid_request` (a field is missing); 401 `invalid_apple_token`
+    /// (the token is not Apple's, has ended, is more than five minutes old, does not match the nonce,
+    /// was used already, or names another Apple identity), which counts toward the address's Sign in
+    /// with Apple lock (429 `too_many_attempts`, `retryAfterSeconds`); 409 `in_use`; 502
+    /// `apple_unreachable` (Apple's keys could not be read); 503 `apple_sign_in_unavailable` or
+    /// `auth_unavailable`. A 401 `unauthenticated` means this phone's session is gone, which is also
+    /// what an earlier delete of the account leaves.
+    public func deleteAccount(confirmedWithApple request: AppleAccountDeletionRequest) async throws(QBankError) {
+        _ = try await exchange(Request(.delete, "/api/me", body: request))
+    }
+
+    /// Keeps `step` with the stored session, so a delete that stops part way is finished from where
+    /// it stopped, even after a relaunch. Everything else in the session stays as it is.
+    public func recordAccountDeletion(_ step: AccountDeletionStep) throws(QBankError) {
+        guard let stored = try loadSession() else { throw .notSignedIn }
+        try save(
+            StoredSession(
+                token: stored.token, expiresAt: stored.expiresAt, account: stored.account, appleUser: stored.appleUser, unsent: stored.unsent,
+                deletion: step
+            ))
     }
 
     // MARK: Courses
@@ -703,7 +740,11 @@ public struct QBankClient: Sendable {
     public func setPalette(_ palette: Account.Palette) async throws(QBankError) -> Account {
         let account: Account = try await send(Request(.put, "/api/me/palette", body: PaletteUpdate(palette: palette)))
         if let stored = try loadSession() {
-            try save(StoredSession(token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent))
+            try save(
+                StoredSession(
+                    token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent,
+                    deletion: stored.deletion
+                ))
         }
         return account
     }

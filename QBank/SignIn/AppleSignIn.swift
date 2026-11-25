@@ -12,11 +12,16 @@ nonisolated struct AppleCredential: Sendable, Equatable {
     /// the identity token: for the phone to show and to fill in, never to trust. The server reads the
     /// token itself.
     let email: String?
+    /// The authorization code Apple gave with this sign-in, as UTF-8 text, good once for five
+    /// minutes. Deleting a store account sends it, for the server to revoke Apple's tokens with; a
+    /// sign-in does not. Nil when Apple gave none.
+    let authorizationCode: String?
 
-    init(user: String, identityToken: String, email: String?) {
+    init(user: String, identityToken: String, email: String?, authorizationCode: String? = nil) {
         self.user = user
         self.identityToken = identityToken
         self.email = email ?? Self.email(inToken: identityToken)
+        self.authorizationCode = authorizationCode
     }
 
     /// The `email` claim of an identity token, unchecked: a JWT's middle part is base64url JSON.

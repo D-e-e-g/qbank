@@ -30,7 +30,7 @@ The reviewer needs to understand this, so the review notes below say it in short
 Login rules this meets:
 
 - **Guideline 4.8 (Sign in with Apple)**: the first screen offers Sign in with Apple; the only other way in is QBank's own email-and-password account.
-- **Guideline 5.1.1(v), account deletion:** required for apps that let people create an account, and QBank's app does: **Sign in with Apple** makes an account for someone new. **Settings > Delete account** deletes an email-and-password account from inside the app (step 6 above), through the server's `DELETE /api/me`; an account made with Apple has no Delete account yet.
+- **Guideline 5.1.1(v), account deletion:** required for apps that let people create an account, and QBank's app does: **Sign in with Apple** makes an account for someone new. **Settings > Delete account** deletes an account from inside the app, through the server's `DELETE /api/me`: an email-and-password account with its password (step 6 above), and an account made with Apple with a fresh Sign in with Apple, whose authorization code the server uses to revoke the app's Apple tokens before it deletes. For an account made with Apple the screen also says that deleting does not cancel a subscription, with a **Manage subscription** button.
 - **Guideline 2.1, demo account:** required because the app has a login; see below. The server must be up during review.
 
 ## Demo account
@@ -70,7 +70,7 @@ What to try:
 4. Open Exam in the course, pick folders (or "Wrong questions only"), and start a timed exam. "End exam" scores what was answered.
 5. Turn on Airplane Mode and answer a practice question: it is saved on the phone and sent when the connection returns. Exams need a connection.
 
-Accounts: Sign up makes an account only for an email the owner has added. To delete an account in the app, open the Settings tab, tap Delete account, enter the account's password, and tap Delete account: the account and everything in it are deleted for good, on every device. There is no third-party or social login (Guideline 4.8 does not apply).
+Accounts: Sign up makes an account only for an email the owner has added. To delete an account in the app, open the Settings tab, tap Delete account, enter the account's password, and tap Delete account: the account and everything in it are deleted for good, on every device. An account made with Sign in with Apple has no password: tap Delete account and confirm with Sign in with Apple. There is no third-party or social login (Guideline 4.8 does not apply).
 
 The app has no ads, no tracking, no analytics, and no in-app purchases. It uses only standard HTTPS encryption.
 

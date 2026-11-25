@@ -45,7 +45,8 @@ extension SystemAppleSignIn: ASAuthorizationControllerDelegate {
             finish(.failure(.failed))
             return
         }
-        finish(.success(AppleCredential(user: credential.user, identityToken: token, email: credential.email)))
+        let code = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
+        finish(.success(AppleCredential(user: credential.user, identityToken: token, email: credential.email, authorizationCode: code)))
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {

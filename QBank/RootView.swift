@@ -23,6 +23,13 @@ struct RootView: View {
                     // reads the bank where it is now.
                     .id("\(model.phoneKey ?? account.id) \(model.signIns) \(model.kind.rawValue)")
                     .transition(.opacity)
+            case .finishingDeletion:
+                // This phone's copy of a store account is erased and the server has not deleted the
+                // account yet: finishing the delete is all there is.
+                NavigationStack {
+                    AppleDeleteAccountView(app: model)
+                }
+                .transition(.opacity)
             }
         }
         .animation(QBankMotion.reveal, value: model.route)

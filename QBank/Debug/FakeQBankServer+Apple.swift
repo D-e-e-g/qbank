@@ -105,7 +105,7 @@ nonisolated extension FakeQBankServer {
     }
 
     /// The text claims of a stand-in token, or nil when it is not one.
-    private static func claims(of token: String) -> [String: String]? {
+    static func claims(of token: String) -> [String: String]? {
         let parts = token.split(separator: ".", omittingEmptySubsequences: false)
         guard parts.count == 3 else { return nil }
         var base64 = parts[1].replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
