@@ -179,7 +179,7 @@ struct CloudTests {
         #expect(store.finished.isEmpty)
         switch answer {
         case .pending:
-            #expect(app.cloud.notice == CloudWording.pending)
+            #expect(app.cloud.notice == .note(CloudWording.pending))
             #expect(app.cloud.problem == nil)
         case .unverified:
             #expect(app.cloud.problem == CloudWording.unverified)
@@ -253,7 +253,7 @@ struct CloudTests {
         #expect(try sentTransactions(server) == ["synthetic.signed.3"])
         #expect(store.finished == [3])
         #expect(app.cloud.status?.active == true)
-        #expect(app.cloud.notice == CloudWording.restored)
+        #expect(app.cloud.notice == .done(CloudWording.restored))
     }
 
     @Test func restoreWithNothingToRestoreSaysSo() async {
@@ -263,7 +263,7 @@ struct CloudTests {
         await app.cloud.restore()
 
         #expect(server.calls.isEmpty)
-        #expect(app.cloud.notice == CloudWording.nothingToRestore)
+        #expect(app.cloud.notice == .note(CloudWording.nothingToRestore))
         #expect(app.cloud.problem == nil)
     }
 

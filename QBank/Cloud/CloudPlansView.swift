@@ -29,8 +29,13 @@ struct CloudPlansView: View {
                     } else {
                         plans
                     }
-                    if let notice = cloud.notice {
-                        SavedText(text: notice)
+                    switch cloud.notice {
+                    case .done(let text)?:
+                        SavedText(text: text)
+                    case .note(let text)?:
+                        note(text)
+                    case nil:
+                        EmptyView()
                     }
                     if let problem = cloud.problem {
                         ProblemText(text: problem)
@@ -166,6 +171,19 @@ struct CloudPlansView: View {
                     .accessibilityIdentifier("cloud.manage")
             }
         }
+    }
+
+    /// A plain fact the sheet tells, such as nothing to restore: neither good news nor a problem.
+    private func note(_ text: String) -> some View {
+        Label(text, systemImage: "info.circle")
+            .qbankFont(.subheadline, weight: .medium)
+            .foregroundStyle(.qbank(.text2))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("cloud.note")
+            .onAppear {
+                AccessibilityNotification.Announcement(text).post()
+            }
     }
 
     private func link(_ title: String, _ url: URL, id: String) -> some View {

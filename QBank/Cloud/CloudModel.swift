@@ -27,8 +27,9 @@ final class CloudModel {
     private(set) var isRestoring = false
     /// Why the last purchase, Restore or Manage subscription did not turn out as asked.
     private(set) var problem: String?
-    /// What happened that needs nothing done: a purchase waiting for approval, a restore.
-    private(set) var notice: String?
+    /// What happened that needs nothing done: a restore that turned Cloud on, a purchase waiting for
+    /// approval, or nothing to restore.
+    private(set) var notice: CloudNotice?
 
     /// The app it serves: who is signed in, and the client to reach QBank's server with.
     @ObservationIgnored weak var app: AppModel?
@@ -141,7 +142,7 @@ final class CloudModel {
                 say(error, for: owner, temporary: CloudWording.notConfirmedYet)
             }
         case .pending:
-            if owner == accountID { notice = CloudWording.pending }
+            if owner == accountID { notice = .note(CloudWording.pending) }
         case .cancelled:
             break
         case .unverified:
@@ -169,7 +170,7 @@ final class CloudModel {
         }
         let transactions = await store.currentEntitlements()
         guard !transactions.isEmpty else {
-            if owner == accountID { notice = CloudWording.nothingToRestore }
+            if owner == accountID { notice = .note(CloudWording.nothingToRestore) }
             return
         }
         // Each answer is the account's whole Cloud state, so the last one received is how it stands.
@@ -185,7 +186,7 @@ final class CloudModel {
         guard owner == accountID else { return }
         if let latest { status = latest }
         if latest?.active == true {
-            notice = CloudWording.restored
+            notice = .done(CloudWording.restored)
         } else if let failure {
             say(failure, for: owner, temporary: CloudWording.notConfirmedYet)
         } else {
@@ -249,4 +250,12 @@ final class CloudModel {
             problem = Wording.problem(error)
         }
     }
+}
+
+/// What happened on the plans sheet that needs nothing done.
+nonisolated enum CloudNotice: Equatable, Sendable {
+    /// Good news: Restore found the subscription and Cloud is on.
+    case done(String)
+    /// A plain fact: a purchase waiting for approval, or nothing to restore.
+    case note(String)
 }
