@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "account-locked",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:40.797Z",
+      "at": "2026-11-25T04:29:39.914Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:40.797Z"
+          "expiresAt": "2027-12-30T04:29:39.914Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:40.848Z",
+      "at": "2026-11-25T04:29:39.964Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -66,7 +66,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:40.893Z",
+      "at": "2026-11-25T04:29:40.011Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -88,7 +88,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:40.938Z",
+      "at": "2026-11-25T04:29:40.057Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -110,7 +110,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:40.982Z",
+      "at": "2026-11-25T04:29:40.105Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -132,7 +132,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:41.027Z",
+      "at": "2026-11-25T04:29:40.152Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -157,7 +157,7 @@
     {
       "step": "request",
       "name": "account-delete-locked",
-      "at": "2026-11-24T01:48:41.072Z",
+      "at": "2026-11-25T04:29:40.201Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",

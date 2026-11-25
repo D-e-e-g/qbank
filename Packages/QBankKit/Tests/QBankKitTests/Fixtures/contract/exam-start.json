@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000201/exams",
@@ -35,12 +35,12 @@
         "Week 2"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-24T01:48:43.303Z",
-      "endsAt": "2026-11-24T01:54:43.303Z",
+      "startedAt": "2026-11-25T04:29:42.608Z",
+      "endsAt": "2026-11-25T04:35:42.608Z",
       "status": "running",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-24T01:48:43.303Z",
+      "serverNow": "2026-11-25T04:29:42.608Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8010-000000000012",
@@ -77,69 +77,9 @@
           "weekLabel": "Week 1"
         },
         {
-          "id": "00000000-0000-4000-8010-000000000010",
-          "publicId": "R1",
-          "position": 2,
-          "type": "single",
-          "topic": "Invented week 2 topic 1",
-          "cj": "Analyze cues",
-          "stem": "An invented stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented rationale.",
-          "takeaway": "Invented takeaway.",
-          "body": {
-            "options": [
-              {
-                "t": "Right",
-                "ok": true
-              },
-              {
-                "t": "Wrong"
-              },
-              {
-                "t": "Also wrong"
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 2"
-        },
-        {
-          "id": "00000000-0000-4000-8010-000000000011",
-          "publicId": "R2",
-          "position": 3,
-          "type": "single",
-          "topic": "Invented week 2 topic 2",
-          "cj": "Analyze cues",
-          "stem": "An invented stem.",
-          "ask": "Which is right?",
-          "rationale": "Invented rationale.",
-          "takeaway": "Invented takeaway.",
-          "body": {
-            "options": [
-              {
-                "t": "Right",
-                "ok": true
-              },
-              {
-                "t": "Wrong"
-              },
-              {
-                "t": "Also wrong"
-              }
-            ]
-          },
-          "table": null,
-          "images": [],
-          "terms": [],
-          "weekLabel": "Week 2"
-        },
-        {
           "id": "00000000-0000-4000-8010-000000000013",
           "publicId": "E2",
-          "position": 4,
+          "position": 2,
           "type": "single",
           "topic": "Invented exam topic 2",
           "cj": "Analyze cues",
@@ -169,6 +109,66 @@
           "images": [],
           "terms": [],
           "weekLabel": "Week 1"
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000010",
+          "publicId": "R1",
+          "position": 3,
+          "type": "single",
+          "topic": "Invented week 2 topic 1",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 2"
+        },
+        {
+          "id": "00000000-0000-4000-8010-000000000011",
+          "publicId": "R2",
+          "position": 4,
+          "type": "single",
+          "topic": "Invented week 2 topic 2",
+          "cj": "Analyze cues",
+          "stem": "An invented stem.",
+          "ask": "Which is right?",
+          "rationale": "Invented rationale.",
+          "takeaway": "Invented takeaway.",
+          "body": {
+            "options": [
+              {
+                "t": "Right",
+                "ok": true
+              },
+              {
+                "t": "Wrong"
+              },
+              {
+                "t": "Also wrong"
+              }
+            ]
+          },
+          "table": null,
+          "images": [],
+          "terms": [],
+          "weekLabel": "Week 2"
         }
       ],
       "answeredQuestionIds": [],

@@ -352,8 +352,7 @@ final class QBankUITests: XCTestCase {
             scroll(app, until: app.staticTexts["settings.version"])
             attach(app, "1d-1 settings scrolled, \(tag)")
 
-            app.swipeDown()
-            app.buttons["settings.changePassword"].tap()
+            open(app.buttons["settings.changePassword"], titled: "Change password", in: app)
             XCTAssertTrue(app.secureTextFields["changePassword.current"].appears(timeout: 5))
             attach(app, "1d-2 change password, \(tag)")
             app.buttons["changePassword.save"].tap()
@@ -361,7 +360,7 @@ final class QBankUITests: XCTestCase {
             attach(app, "1d-2 change password, problem, \(tag)")
             app.navigationBars["Change password"].buttons["Settings"].tap()
 
-            app.buttons["settings.semester.1"].tap()
+            open(app.buttons["settings.semester.1"], titled: "Semester 1", in: app)
             XCTAssertTrue(app.textFields["semester.name"].appears(timeout: 5))
             app.buttons["semester.starts.add"].tap()
             XCTAssertTrue(app.buttons["semester.starts.clear"].appears(timeout: 5))

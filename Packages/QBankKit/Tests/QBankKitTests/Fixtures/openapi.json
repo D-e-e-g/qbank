@@ -7,13 +7,713 @@
   "tags": [
     {
       "name": "Agents",
-      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key. A key the admin approved reaches nothing, whatever its scopes: the admin account has no content or answers of its own, and every operation answers the key with 403 `agent_key_not_allowed`.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. `ok: false` lists the `errors` that block it; `warnings` do not. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `status` says where it stands: `running`, `grace` (its time has run out, and for 30 seconds a last answer may still be on its way) or `ended`. An exam whose time ran out reads as `ended` with its `result`, whether or not the user's app has opened it since, and the export lists it the same way.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`. Archiving a course or topic answers 409 `in_use` while QBank is still making a set or writing exam twins in it: nothing changed, so tell the user its `message` and archive once the job has filed or the user cancelled it.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
+      "description": "How an AI agent that a user brings, such as one running on their own computer, imports the question sets it made into their QBank, reads how the user answered them, and adds, changes and deletes their content as they can in QBank, over plain HTTP, with a key of its own instead of the user's session.\n\n**Pairing.** Nobody copies a key: the agent asks for one, the user approves it in QBank, and the agent picks it up (OAuth 2.0 device authorization, RFC 8628, in this API's words).\n\n1. The agent starts a pairing with `POST /api/agent-pairings`, sending no key: its `name`, which the user will see (such as \"My MacBook agent\"), and the `scopes` it wants. It gets back `deviceCode`, its own secret for this pairing, and `userCode`, such as `BCDF-GHJK`, to show the user. Both last 10 minutes (`expiresAt`).\n2. Signed in to QBank, the user enters the code. The app shows the agent's name and scopes, each in plain words (`scopeTexts`, from `POST /api/agent-pairings/lookup`), and the user approves (`POST /api/agent-pairings/approve`) or denies (`POST /api/agent-pairings/deny`) it. Approving gives the key to the account signed in. The name is only what the agent says it is, so the user approves only a code their own agent is showing them.\n3. Meanwhile the agent polls `POST /api/agent-pairings/token` with its `deviceCode`, waiting `interval` seconds (5 at first) after each answer. Until the user answers it gets 400 `authorization_pending`; a poll that comes too soon gets 400 `slow_down` and a longer `interval` to keep from then on. Once approved, it gets 200 with `token`, the key (`qbk_...`), exactly once: QBank keeps only its hash, and the pairing is used up. 400 `access_denied` means the user denied it; 400 `expired_token` means the pairing ran out or its key was handed over already. Either way the agent starts again.\n4. The agent keeps the key in the operating system's keychain (the macOS Keychain on a Mac), never in a file, a repository, or a log, and sends it on every call below as `Authorization: Bearer qbk_...`.\n\nStarting is limited: one address may start a few pairings in 10 minutes, and only so many may wait at once, whoever started them; past either, 429 `too_many_pairings` with `retryAfterSeconds`.\n\n**The user's keys.** `GET /api/agent-keys` lists the account's keys: each one's name, scopes, when it was made, and when it was last used. `POST /api/agent-keys/{id}/revoke` stops one at once and for good. A key is never shown again after the agent picks it up, and each account sees and revokes only its own.\n\n**Scopes.** An operation tagged Agents lets a key in when the key has any one of the scopes its security names. `import` reaches checking and importing question files, and reading the account's semesters, courses and sets to do it. `read` reaches the user's answers, read-only (see Reading below). `manage` reaches everything `import` does and every change the user can make to their own content (see Changing below). A key may have any of them; a key keeps the scopes it was approved with, so an agent that needs another pairs again and the user approves the new key. A key the admin approved reaches nothing, whatever its scopes: the admin account has no content or answers of its own, and every operation answers the key with 403 `agent_key_not_allowed`.\n\n**Importing with the key.**\n\n1. Find the course: `GET /api/semesters` lists the account's semesters with their courses (match `code`) and its study topics (match `title`).\n2. Check every file first, before importing any: `POST /api/imports/check` with `{\"source\": \"<the file>\"}`. It stores nothing, so check as often as needed, and ask it rather than judge a file yourself: the server is the one judge of the format. Read `issues`: each error (it blocks the import) and warning (it does not) with a stable `code`, the `question` it is about (`index` from 0, and its `id`), `path`, a JSON pointer to the place in the file, and `message`, the sentence to show the user. Fix each error at its path and check again until `ok` is true; the same messages are in `errors` and `warnings`. `kind` is `exam` for an exam set, such as exam twins: a file meant as exam twins that comes back `practice` is not one, so import nothing.\n3. Import each file: `POST /api/imports` with `source` and `courseId` (or `newCourse` or `newTopic`), and `folderName` or `folderId` (without either, the course's Unsorted folder); practice sets first, then their exam twins. Leave `decision` out, or send `import`.\n   - 201: the set landed: `courseId`, `folderId`, `folderName`, `setId`, `setKind`, its `warnings`, and `importedByAgent` naming this key.\n   - 409: a current set of the same kind and name is already in the course, and nothing was written. Read it with `GET /api/practice-sets/{setId}` to tell whether it holds the same questions, and tell the user: they decide in QBank whether to replace it. A key without `manage` never replaces a set or adds a second of the same name (`decision` `replace` or `separate` answers 403); with `manage`, see Changing below.\n   - 400 `invalid_import`, with `errors` and `warnings`: the file fails the check. Check it (step 2) for its `issues`. Another 400 names what is wrong with the course or folder choice in `message`.\n   - 404: that course or folder is not the account's.\n4. Confirm where the sets landed: `GET /api/courses/{courseId}`. Each folder in `folders` lists its `sets` and `examSets` by title, each with `importedByAgent`, so the agent can tell the user \"Week 5 now has Set 1 and Set 2, and their exam twins\".\n\n**Reading the user's answers with the key.** So the agent can aim its next questions at what the user finds hard. A `read` key only reads: it never answers a question, starts or ends an exam, clears Review, or changes anything else, and its reads write nothing in QBank but the key's `lastUsedAt`. It reads its own account's answers only: another account's course or exam answers 404, as an id that names nothing does, and a key the admin approved reads none (403 `agent_key_not_allowed`).\n\n1. Where the user stands, topic by topic: `GET /api/me/standing`. Every course and study topic of the account, each with `byTopic`: for each topic its question files name, how many current questions it has (practice and exam bank), how many the user has answered, and what their latest answers were: fully right, partly right, missed, guessed, points of `maxPoints`, and how many are in Review. A topic with many answers and few fully right is a weak spot; one with few answers is not practiced yet. Its course ids are the ones the reads below take.\n2. What the user missed or guessed in a course: `GET /api/courses/{id}/review`, with `?filter=missed`, `partial` or `guessed` for one kind. The course's Review list as the Review screen shows it, newest first: each practice question whose latest answer was not fully right or was a guess, with its topic, folder, set and mark. A question leaves the list when the user answers it fully right without guessing, or clears the list.\n3. One exam's result: `GET /api/exams/{id}`, with an exam's id from the export (`studySessions` whose `mode` is `exam`). Its questions in the order served, and once it has ended, `result`: points, fully right, partly right, missed, guessed and not answered, by folder and by clinical judgment step, and each question's mark. `status` says where it stands: `running`, `grace` (its time has run out, and for 30 seconds a last answer may still be on its way) or `ended`. An exam whose time ran out reads as `ended` with its `result`, whether or not the user's app has opened it since, and the export lists it the same way.\n4. Everything: `GET /api/me/export`, the user's whole history as one JSON file: every answer they gave, each question's latest answer, every Review list, course scores, and every study session, exams included. It grows with every answer; for where the user stands, the standing is enough.\n\n**Changing the user's content with the key.** A `manage` key adds, changes and deletes the account's own content through the same operations, with the same checks and answers, as the user's own app: everything in it is the user's, so do what the user asked and tell them what changed. It reaches the account's own content only: another account's id answers 404, as an id that names nothing does, and a key the admin approved changes nothing (403 `agent_key_not_allowed`).\n\n- Semesters, courses and study topics: `POST /api/semesters`, `PATCH /api/semesters/{id}` (rename, archive), `POST /api/courses`, `POST /api/topics`, `PATCH /api/courses/{id}` (rename, move to another semester, archive), `PUT /api/topic-order`. Archiving a course or topic answers 409 `in_use` while QBank is still making a set or writing exam twins in it: nothing changed, so tell the user its `message` and archive once the job has filed or the user cancelled it.\n- Folders: `POST /api/courses/{id}/folders`, `PATCH /api/folders/{id}` (rename, put on a page or take off one), `PUT /api/courses/{id}/folder-order`, and `POST /api/practice-sets/{id}/move` to move a set to another folder.\n- Pages: `POST /api/courses/{id}/course-exams` and `PUT /api/course-exams/{id}` (rename, set its folders, its primer link and its `badge`: `exam`, `concept`, `study`, or null for none). Deleting a page (below) deletes the page alone: its folders, their sets and the user's answers stay, in the course's Folders list until Undo.\n- Sets and their questions: a set's questions change through its file. `POST /api/imports` adds a set (see Importing above); with `decision` `replace` its file becomes the set's new version, and the version before stays for Restore; with `separate` it is added beside the set of the same name. `POST /api/practice-sets/{id}/restore` brings back the version before.\n- Deleting, always in three steps, as the user deletes: read the preview (`GET /api/practice-sets/{id}/delete-preview`, `GET /api/folders/{id}/delete-preview`, `GET /api/course-exams/{id}/delete-preview`, `GET /api/courses/{id}/delete-preview`), tell the user its `message` and do it only when they want it gone, then send its `confirm` with the delete (`DELETE /api/practice-sets/{id}?confirm=...`, `/api/folders/{id}`, `/api/course-exams/{id}`, `/api/courses/{id}`). Without `confirm` the delete answers 409 `confirmation_required` (only an empty folder or a page with no folders needs none), and when anything changed since the preview, 409 `deletion_changed`; either way nothing is deleted. Nothing is ever removed: what a key deletes goes to Recently deleted (`GET /api/courses/{id}/deleted`, `GET /api/deleted-courses`) exactly as the user's own deletes do, with `deletedByAgent` naming the key, and Undo (`POST /api/practice-sets/{id}/undo-delete`, `/api/folders/{id}/undo-delete`, `/api/course-exams/{id}/undo-delete`, `/api/courses/{id}/undo-delete`) brings it back as it was, for the user in QBank or for the key, for 30 days.\n\n**What every one of these can answer for the key:** 401 `invalid_agent_key` (QBank does not know it) or `agent_key_revoked` (the user revoked it): pair again. 403 `agent_key_not_allowed`: its scopes do not cover this. 403 `must_change_password`: the account has a temporary password, and nothing works until the user signs in and picks their own. 403 `cloud_required`: the account is one made in the iPhone app whose Cloud subscription is not active, and of these it keeps only the file check, `POST /api/imports/check`. 503 `auth_unavailable`.\n\n**What a key never does.** Every other operation, pairing and the user's keys included, answers a request that carries a key with 403 `agent_key_not_allowed` before reading it: a key never answers a question, starts or ends an exam, clears Review, or deletes a past exam, since the user's answers are theirs alone; never removes anything for good; never makes questions with Make questions; never changes a password, a passkey or an account; never reaches Admin or another account; and never pairs, approves, lists or revokes keys. Those need the user's signed-in session."
     },
     {
       "name": "Agent keys",
       "description": "The user's side of pairing, and the account's agent keys: a signed-in session only (the session cookie, or the token from sign-in), never an agent key. Each account sees, answers for, and revokes only its own. See Agents for the whole flow."
     }
   ],
+  "x-question-format": {
+    "descriptor": {
+      "setKinds": [
+        "practice",
+        "exam"
+      ],
+      "defaultTitle": "Imported questions",
+      "set": [
+        {
+          "name": "title",
+          "required": false,
+          "about": "The set's name, as text. \"Imported questions\" when the file gives none."
+        },
+        {
+          "name": "desc",
+          "required": false,
+          "about": "A line about what the set covers, as text."
+        },
+        {
+          "name": "kind",
+          "required": false,
+          "about": "\"practice\" or \"exam\". A practice set is the default; an exam set's questions are asked only on exams."
+        },
+        {
+          "name": "terms",
+          "required": false,
+          "about": "The terms its questions use: an object from each term's key to [\"Term\", \"What it means\"]. A question lists the keys it uses in its own \"terms\"."
+        },
+        {
+          "name": "questions",
+          "required": true,
+          "about": "The questions, a list of at least one."
+        }
+      ],
+      "question": [
+        {
+          "name": "id",
+          "required": false,
+          "about": "Its id, as text or a number. A question without one is Q1, Q2... by its place in the file.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "type",
+          "required": true,
+          "about": "Its format: one of the question types below.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "topic",
+          "required": false,
+          "about": "What it is about, as text. Results are counted by topic.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "cj",
+          "required": false,
+          "about": "The thinking step it tests, as text, such as a nursing question's clinical judgment step.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": true
+        },
+        {
+          "name": "need",
+          "required": false,
+          "about": "The area it belongs to, as text, such as a nursing question's client need.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": true
+        },
+        {
+          "name": "diff",
+          "required": false,
+          "about": "How hard it is, as a whole number.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": true
+        },
+        {
+          "name": "wk",
+          "required": false,
+          "about": "The folder it belongs in, as text, when that is not the set's own.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "stem",
+          "required": false,
+          "about": "What comes before the question: the scenario, the passage, the readings.",
+          "emptyWhenMissing": true,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "ask",
+          "required": true,
+          "about": "The question itself.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "rationale",
+          "required": false,
+          "about": "Why the answer is right, shown once the question is answered.",
+          "emptyWhenMissing": true,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "takeaway",
+          "required": false,
+          "about": "The one thing to remember, shown with the rationale.",
+          "emptyWhenMissing": true,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "terms",
+          "required": false,
+          "about": "The keys of the set's \"terms\" it uses, as a list.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "src",
+          "required": false,
+          "about": "Where it comes from, as text: a slide, a page, a line.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": true
+        },
+        {
+          "name": "twinOf",
+          "required": false,
+          "about": "In an exam set, the id of the practice question it is the exam twin of. A practice set does not read it.",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "table",
+          "required": false,
+          "about": "A table under the stem, for readings such as vital signs or lab values (see Tables and images).",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        },
+        {
+          "name": "images",
+          "required": false,
+          "about": "Up to 4 images (see Tables and images).",
+          "emptyWhenMissing": false,
+          "warnedWhenMissing": false
+        }
+      ],
+      "types": [
+        {
+          "type": "single",
+          "label": "Single answer",
+          "list": {
+            "field": "options",
+            "min": 2
+          },
+          "correct": "exactlyOne",
+          "fields": [
+            {
+              "name": "options",
+              "about": "Each { \"t\": its text, \"ok\": true on the right one, \"why\": why it is right or wrong }."
+            }
+          ]
+        },
+        {
+          "type": "priority",
+          "label": "Priority / first action",
+          "list": {
+            "field": "options",
+            "min": 2
+          },
+          "correct": "exactlyOne",
+          "fields": [
+            {
+              "name": "options",
+              "about": "Each { \"t\": its text, \"ok\": true on the one to do first, \"why\": why it comes first or does not }."
+            }
+          ]
+        },
+        {
+          "type": "sata",
+          "label": "Select all that apply",
+          "list": {
+            "field": "options",
+            "min": 2
+          },
+          "correct": "atLeastOne",
+          "fields": [
+            {
+              "name": "options",
+              "about": "Each { \"t\": its text, \"ok\": true on every right one, \"why\": why it is right or wrong }."
+            }
+          ]
+        },
+        {
+          "type": "highlight",
+          "label": "Highlight",
+          "list": {
+            "field": "segments",
+            "min": 3
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "segments",
+              "about": "The passage in phrases, in reading order, each { \"t\": the phrase, \"ok\": true on one to highlight, \"why\" }; at least one has \"ok\": true and at least one does not. The phrases are joined with spaces."
+            }
+          ]
+        },
+        {
+          "type": "order",
+          "label": "Ordered response",
+          "list": {
+            "field": "items",
+            "min": 3
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "items",
+              "about": "Each { \"t\": a step, \"why\" }, listed in the right order. The runner shuffles them."
+            }
+          ]
+        },
+        {
+          "type": "match",
+          "label": "Matching",
+          "list": {
+            "field": "pairs",
+            "min": 2
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "pairs",
+              "about": "Each { \"l\": a left item, \"r\": its match, \"why\" }."
+            },
+            {
+              "name": "extra",
+              "about": "Optional: right-hand choices that match no left item, each { \"r\", \"why\" }."
+            }
+          ]
+        },
+        {
+          "type": "matrix",
+          "label": "Matrix",
+          "list": {
+            "field": "rows",
+            "min": 1
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "columns",
+              "about": "The column names, at least 2, each different."
+            },
+            {
+              "name": "rows",
+              "about": "Each { \"t\": its text, \"ans\": the name of its one right column, \"why\" }."
+            }
+          ]
+        },
+        {
+          "type": "matrixmulti",
+          "label": "Matrix, check all that fit",
+          "list": {
+            "field": "rows",
+            "min": 1
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "columns",
+              "about": "The column names, at least 2, each different."
+            },
+            {
+              "name": "rows",
+              "about": "Each { \"t\": its text, \"ans\": a list of the names of its right columns, each once, \"why\" }; every row has at least one right column, and not every box in the table is right."
+            }
+          ]
+        },
+        {
+          "type": "cloze",
+          "label": "Drop-down cloze",
+          "list": {
+            "field": "blanks",
+            "min": 0
+          },
+          "correct": null,
+          "fields": [
+            {
+              "name": "cloze",
+              "about": "{ \"text\": the passage with {0}, {1}... where the blanks go, \"blanks\": one per placeholder, each { \"opts\": its choices, at least 2, \"ans\": the index of the right one from 0, \"why\" } }."
+            }
+          ]
+        }
+      ],
+      "table": [
+        {
+          "name": "caption",
+          "required": false,
+          "about": "A caption, as text."
+        },
+        {
+          "name": "head",
+          "required": false,
+          "about": "The header row, a list of cells."
+        },
+        {
+          "name": "rows",
+          "required": true,
+          "about": "The rows, a list of at least one, each a list of cells. A cell is text, a number, true or false, or null for an empty cell."
+        }
+      ],
+      "image": [
+        {
+          "name": "alt",
+          "required": true,
+          "about": "A short description of what it shows."
+        },
+        {
+          "name": "src",
+          "required": false,
+          "about": "The image itself, as a base64 data URL such as data:image/png;base64,...: PNG, JPEG, WebP, or SVG."
+        },
+        {
+          "name": "svg",
+          "required": false,
+          "about": "SVG markup, as text: a diagram drawn for the question."
+        },
+        {
+          "name": "caption",
+          "required": false,
+          "about": "A caption, as text."
+        },
+        {
+          "name": "at",
+          "required": false,
+          "about": "\"stem\" or \"rationale\": under the stem (the default), or with the rationale once the question is answered."
+        }
+      ],
+      "imageTypes": [
+        {
+          "type": "image/png",
+          "kind": "PNG"
+        },
+        {
+          "type": "image/jpeg",
+          "kind": "JPEG"
+        },
+        {
+          "type": "image/webp",
+          "kind": "WebP"
+        },
+        {
+          "type": "image/svg+xml",
+          "kind": "SVG"
+        }
+      ],
+      "imagePlaces": [
+        "stem",
+        "rationale"
+      ],
+      "limits": {
+        "matrixColumnsMin": 2,
+        "clozeOptionsMin": 2,
+        "imageMaxBytes": 307200,
+        "imagesPerQuestion": 4
+      },
+      "catchAllColumns": [
+        "both",
+        "either",
+        "either class",
+        "all",
+        "all of these",
+        "all of the above"
+      ],
+      "moreThanOne": {
+        "source": "more than one",
+        "flags": "i"
+      },
+      "clozeHole": {
+        "source": "\\{\\d+\\}",
+        "flags": "g"
+      },
+      "severities": [
+        "error",
+        "warning"
+      ],
+      "rules": [
+        {
+          "name": "notJson",
+          "code": "not_json",
+          "severity": "error",
+          "message": "This is not valid JSON: {reason}. Ask your AI chat to resend only the JSON block."
+        },
+        {
+          "name": "noQuestions",
+          "code": "no_questions",
+          "severity": "error",
+          "message": "No \"questions\" list was found."
+        },
+        {
+          "name": "badKind",
+          "code": "bad_kind",
+          "severity": "error",
+          "message": "The set's \"kind\" must be \"practice\" or \"exam\" (found {found})"
+        },
+        {
+          "name": "notAnObject",
+          "code": "not_an_object",
+          "severity": "error",
+          "message": "not an object"
+        },
+        {
+          "name": "unknownType",
+          "code": "unknown_type",
+          "severity": "error",
+          "message": "unknown type \"{type}\""
+        },
+        {
+          "name": "missingField",
+          "code": "missing_field",
+          "severity": "error",
+          "message": "missing {field}"
+        },
+        {
+          "name": "missingUsedField",
+          "code": "missing_field_used_elsewhere",
+          "severity": "warning",
+          "message": "missing {field}"
+        },
+        {
+          "name": "notText",
+          "code": "not_text",
+          "severity": "error",
+          "message": "{field} must be text"
+        },
+        {
+          "name": "twinOfNotAnId",
+          "code": "twin_of_not_an_id",
+          "severity": "error",
+          "message": "\"twinOf\" must be the id of its practice question"
+        },
+        {
+          "name": "twinOfIgnored",
+          "code": "twin_of_ignored",
+          "severity": "warning",
+          "message": "\"twinOf\" is only read in an exam set (\"kind\": \"exam\")"
+        },
+        {
+          "name": "termUndefined",
+          "code": "term_undefined",
+          "severity": "warning",
+          "message": "term \"{term}\" has no definition and will be skipped"
+        },
+        {
+          "name": "optionsMin",
+          "code": "options_min",
+          "severity": "error",
+          "message": "needs at least {min} {list}"
+        },
+        {
+          "name": "optionNeedsText",
+          "code": "option_needs_text",
+          "severity": "error",
+          "message": "every option needs text \"t\""
+        },
+        {
+          "name": "exactlyOneCorrect",
+          "code": "exactly_one_correct",
+          "severity": "error",
+          "message": "needs exactly one option with \"ok\": true (found {found})"
+        },
+        {
+          "name": "sataNeedsCorrect",
+          "code": "sata_needs_correct",
+          "severity": "error",
+          "message": "select-all needs at least one correct option"
+        },
+        {
+          "name": "itemsShape",
+          "code": "items_shape",
+          "severity": "error",
+          "message": "needs 3+ items with text \"t\", listed in the correct order"
+        },
+        {
+          "name": "pairsShape",
+          "code": "pairs_shape",
+          "severity": "error",
+          "message": "needs 2+ pairs with \"l\" and \"r\""
+        },
+        {
+          "name": "matrixShape",
+          "code": "matrix_shape",
+          "severity": "error",
+          "message": "needs columns and rows"
+        },
+        {
+          "name": "matrixRow",
+          "code": "matrix_row",
+          "severity": "error",
+          "message": "every row needs text \"t\" and an \"ans\" that matches a column name"
+        },
+        {
+          "name": "matrixCatchAll",
+          "code": "matrix_catch_all",
+          "severity": "warning",
+          "message": "If a row can fit more than one column, use matrixmulti"
+        },
+        {
+          "name": "segmentsShape",
+          "code": "segments_shape",
+          "severity": "error",
+          "message": "needs 3+ segments, some with \"ok\": true and some without"
+        },
+        {
+          "name": "clozeHoles",
+          "code": "cloze_holes",
+          "severity": "error",
+          "message": "cloze text needs one {0}, {1}... placeholder per blank"
+        },
+        {
+          "name": "clozeBlank",
+          "code": "cloze_blank",
+          "severity": "error",
+          "message": "every blank needs \"opts\" and an \"ans\" index"
+        },
+        {
+          "name": "duplicateColumn",
+          "code": "duplicate_column",
+          "severity": "error",
+          "message": "every column name must be different"
+        },
+        {
+          "name": "matrixMultiShape",
+          "code": "matrixmulti_shape",
+          "severity": "error",
+          "message": "needs 2 or more columns and at least 1 row"
+        },
+        {
+          "name": "matrixMultiRow",
+          "code": "matrixmulti_row",
+          "severity": "error",
+          "message": "every row needs text \"t\" and an \"ans\" list of column names"
+        },
+        {
+          "name": "matrixMultiNoRight",
+          "code": "matrixmulti_no_right",
+          "severity": "error",
+          "message": "every row needs at least one right column"
+        },
+        {
+          "name": "matrixMultiAnsName",
+          "code": "matrixmulti_ans_name",
+          "severity": "error",
+          "message": "every \"ans\" entry must name a column"
+        },
+        {
+          "name": "matrixMultiAnsTwice",
+          "code": "matrixmulti_ans_twice",
+          "severity": "error",
+          "message": "an \"ans\" entry must appear once in that row"
+        },
+        {
+          "name": "matrixMultiAllRight",
+          "code": "matrixmulti_all_right",
+          "severity": "error",
+          "message": "not every box can be right"
+        },
+        {
+          "name": "matrixMultiAsk",
+          "code": "matrixmulti_ask",
+          "severity": "warning",
+          "message": "the ask does not say a row can fit more than one column"
+        },
+        {
+          "name": "tableShape",
+          "code": "table_shape",
+          "severity": "error",
+          "message": "table needs \"rows\": a list of rows, each a list of cell texts"
+        },
+        {
+          "name": "tableCaption",
+          "code": "table_caption",
+          "severity": "error",
+          "message": "table \"caption\" must be text"
+        },
+        {
+          "name": "tableHead",
+          "code": "table_head",
+          "severity": "error",
+          "message": "table \"head\" must be a list of cell texts"
+        },
+        {
+          "name": "imagesNotList",
+          "code": "images_not_list",
+          "severity": "error",
+          "message": "\"images\" must be a list"
+        },
+        {
+          "name": "imagesOver",
+          "code": "images_over",
+          "severity": "error",
+          "message": "has {found} images; the limit is 4"
+        },
+        {
+          "name": "imageNotObject",
+          "code": "image_not_object",
+          "severity": "error",
+          "message": "{image} is not an object"
+        },
+        {
+          "name": "imageNeedsAlt",
+          "code": "image_needs_alt",
+          "severity": "error",
+          "message": "{image} needs \"alt\": a short description of what it shows"
+        },
+        {
+          "name": "imageCaption",
+          "code": "image_caption",
+          "severity": "error",
+          "message": "{image} \"caption\" must be text"
+        },
+        {
+          "name": "imageAt",
+          "code": "image_at",
+          "severity": "error",
+          "message": "{image} \"at\" must be \"stem\" or \"rationale\""
+        },
+        {
+          "name": "imageSource",
+          "code": "image_source",
+          "severity": "error",
+          "message": "{image} needs either \"src\" (a base64 data URL) or \"svg\" (SVG markup), not both"
+        },
+        {
+          "name": "imageSvgText",
+          "code": "image_svg_text",
+          "severity": "error",
+          "message": "{image} \"svg\" must be text"
+        },
+        {
+          "name": "imageSrcText",
+          "code": "image_src_text",
+          "severity": "error",
+          "message": "{image} \"src\" must be text"
+        },
+        {
+          "name": "srcNotDataUrl",
+          "code": "src_not_data_url",
+          "severity": "error",
+          "message": "{image} \"src\" must be a data URL such as data:image/png;base64,..."
+        },
+        {
+          "name": "imageTypeNotAccepted",
+          "code": "image_type_not_accepted",
+          "severity": "error",
+          "message": "{image} must be PNG, JPEG, WebP, or SVG (found {found})"
+        },
+        {
+          "name": "srcNotBase64",
+          "code": "src_not_base64",
+          "severity": "error",
+          "message": "{image} \"src\" must be base64 (data:{type};base64,...). Put SVG markup in \"svg\" instead"
+        },
+        {
+          "name": "srcBadBase64",
+          "code": "src_bad_base64",
+          "severity": "error",
+          "message": "{image} \"src\" is not valid base64"
+        },
+        {
+          "name": "imageTooBig",
+          "code": "image_too_big",
+          "severity": "error",
+          "message": "{image} is {kb} KB; the limit is 300 KB"
+        },
+        {
+          "name": "imageNotReal",
+          "code": "image_not_real",
+          "severity": "error",
+          "message": "{image} is not a real {kind} file"
+        },
+        {
+          "name": "svgNoElement",
+          "code": "svg_no_element",
+          "severity": "error",
+          "message": "{image} SVG markup must contain an <svg> element"
+        },
+        {
+          "name": "svgUnsafe",
+          "code": "svg_unsafe",
+          "severity": "error",
+          "message": "{image} SVG has a script, an event handler, or a link to another file; remove it"
+        }
+      ]
+    },
+    "markdown": "<!-- Generated from packages/questions/src/format.ts by `pnpm openapi`. Do not edit. -->\n\n# Question file format\n\nA question file is one set of questions, written as JSON. `POST /api/imports/check` is the one judge of a file: it answers with every error and warning below that the file has, each with its code and its place in the file. An error blocks the import; a warning does not.\n\nThe API's contract, `apps/api/openapi.json`, carries the same format in `x-question-format`: this page, and the data it is written from. Both are generated from the format table, `packages/questions/src/format.ts`.\n\nThe file may wrap its JSON in a Markdown code fence; the check reads the JSON inside it. A file that is only a list of questions is a practice set titled \"Imported questions\".\n\n## The set\n\n| Field | Required | What it holds |\n|---|---|---|\n| `title` | no | The set's name, as text. \"Imported questions\" when the file gives none. |\n| `desc` | no | A line about what the set covers, as text. |\n| `kind` | no | \"practice\" or \"exam\". A practice set is the default; an exam set's questions are asked only on exams. |\n| `terms` | no | The terms its questions use: an object from each term's key to [\"Term\", \"What it means\"]. A question lists the keys it uses in its own \"terms\". |\n| `questions` | yes | The questions, a list of at least one. |\n\n## A question\n\n| Field | Required | What it holds |\n|---|---|---|\n| `id` | no | Its id, as text or a number. A question without one is Q1, Q2... by its place in the file. |\n| `type` | yes | Its format: one of the question types below. |\n| `topic` | no | What it is about, as text. Results are counted by topic. |\n| `cj` | no | The thinking step it tests, as text, such as a nursing question's clinical judgment step. Missing it is a warning when another question in the file has it. |\n| `need` | no | The area it belongs to, as text, such as a nursing question's client need. Missing it is a warning when another question in the file has it. |\n| `diff` | no | How hard it is, as a whole number. Missing it is a warning when another question in the file has it. |\n| `wk` | no | The folder it belongs in, as text, when that is not the set's own. |\n| `stem` | no | What comes before the question: the scenario, the passage, the readings. Empty when left out. |\n| `ask` | yes | The question itself. |\n| `rationale` | no | Why the answer is right, shown once the question is answered. Empty when left out. |\n| `takeaway` | no | The one thing to remember, shown with the rationale. Empty when left out. |\n| `terms` | no | The keys of the set's \"terms\" it uses, as a list. |\n| `src` | no | Where it comes from, as text: a slide, a page, a line. Missing it is a warning when another question in the file has it. |\n| `twinOf` | no | In an exam set, the id of the practice question it is the exam twin of. A practice set does not read it. |\n| `table` | no | A table under the stem, for readings such as vital signs or lab values (see Tables and images). |\n| `images` | no | Up to 4 images (see Tables and images). |\n\nA question may carry other fields as well: they are kept with it as written.\n\n## Question types\n\n| Type | Name | List | At least |\n|---|---|---|---|\n| `single` | Single answer | `options` | 2 |\n| `priority` | Priority / first action | `options` | 2 |\n| `sata` | Select all that apply | `options` | 2 |\n| `highlight` | Highlight | `segments` | 3 |\n| `order` | Ordered response | `items` | 3 |\n| `match` | Matching | `pairs` | 2 |\n| `matrix` | Matrix | `rows` | 1 |\n| `matrixmulti` | Matrix, check all that fit | `rows` | 1 |\n| `cloze` | Drop-down cloze | `blanks` | 0 |\n\nThe fields of each type's answers:\n\n### `single`: Single answer\n\n- `options`: At least 2; exactly one has \"ok\": true. Each { \"t\": its text, \"ok\": true on the right one, \"why\": why it is right or wrong }.\n\n### `priority`: Priority / first action\n\n- `options`: At least 2; exactly one has \"ok\": true. Each { \"t\": its text, \"ok\": true on the one to do first, \"why\": why it comes first or does not }.\n\n### `sata`: Select all that apply\n\n- `options`: At least 2; at least one has \"ok\": true, and every one may. Each { \"t\": its text, \"ok\": true on every right one, \"why\": why it is right or wrong }.\n\n### `highlight`: Highlight\n\n- `segments`: At least 3. The passage in phrases, in reading order, each { \"t\": the phrase, \"ok\": true on one to highlight, \"why\" }; at least one has \"ok\": true and at least one does not. The phrases are joined with spaces.\n\n### `order`: Ordered response\n\n- `items`: At least 3. Each { \"t\": a step, \"why\" }, listed in the right order. The runner shuffles them.\n\n### `match`: Matching\n\n- `pairs`: At least 2. Each { \"l\": a left item, \"r\": its match, \"why\" }.\n- `extra`: Optional: right-hand choices that match no left item, each { \"r\", \"why\" }.\n\n### `matrix`: Matrix\n\n- `columns`: The column names, at least 2, each different.\n- `rows`: At least 1. Each { \"t\": its text, \"ans\": the name of its one right column, \"why\" }.\n- A column named \"both\", \"either\", \"either class\", \"all\", \"all of these\", or \"all of the above\" (any case) is a warning: a row that fits more than one column belongs in a `matrixmulti`.\n\n### `matrixmulti`: Matrix, check all that fit\n\n- `columns`: The column names, at least 2, each different.\n- `rows`: At least 1. Each { \"t\": its text, \"ans\": a list of the names of its right columns, each once, \"why\" }; every row has at least one right column, and not every box in the table is right.\n- Its `ask` should say that a row can fit more than one column, in the words \"more than one\"; one that does not is a warning.\n\n### `cloze`: Drop-down cloze\n\n- `cloze`: { \"text\": the passage with {0}, {1}... where the blanks go, \"blanks\": one per placeholder, each { \"opts\": its choices, at least 2, \"ans\": the index of the right one from 0, \"why\" } }.\n\n## Tables and images\n\nA question may show a `table` under its stem, and images. Every screen draws them, so the check refuses one that a screen cannot draw. Use a table for readings, never a picture of one.\n\n`table`:\n\n| Field | Required | What it holds |\n|---|---|---|\n| `caption` | no | A caption, as text. |\n| `head` | no | The header row, a list of cells. |\n| `rows` | yes | The rows, a list of at least one, each a list of cells. A cell is text, a number, true or false, or null for an empty cell. |\n\n`images`: a list of at most 4, each:\n\n| Field | Required | What it holds |\n|---|---|---|\n| `alt` | yes | A short description of what it shows. |\n| `src` | no | The image itself, as a base64 data URL such as data:image/png;base64,...: PNG, JPEG, WebP, or SVG. |\n| `svg` | no | SVG markup, as text: a diagram drawn for the question. |\n| `caption` | no | A caption, as text. |\n| `at` | no | \"stem\" or \"rationale\": under the stem (the default), or with the rationale once the question is answered. |\n\nExactly one of `src` and `svg` carries the image: PNG, JPEG, WebP, or SVG, at most 300 KB. An image travels inside the file; a link to an image elsewhere is not one. SVG markup may not have a script, an event handler, or a link to another file. `at` is \"stem\" or \"rationale\".\n\n## Errors and warnings\n\nEach error and warning has a code that names its rule for as long as the rule exists; a new rule gets a new code. A name in braces is filled in from the file: the field, what was found, which image. Each message about a question starts with the question's place and id, such as `Question 2 (Q2): `.\n\n| Code | Severity | Message |\n|---|---|---|\n| `not_json` | error | `This is not valid JSON: {reason}. Ask your AI chat to resend only the JSON block.` |\n| `no_questions` | error | `No \"questions\" list was found.` |\n| `bad_kind` | error | `The set's \"kind\" must be \"practice\" or \"exam\" (found {found})` |\n| `not_an_object` | error | `not an object` |\n| `unknown_type` | error | `unknown type \"{type}\"` |\n| `missing_field` | error | `missing {field}` |\n| `missing_field_used_elsewhere` | warning | `missing {field}` |\n| `not_text` | error | `{field} must be text` |\n| `twin_of_not_an_id` | error | `\"twinOf\" must be the id of its practice question` |\n| `twin_of_ignored` | warning | `\"twinOf\" is only read in an exam set (\"kind\": \"exam\")` |\n| `term_undefined` | warning | `term \"{term}\" has no definition and will be skipped` |\n| `options_min` | error | `needs at least {min} {list}` |\n| `option_needs_text` | error | `every option needs text \"t\"` |\n| `exactly_one_correct` | error | `needs exactly one option with \"ok\": true (found {found})` |\n| `sata_needs_correct` | error | `select-all needs at least one correct option` |\n| `items_shape` | error | `needs 3+ items with text \"t\", listed in the correct order` |\n| `pairs_shape` | error | `needs 2+ pairs with \"l\" and \"r\"` |\n| `matrix_shape` | error | `needs columns and rows` |\n| `matrix_row` | error | `every row needs text \"t\" and an \"ans\" that matches a column name` |\n| `matrix_catch_all` | warning | `If a row can fit more than one column, use matrixmulti` |\n| `segments_shape` | error | `needs 3+ segments, some with \"ok\": true and some without` |\n| `cloze_holes` | error | `cloze text needs one {0}, {1}... placeholder per blank` |\n| `cloze_blank` | error | `every blank needs \"opts\" and an \"ans\" index` |\n| `duplicate_column` | error | `every column name must be different` |\n| `matrixmulti_shape` | error | `needs 2 or more columns and at least 1 row` |\n| `matrixmulti_row` | error | `every row needs text \"t\" and an \"ans\" list of column names` |\n| `matrixmulti_no_right` | error | `every row needs at least one right column` |\n| `matrixmulti_ans_name` | error | `every \"ans\" entry must name a column` |\n| `matrixmulti_ans_twice` | error | `an \"ans\" entry must appear once in that row` |\n| `matrixmulti_all_right` | error | `not every box can be right` |\n| `matrixmulti_ask` | warning | `the ask does not say a row can fit more than one column` |\n| `table_shape` | error | `table needs \"rows\": a list of rows, each a list of cell texts` |\n| `table_caption` | error | `table \"caption\" must be text` |\n| `table_head` | error | `table \"head\" must be a list of cell texts` |\n| `images_not_list` | error | `\"images\" must be a list` |\n| `images_over` | error | `has {found} images; the limit is 4` |\n| `image_not_object` | error | `{image} is not an object` |\n| `image_needs_alt` | error | `{image} needs \"alt\": a short description of what it shows` |\n| `image_caption` | error | `{image} \"caption\" must be text` |\n| `image_at` | error | `{image} \"at\" must be \"stem\" or \"rationale\"` |\n| `image_source` | error | `{image} needs either \"src\" (a base64 data URL) or \"svg\" (SVG markup), not both` |\n| `image_svg_text` | error | `{image} \"svg\" must be text` |\n| `image_src_text` | error | `{image} \"src\" must be text` |\n| `src_not_data_url` | error | `{image} \"src\" must be a data URL such as data:image/png;base64,...` |\n| `image_type_not_accepted` | error | `{image} must be PNG, JPEG, WebP, or SVG (found {found})` |\n| `src_not_base64` | error | `{image} \"src\" must be base64 (data:{type};base64,...). Put SVG markup in \"svg\" instead` |\n| `src_bad_base64` | error | `{image} \"src\" is not valid base64` |\n| `image_too_big` | error | `{image} is {kb} KB; the limit is 300 KB` |\n| `image_not_real` | error | `{image} is not a real {kind} file` |\n| `svg_no_element` | error | `{image} SVG markup must contain an <svg> element` |\n| `svg_unsafe` | error | `{image} SVG has a script, an event handler, or a link to another file; remove it` |\n"
+  },
   "components": {
     "securitySchemes": {
       "sessionCookie": {
@@ -1761,6 +2461,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportCheckIssue"
+            },
+            "description": "Every error and warning, in the order the check found them, each with its code, its question and its place in the file. Its errors' messages are `errors`, and its warnings' are `warnings`, in the same order."
           }
         },
         "required": [
@@ -1772,14 +2479,75 @@
           "termCount",
           "formats",
           "errors",
-          "warnings"
+          "warnings",
+          "issues"
+        ]
+      },
+      "ImportCheckIssue": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "description": "`error` blocks the import; `warning` does not."
+          },
+          "code": {
+            "type": "string",
+            "description": "The rule it breaks. Stable: a code names its rule for as long as the rule exists, whatever the message's words become, and a new rule gets a new code. More may be added, so show the message of a code you do not know. The codes now, from the format table in packages/questions/src/format.ts: error: `not_json`, `no_questions`, `bad_kind`, `not_an_object`, `unknown_type`, `missing_field`, `not_text`, `twin_of_not_an_id`, `options_min`, `option_needs_text`, `exactly_one_correct`, `sata_needs_correct`, `items_shape`, `pairs_shape`, `matrix_shape`, `matrix_row`, `segments_shape`, `cloze_holes`, `cloze_blank`, `duplicate_column`, `matrixmulti_shape`, `matrixmulti_row`, `matrixmulti_no_right`, `matrixmulti_ans_name`, `matrixmulti_ans_twice`, `matrixmulti_all_right`, `table_shape`, `table_caption`, `table_head`, `images_not_list`, `images_over`, `image_not_object`, `image_needs_alt`, `image_caption`, `image_at`, `image_source`, `image_svg_text`, `image_src_text`, `src_not_data_url`, `image_type_not_accepted`, `src_not_base64`, `src_bad_base64`, `image_too_big`, `image_not_real`, `svg_no_element`, `svg_unsafe`; warning: `missing_field_used_elsewhere`, `twin_of_ignored`, `term_undefined`, `matrix_catch_all`, `matrixmulti_ask`."
+          },
+          "question": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ImportCheckIssueQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The question it is about, or null for the file as a whole, such as `not_json`."
+          },
+          "path": {
+            "type": "string",
+            "description": "A JSON pointer (RFC 6901) to the place in the file's JSON, inside its code fence when it has one. `\"\"` is the whole file, `/questions/2/options/1/t` is the text of the third question's second option, and `/2/options/1/t` is the same in a file that is a bare list of questions. A field that is missing is pointed to where it belongs."
+          },
+          "message": {
+            "type": "string",
+            "description": "The same sentence as in `errors` or `warnings`."
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "question",
+          "path",
+          "message"
+        ]
+      },
+      "ImportCheckIssueQuestion": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "description": "Its place in the file's list of questions, from 0: `Question 1` in the message is index 0."
+          },
+          "id": {
+            "type": "string",
+            "description": "Its `id` as the file writes it, a number as text. Absent when it has no text or number id."
+          }
+        },
+        "required": [
+          "index"
         ]
       },
       "ImportSource": {
         "type": "object",
         "properties": {
           "source": {
-            "type": "string"
+            "type": "string",
+            "description": "The question file as text: JSON in the question file format (`x-question-format`), on its own or in a Markdown code fence."
           }
         },
         "required": [
@@ -11363,6 +12131,7 @@
     "/api/imports/check": {
       "post": {
         "summary": "Check a question file without importing it",
+        "description": "The server's answer to whether a question file is valid, so a tool asks here rather than keep its own copy of the rules. It reads only the file it is sent and stores nothing, so every signed-in account may call it: an invited account, the admin, and a store account with or without Cloud. `issues` says what is wrong and where: each error or warning with its stable `code`, the question (`index` and `id`), and `path`, a JSON pointer into the file. It takes the files POST /api/imports takes: a body over 25 MB is refused by both with 413 `too_large`.",
         "tags": [
           "Import",
           "Agents"
@@ -11396,7 +12165,7 @@
         },
         "responses": {
           "200": {
-            "description": "The file's counts, or the errors that block import.",
+            "description": "The file's counts, or the errors that block import, with every error and warning as an issue.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11417,6 +12186,16 @@
           },
           "403": {
             "description": "`agent_key_not_allowed`: the key's scopes do not cover this, it asked for what its scopes do not cover, or the admin approved it (the admin account has no content of its own). `must_change_password`: the account has a temporary password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "`too_large`: the body is over 25 MB. The rest is not read. Nothing was changed.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11461,7 +12240,8 @@
                 "type": "object",
                 "properties": {
                   "source": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The question file as text: JSON in the question file format (`x-question-format`), on its own or in a Markdown code fence."
                   },
                   "title": {
                     "type": "string"
@@ -11600,6 +12380,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ImportConflict"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "`too_large`: the body is over 25 MB. The rest is not read. Nothing was changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentError"
                 }
               }
             }

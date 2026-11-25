@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000701/delete-preview",
@@ -13,8 +13,8 @@
     "body": {
       "examId": "e0000000-0000-4000-8000-000000000701",
       "courseId": "c0000000-0000-4000-8000-000000000701",
-      "startedAt": "2026-11-24T01:48:47.914Z",
-      "finishedAt": "2026-11-24T01:48:47.937Z",
+      "startedAt": "2026-11-25T04:29:47.358Z",
+      "finishedAt": "2026-11-25T04:29:47.383Z",
       "questionCount": 3,
       "answeredCount": 2,
       "changedCount": 1,
@@ -51,7 +51,7 @@
         "body": "Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days."
       },
       "refusal": null,
-      "confirm": "b94830bc0ed23bbc",
+      "confirm": "5fc5e2c8fc38c67b",
       "undoDays": 30
     }
   }

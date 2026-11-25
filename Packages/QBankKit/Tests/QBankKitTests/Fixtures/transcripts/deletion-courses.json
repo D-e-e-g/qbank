@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "deletion-courses",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.640Z",
+      "at": "2026-11-25T04:29:48.106Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:48.640Z"
+          "expiresAt": "2027-12-30T04:29:48.106Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.688Z",
+      "at": "2026-11-25T04:29:48.158Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.693Z",
+      "at": "2026-11-25T04:29:48.164Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.697Z",
+      "at": "2026-11-25T04:29:48.169Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -148,7 +148,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.705Z",
+      "at": "2026-11-25T04:29:48.177Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -188,7 +188,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.709Z",
+      "at": "2026-11-25T04:29:48.183Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/00000000-0000-4000-8016-000000000001",
@@ -324,7 +324,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.714Z",
+      "at": "2026-11-25T04:29:48.190Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -351,7 +351,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-24T01:48:48.714Z",
+          "answeredAt": "2026-11-25T04:29:48.190Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -363,7 +363,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.721Z",
+      "at": "2026-11-25T04:29:48.199Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801/exams",
@@ -393,21 +393,21 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 450,
-          "startedAt": "2026-11-24T01:48:48.721Z",
-          "endsAt": "2026-11-24T01:56:18.721Z",
+          "startedAt": "2026-11-25T04:29:48.199Z",
+          "endsAt": "2026-11-25T04:37:18.199Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-24T01:48:48.721Z",
+          "serverNow": "2026-11-25T04:29:48.199Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8016-000000000005",
-              "publicId": "Q2",
+              "id": "00000000-0000-4000-8016-000000000004",
+              "publicId": "Q1",
               "position": 1,
               "type": "single",
-              "topic": "Fundamentals A topic 2",
+              "topic": "Fundamentals A topic 1",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 2.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -438,13 +438,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8016-000000000006",
-              "publicId": "Q3",
+              "id": "00000000-0000-4000-8016-000000000005",
+              "publicId": "Q2",
               "position": 2,
               "type": "single",
-              "topic": "Fundamentals A topic 3",
+              "topic": "Fundamentals A topic 2",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 3.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 2.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -512,13 +512,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8016-000000000004",
-              "publicId": "Q1",
+              "id": "00000000-0000-4000-8016-000000000006",
+              "publicId": "Q3",
               "position": 4,
               "type": "single",
-              "topic": "Fundamentals A topic 1",
+              "topic": "Fundamentals A topic 3",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 1.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 3.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -594,7 +594,7 @@
     {
       "step": "request",
       "name": "course-delete-preview-in-use",
-      "at": "2026-11-24T01:48:48.728Z",
+      "at": "2026-11-25T04:29:48.206Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801/delete-preview",
@@ -629,7 +629,7 @@
             "body": "You can bring it back for 30 days."
           },
           "refusal": "An exam in NURS 220 is still going. Finish or leave that exam first.",
-          "confirm": "eb11dd2e053f4906",
+          "confirm": "8a51620c411508b1",
           "undoDays": 30
         }
       }
@@ -637,12 +637,12 @@
     {
       "step": "request",
       "name": "course-delete-in-use",
-      "at": "2026-11-24T01:48:48.733Z",
+      "at": "2026-11-25T04:29:48.212Z",
       "request": {
         "method": "DELETE",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801",
         "query": {
-          "confirm": "eb11dd2e053f4906"
+          "confirm": "8a51620c411508b1"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -659,7 +659,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.737Z",
+      "at": "2026-11-25T04:29:48.216Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/00000000-0000-4000-8016-000000000007/finish",
@@ -686,21 +686,21 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 450,
-          "startedAt": "2026-11-24T01:48:48.721Z",
-          "endsAt": "2026-11-24T01:56:18.721Z",
+          "startedAt": "2026-11-25T04:29:48.199Z",
+          "endsAt": "2026-11-25T04:37:18.199Z",
           "status": "ended",
-          "finishedAt": "2026-11-24T01:48:48.737Z",
+          "finishedAt": "2026-11-25T04:29:48.216Z",
           "endReason": "finished",
-          "serverNow": "2026-11-24T01:48:48.737Z",
+          "serverNow": "2026-11-25T04:29:48.216Z",
           "questions": [
             {
-              "id": "00000000-0000-4000-8016-000000000005",
-              "publicId": "Q2",
+              "id": "00000000-0000-4000-8016-000000000004",
+              "publicId": "Q1",
               "position": 1,
               "type": "single",
-              "topic": "Fundamentals A topic 2",
+              "topic": "Fundamentals A topic 1",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 2.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -731,13 +731,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8016-000000000006",
-              "publicId": "Q3",
+              "id": "00000000-0000-4000-8016-000000000005",
+              "publicId": "Q2",
               "position": 2,
               "type": "single",
-              "topic": "Fundamentals A topic 3",
+              "topic": "Fundamentals A topic 2",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 3.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 2.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -805,13 +805,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8016-000000000004",
-              "publicId": "Q1",
+              "id": "00000000-0000-4000-8016-000000000006",
+              "publicId": "Q3",
               "position": 4,
               "type": "single",
-              "topic": "Fundamentals A topic 1",
+              "topic": "Fundamentals A topic 3",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Fundamentals A topic 1.",
+              "stem": "An invented client presents with a finding about Fundamentals A topic 3.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -917,7 +917,7 @@
             ],
             "items": [
               {
-                "questionId": "00000000-0000-4000-8016-000000000005",
+                "questionId": "00000000-0000-4000-8016-000000000004",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -927,7 +927,7 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8016-000000000006",
+                "questionId": "00000000-0000-4000-8016-000000000005",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -947,7 +947,7 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8016-000000000004",
+                "questionId": "00000000-0000-4000-8016-000000000006",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -974,7 +974,7 @@
     {
       "step": "request",
       "name": "course-delete-preview",
-      "at": "2026-11-24T01:48:48.743Z",
+      "at": "2026-11-25T04:29:48.224Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801/delete-preview",
@@ -1009,7 +1009,7 @@
             "body": "You can bring it back for 30 days."
           },
           "refusal": null,
-          "confirm": "eb11dd2e053f4906",
+          "confirm": "8a51620c411508b1",
           "undoDays": 30
         }
       }
@@ -1017,12 +1017,12 @@
     {
       "step": "request",
       "name": "course-delete",
-      "at": "2026-11-24T01:48:48.748Z",
+      "at": "2026-11-25T04:29:48.228Z",
       "request": {
         "method": "DELETE",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801",
         "query": {
-          "confirm": "eb11dd2e053f4906"
+          "confirm": "8a51620c411508b1"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1036,7 +1036,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.752Z",
+      "at": "2026-11-25T04:29:48.233Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -1072,7 +1072,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.755Z",
+      "at": "2026-11-25T04:29:48.236Z",
       "request": {
         "method": "POST",
         "path": "/api/topics",
@@ -1106,7 +1106,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.759Z",
+      "at": "2026-11-25T04:29:48.241Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -1147,7 +1147,7 @@
     {
       "step": "request",
       "name": "topic-delete-preview",
-      "at": "2026-11-24T01:48:48.765Z",
+      "at": "2026-11-25T04:29:48.246Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000802/delete-preview",
@@ -1178,7 +1178,7 @@
             "body": "You can bring it back for 30 days."
           },
           "refusal": null,
-          "confirm": "9ea4d6ab6d64c80a",
+          "confirm": "627440150b0d3b39",
           "undoDays": 30
         }
       }
@@ -1186,12 +1186,12 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:48.769Z",
+      "at": "2026-11-25T04:29:48.251Z",
       "request": {
         "method": "DELETE",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000802",
         "query": {
-          "confirm": "9ea4d6ab6d64c80a"
+          "confirm": "627440150b0d3b39"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1205,7 +1205,7 @@
     {
       "step": "request",
       "name": "deleted-courses",
-      "at": "2026-11-24T01:48:48.773Z",
+      "at": "2026-11-25T04:29:48.257Z",
       "request": {
         "method": "GET",
         "path": "/api/deleted-courses",
@@ -1226,8 +1226,8 @@
               "title": "Pharmacology",
               "semester": null,
               "questionCount": 3,
-              "deletedAt": "2026-11-24T01:48:48.769Z",
-              "undoUntil": "2026-12-24T01:48:48.769Z",
+              "deletedAt": "2026-11-25T04:29:48.251Z",
+              "undoUntil": "2026-12-25T04:29:48.251Z",
               "undoRefusal": null,
               "deletedByAgent": null
             },
@@ -1242,8 +1242,8 @@
                 "name": "Semester 2"
               },
               "questionCount": 5,
-              "deletedAt": "2026-11-24T01:48:48.748Z",
-              "undoUntil": "2026-12-24T01:48:48.748Z",
+              "deletedAt": "2026-11-25T04:29:48.228Z",
+              "undoUntil": "2026-12-25T04:29:48.228Z",
               "undoRefusal": "Semester 2 already has a course with the code NURS 220. Rename one of them, then bring this one back.",
               "deletedByAgent": null
             }
@@ -1254,7 +1254,7 @@
     {
       "step": "request",
       "name": "course-undo-delete",
-      "at": "2026-11-24T01:48:48.777Z",
+      "at": "2026-11-25T04:29:48.262Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000802/undo-delete",
@@ -1286,7 +1286,7 @@
     {
       "step": "request",
       "name": "course-undo-delete-code-taken",
-      "at": "2026-11-24T01:48:48.782Z",
+      "at": "2026-11-25T04:29:48.268Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000801/undo-delete",

@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "agents",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.226Z",
+      "at": "2026-11-25T04:29:41.423Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:42.226Z"
+          "expiresAt": "2027-12-30T04:29:41.423Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.274Z",
+      "at": "2026-11-25T04:29:41.473Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -76,14 +76,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:42.274Z"
+          "expiresAt": "2027-12-30T04:29:41.473Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-keys-empty",
-      "at": "2026-11-24T01:48:42.319Z",
+      "at": "2026-11-25T04:29:41.520Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -102,7 +102,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-not-found",
-      "at": "2026-11-24T01:48:42.321Z",
+      "at": "2026-11-25T04:29:41.523Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -124,7 +124,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.324Z",
+      "at": "2026-11-25T04:29:41.526Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -142,9 +142,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "gdEtBpsCV1ZUy24iTmqhf63uojNdZ1DVGYOWI4vItaI",
+          "deviceCode": "4w7xpMB2sBPu7LXoRrc7B_m75WMRf-j2jMe4AVf7I_g",
           "userCode": "MNQT-XPJQ",
-          "expiresAt": "2026-11-24T01:58:42.324Z",
+          "expiresAt": "2026-11-25T04:39:41.526Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -153,7 +153,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup",
-      "at": "2026-11-24T01:48:42.326Z",
+      "at": "2026-11-25T04:29:41.528Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -183,15 +183,15 @@
             }
           ],
           "status": "pending",
-          "createdAt": "2026-11-24T01:48:42.324Z",
-          "expiresAt": "2026-11-24T01:58:42.324Z"
+          "createdAt": "2026-11-25T04:29:41.526Z",
+          "expiresAt": "2026-11-25T04:39:41.526Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-approve",
-      "at": "2026-11-24T01:48:42.328Z",
+      "at": "2026-11-25T04:29:41.531Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -221,22 +221,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-24T01:48:42.324Z",
-          "expiresAt": "2026-11-24T01:58:42.324Z"
+          "createdAt": "2026-11-25T04:29:41.526Z",
+          "expiresAt": "2026-11-25T04:39:41.526Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.330Z",
+      "at": "2026-11-25T04:29:41.534Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "gdEtBpsCV1ZUy24iTmqhf63uojNdZ1DVGYOWI4vItaI"
+          "deviceCode": "4w7xpMB2sBPu7LXoRrc7B_m75WMRf-j2jMe4AVf7I_g"
         }
       },
       "response": {
@@ -251,7 +251,7 @@
               "import",
               "read"
             ],
-            "createdAt": "2026-11-24T01:48:42.330Z",
+            "createdAt": "2026-11-25T04:29:41.534Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -261,7 +261,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.332Z",
+      "at": "2026-11-25T04:29:41.535Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -279,9 +279,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "n0c1fXyA6aV82MS_56jRBLRgz9Q_q0rPgkQG33-IUF0",
+          "deviceCode": "j66jkuhPzM8A0KrHx9SluBHuVuuIF7oTylGzGuvx_0U",
           "userCode": "WHWP-QSTD",
-          "expiresAt": "2026-11-24T01:58:42.332Z",
+          "expiresAt": "2026-11-25T04:39:41.535Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -290,7 +290,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-manage",
-      "at": "2026-11-24T01:48:42.333Z",
+      "at": "2026-11-25T04:29:41.536Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -320,15 +320,15 @@
             }
           ],
           "status": "pending",
-          "createdAt": "2026-11-24T01:48:42.332Z",
-          "expiresAt": "2026-11-24T01:58:42.332Z"
+          "createdAt": "2026-11-25T04:29:41.535Z",
+          "expiresAt": "2026-11-25T04:39:41.535Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-deny",
-      "at": "2026-11-24T01:48:42.335Z",
+      "at": "2026-11-25T04:29:41.538Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/deny",
@@ -358,15 +358,15 @@
             }
           ],
           "status": "denied",
-          "createdAt": "2026-11-24T01:48:42.332Z",
-          "expiresAt": "2026-11-24T01:58:42.332Z"
+          "createdAt": "2026-11-25T04:29:41.535Z",
+          "expiresAt": "2026-11-25T04:39:41.535Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-approve-answered",
-      "at": "2026-11-24T01:48:42.337Z",
+      "at": "2026-11-25T04:29:41.541Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -388,7 +388,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.339Z",
+      "at": "2026-11-25T04:29:41.543Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -406,9 +406,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "taNjdVJTZ2hScKe6QYYLSeEKo7EXgnPTMetBVGvha8Y",
+          "deviceCode": "mRas6zLiBJgcmhzShY-mOMC8DCxQW8No_aYXh-GlZIs",
           "userCode": "KLMN-PQRS",
-          "expiresAt": "2026-11-24T01:58:42.339Z",
+          "expiresAt": "2026-11-25T04:39:41.543Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -417,7 +417,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.340Z",
+      "at": "2026-11-25T04:29:41.544Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -447,22 +447,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-24T01:48:42.339Z",
-          "expiresAt": "2026-11-24T01:58:42.339Z"
+          "createdAt": "2026-11-25T04:29:41.543Z",
+          "expiresAt": "2026-11-25T04:39:41.543Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.343Z",
+      "at": "2026-11-25T04:29:41.546Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "taNjdVJTZ2hScKe6QYYLSeEKo7EXgnPTMetBVGvha8Y"
+          "deviceCode": "mRas6zLiBJgcmhzShY-mOMC8DCxQW8No_aYXh-GlZIs"
         }
       },
       "response": {
@@ -477,7 +477,7 @@
               "import",
               "manage"
             ],
-            "createdAt": "2026-11-24T01:48:42.343Z",
+            "createdAt": "2026-11-25T04:29:41.546Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -487,7 +487,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.344Z",
+      "at": "2026-11-25T04:29:41.547Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -504,9 +504,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "cMmY5HGBa4lLlgzg6gpMMUwjbxhfPyNfqwRx6YLTjn4",
+          "deviceCode": "0VuGGgRDyeKuQJpeSu8nHGqbg8R5g5wToiIurohIyA0",
           "userCode": "TVWX-ZBCD",
-          "expiresAt": "2026-11-24T01:58:42.344Z",
+          "expiresAt": "2026-11-25T04:39:41.547Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -515,7 +515,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.345Z",
+      "at": "2026-11-25T04:29:41.549Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -540,22 +540,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-24T01:48:42.344Z",
-          "expiresAt": "2026-11-24T01:58:42.344Z"
+          "createdAt": "2026-11-25T04:29:41.547Z",
+          "expiresAt": "2026-11-25T04:39:41.547Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.347Z",
+      "at": "2026-11-25T04:29:41.551Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "cMmY5HGBa4lLlgzg6gpMMUwjbxhfPyNfqwRx6YLTjn4"
+          "deviceCode": "0VuGGgRDyeKuQJpeSu8nHGqbg8R5g5wToiIurohIyA0"
         }
       },
       "response": {
@@ -569,7 +569,7 @@
             "scopes": [
               "import"
             ],
-            "createdAt": "2026-11-24T01:48:42.347Z",
+            "createdAt": "2026-11-25T04:29:41.551Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -579,7 +579,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.348Z",
+      "at": "2026-11-25T04:29:41.552Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -606,7 +606,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.355Z",
+      "at": "2026-11-25T04:29:41.558Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -642,7 +642,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.359Z",
+      "at": "2026-11-25T04:29:41.564Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -679,7 +679,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.367Z",
+      "at": "2026-11-25T04:29:41.573Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -719,7 +719,7 @@
     {
       "step": "request",
       "name": "course-imported-by-agent",
-      "at": "2026-11-24T01:48:42.372Z",
+      "at": "2026-11-25T04:29:41.577Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/5fd870de-aebb-44ac-b6b3-a7aa431a5fb5",
@@ -761,8 +761,8 @@
                   "title": "Week 1 - Set 1: Her own set",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-24T01:48:42.359Z",
-                  "activeSince": "2026-11-24T01:48:42.359Z",
+                  "importedAt": "2026-11-25T04:29:41.564Z",
+                  "activeSince": "2026-11-25T04:29:41.564Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -782,8 +782,8 @@
                   "title": "Week 1 - Set 2: From her agent",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-24T01:48:42.367Z",
-                  "activeSince": "2026-11-24T01:48:42.367Z",
+                  "importedAt": "2026-11-25T04:29:41.573Z",
+                  "activeSince": "2026-11-25T04:29:41.573Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -817,8 +817,8 @@
                   "title": "Week 1 - Set 1: Her own set",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-24T01:48:42.359Z",
-                  "activeSince": "2026-11-24T01:48:42.359Z",
+                  "importedAt": "2026-11-25T04:29:41.564Z",
+                  "activeSince": "2026-11-25T04:29:41.564Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -838,8 +838,8 @@
                   "title": "Week 1 - Set 2: From her agent",
                   "description": "Invented practice set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-24T01:48:42.367Z",
-                  "activeSince": "2026-11-24T01:48:42.367Z",
+                  "importedAt": "2026-11-25T04:29:41.573Z",
+                  "activeSince": "2026-11-25T04:29:41.573Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -869,7 +869,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.388Z",
+      "at": "2026-11-25T04:29:41.592Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -888,7 +888,7 @@
               "scopes": [
                 "import"
               ],
-              "createdAt": "2026-11-24T01:48:42.347Z",
+              "createdAt": "2026-11-25T04:29:41.551Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -899,7 +899,7 @@
                 "import",
                 "manage"
               ],
-              "createdAt": "2026-11-24T01:48:42.343Z",
+              "createdAt": "2026-11-25T04:29:41.546Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -910,8 +910,8 @@
                 "import",
                 "read"
               ],
-              "createdAt": "2026-11-24T01:48:42.330Z",
-              "lastUsedAt": "2026-11-24T01:48:42.367Z",
+              "createdAt": "2026-11-25T04:29:41.534Z",
+              "lastUsedAt": "2026-11-25T04:29:41.573Z",
               "revokedAt": null
             }
           ]
@@ -921,7 +921,7 @@
     {
       "step": "request",
       "name": "agent-key-revoke",
-      "at": "2026-11-24T01:48:42.390Z",
+      "at": "2026-11-25T04:29:41.594Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-keys/c925031b-bff0-4153-aca1-ab8ff8648f21/revoke",
@@ -938,16 +938,16 @@
           "scopes": [
             "import"
           ],
-          "createdAt": "2026-11-24T01:48:42.347Z",
+          "createdAt": "2026-11-25T04:29:41.551Z",
           "lastUsedAt": null,
-          "revokedAt": "2026-11-24T01:48:42.390Z"
+          "revokedAt": "2026-11-25T04:29:41.594Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-keys",
-      "at": "2026-11-24T01:48:42.392Z",
+      "at": "2026-11-25T04:29:41.596Z",
       "request": {
         "method": "GET",
         "path": "/api/agent-keys",
@@ -966,9 +966,9 @@
               "scopes": [
                 "import"
               ],
-              "createdAt": "2026-11-24T01:48:42.347Z",
+              "createdAt": "2026-11-25T04:29:41.551Z",
               "lastUsedAt": null,
-              "revokedAt": "2026-11-24T01:48:42.390Z"
+              "revokedAt": "2026-11-25T04:29:41.594Z"
             },
             {
               "id": "00000000-0000-4000-8009-000000000002",
@@ -977,7 +977,7 @@
                 "import",
                 "manage"
               ],
-              "createdAt": "2026-11-24T01:48:42.343Z",
+              "createdAt": "2026-11-25T04:29:41.546Z",
               "lastUsedAt": null,
               "revokedAt": null
             },
@@ -988,8 +988,8 @@
                 "import",
                 "read"
               ],
-              "createdAt": "2026-11-24T01:48:42.330Z",
-              "lastUsedAt": "2026-11-24T01:48:42.367Z",
+              "createdAt": "2026-11-25T04:29:41.534Z",
+              "lastUsedAt": "2026-11-25T04:29:41.573Z",
               "revokedAt": null
             }
           ]
@@ -999,7 +999,7 @@
     {
       "step": "request",
       "name": "agent-key-revoke-not-found",
-      "at": "2026-11-24T01:48:42.394Z",
+      "at": "2026-11-25T04:29:41.598Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-keys/4d1c3f8e-0000-4000-8000-000000000404/revoke",
@@ -1019,7 +1019,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.395Z",
+      "at": "2026-11-25T04:29:41.600Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1041,7 +1041,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.398Z",
+      "at": "2026-11-25T04:29:41.602Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1063,7 +1063,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.400Z",
+      "at": "2026-11-25T04:29:41.604Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1085,7 +1085,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.404Z",
+      "at": "2026-11-25T04:29:41.607Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1107,7 +1107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.406Z",
+      "at": "2026-11-25T04:29:41.609Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1132,7 +1132,7 @@
     {
       "step": "request",
       "name": "agent-pairing-lookup-locked",
-      "at": "2026-11-24T01:48:42.408Z",
+      "at": "2026-11-25T04:29:41.612Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",
@@ -1157,7 +1157,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.410Z",
+      "at": "2026-11-25T04:29:41.613Z",
       "request": {
         "method": "POST",
         "path": "/api/admin/student-password",
@@ -1179,7 +1179,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:42.455Z",
+      "at": "2026-11-25T04:29:41.660Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -1211,14 +1211,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:42.455Z"
+          "expiresAt": "2027-12-30T04:29:41.660Z"
         }
       }
     },
     {
       "step": "request",
       "name": "agent-pairing-lookup-temporary-password",
-      "at": "2026-11-24T01:48:42.501Z",
+      "at": "2026-11-25T04:29:41.706Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/lookup",

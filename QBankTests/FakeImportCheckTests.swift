@@ -1,3 +1,5 @@
+import Foundation
+import QBankKit
 import Testing
 @testable import QBank
 
@@ -24,5 +26,13 @@ struct FakeImportCheckTests {
         #expect(check.errors == ["Question 1 (Q1): select-all needs at least one correct option"])
         #expect(!check.ok)
         #expect(check.questionCount == 0)
+    }
+
+    /// The fake writes the check's answer by hand, so a field it drops would break the app only in a UI test.
+    @Test(arguments: [#"[{"t":"A","ok":true},{"t":"B"}]"#, #"[{"t":"A"},{"t":""}]"#, "7"])
+    func itAnswersWhatTheAppDecodes(options: String) throws {
+        let source = Self.file(options: options)
+        let answer = try JSONSerialization.data(withJSONObject: FakeImportCheck(source: source).json)
+        #expect(try JSONDecoder().decode(ImportReport.self, from: answer) == ImportChecker.report(for: source))
     }
 }

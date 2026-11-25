@@ -11,9 +11,8 @@ import Testing
 /// and a course's terms), the study routes (answers, a set's sittings and Start over, Review and the place), deleting and Undo
 /// (sets, folders, pages, courses and topics, with Recently deleted) and exams. A transcript is proven whole when every bank request in it is one
 /// the bank serves. One that also holds a request a later slice serves (the archive) is proven up to that request, and the
-/// request is named in `waiting`, so the day a slice serves it the transcript moves to the whole list. Import answers the server has changed since
-/// the recording come from `Fixtures/import-drift.json` (`Transcript.loadWithImportDrift`). An agent's imports and the admin's reads are
-/// not the bank's to answer, so those transcripts are not listed.
+/// request is named in `waiting`, so the day a slice serves it the transcript moves to the whole list. An agent's imports and the
+/// admin's reads are not the bank's to answer, so those transcripts are not listed.
 @Suite struct LocalBankParityTests {
     /// The paths of the bank, which the phone answers. Everything else is the account, which stays on the server.
     static func isBank(_ request: Fixture.Request) -> Bool {
@@ -47,7 +46,7 @@ import Testing
 
     @Test(arguments: whole)
     func replaysWhole(_ name: String) async throws {
-        let transcript = try Transcript.loadWithImportDrift(name)
+        let transcript = try Transcript.load(name)
         let harness = try LocalBankHarness()
         let differences = try await TranscriptReplay.run(transcript, over: harness.bank, hooks: harness.hooks(serves: Self.isAnswered))
         #expect(differences.isEmpty, "\(differences.map(\.description).joined(separator: "\n"))")
@@ -56,7 +55,7 @@ import Testing
 
     @Test(arguments: waiting.keys.sorted())
     func replaysUpToTheFirstRequestOfALaterSlice(_ name: String) async throws {
-        let transcript = try Transcript.loadWithImportDrift(name)
+        let transcript = try Transcript.load(name)
         let harness = try LocalBankHarness()
         let expected = try #require(Self.waiting[name])
         let first = try #require(
@@ -73,7 +72,7 @@ import Testing
 
     @Test(arguments: askingForTwins.keys.sorted())
     func replaysUpToTheExamThatAsksForTwins(_ name: String) async throws {
-        let transcript = try Transcript.loadWithImportDrift(name)
+        let transcript = try Transcript.load(name)
         let harness = try LocalBankHarness()
         let expected = try #require(Self.askingForTwins[name])
         guard case .request(let exchange) = transcript.steps[expected.step] else {

@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "PUT",
     "path": "/api/topic-order",
@@ -56,7 +56,7 @@
           "code": "",
           "title": "Invented Spanish Verbs",
           "sortOrder": 3,
-          "archivedAt": "2026-11-24T01:48:50.278Z",
+          "archivedAt": "2026-11-25T04:29:49.833Z",
           "questionCount": 0,
           "weekCount": 0,
           "folderCount": 0,

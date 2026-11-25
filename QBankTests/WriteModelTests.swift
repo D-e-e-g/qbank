@@ -110,7 +110,7 @@ struct WriteModelTests {
     @Test func aRefusalTheEditorCannotSayIsShownInTheChecksWords() async throws {
         let (server, model) = Self.app(Self.written())
         server["POST /api/imports/check"] = .ok(
-            #"{"ok":false,"title":"Invented Sleep","description":"","kind":"practice","questionCount":0,"termCount":0,"formats":[],"errors":["Invented server rule"],"warnings":[]}"#)
+            #"{"ok":false,"title":"Invented Sleep","description":"","kind":"practice","questionCount":0,"termCount":0,"formats":[],"errors":["Invented server rule"],"warnings":[],"issues":[{"severity":"error","code":"invented_rule","question":null,"path":"","message":"Invented server rule"}]}"#)
         await model.save()
         #expect(model.problems == ["Invented server rule"])
         #expect(!server.calls.contains("POST /api/imports"))

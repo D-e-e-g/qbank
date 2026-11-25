@@ -115,7 +115,20 @@ extension ImportReport {
             "ok": .bool(ok), "title": .optional(title), "description": .string(description), "kind": .string(kind.rawValue),
             "questionCount": .int(questionCount), "termCount": .int(termCount),
             "formats": .array(formats.map { .object(["type": .string($0.type), "label": .string($0.label), "count": .int($0.count)]) }),
-            "errors": .array(errors.map(JSONValue.string)), "warnings": .array(warnings.map(JSONValue.string)),
+            "errors": .array(errors.map(JSONValue.string)), "warnings": .array(warnings.map(JSONValue.string)), "issues": .array(issues.map(\.wire)),
         ])
+    }
+}
+
+extension ImportReport.Issue {
+    /// An issue as the check answers it: one with the file as a whole answers a null question, and a question with no id leaves it out.
+    var wire: JSONValue {
+        let about: JSONValue =
+            question.map { question in
+                var fields: [String: JSONValue] = ["index": .int(question.index)]
+                if let id = question.id { fields["id"] = .string(id) }
+                return .object(fields)
+            } ?? .null
+        return .object(["severity": .string(severity.rawValue), "code": .string(code), "question": about, "path": .string(path), "message": .string(message)])
     }
 }

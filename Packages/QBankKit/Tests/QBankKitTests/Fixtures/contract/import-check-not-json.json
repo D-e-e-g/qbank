@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "POST",
     "path": "/api/imports/check",
@@ -23,7 +23,16 @@
       "errors": [
         "This is not valid JSON: Unexpected token 'H', \"Here are y\"... is not valid JSON. Ask your AI chat to resend only the JSON block."
       ],
-      "warnings": []
+      "warnings": [],
+      "issues": [
+        {
+          "severity": "error",
+          "code": "not_json",
+          "question": null,
+          "path": "",
+          "message": "This is not valid JSON: Unexpected token 'H', \"Here are y\"... is not valid JSON. Ask your AI chat to resend only the JSON block."
+        }
+      ]
     }
   }
 }

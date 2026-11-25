@@ -22,6 +22,38 @@ public struct ImportReport: Codable, Sendable, Equatable {
     public let formats: [Format]
     public let errors: [String]
     public let warnings: [String]
+    /// Every error and warning in the order the check found them, each with its rule, its question
+    /// and its place in the file. `errors` and `warnings` are their sentences.
+    public let issues: [Issue]
+
+    /// One thing the check found.
+    public struct Issue: Codable, Sendable, Equatable {
+        public enum Severity: String, Codable, Sendable {
+            /// Blocks the import.
+            case error
+            case warning
+        }
+
+        /// The question an issue is about.
+        public struct Question: Codable, Sendable, Equatable {
+            /// Its place in the file's list of questions, from 0: "Question 1" in a message is 0.
+            public let index: Int
+            /// Its `id` as the file writes it, a number as text. Nil when it has no text or number id.
+            public let id: String?
+        }
+
+        public let severity: Severity
+        /// The rule it breaks. The server adds codes over time, so show the message of one you do
+        /// not know.
+        public let code: String
+        /// Nil for an issue with the file as a whole.
+        public let question: Question?
+        /// A JSON pointer into the file's JSON, inside its code fence when it has one. Empty is the
+        /// whole file. A field that is missing is pointed to where it belongs.
+        public let path: String
+        /// The same sentence as in `errors` or `warnings`.
+        public let message: String
+    }
 }
 
 /// What `QBankClient.importSet` sends: the file, its course and folder, and what to do about a set

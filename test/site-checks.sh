@@ -3,7 +3,8 @@
 # and the workflow that publishes it.
 #
 # Run by test/release-checks.sh. Credential-free and network-free: it reads
-# tracked files and renders the privacy page from the policy.
+# tracked files, and renders the privacy page from the policy and the format page
+# from the pinned contract.
 # shellcheck disable=SC2016 # the Ruby programs are single-quoted on purpose
 set -u
 
@@ -38,7 +39,7 @@ else
   fail "$SITE/CNAME is qbank-app.dimitrygallego.com on one line"
 fi
 
-for page in "$SITE/privacy/index.html" "$SITE/support/index.html"; do
+for page in "$SITE/privacy/index.html" "$SITE/support/index.html" "$SITE/format/index.html"; do
   if grep -qF "mailto:$CONTACT" "$page" 2>/dev/null && grep -qF ">$CONTACT<" "$page"; then
     pass "$page shows the contact address $CONTACT"
   else
@@ -91,52 +92,12 @@ else
   fail "site/privacy/index.html is docs/privacy-policy.md rendered (run scripts/render-privacy-page.rb)"
 fi
 
-# --- The format page describes the API's import check -----------------------------
+# --- The format page is the contract's description -------------------------------
 
-FORMAT="$SITE/format/index.html"
-OPENAPI=Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json
-
-# The oracle for the types is the server's published API (the pinned OpenAPI
-# fixture): the type enum of DraftQuestion, a question as the importer stores it.
-# The oracle for the limits is the server's import check
-# (packages/questions/src/media.ts in the private server repository): at most 4
-# images per question, each at most 300 KB after decoding.
-format_check="$(ruby -rjson -rcgi -e '
-  html, api = File.read(ARGV[0]), JSON.parse(File.read(ARGV[1]))
-  types = api.dig("components", "schemas", "DraftQuestion", "properties", "type", "enum") or abort "#{ARGV[1]}: no DraftQuestion type enum"
-  section = lambda do |title|
-    html[%r{<h2>#{Regexp.escape(title)}</h2>(.*?)(?=<h2>|</main>)}m, 1] or abort "no #{title.inspect} section"
-  end
-  rows = section.("The nine question formats").scan(%r{<tr><td><code>([^<]+)</code></td>}).flatten
-  abort "the format table lists #{rows.inspect}, the API #{types.inspect}" unless rows.sort == types.sort && rows.uniq == rows
-  type_row = section.("Every question")[%r{<tr><td><code>type</code></td><td>(.*?)</td></tr>}m, 1] or abort "no type row under Every question"
-  listed = type_row.scan(%r{<code>([^<]+)</code>}).flatten
-  abort "the type row lists #{listed.inspect}, the API #{types.inspect}" unless listed.sort == types.sort && listed.uniq == listed
-  media = CGI.unescapeHTML(section.("Tables and pictures").gsub(/<[^>]+>/, ""))
-  count = media[/images is a list of at most (\d+) pictures per question/, 1]
-  abort "the picture count limit is #{count.inspect}, the importer 4" unless count == "4"
-  size = media[/An image may be at most (\d+) KB after decoding/, 1]
-  abort "the image size limit is #{size.inspect} KB, the importer 300" unless size == "300"
-' "$FORMAT" "$OPENAPI" 2>&1)"
-# shellcheck disable=SC2181 # the program's output is the failure message
-if [ $? -eq 0 ]; then
-  pass "the format page lists the API's nine types and the importer's image limits"
+if ruby scripts/render-format-page.rb --check; then
+  pass "site/format/index.html is the pinned contract's question file format rendered"
 else
-  fail "the format page lists the API's nine types and the importer's image limits: $format_check"
-fi
-
-ruby_example="$(ruby -rjson -rcgi -e '
-  html = File.read(ARGV[0])
-  block = html[%r{<pre><code>(.*?)</code></pre>}m, 1] or abort "no example"
-  data = JSON.parse(CGI.unescapeHTML(block))
-  abort "no questions" unless data["questions"].is_a?(Array) && !data["questions"].empty?
-  data["questions"].each { |q| abort "#{q["id"]}: no ask" unless q["ask"].is_a?(String) && !q["ask"].strip.empty? }
-' "$FORMAT" 2>&1)"
-# shellcheck disable=SC2181 # the program's output is the failure message
-if [ $? -eq 0 ]; then
-  pass "the format page's example is JSON whose questions each have an ask"
-else
-  fail "the format page's example is JSON whose questions each have an ask: $ruby_example"
+  fail "site/format/index.html is the pinned contract's question file format rendered (run scripts/render-format-page.rb)"
 fi
 
 # --- The Pages workflow ---------------------------------------------------------

@@ -17,7 +17,7 @@ import Testing
     private static let deletion = 13
 
     @Test func pagesAndFoldersReplayEqualOverTheBanksOwnImports() async throws {
-        let transcript = try Transcript.loadWithImportDrift("organize-folders")
+        let transcript = try Transcript.load("organize-folders")
         let harness = try LocalBankHarness()
         let steps = Self.served.filter { $0 != Self.deletion }.map { transcript.steps[$0] }
         let whole = Transcript(recordedFrom: transcript.recordedFrom, world: transcript.world, steps: steps)

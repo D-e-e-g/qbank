@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Records the live QBankKit contract fixtures, and each scenario's ordered transcript,
-# from a local qbank-server checkout.
+# from a local qbank-server checkout, and pins its import conformance corpus.
 #
 # usage: test/record-contract.sh SERVER_CHECKOUT
 #
@@ -9,14 +9,16 @@
 # default is a directory under ${TMPDIR:-/tmp}. Set QBANK_API_IMAGE when that
 # commit has no image digest recorded in test/record-contract/main.ts.
 #
-# Writes Fixtures/contract/ and Fixtures/transcripts/ under
-# Packages/QBankKit/Tests/QBankKitTests. Every file is rewritten, and a record
-# is not byte-stable: times, delete confirm tokens and the exam questions the
-# server draws at random change from one run to the next.
+# Writes Fixtures/contract/, Fixtures/transcripts/, openapi.json, pin.json,
+# import-cases.json (the server's corpus, copied) and import-cases.pin.json under
+# Packages/QBankKit/Tests/QBankKitTests. Every file is rewritten. The corpus is
+# byte for byte the server's, but a record is not byte-stable: times, delete
+# confirm tokens and the exam questions the server draws at random change from
+# one run to the next.
 set -euo pipefail
 
 usage() {
-  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' >&2
+  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2
   exit 64
 }
 

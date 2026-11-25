@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "organize-imports",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.014Z",
+      "at": "2026-11-25T04:29:46.449Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:47.014Z"
+          "expiresAt": "2027-12-30T04:29:46.449Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.067Z",
+      "at": "2026-11-25T04:29:46.498Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.073Z",
+      "at": "2026-11-25T04:29:46.503Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.078Z",
+      "at": "2026-11-25T04:29:46.508Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -134,7 +134,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.085Z",
+      "at": "2026-11-25T04:29:46.514Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -161,7 +161,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:47.090Z",
+      "at": "2026-11-25T04:29:46.519Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/course-exams",
@@ -195,7 +195,7 @@
     {
       "step": "request",
       "name": "import-check",
-      "at": "2026-11-24T01:48:47.098Z",
+      "at": "2026-11-25T04:29:46.524Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -228,14 +228,15 @@
             }
           ],
           "errors": [],
-          "warnings": []
+          "warnings": [],
+          "issues": []
         }
       }
     },
     {
       "step": "request",
       "name": "import-check-errors",
-      "at": "2026-11-24T01:48:47.102Z",
+      "at": "2026-11-25T04:29:46.526Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -259,14 +260,26 @@
           "errors": [
             "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
           ],
-          "warnings": []
+          "warnings": [],
+          "issues": [
+            {
+              "severity": "error",
+              "code": "exactly_one_correct",
+              "question": {
+                "index": 0,
+                "id": "Q1"
+              },
+              "path": "/questions/0/options",
+              "message": "Question 1 (Q1): needs exactly one option with \"ok\": true (found 2)"
+            }
+          ]
         }
       }
     },
     {
       "step": "request",
       "name": "import-check-not-json",
-      "at": "2026-11-24T01:48:47.105Z",
+      "at": "2026-11-25T04:29:46.528Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -290,14 +303,23 @@
           "errors": [
             "This is not valid JSON: Unexpected token 'H', \"Here are y\"... is not valid JSON. Ask your AI chat to resend only the JSON block."
           ],
-          "warnings": []
+          "warnings": [],
+          "issues": [
+            {
+              "severity": "error",
+              "code": "not_json",
+              "question": null,
+              "path": "",
+              "message": "This is not valid JSON: Unexpected token 'H', \"Here are y\"... is not valid JSON. Ask your AI chat to resend only the JSON block."
+            }
+          ]
         }
       }
     },
     {
       "step": "request",
       "name": "import-check-exam",
-      "at": "2026-11-24T01:48:47.108Z",
+      "at": "2026-11-25T04:29:46.529Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -325,14 +347,15 @@
             }
           ],
           "errors": [],
-          "warnings": []
+          "warnings": [],
+          "issues": []
         }
       }
     },
     {
       "step": "request",
       "name": "import",
-      "at": "2026-11-24T01:48:47.111Z",
+      "at": "2026-11-25T04:29:46.531Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -368,7 +391,7 @@
     {
       "step": "request",
       "name": "import-folder",
-      "at": "2026-11-24T01:48:47.118Z",
+      "at": "2026-11-25T04:29:46.537Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -406,7 +429,7 @@
     {
       "step": "request",
       "name": "import-new-folder",
-      "at": "2026-11-24T01:48:47.124Z",
+      "at": "2026-11-25T04:29:46.542Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -443,7 +466,7 @@
     {
       "step": "request",
       "name": "import-new-course",
-      "at": "2026-11-24T01:48:47.130Z",
+      "at": "2026-11-25T04:29:46.548Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -483,7 +506,7 @@
     {
       "step": "request",
       "name": "import-conflict",
-      "at": "2026-11-24T01:48:47.138Z",
+      "at": "2026-11-25T04:29:46.554Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -517,7 +540,7 @@
     {
       "step": "request",
       "name": "import-replace",
-      "at": "2026-11-24T01:48:47.143Z",
+      "at": "2026-11-25T04:29:46.558Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -554,7 +577,7 @@
     {
       "step": "request",
       "name": "import-separate",
-      "at": "2026-11-24T01:48:47.149Z",
+      "at": "2026-11-25T04:29:46.563Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -591,7 +614,7 @@
     {
       "step": "request",
       "name": "import-invalid",
-      "at": "2026-11-24T01:48:47.157Z",
+      "at": "2026-11-25T04:29:46.569Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -619,7 +642,7 @@
     {
       "step": "request",
       "name": "import-exam",
-      "at": "2026-11-24T01:48:47.160Z",
+      "at": "2026-11-25T04:29:46.573Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
