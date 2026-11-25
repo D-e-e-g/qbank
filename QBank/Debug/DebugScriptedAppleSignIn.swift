@@ -14,7 +14,8 @@ import UIKit
 /// - `returning-person`: the person who already has the fake server's store account,
 ///   `FakeQBankServer.applePerson`.
 /// - `password-email`: someone whose Apple email is the fake server's password account's, which the
-///   server refuses to make a second account for.
+///   server refuses to make a second account for, until that account links this Apple identity in
+///   Settings: then Sign in with Apple opens it.
 /// - `cancel`: she closes Apple's sheet.
 final class DebugScriptedAppleSignIn: AppleSignInProvider {
     /// The environment variable a test sets to script the sheet's answer.

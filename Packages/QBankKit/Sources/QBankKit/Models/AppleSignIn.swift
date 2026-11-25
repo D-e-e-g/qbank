@@ -18,6 +18,23 @@ public struct AppleSignInRequest: Codable, Sendable, Equatable {
     }
 }
 
+/// The body of `POST /api/me/apple`: a Sign in with Apple the app has just done, as
+/// `AppleSignInRequest` sends it, with the signed-in account's current password beside it.
+public struct AppleLinkRequest: Codable, Sendable, Equatable {
+    /// The credential's `identityToken`, as UTF-8 text.
+    public let identityToken: String
+    /// The nonce as the app made it, not its hash.
+    public let nonce: String
+    /// The account's current password, which the server checks before it reads the token.
+    public let password: String
+
+    public init(identityToken: String, nonce: String, password: String) {
+        self.identityToken = identityToken
+        self.nonce = nonce
+        self.password = password
+    }
+}
+
 /// A nonce for one Sign in with Apple: random, used once, and long enough that no one can guess it.
 public struct AppleSignInNonce: Sendable, Equatable {
     /// What the server is sent: 64 lowercase hex digits, within the 16 to 256 characters it takes.

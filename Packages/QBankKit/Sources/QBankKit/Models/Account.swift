@@ -15,6 +15,16 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         case store
     }
 
+    /// A way into the account (`signInWith`).
+    public enum SignInMethod: String, Codable, Sendable {
+        /// Its email and password.
+        case password
+        /// One or more passkeys, which the web app uses.
+        case passkey
+        /// Sign in with Apple: it made a store account, or an account with a password linked it.
+        case apple
+    }
+
     /// The account's color scheme, which follows it to every device. Look (light or dark) stays
     /// per device.
     public enum Palette: String, Codable, Sendable, CaseIterable {
@@ -38,9 +48,17 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
     /// version does not know reads as `.invited`: every account that existed then was one, and an
     /// invited account's bank stays on the server, as it always has.
     public let origin: Origin
+    /// The ways into the account now, as the server last said, each once. An invited account has
+    /// `password`, and `apple` once it linked Sign in with Apple (`QBankClient.linkApple`); a store
+    /// account has `apple`. A way this version does not know is left out, as the server asks. A server
+    /// from before ways in, or a session kept on the phone from then, says none: an invited account
+    /// reads as `password` alone and a store account as `apple` alone, which is all either could have
+    /// on the phone then.
+    public let signInWith: [SignInMethod]
 
     public init(
-        id: String, email: String, name: String, role: Role, mustChangePassword: Bool, palette: Palette = .dusk, origin: Origin = .invited
+        id: String, email: String, name: String, role: Role, mustChangePassword: Bool, palette: Palette = .dusk, origin: Origin = .invited,
+        signInWith: [SignInMethod]? = nil
     ) {
         self.id = id
         self.email = email
@@ -49,6 +67,7 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         self.mustChangePassword = mustChangePassword
         self.palette = palette
         self.origin = origin
+        self.signInWith = signInWith ?? Self.waysIn(of: origin)
     }
 
     public init(from decoder: any Decoder) throws {
@@ -60,6 +79,21 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         mustChangePassword = try container.decode(Bool.self, forKey: .mustChangePassword)
         palette = try container.decodeIfPresent(String.self, forKey: .palette).flatMap(Palette.init(rawValue:)) ?? .dusk
         origin = try container.decodeIfPresent(String.self, forKey: .origin).flatMap(Origin.init(rawValue:)) ?? .invited
+        signInWith = try container.decodeIfPresent([String].self, forKey: .signInWith)?.compactMap(SignInMethod.init(rawValue:)) ?? Self.waysIn(of: origin)
+    }
+
+    /// Whether the account signs in with its email and password, so it can link Sign in with Apple.
+    public var hasPassword: Bool { signInWith.contains(.password) }
+
+    /// Whether Sign in with Apple lands in this account.
+    public var signsInWithApple: Bool { signInWith.contains(.apple) }
+
+    /// The ways in of an account whose server or kept session says none.
+    private static func waysIn(of origin: Origin) -> [SignInMethod] {
+        switch origin {
+        case .invited: [.password]
+        case .store: [.apple]
+        }
     }
 }
 

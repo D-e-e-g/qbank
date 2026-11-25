@@ -276,6 +276,17 @@ final class AppModel {
         route = Self.route(for: signedIn.user)
     }
 
+    /// Links to her account, checked with its current password, the Apple identity of a Sign in with
+    /// Apple she just did in Settings, so Sign in with Apple opens this account from then on. The
+    /// account comes back with Apple among its ways in and is otherwise as it was: its bank stays on
+    /// the server and she stays signed in. A refusal links nothing and is thrown for the screen to say.
+    func linkApple(_ credential: AppleCredential, nonce: AppleSignInNonce, password: String) async throws(QBankError) {
+        let request = AppleLinkRequest(identityToken: credential.identityToken, nonce: nonce.value, password: password)
+        let linked = try await client.linkApple(request)
+        guard account?.id == linked.id else { return }
+        route = Self.route(for: linked)
+    }
+
     // MARK: Sign in with Apple
 
     /// Where a Sign in with Apple that Apple confirmed ended.
