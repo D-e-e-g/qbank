@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "session",
   "steps": [
     {
       "step": "request",
       "name": "health",
-      "at": "2026-11-25T04:29:34.786Z",
+      "at": "2026-11-25T09:49:55.458Z",
       "request": {
         "method": "GET",
         "path": "/health",
@@ -25,7 +25,7 @@
     {
       "step": "request",
       "name": "session-signed-out",
-      "at": "2026-11-25T04:29:34.788Z",
+      "at": "2026-11-25T09:49:55.461Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -45,7 +45,7 @@
     {
       "step": "request",
       "name": "semesters-signed-out",
-      "at": "2026-11-25T04:29:34.790Z",
+      "at": "2026-11-25T09:49:55.462Z",
       "request": {
         "method": "GET",
         "path": "/api/semesters",
@@ -65,7 +65,7 @@
     {
       "step": "request",
       "name": "sign-in",
-      "at": "2026-11-25T04:29:34.837Z",
+      "at": "2026-11-25T09:49:55.504Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -97,14 +97,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:34.837Z"
+          "expiresAt": "2027-12-30T09:49:55.504Z"
         }
       }
     },
     {
       "step": "request",
       "name": "sign-in-wrong-password",
-      "at": "2026-11-25T04:29:34.887Z",
+      "at": "2026-11-25T09:49:55.549Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -127,7 +127,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:34.937Z",
+      "at": "2026-11-25T09:49:55.593Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -150,7 +150,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:34.984Z",
+      "at": "2026-11-25T09:49:55.634Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -173,7 +173,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:35.031Z",
+      "at": "2026-11-25T09:49:55.678Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -196,7 +196,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:35.078Z",
+      "at": "2026-11-25T09:49:55.719Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -219,7 +219,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:35.125Z",
+      "at": "2026-11-25T09:49:55.762Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -245,7 +245,7 @@
     {
       "step": "request",
       "name": "sign-in-locked",
-      "at": "2026-11-25T04:29:35.171Z",
+      "at": "2026-11-25T09:49:55.803Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -271,7 +271,7 @@
     {
       "step": "request",
       "name": "session",
-      "at": "2026-11-25T04:29:35.172Z",
+      "at": "2026-11-25T09:49:55.804Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -299,14 +299,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:34.837Z"
+          "expiresAt": "2027-12-30T09:49:55.504Z"
         }
       }
     },
     {
       "step": "request",
       "name": "change-password-wrong",
-      "at": "2026-11-25T04:29:35.175Z",
+      "at": "2026-11-25T09:49:55.806Z",
       "request": {
         "method": "POST",
         "path": "/api/account/password",
@@ -329,7 +329,7 @@
     {
       "step": "request",
       "name": "change-password-short",
-      "at": "2026-11-25T04:29:35.265Z",
+      "at": "2026-11-25T09:49:55.889Z",
       "request": {
         "method": "POST",
         "path": "/api/account/password",
@@ -352,7 +352,7 @@
     {
       "step": "request",
       "name": "change-password-same",
-      "at": "2026-11-25T04:29:35.266Z",
+      "at": "2026-11-25T09:49:55.889Z",
       "request": {
         "method": "POST",
         "path": "/api/account/password",
@@ -375,7 +375,7 @@
     {
       "step": "request",
       "name": "change-password",
-      "at": "2026-11-25T04:29:35.268Z",
+      "at": "2026-11-25T09:49:55.891Z",
       "request": {
         "method": "POST",
         "path": "/api/account/password",
@@ -407,14 +407,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:35.268Z"
+          "expiresAt": "2027-12-30T09:49:55.891Z"
         }
       }
     },
     {
       "step": "request",
       "name": "sign-out",
-      "at": "2026-11-25T04:29:35.360Z",
+      "at": "2026-11-25T09:49:55.976Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-out",
@@ -433,7 +433,7 @@
     {
       "step": "request",
       "name": "session-after-sign-out",
-      "at": "2026-11-25T04:29:35.363Z",
+      "at": "2026-11-25T09:49:55.979Z",
       "request": {
         "method": "GET",
         "path": "/api/session",

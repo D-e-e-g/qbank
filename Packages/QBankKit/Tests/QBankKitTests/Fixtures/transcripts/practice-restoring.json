@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "practice-restoring",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:43.369Z",
+      "at": "2026-11-25T09:50:03.392Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:43.369Z"
+          "expiresAt": "2027-12-30T09:50:03.392Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:43.421Z",
+      "at": "2026-11-25T09:50:03.436Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:43.428Z",
+      "at": "2026-11-25T09:50:03.441Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:43.432Z",
+      "at": "2026-11-25T09:50:03.445Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -144,7 +144,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:43.440Z",
+      "at": "2026-11-25T09:50:03.452Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -181,7 +181,7 @@
     {
       "step": "request",
       "name": "practice-set-restore",
-      "at": "2026-11-25T04:29:43.446Z",
+      "at": "2026-11-25T09:50:03.457Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",
@@ -197,8 +197,8 @@
           "title": "Week 1 - Set 1: Invented basics",
           "description": "Invented practice questions.",
           "questionCount": 2,
-          "importedAt": "2026-11-25T04:29:43.432Z",
-          "activeSince": "2026-11-25T04:29:43.446Z",
+          "importedAt": "2026-11-25T09:50:03.445Z",
+          "activeSince": "2026-11-25T09:50:03.457Z",
           "status": "restored",
           "canRestore": true,
           "answeredCount": 0,
@@ -217,7 +217,7 @@
     {
       "step": "request",
       "name": "practice-set-restore-not-current",
-      "at": "2026-11-25T04:29:43.455Z",
+      "at": "2026-11-25T09:50:03.463Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/00000000-0000-4000-8011-000000000005/restore",

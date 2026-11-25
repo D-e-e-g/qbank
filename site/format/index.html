@@ -18,10 +18,72 @@
 </header>
 <main>
 <h1>Question file format</h1>
-<p class="lede">QBank imports a set of questions from one JSON file. You can write the file by hand or ask an AI chat to write it.</p>
-<p>A question file is one set of questions, written as JSON. <code>POST /api/imports/check</code> is the one judge of a file: it answers with every error and warning below that the file has, each with its code and its place in the file. An error blocks the import; a warning does not.</p>
-<p>The API&#39;s contract, <code>apps/api/openapi.json</code>, carries the same format in <code>x-question-format</code>: this page, and the data it is written from. Both are generated from the format table, <code>packages/questions/src/format.ts</code>.</p>
+<p class="lede">You can write a question file for QBank by hand, or ask an AI chat to write it.</p>
+<p>A question file is one set of questions for the app, written as JSON.</p>
+<p>The app checks a file before importing it, and lists every error and warning it finds. An error blocks the import; a warning does not.</p>
 <p>The file may wrap its JSON in a Markdown code fence; the check reads the JSON inside it. A file that is only a list of questions is a practice set titled &quot;Imported questions&quot;.</p>
+<h2>An example</h2>
+<p>A complete file, which the check takes with no error and no warning:</p>
+<pre><code>{
+  &quot;title&quot;: &quot;Basic geography&quot;,
+  &quot;desc&quot;: &quot;A capital, a river, and bodies of water.&quot;,
+  &quot;questions&quot;: [
+    {
+      &quot;id&quot;: &quot;g1&quot;,
+      &quot;type&quot;: &quot;single&quot;,
+      &quot;ask&quot;: &quot;What is the capital of France?&quot;,
+      &quot;options&quot;: [
+        {
+          &quot;t&quot;: &quot;Paris&quot;,
+          &quot;ok&quot;: true,
+          &quot;why&quot;: &quot;Paris is the capital of France and its largest city.&quot;
+        },
+        {
+          &quot;t&quot;: &quot;Lyon&quot;,
+          &quot;why&quot;: &quot;A large city, but not the capital.&quot;
+        },
+        {
+          &quot;t&quot;: &quot;Marseille&quot;,
+          &quot;why&quot;: &quot;A major port, but not the capital.&quot;
+        }
+      ],
+      &quot;rationale&quot;: &quot;The French government sits in Paris.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;g2&quot;,
+      &quot;type&quot;: &quot;single&quot;,
+      &quot;ask&quot;: &quot;True or false: the Nile flows north.&quot;,
+      &quot;options&quot;: [
+        {
+          &quot;t&quot;: &quot;True&quot;,
+          &quot;ok&quot;: true,
+          &quot;why&quot;: &quot;The Nile runs north into the Mediterranean Sea.&quot;
+        },
+        {
+          &quot;t&quot;: &quot;False&quot;,
+          &quot;why&quot;: &quot;Rivers run downhill, whichever way that is.&quot;
+        }
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;g3&quot;,
+      &quot;type&quot;: &quot;order&quot;,
+      &quot;ask&quot;: &quot;Put these in order from smallest to largest.&quot;,
+      &quot;items&quot;: [
+        {
+          &quot;t&quot;: &quot;Pond&quot;
+        },
+        {
+          &quot;t&quot;: &quot;Lake&quot;
+        },
+        {
+          &quot;t&quot;: &quot;Ocean&quot;
+        }
+      ],
+      &quot;rationale&quot;: &quot;Lakes are larger than ponds, and oceans dwarf both.&quot;
+    }
+  ]
+}</code></pre>
 <h2>The set</h2>
 <div class="table-wrap">
 <table>
@@ -63,17 +125,17 @@
 <h2>Question types</h2>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Type</th><th>Name</th><th>List</th><th>At least</th></tr></thead>
+<thead><tr><th>Type</th><th>Name</th><th>List</th><th>How many</th></tr></thead>
 <tbody>
-<tr><td><code>single</code></td><td>Single answer</td><td><code>options</code></td><td>2</td></tr>
-<tr><td><code>priority</code></td><td>Priority / first action</td><td><code>options</code></td><td>2</td></tr>
-<tr><td><code>sata</code></td><td>Select all that apply</td><td><code>options</code></td><td>2</td></tr>
-<tr><td><code>highlight</code></td><td>Highlight</td><td><code>segments</code></td><td>3</td></tr>
-<tr><td><code>order</code></td><td>Ordered response</td><td><code>items</code></td><td>3</td></tr>
-<tr><td><code>match</code></td><td>Matching</td><td><code>pairs</code></td><td>2</td></tr>
-<tr><td><code>matrix</code></td><td>Matrix</td><td><code>rows</code></td><td>1</td></tr>
-<tr><td><code>matrixmulti</code></td><td>Matrix, check all that fit</td><td><code>rows</code></td><td>1</td></tr>
-<tr><td><code>cloze</code></td><td>Drop-down cloze</td><td><code>blanks</code></td><td>0</td></tr>
+<tr><td><code>single</code></td><td>Single answer</td><td><code>options</code></td><td>At least 2</td></tr>
+<tr><td><code>priority</code></td><td>Priority / first action</td><td><code>options</code></td><td>At least 2</td></tr>
+<tr><td><code>sata</code></td><td>Select all that apply</td><td><code>options</code></td><td>At least 2</td></tr>
+<tr><td><code>highlight</code></td><td>Highlight</td><td><code>segments</code></td><td>At least 3</td></tr>
+<tr><td><code>order</code></td><td>Ordered response</td><td><code>items</code></td><td>At least 3</td></tr>
+<tr><td><code>match</code></td><td>Matching</td><td><code>pairs</code></td><td>At least 2</td></tr>
+<tr><td><code>matrix</code></td><td>Matrix</td><td><code>rows</code></td><td>At least 1</td></tr>
+<tr><td><code>matrixmulti</code></td><td>Matrix, check all that fit</td><td><code>rows</code></td><td>At least 1</td></tr>
+<tr><td><code>cloze</code></td><td>Drop-down cloze</td><td><code>blanks</code></td><td>One per {0}, {1}... in the text, each with at least 2 options</td></tr>
 </tbody>
 </table>
 </div>
@@ -96,7 +158,7 @@
 </ul>
 <h3><code>order</code>: Ordered response</h3>
 <ul>
-<li><code>items</code>: At least 3. Each { &quot;t&quot;: a step, &quot;why&quot; }, listed in the right order. The runner shuffles them.</li>
+<li><code>items</code>: At least 3. Each { &quot;t&quot;: a step, &quot;why&quot; }, listed in the right order. The app shuffles them.</li>
 </ul>
 <h3><code>match</code>: Matching</h3>
 <ul>

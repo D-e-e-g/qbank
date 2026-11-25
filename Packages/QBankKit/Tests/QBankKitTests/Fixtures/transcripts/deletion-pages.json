@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "deletion-pages",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.887Z",
+      "at": "2026-11-25T09:50:08.373Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:48.887Z"
+          "expiresAt": "2027-12-30T09:50:08.373Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.935Z",
+      "at": "2026-11-25T09:50:08.417Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.941Z",
+      "at": "2026-11-25T09:50:08.422Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.945Z",
+      "at": "2026-11-25T09:50:08.426Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -148,7 +148,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.952Z",
+      "at": "2026-11-25T09:50:08.432Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -188,7 +188,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.957Z",
+      "at": "2026-11-25T09:50:08.437Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -229,7 +229,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.962Z",
+      "at": "2026-11-25T09:50:08.442Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -269,7 +269,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.968Z",
+      "at": "2026-11-25T09:50:08.446Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -309,7 +309,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.973Z",
+      "at": "2026-11-25T09:50:08.451Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -349,7 +349,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.978Z",
+      "at": "2026-11-25T09:50:08.455Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
@@ -383,7 +383,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.983Z",
+      "at": "2026-11-25T09:50:08.460Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
@@ -420,7 +420,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.988Z",
+      "at": "2026-11-25T09:50:08.464Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000902",
@@ -520,7 +520,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:48.993Z",
+      "at": "2026-11-25T09:50:08.468Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -547,7 +547,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:48.993Z",
+          "answeredAt": "2026-11-25T09:50:08.468Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -559,7 +559,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.000Z",
+      "at": "2026-11-25T09:50:08.475Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/exams",
@@ -594,91 +594,17 @@
             "Week 3"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-25T04:29:49.000Z",
-          "endsAt": "2026-11-25T04:35:49.000Z",
+          "startedAt": "2026-11-25T09:50:08.475Z",
+          "endsAt": "2026-11-25T09:56:08.475Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:49.000Z",
+          "serverNow": "2026-11-25T09:50:08.475Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8017-000000000004",
-              "publicId": "E1",
-              "position": 1,
-              "type": "single",
-              "topic": "Kidneys A exam topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 4"
-            },
-            {
-              "id": "00000000-0000-4000-8017-000000000002",
-              "publicId": "Q1",
-              "position": 2,
-              "type": "single",
-              "topic": "Lungs A topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Lungs A topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 3"
-            },
-            {
-              "id": "00000000-0000-4000-8017-000000000005",
               "publicId": "E2",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Kidneys A exam topic 2",
               "cj": "Analyze cues",
@@ -715,11 +641,85 @@
             {
               "id": "00000000-0000-4000-8017-000000000003",
               "publicId": "Q2",
-              "position": 4,
+              "position": 2,
               "type": "single",
               "topic": "Lungs A topic 2",
               "cj": "Analyze cues",
               "stem": "An invented client presents with a finding about Lungs A topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000005",
+              "publicId": "E1",
+              "position": 3,
+              "type": "single",
+              "topic": "Kidneys A exam topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000002",
+              "publicId": "Q1",
+              "position": 4,
+              "type": "single",
+              "topic": "Lungs A topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -758,7 +758,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.008Z",
+      "at": "2026-11-25T09:50:08.481Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000901/finish",
@@ -789,91 +789,17 @@
             "Week 3"
           ],
           "timeLimitSeconds": 360,
-          "startedAt": "2026-11-25T04:29:49.000Z",
-          "endsAt": "2026-11-25T04:35:49.000Z",
+          "startedAt": "2026-11-25T09:50:08.475Z",
+          "endsAt": "2026-11-25T09:56:08.475Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:49.008Z",
+          "finishedAt": "2026-11-25T09:50:08.481Z",
           "endReason": "finished",
-          "serverNow": "2026-11-25T04:29:49.008Z",
+          "serverNow": "2026-11-25T09:50:08.481Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8017-000000000004",
-              "publicId": "E1",
-              "position": 1,
-              "type": "single",
-              "topic": "Kidneys A exam topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 4"
-            },
-            {
-              "id": "00000000-0000-4000-8017-000000000002",
-              "publicId": "Q1",
-              "position": 2,
-              "type": "single",
-              "topic": "Lungs A topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about Lungs A topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 3"
-            },
-            {
-              "id": "00000000-0000-4000-8017-000000000005",
               "publicId": "E2",
-              "position": 3,
+              "position": 1,
               "type": "single",
               "topic": "Kidneys A exam topic 2",
               "cj": "Analyze cues",
@@ -910,11 +836,85 @@
             {
               "id": "00000000-0000-4000-8017-000000000003",
               "publicId": "Q2",
-              "position": 4,
+              "position": 2,
               "type": "single",
               "topic": "Lungs A topic 2",
               "cj": "Analyze cues",
               "stem": "An invented client presents with a finding about Lungs A topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000005",
+              "publicId": "E1",
+              "position": 3,
+              "type": "single",
+              "topic": "Kidneys A exam topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Kidneys A exam topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 4"
+            },
+            {
+              "id": "00000000-0000-4000-8017-000000000002",
+              "publicId": "Q1",
+              "position": 4,
+              "type": "single",
+              "topic": "Lungs A topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about Lungs A topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -1004,7 +1004,7 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8017-000000000002",
+                "questionId": "00000000-0000-4000-8017-000000000003",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -1024,7 +1024,7 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8017-000000000003",
+                "questionId": "00000000-0000-4000-8017-000000000002",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -1041,7 +1041,7 @@
     {
       "step": "request",
       "name": "course-exam-delete-preview",
-      "at": "2026-11-25T04:29:49.015Z",
+      "at": "2026-11-25T09:50:08.487Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -1108,7 +1108,7 @@
             "body": "Its 2 folders stay, with their sets and your progress, under Folders: Week 3 and Week 4. Your 1 past exam over it stays. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "a8256225bf0c0209",
+          "confirm": "f9b8503617ca1d26",
           "undoDays": 30
         }
       }
@@ -1116,7 +1116,7 @@
     {
       "step": "request",
       "name": "course-exam-delete-unconfirmed",
-      "at": "2026-11-25T04:29:49.021Z",
+      "at": "2026-11-25T09:50:08.492Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
@@ -1136,7 +1136,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.025Z",
+      "at": "2026-11-25T09:50:08.496Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000904",
@@ -1160,8 +1160,8 @@
               "title": "Skin A",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-11-25T04:29:48.968Z",
-              "activeSince": "2026-11-25T04:29:48.968Z",
+              "importedAt": "2026-11-25T09:50:08.446Z",
+              "activeSince": "2026-11-25T09:50:08.446Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
@@ -1184,12 +1184,12 @@
     {
       "step": "request",
       "name": "course-exam-delete-changed",
-      "at": "2026-11-25T04:29:49.033Z",
+      "at": "2026-11-25T09:50:08.503Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
         "query": {
-          "confirm": "a8256225bf0c0209"
+          "confirm": "f9b8503617ca1d26"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1206,7 +1206,7 @@
     {
       "step": "request",
       "name": "course-exam-delete-preview-changed",
-      "at": "2026-11-25T04:29:49.037Z",
+      "at": "2026-11-25T09:50:08.506Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -1279,7 +1279,7 @@
             "body": "Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "eb8cf0941d0d76fb",
+          "confirm": "359b96fb34cff893",
           "undoDays": 30
         }
       }
@@ -1287,12 +1287,12 @@
     {
       "step": "request",
       "name": "course-exam-delete",
-      "at": "2026-11-25T04:29:49.042Z",
+      "at": "2026-11-25T09:50:08.511Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
         "query": {
-          "confirm": "eb8cf0941d0d76fb"
+          "confirm": "359b96fb34cff893"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1306,7 +1306,7 @@
     {
       "step": "request",
       "name": "course-exam-delete-gone",
-      "at": "2026-11-25T04:29:49.046Z",
+      "at": "2026-11-25T09:50:08.514Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -1326,7 +1326,7 @@
     {
       "step": "request",
       "name": "course-after-exam-page-delete",
-      "at": "2026-11-25T04:29:49.048Z",
+      "at": "2026-11-25T09:50:08.516Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901",
@@ -1368,8 +1368,8 @@
                   "title": "Heart A",
                   "description": "Invented set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:48.945Z",
-                  "activeSince": "2026-11-25T04:29:48.945Z",
+                  "importedAt": "2026-11-25T09:50:08.426Z",
+                  "activeSince": "2026-11-25T09:50:08.426Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1395,13 +1395,13 @@
                   "title": "Lungs A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.952Z",
-                  "activeSince": "2026-11-25T04:29:48.952Z",
+                  "importedAt": "2026-11-25T09:50:08.432Z",
+                  "activeSince": "2026-11-25T09:50:08.432Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 1,
-                  "lastAnsweredAt": "2026-11-25T04:29:48.993Z",
+                  "lastAnsweredAt": "2026-11-25T09:50:08.468Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -1423,8 +1423,8 @@
                   "title": "Kidneys A",
                   "description": "Invented set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:48.957Z",
-                  "activeSince": "2026-11-25T04:29:48.957Z",
+                  "importedAt": "2026-11-25T09:50:08.437Z",
+                  "activeSince": "2026-11-25T09:50:08.437Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1450,8 +1450,8 @@
                   "title": "Skin A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.968Z",
-                  "activeSince": "2026-11-25T04:29:48.968Z",
+                  "importedAt": "2026-11-25T09:50:08.446Z",
+                  "activeSince": "2026-11-25T09:50:08.446Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1476,8 +1476,8 @@
                   "title": "Mixed A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.973Z",
-                  "activeSince": "2026-11-25T04:29:48.973Z",
+                  "importedAt": "2026-11-25T09:50:08.451Z",
+                  "activeSince": "2026-11-25T09:50:08.451Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1507,8 +1507,8 @@
                   "title": "Heart A",
                   "description": "Invented set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:48.945Z",
-                  "activeSince": "2026-11-25T04:29:48.945Z",
+                  "importedAt": "2026-11-25T09:50:08.426Z",
+                  "activeSince": "2026-11-25T09:50:08.426Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1538,8 +1538,8 @@
                   "title": "Mixed A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.973Z",
-                  "activeSince": "2026-11-25T04:29:48.973Z",
+                  "importedAt": "2026-11-25T09:50:08.451Z",
+                  "activeSince": "2026-11-25T09:50:08.451Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1568,13 +1568,13 @@
                   "title": "Lungs A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.952Z",
-                  "activeSince": "2026-11-25T04:29:48.952Z",
+                  "importedAt": "2026-11-25T09:50:08.432Z",
+                  "activeSince": "2026-11-25T09:50:08.432Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 1,
-                  "lastAnsweredAt": "2026-11-25T04:29:48.993Z",
+                  "lastAnsweredAt": "2026-11-25T09:50:08.468Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -1600,8 +1600,8 @@
                   "title": "Kidneys A",
                   "description": "Invented set.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:48.957Z",
-                  "activeSince": "2026-11-25T04:29:48.957Z",
+                  "importedAt": "2026-11-25T09:50:08.437Z",
+                  "activeSince": "2026-11-25T09:50:08.437Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1638,8 +1638,8 @@
                   "title": "Skin A",
                   "description": "Invented set.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:48.968Z",
-                  "activeSince": "2026-11-25T04:29:48.968Z",
+                  "importedAt": "2026-11-25T09:50:08.446Z",
+                  "activeSince": "2026-11-25T09:50:08.446Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1679,7 +1679,7 @@
     {
       "step": "request",
       "name": "course-deleted-exam-page",
-      "at": "2026-11-25T04:29:49.056Z",
+      "at": "2026-11-25T09:50:08.523Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
@@ -1712,8 +1712,8 @@
                 }
               ],
               "pastExamCount": 1,
-              "deletedAt": "2026-11-25T04:29:49.042Z",
-              "undoUntil": "2026-12-25T04:29:49.042Z",
+              "deletedAt": "2026-11-25T09:50:08.511Z",
+              "undoUntil": "2026-12-25T09:50:08.511Z",
               "undoRefusal": null,
               "deletedByAgent": null
             }
@@ -1727,7 +1727,7 @@
     {
       "step": "request",
       "name": "course-exam-undo-delete",
-      "at": "2026-11-25T04:29:49.062Z",
+      "at": "2026-11-25T09:50:08.529Z",
       "request": {
         "method": "POST",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",
@@ -1760,7 +1760,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.067Z",
+      "at": "2026-11-25T09:50:08.534Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/delete-preview",
@@ -1833,7 +1833,7 @@
             "body": "Its 3 folders stay, with their sets and your progress, under Folders: Week 3, Week 4 and Week 5. Your 1 past exam over it stays. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "eb8cf0941d0d76fb",
+          "confirm": "359b96fb34cff893",
           "undoDays": 30
         }
       }
@@ -1841,12 +1841,12 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.072Z",
+      "at": "2026-11-25T09:50:08.538Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902",
         "query": {
-          "confirm": "eb8cf0941d0d76fb"
+          "confirm": "359b96fb34cff893"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1860,7 +1860,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.076Z",
+      "at": "2026-11-25T09:50:08.541Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/folders",
@@ -1887,7 +1887,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.083Z",
+      "at": "2026-11-25T09:50:08.547Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/course-exams",
@@ -1921,7 +1921,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.087Z",
+      "at": "2026-11-25T09:50:08.552Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000906",
@@ -1948,7 +1948,7 @@
     {
       "step": "request",
       "name": "course-deleted-exam-page-name-taken",
-      "at": "2026-11-25T04:29:49.096Z",
+      "at": "2026-11-25T09:50:08.559Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
@@ -1981,8 +1981,8 @@
                 }
               ],
               "pastExamCount": 1,
-              "deletedAt": "2026-11-25T04:29:49.072Z",
-              "undoUntil": "2026-12-25T04:29:49.072Z",
+              "deletedAt": "2026-11-25T09:50:08.538Z",
+              "undoUntil": "2026-12-25T09:50:08.538Z",
               "undoRefusal": "This course already has a page named Exam 2. Rename one of them, then bring this one back.",
               "deletedByAgent": null
             }
@@ -1996,7 +1996,7 @@
     {
       "step": "request",
       "name": "course-exam-undo-delete-name-taken",
-      "at": "2026-11-25T04:29:49.103Z",
+      "at": "2026-11-25T09:50:08.565Z",
       "request": {
         "method": "POST",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000902/undo-delete",
@@ -2016,7 +2016,7 @@
     {
       "step": "request",
       "name": "course-exam-delete-preview-name-taken",
-      "at": "2026-11-25T04:29:49.106Z",
+      "at": "2026-11-25T09:50:08.568Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000903/delete-preview",
@@ -2077,7 +2077,7 @@
             "body": "Its folder First Pass stays, with its sets and your progress, under Folders. You can undo this for 30 days."
           },
           "refusal": "NURS 101 already has a folder named First Pass in its Folders list. Rename one of them before deleting Exam 2.",
-          "confirm": "7fb950a88b7b1331",
+          "confirm": "32607d1b41b040df",
           "undoDays": 30
         }
       }
@@ -2085,12 +2085,12 @@
     {
       "step": "request",
       "name": "course-exam-delete-name-taken",
-      "at": "2026-11-25T04:29:49.111Z",
+      "at": "2026-11-25T09:50:08.572Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000903",
         "query": {
-          "confirm": "7fb950a88b7b1331"
+          "confirm": "32607d1b41b040df"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2107,7 +2107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.115Z",
+      "at": "2026-11-25T09:50:08.576Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901/delete-preview",
@@ -2168,7 +2168,7 @@
             "body": "Its folder Week 1 stays, with its sets and your progress, under Folders. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "bd92611c88a9ac41",
+          "confirm": "847d05e162c4a606",
           "undoDays": 30
         }
       }
@@ -2176,12 +2176,12 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:49.121Z",
+      "at": "2026-11-25T09:50:08.581Z",
       "request": {
         "method": "DELETE",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901",
         "query": {
-          "confirm": "bd92611c88a9ac41"
+          "confirm": "847d05e162c4a606"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2194,16 +2194,16 @@
     },
     {
       "step": "write",
-      "at": "2026-11-25T04:29:49.126Z",
+      "at": "2026-11-25T09:50:08.584Z",
       "table": "course_exam",
       "id": "ce000000-0000-4000-8000-000000000901",
       "column": "deleted_at",
-      "value": "2026-10-25T04:29:49.121Z"
+      "value": "2026-10-25T09:50:08.581Z"
     },
     {
       "step": "request",
       "name": "course-exam-undo-expired",
-      "at": "2026-11-25T04:29:49.126Z",
+      "at": "2026-11-25T09:50:08.584Z",
       "request": {
         "method": "POST",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000901/undo-delete",

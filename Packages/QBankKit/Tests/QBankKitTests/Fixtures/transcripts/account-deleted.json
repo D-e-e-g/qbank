@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "account-deleted",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.143Z",
+      "at": "2026-11-25T09:49:58.563Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:38.143Z"
+          "expiresAt": "2027-12-30T09:49:58.563Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.238Z",
+      "at": "2026-11-25T09:49:58.658Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -76,14 +76,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:38.238Z"
+          "expiresAt": "2027-12-30T09:49:58.658Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.286Z",
+      "at": "2026-11-25T09:49:58.707Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -115,14 +115,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:38.286Z"
+          "expiresAt": "2027-12-30T09:49:58.707Z"
         }
       }
     },
     {
       "step": "request",
       "name": "account-delete-admin",
-      "at": "2026-11-25T04:29:38.335Z",
+      "at": "2026-11-25T09:49:58.755Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -144,7 +144,7 @@
     {
       "step": "request",
       "name": "account-delete-wrong-password",
-      "at": "2026-11-25T04:29:38.338Z",
+      "at": "2026-11-25T09:49:58.757Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -166,7 +166,7 @@
     {
       "step": "request",
       "name": "account-delete-no-password",
-      "at": "2026-11-25T04:29:38.387Z",
+      "at": "2026-11-25T09:49:58.805Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -186,7 +186,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.387Z",
+      "at": "2026-11-25T09:49:58.805Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings",
@@ -204,9 +204,9 @@
         "status": 201,
         "headers": {},
         "body": {
-          "deviceCode": "_r1w3aa-j-VfSvG-gejN0Cp8FTqa6xXPOh-WaK8zO74",
+          "deviceCode": "cuJrnARb_7PJBTtEs-ATpZo2xWoJ-y7z3jRGFA1SOq8",
           "userCode": "BCDF-GHJK",
-          "expiresAt": "2026-11-25T04:39:38.387Z",
+          "expiresAt": "2026-11-25T09:59:58.805Z",
           "expiresIn": 600,
           "interval": 5
         }
@@ -215,7 +215,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.390Z",
+      "at": "2026-11-25T09:49:58.809Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/approve",
@@ -245,22 +245,22 @@
             }
           ],
           "status": "approved",
-          "createdAt": "2026-11-25T04:29:38.387Z",
-          "expiresAt": "2026-11-25T04:39:38.387Z"
+          "createdAt": "2026-11-25T09:49:58.805Z",
+          "expiresAt": "2026-11-25T09:59:58.805Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.394Z",
+      "at": "2026-11-25T09:49:58.812Z",
       "request": {
         "method": "POST",
         "path": "/api/agent-pairings/token",
         "query": {},
         "authorization": null,
         "body": {
-          "deviceCode": "_r1w3aa-j-VfSvG-gejN0Cp8FTqa6xXPOh-WaK8zO74"
+          "deviceCode": "cuJrnARb_7PJBTtEs-ATpZo2xWoJ-y7z3jRGFA1SOq8"
         }
       },
       "response": {
@@ -275,7 +275,7 @@
               "import",
               "read"
             ],
-            "createdAt": "2026-11-25T04:29:38.394Z",
+            "createdAt": "2026-11-25T09:49:58.812Z",
             "lastUsedAt": null,
             "revokedAt": null
           }
@@ -285,7 +285,7 @@
     {
       "step": "request",
       "name": "account-delete-agent-key",
-      "at": "2026-11-25T04:29:38.396Z",
+      "at": "2026-11-25T09:49:58.814Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -307,7 +307,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.396Z",
+      "at": "2026-11-25T09:49:58.814Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -334,7 +334,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.403Z",
+      "at": "2026-11-25T09:49:58.821Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -370,7 +370,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.408Z",
+      "at": "2026-11-25T09:49:58.826Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs",
@@ -457,8 +457,8 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-24 23:29:38.408-05",
-          "updatedAt": "2026-11-24 23:29:38.408-05",
+          "createdAt": "2026-11-25 04:49:58.826-05",
+          "updatedAt": "2026-11-25 04:49:58.826-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -475,7 +475,7 @@
     {
       "step": "request",
       "name": "account-delete-in-use",
-      "at": "2026-11-25T04:29:38.421Z",
+      "at": "2026-11-25T09:49:58.839Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -497,7 +497,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:38.468Z",
+      "at": "2026-11-25T09:49:58.891Z",
       "request": {
         "method": "POST",
         "path": "/api/question-jobs/00000000-0000-4000-8005-000000000004/cancel",
@@ -574,9 +574,9 @@
           "title": null,
           "photoCount": 0,
           "sets": [],
-          "createdAt": "2026-11-24 23:29:38.408-05",
-          "updatedAt": "2026-11-24 23:29:38.468-05",
-          "finishedAt": "2026-11-24 23:29:38.468-05",
+          "createdAt": "2026-11-25 04:49:58.826-05",
+          "updatedAt": "2026-11-25 04:49:58.891-05",
+          "finishedAt": "2026-11-25 04:49:58.891-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -592,7 +592,7 @@
     {
       "step": "request",
       "name": "account-delete",
-      "at": "2026-11-25T04:29:38.473Z",
+      "at": "2026-11-25T09:49:58.897Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",
@@ -613,7 +613,7 @@
     {
       "step": "request",
       "name": "session-after-account-delete",
-      "at": "2026-11-25T04:29:38.528Z",
+      "at": "2026-11-25T09:49:58.958Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -633,7 +633,7 @@
     {
       "step": "request",
       "name": "account-delete-signed-out",
-      "at": "2026-11-25T04:29:38.529Z",
+      "at": "2026-11-25T09:49:58.959Z",
       "request": {
         "method": "DELETE",
         "path": "/api/me",

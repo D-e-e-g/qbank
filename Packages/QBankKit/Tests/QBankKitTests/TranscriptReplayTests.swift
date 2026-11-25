@@ -230,7 +230,9 @@ struct TranscriptReplayTests {
         let transcript = try Transcript.load("practice-studying")
         let exchanges = transcript.exchanges
         let saved = try #require(exchanges.firstIndex { $0.name == "attempt-saved" })
-        let earlier = try #require(exchanges[..<saved].last { exchanges[saved].at.timeIntervalSince($0.at) > 0.1 })
+        // The nearest step the tolerance can tell apart, whatever the speed of the recording's machine. The extra millisecond
+        // is the precision of a recorded time.
+        let earlier = try #require(exchanges[..<saved].last { exchanges[saved].at.timeIntervalSince($0.at) > TranscriptReplay.timeTolerance + 0.001 })
         #expect(transcript.span < 2)
         let engine = transcript.answering("attempt-saved") { $0.with("answeredAt") { _ in .string(QBankJSON.formatDate(earlier.at)) } }
         let differences = try await replay(transcript, against: engine)

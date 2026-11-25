@@ -100,6 +100,28 @@ else
   fail "site/format/index.html is the pinned contract's question file format rendered (run scripts/render-format-page.rb)"
 fi
 
+# The format itself names what a question must have, its text among them. The
+# whole example goes through the phone's import check in QBankKit's tests.
+if example_check="$(ruby -rjson -rcgi -e '
+  html = File.read(ARGV[0], encoding: "UTF-8")
+  contract = JSON.parse(File.read(ARGV[1], encoding: "UTF-8"))
+  fields = contract.dig("x-question-format", "descriptor", "question").to_a
+  required = fields.select { |field| field["required"] }.map { |field| field["name"] }
+  abort "the format requires no field of a question" if required.empty?
+  blocks = html.scan(%r{<pre><code>(.*?)</code></pre>}m).flatten
+  abort "the page has #{blocks.length} examples, not 1" unless blocks.length == 1
+  questions = JSON.parse(CGI.unescapeHTML(blocks.first))["questions"]
+  abort "the example has no questions" unless questions.is_a?(Array) && !questions.empty?
+  questions.each.with_index(1) do |question, place|
+    missing = required.reject { |name| question[name].is_a?(String) && !question[name].strip.empty? }
+    abort "question #{place} has no #{missing.join(", ")}" unless missing.empty?
+  end
+' "$SITE/format/index.html" Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json 2>&1)"; then
+  pass "the format page's example is JSON whose questions each have every field the format requires"
+else
+  fail "the format page's example is JSON whose questions each have every field the format requires: $example_check"
+fi
+
 # --- The Pages workflow ---------------------------------------------------------
 
 if [ ! -f "$PAGES" ]; then

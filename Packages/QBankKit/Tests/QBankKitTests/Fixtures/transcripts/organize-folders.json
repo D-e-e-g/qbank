@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "organize-folders",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.604Z",
+      "at": "2026-11-25T09:50:05.392Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:45.604Z"
+          "expiresAt": "2027-12-30T09:50:05.392Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.654Z",
+      "at": "2026-11-25T09:50:05.437Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.660Z",
+      "at": "2026-11-25T09:50:05.443Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.665Z",
+      "at": "2026-11-25T09:50:05.446Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -148,7 +148,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.674Z",
+      "at": "2026-11-25T09:50:05.453Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -188,7 +188,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.681Z",
+      "at": "2026-11-25T09:50:05.458Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -228,7 +228,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.687Z",
+      "at": "2026-11-25T09:50:05.463Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -268,7 +268,7 @@
     {
       "step": "request",
       "name": "course-exam-create-blank",
-      "at": "2026-11-25T04:29:45.693Z",
+      "at": "2026-11-25T09:50:05.468Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -291,7 +291,7 @@
     {
       "step": "request",
       "name": "course-exam-create",
-      "at": "2026-11-25T04:29:45.697Z",
+      "at": "2026-11-25T09:50:05.471Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -328,7 +328,7 @@
     {
       "step": "request",
       "name": "course-exam-create-folder-taken",
-      "at": "2026-11-25T04:29:45.703Z",
+      "at": "2026-11-25T09:50:05.476Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -354,7 +354,7 @@
     {
       "step": "request",
       "name": "course-exam-create-name-taken",
-      "at": "2026-11-25T04:29:45.708Z",
+      "at": "2026-11-25T09:50:05.480Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -379,7 +379,7 @@
     {
       "step": "request",
       "name": "course-exam-create-unknown-folder",
-      "at": "2026-11-25T04:29:45.712Z",
+      "at": "2026-11-25T09:50:05.482Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -404,7 +404,7 @@
     {
       "step": "request",
       "name": "course-exam-update",
-      "at": "2026-11-25T04:29:45.717Z",
+      "at": "2026-11-25T09:50:05.486Z",
       "request": {
         "method": "PUT",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000001",
@@ -441,7 +441,7 @@
     {
       "step": "request",
       "name": "course-exam-not-found",
-      "at": "2026-11-25T04:29:45.723Z",
+      "at": "2026-11-25T09:50:05.491Z",
       "request": {
         "method": "GET",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000002/delete-preview",
@@ -461,7 +461,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.726Z",
+      "at": "2026-11-25T09:50:05.493Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/course-exams",
@@ -495,7 +495,7 @@
     {
       "step": "request",
       "name": "course-exam-update-folder-taken",
-      "at": "2026-11-25T04:29:45.731Z",
+      "at": "2026-11-25T09:50:05.498Z",
       "request": {
         "method": "PUT",
         "path": "/api/course-exams/ce000000-0000-4000-8000-000000000002",
@@ -521,7 +521,7 @@
     {
       "step": "request",
       "name": "folder-create-blank",
-      "at": "2026-11-25T04:29:45.737Z",
+      "at": "2026-11-25T09:50:05.503Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folders",
@@ -543,7 +543,7 @@
     {
       "step": "request",
       "name": "folder-create",
-      "at": "2026-11-25T04:29:45.740Z",
+      "at": "2026-11-25T09:50:05.506Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folders",
@@ -570,7 +570,7 @@
     {
       "step": "request",
       "name": "folder-create-taken",
-      "at": "2026-11-25T04:29:45.747Z",
+      "at": "2026-11-25T09:50:05.512Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folders",
@@ -592,7 +592,7 @@
     {
       "step": "request",
       "name": "folder-rename",
-      "at": "2026-11-25T04:29:45.751Z",
+      "at": "2026-11-25T09:50:05.515Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000011",
@@ -619,7 +619,7 @@
     {
       "step": "request",
       "name": "folder-rename-taken",
-      "at": "2026-11-25T04:29:45.758Z",
+      "at": "2026-11-25T09:50:05.522Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000002",
@@ -641,7 +641,7 @@
     {
       "step": "request",
       "name": "folder-not-found",
-      "at": "2026-11-25T04:29:45.762Z",
+      "at": "2026-11-25T09:50:05.526Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000999",
@@ -663,7 +663,7 @@
     {
       "step": "request",
       "name": "folder-put-on-page",
-      "at": "2026-11-25T04:29:45.765Z",
+      "at": "2026-11-25T09:50:05.528Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000011",
@@ -690,7 +690,7 @@
     {
       "step": "request",
       "name": "folder-take-off-page",
-      "at": "2026-11-25T04:29:45.773Z",
+      "at": "2026-11-25T09:50:05.534Z",
       "request": {
         "method": "PATCH",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000011",
@@ -717,7 +717,7 @@
     {
       "step": "request",
       "name": "practice-set-move",
-      "at": "2026-11-25T04:29:45.780Z",
+      "at": "2026-11-25T09:50:05.540Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000004/move",
@@ -741,8 +741,8 @@
               "title": "Week 3 - Set 2: Invented mixed review",
               "description": "Invented practice questions for week 3.",
               "questionCount": 2,
-              "importedAt": "2026-11-25T04:29:45.687Z",
-              "activeSince": "2026-11-25T04:29:45.687Z",
+              "importedAt": "2026-11-25T09:50:05.463Z",
+              "activeSince": "2026-11-25T09:50:05.463Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
@@ -765,7 +765,7 @@
     {
       "step": "request",
       "name": "practice-set-move-new-folder",
-      "at": "2026-11-25T04:29:45.788Z",
+      "at": "2026-11-25T09:50:05.547Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000004/move",
@@ -789,8 +789,8 @@
               "title": "Week 3 - Set 2: Invented mixed review",
               "description": "Invented practice questions for week 3.",
               "questionCount": 2,
-              "importedAt": "2026-11-25T04:29:45.687Z",
-              "activeSince": "2026-11-25T04:29:45.687Z",
+              "importedAt": "2026-11-25T09:50:05.463Z",
+              "activeSince": "2026-11-25T09:50:05.463Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
@@ -813,7 +813,7 @@
     {
       "step": "request",
       "name": "practice-set-move-new-folder-taken",
-      "at": "2026-11-25T04:29:45.797Z",
+      "at": "2026-11-25T09:50:05.555Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000004/move",
@@ -835,7 +835,7 @@
     {
       "step": "request",
       "name": "folder-order",
-      "at": "2026-11-25T04:29:45.801Z",
+      "at": "2026-11-25T09:50:05.558Z",
       "request": {
         "method": "PUT",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folder-order",
@@ -865,8 +865,8 @@
                   "title": "Week 1 - Set 1: Invented week 1",
                   "description": "Invented practice questions for week 1.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:45.665Z",
-                  "activeSince": "2026-11-25T04:29:45.665Z",
+                  "importedAt": "2026-11-25T09:50:05.446Z",
+                  "activeSince": "2026-11-25T09:50:05.446Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -896,8 +896,8 @@
                   "title": "Week 2 - Set 1: Invented week 2",
                   "description": "Invented practice questions for week 2.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.674Z",
-                  "activeSince": "2026-11-25T04:29:45.674Z",
+                  "importedAt": "2026-11-25T09:50:05.453Z",
+                  "activeSince": "2026-11-25T09:50:05.453Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -922,7 +922,7 @@
     {
       "step": "request",
       "name": "folder-order-stale",
-      "at": "2026-11-25T04:29:45.808Z",
+      "at": "2026-11-25T09:50:05.564Z",
       "request": {
         "method": "PUT",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/folder-order",
@@ -947,7 +947,7 @@
     {
       "step": "request",
       "name": "course-with-exams",
-      "at": "2026-11-25T04:29:45.812Z",
+      "at": "2026-11-25T09:50:05.567Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101",
@@ -989,8 +989,8 @@
                   "title": "Week 1 - Set 1: Invented week 1",
                   "description": "Invented practice questions for week 1.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:45.665Z",
-                  "activeSince": "2026-11-25T04:29:45.665Z",
+                  "importedAt": "2026-11-25T09:50:05.446Z",
+                  "activeSince": "2026-11-25T09:50:05.446Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1016,8 +1016,8 @@
                   "title": "Week 2 - Set 1: Invented week 2",
                   "description": "Invented practice questions for week 2.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.674Z",
-                  "activeSince": "2026-11-25T04:29:45.674Z",
+                  "importedAt": "2026-11-25T09:50:05.453Z",
+                  "activeSince": "2026-11-25T09:50:05.453Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1042,8 +1042,8 @@
                   "title": "Week 3 - Set 1: Invented week 3",
                   "description": "Invented practice questions for week 3.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.681Z",
-                  "activeSince": "2026-11-25T04:29:45.681Z",
+                  "importedAt": "2026-11-25T09:50:05.458Z",
+                  "activeSince": "2026-11-25T09:50:05.458Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1068,8 +1068,8 @@
                   "title": "Week 3 - Set 2: Invented mixed review",
                   "description": "Invented practice questions for week 3.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.687Z",
-                  "activeSince": "2026-11-25T04:29:45.687Z",
+                  "importedAt": "2026-11-25T09:50:05.463Z",
+                  "activeSince": "2026-11-25T09:50:05.463Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1099,8 +1099,8 @@
                   "title": "Week 1 - Set 1: Invented week 1",
                   "description": "Invented practice questions for week 1.",
                   "questionCount": 3,
-                  "importedAt": "2026-11-25T04:29:45.665Z",
-                  "activeSince": "2026-11-25T04:29:45.665Z",
+                  "importedAt": "2026-11-25T09:50:05.446Z",
+                  "activeSince": "2026-11-25T09:50:05.446Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1130,8 +1130,8 @@
                   "title": "Week 2 - Set 1: Invented week 2",
                   "description": "Invented practice questions for week 2.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.674Z",
-                  "activeSince": "2026-11-25T04:29:45.674Z",
+                  "importedAt": "2026-11-25T09:50:05.453Z",
+                  "activeSince": "2026-11-25T09:50:05.453Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1160,8 +1160,8 @@
                   "title": "Week 3 - Set 1: Invented week 3",
                   "description": "Invented practice questions for week 3.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.681Z",
-                  "activeSince": "2026-11-25T04:29:45.681Z",
+                  "importedAt": "2026-11-25T09:50:05.458Z",
+                  "activeSince": "2026-11-25T09:50:05.458Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1199,8 +1199,8 @@
                   "title": "Week 3 - Set 2: Invented mixed review",
                   "description": "Invented practice questions for week 3.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-25T04:29:45.687Z",
-                  "activeSince": "2026-11-25T04:29:45.687Z",
+                  "importedAt": "2026-11-25T09:50:05.463Z",
+                  "activeSince": "2026-11-25T09:50:05.463Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -1255,7 +1255,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.819Z",
+      "at": "2026-11-25T09:50:05.574Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/exams",
@@ -1288,12 +1288,12 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 450,
-          "startedAt": "2026-11-25T04:29:45.819Z",
-          "endsAt": "2026-11-25T04:37:15.819Z",
+          "startedAt": "2026-11-25T09:50:05.574Z",
+          "endsAt": "2026-11-25T09:57:35.574Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:45.819Z",
+          "serverNow": "2026-11-25T09:50:05.574Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8013-000000000007",
@@ -1333,46 +1333,9 @@
               "weekLabel": "Week 2"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000006",
-              "publicId": "Q1",
-              "position": 2,
-              "type": "single",
-              "topic": "week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 2 topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8013-000000000005",
               "publicId": "Q3",
-              "position": 3,
+              "position": 2,
               "type": "single",
               "topic": "week 1 topic 3",
               "cj": "Analyze cues",
@@ -1407,13 +1370,50 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000004",
-              "publicId": "Q2",
+              "id": "00000000-0000-4000-8013-000000000006",
+              "publicId": "Q1",
+              "position": 3,
+              "type": "single",
+              "topic": "week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about week 2 topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8013-000000000003",
+              "publicId": "Q1",
               "position": 4,
               "type": "single",
-              "topic": "week 1 topic 2",
+              "topic": "week 1 topic 1",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 1 topic 2.",
+              "stem": "An invented client presents with a finding about week 1 topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -1444,13 +1444,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000003",
-              "publicId": "Q1",
+              "id": "00000000-0000-4000-8013-000000000004",
+              "publicId": "Q2",
               "position": 5,
               "type": "single",
-              "topic": "week 1 topic 1",
+              "topic": "week 1 topic 2",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 1 topic 1.",
+              "stem": "An invented client presents with a finding about week 1 topic 2.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -1489,7 +1489,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.827Z",
+      "at": "2026-11-25T09:50:05.580Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000001/finish",
@@ -1518,12 +1518,12 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 450,
-          "startedAt": "2026-11-25T04:29:45.819Z",
-          "endsAt": "2026-11-25T04:37:15.819Z",
+          "startedAt": "2026-11-25T09:50:05.574Z",
+          "endsAt": "2026-11-25T09:57:35.574Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:45.827Z",
+          "finishedAt": "2026-11-25T09:50:05.580Z",
           "endReason": "finished",
-          "serverNow": "2026-11-25T04:29:45.827Z",
+          "serverNow": "2026-11-25T09:50:05.580Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8013-000000000007",
@@ -1563,46 +1563,9 @@
               "weekLabel": "Week 2"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000006",
-              "publicId": "Q1",
-              "position": 2,
-              "type": "single",
-              "topic": "week 2 topic 1",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 2 topic 1.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
-            {
               "id": "00000000-0000-4000-8013-000000000005",
               "publicId": "Q3",
-              "position": 3,
+              "position": 2,
               "type": "single",
               "topic": "week 1 topic 3",
               "cj": "Analyze cues",
@@ -1637,13 +1600,50 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000004",
-              "publicId": "Q2",
+              "id": "00000000-0000-4000-8013-000000000006",
+              "publicId": "Q1",
+              "position": 3,
+              "type": "single",
+              "topic": "week 2 topic 1",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about week 2 topic 1.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
+            },
+            {
+              "id": "00000000-0000-4000-8013-000000000003",
+              "publicId": "Q1",
               "position": 4,
               "type": "single",
-              "topic": "week 1 topic 2",
+              "topic": "week 1 topic 1",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 1 topic 2.",
+              "stem": "An invented client presents with a finding about week 1 topic 1.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -1674,13 +1674,13 @@
               "weekLabel": "Week 1"
             },
             {
-              "id": "00000000-0000-4000-8013-000000000003",
-              "publicId": "Q1",
+              "id": "00000000-0000-4000-8013-000000000004",
+              "publicId": "Q2",
               "position": 5,
               "type": "single",
-              "topic": "week 1 topic 1",
+              "topic": "week 1 topic 2",
               "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 1 topic 1.",
+              "stem": "An invented client presents with a finding about week 1 topic 2.",
               "ask": "Which action should the nurse take first?",
               "rationale": "The first action addresses the invented finding.",
               "takeaway": "Match the action to the finding.",
@@ -1770,16 +1770,6 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8013-000000000006",
-                "status": "unanswered",
-                "label": "Not answered",
-                "points": 0,
-                "maxPoints": 1,
-                "guessed": false,
-                "response": null,
-                "shuffle": null
-              },
-              {
                 "questionId": "00000000-0000-4000-8013-000000000005",
                 "status": "unanswered",
                 "label": "Not answered",
@@ -1790,7 +1780,7 @@
                 "shuffle": null
               },
               {
-                "questionId": "00000000-0000-4000-8013-000000000004",
+                "questionId": "00000000-0000-4000-8013-000000000006",
                 "status": "unanswered",
                 "label": "Not answered",
                 "points": 0,
@@ -1808,6 +1798,16 @@
                 "guessed": false,
                 "response": null,
                 "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8013-000000000004",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
               }
             ]
           }
@@ -1817,7 +1817,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.833Z",
+      "at": "2026-11-25T09:50:05.586Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/exams",
@@ -1853,54 +1853,17 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 630,
-          "startedAt": "2026-11-25T04:29:45.833Z",
-          "endsAt": "2026-11-25T04:40:15.833Z",
+          "startedAt": "2026-11-25T09:50:05.586Z",
+          "endsAt": "2026-11-25T10:00:35.586Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:45.833Z",
+          "serverNow": "2026-11-25T09:50:05.586Z",
           "questions": [
-            {
-              "id": "00000000-0000-4000-8013-000000000007",
-              "publicId": "Q2",
-              "position": 1,
-              "type": "single",
-              "topic": "week 2 topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 2 topic 2.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
             {
               "id": "00000000-0000-4000-8013-000000000004",
               "publicId": "Q2",
-              "position": 2,
+              "position": 1,
               "type": "single",
               "topic": "week 1 topic 2",
               "cj": "Analyze cues",
@@ -1937,7 +1900,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000003",
               "publicId": "Q1",
-              "position": 3,
+              "position": 2,
               "type": "single",
               "topic": "week 1 topic 1",
               "cj": "Analyze cues",
@@ -1974,7 +1937,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000009",
               "publicId": "Q2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "week 3 topic 2",
               "cj": "Analyze cues",
@@ -2011,7 +1974,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000005",
               "publicId": "Q3",
-              "position": 5,
+              "position": 4,
               "type": "single",
               "topic": "week 1 topic 3",
               "cj": "Analyze cues",
@@ -2048,7 +2011,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000006",
               "publicId": "Q1",
-              "position": 6,
+              "position": 5,
               "type": "single",
               "topic": "week 2 topic 1",
               "cj": "Analyze cues",
@@ -2085,7 +2048,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000008",
               "publicId": "Q1",
-              "position": 7,
+              "position": 6,
               "type": "single",
               "topic": "week 3 topic 1",
               "cj": "Analyze cues",
@@ -2118,6 +2081,43 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8013-000000000007",
+              "publicId": "Q2",
+              "position": 7,
+              "type": "single",
+              "topic": "week 2 topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about week 2 topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
             }
           ],
           "answeredQuestionIds": [],
@@ -2128,7 +2128,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:45.839Z",
+      "at": "2026-11-25T09:50:05.591Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000002/finish",
@@ -2159,54 +2159,17 @@
           "pool": "all",
           "practiceWeeks": null,
           "timeLimitSeconds": 630,
-          "startedAt": "2026-11-25T04:29:45.833Z",
-          "endsAt": "2026-11-25T04:40:15.833Z",
+          "startedAt": "2026-11-25T09:50:05.586Z",
+          "endsAt": "2026-11-25T10:00:35.586Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:45.839Z",
+          "finishedAt": "2026-11-25T09:50:05.591Z",
           "endReason": "finished",
-          "serverNow": "2026-11-25T04:29:45.839Z",
+          "serverNow": "2026-11-25T09:50:05.591Z",
           "questions": [
-            {
-              "id": "00000000-0000-4000-8013-000000000007",
-              "publicId": "Q2",
-              "position": 1,
-              "type": "single",
-              "topic": "week 2 topic 2",
-              "cj": "Analyze cues",
-              "stem": "An invented client presents with a finding about week 2 topic 2.",
-              "ask": "Which action should the nurse take first?",
-              "rationale": "The first action addresses the invented finding.",
-              "takeaway": "Match the action to the finding.",
-              "body": {
-                "options": [
-                  {
-                    "t": "The action that addresses the finding",
-                    "ok": true,
-                    "why": "It addresses the finding."
-                  },
-                  {
-                    "t": "An action for a different finding",
-                    "why": "It does not change this finding."
-                  },
-                  {
-                    "t": "Waiting to reassess later",
-                    "why": "It delays care."
-                  },
-                  {
-                    "t": "Documenting only",
-                    "why": "It does not treat the client."
-                  }
-                ]
-              },
-              "table": null,
-              "images": [],
-              "terms": [],
-              "weekLabel": "Week 2"
-            },
             {
               "id": "00000000-0000-4000-8013-000000000004",
               "publicId": "Q2",
-              "position": 2,
+              "position": 1,
               "type": "single",
               "topic": "week 1 topic 2",
               "cj": "Analyze cues",
@@ -2243,7 +2206,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000003",
               "publicId": "Q1",
-              "position": 3,
+              "position": 2,
               "type": "single",
               "topic": "week 1 topic 1",
               "cj": "Analyze cues",
@@ -2280,7 +2243,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000009",
               "publicId": "Q2",
-              "position": 4,
+              "position": 3,
               "type": "single",
               "topic": "week 3 topic 2",
               "cj": "Analyze cues",
@@ -2317,7 +2280,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000005",
               "publicId": "Q3",
-              "position": 5,
+              "position": 4,
               "type": "single",
               "topic": "week 1 topic 3",
               "cj": "Analyze cues",
@@ -2354,7 +2317,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000006",
               "publicId": "Q1",
-              "position": 6,
+              "position": 5,
               "type": "single",
               "topic": "week 2 topic 1",
               "cj": "Analyze cues",
@@ -2391,7 +2354,7 @@
             {
               "id": "00000000-0000-4000-8013-000000000008",
               "publicId": "Q1",
-              "position": 7,
+              "position": 6,
               "type": "single",
               "topic": "week 3 topic 1",
               "cj": "Analyze cues",
@@ -2424,6 +2387,43 @@
               "images": [],
               "terms": [],
               "weekLabel": "Week 3"
+            },
+            {
+              "id": "00000000-0000-4000-8013-000000000007",
+              "publicId": "Q2",
+              "position": 7,
+              "type": "single",
+              "topic": "week 2 topic 2",
+              "cj": "Analyze cues",
+              "stem": "An invented client presents with a finding about week 2 topic 2.",
+              "ask": "Which action should the nurse take first?",
+              "rationale": "The first action addresses the invented finding.",
+              "takeaway": "Match the action to the finding.",
+              "body": {
+                "options": [
+                  {
+                    "t": "The action that addresses the finding",
+                    "ok": true,
+                    "why": "It addresses the finding."
+                  },
+                  {
+                    "t": "An action for a different finding",
+                    "why": "It does not change this finding."
+                  },
+                  {
+                    "t": "Waiting to reassess later",
+                    "why": "It delays care."
+                  },
+                  {
+                    "t": "Documenting only",
+                    "why": "It does not treat the client."
+                  }
+                ]
+              },
+              "table": null,
+              "images": [],
+              "terms": [],
+              "weekLabel": "Week 2"
             }
           ],
           "answeredQuestionIds": [],
@@ -2486,16 +2486,6 @@
             ],
             "items": [
               {
-                "questionId": "00000000-0000-4000-8013-000000000007",
-                "status": "unanswered",
-                "label": "Not answered",
-                "points": 0,
-                "maxPoints": 1,
-                "guessed": false,
-                "response": null,
-                "shuffle": null
-              },
-              {
                 "questionId": "00000000-0000-4000-8013-000000000004",
                 "status": "unanswered",
                 "label": "Not answered",
@@ -2554,6 +2544,16 @@
                 "guessed": false,
                 "response": null,
                 "shuffle": null
+              },
+              {
+                "questionId": "00000000-0000-4000-8013-000000000007",
+                "status": "unanswered",
+                "label": "Not answered",
+                "points": 0,
+                "maxPoints": 1,
+                "guessed": false,
+                "response": null,
+                "shuffle": null
               }
             ]
           }
@@ -2563,7 +2563,7 @@
     {
       "step": "request",
       "name": "exam-setup-course-exams",
-      "at": "2026-11-25T04:29:45.846Z",
+      "at": "2026-11-25T09:50:05.597Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000101/exams",
@@ -2656,10 +2656,10 @@
               "practiceWeeks": null,
               "questionCount": 7,
               "timeLimitSeconds": 630,
-              "startedAt": "2026-11-25T04:29:45.833Z",
-              "endsAt": "2026-11-25T04:40:15.833Z",
+              "startedAt": "2026-11-25T09:50:05.586Z",
+              "endsAt": "2026-11-25T10:00:35.586Z",
               "status": "ended",
-              "finishedAt": "2026-11-25T04:29:45.839Z",
+              "finishedAt": "2026-11-25T09:50:05.591Z",
               "endReason": "finished",
               "answeredCount": 0,
               "fullyRight": 0,
@@ -2683,10 +2683,10 @@
               "practiceWeeks": null,
               "questionCount": 5,
               "timeLimitSeconds": 450,
-              "startedAt": "2026-11-25T04:29:45.819Z",
-              "endsAt": "2026-11-25T04:37:15.819Z",
+              "startedAt": "2026-11-25T09:50:05.574Z",
+              "endsAt": "2026-11-25T09:57:35.574Z",
               "status": "ended",
-              "finishedAt": "2026-11-25T04:29:45.827Z",
+              "finishedAt": "2026-11-25T09:50:05.580Z",
               "endReason": "finished",
               "answeredCount": 0,
               "fullyRight": 0,

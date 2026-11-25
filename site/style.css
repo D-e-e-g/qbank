@@ -139,16 +139,31 @@ td:last-child {
   overflow-wrap: anywhere;
 }
 
-/* On a phone the sentence in a three-column table gets most of the width. */
+/* On a phone the sentence in a three-column table gets most of the width, and a
+   four-column table closes up so its last column holds more than a word a line. */
 @media (max-width: 34rem) {
   th:nth-child(3):last-child {
     width: 60%;
   }
+
+  th:nth-child(4):last-child {
+    width: 36%;
+  }
+
+  tr > :nth-child(4):last-child,
+  tr > :has(~ :nth-child(4):last-child) {
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: 0.9rem;
+  }
 }
 
+/* An example keeps its lines and indentation: a long line scrolls inside its box,
+   never the page. */
 pre {
   margin: 0 0 16px;
   padding: 12px;
+  white-space: pre;
   overflow-x: auto;
 }
 

@@ -84,6 +84,19 @@ import Testing
         #expect(phone.sorted() == server.sorted())
     }
 
+    /// The public /format page renders the contract's Markdown, whose one `json` block is the example it offers to copy.
+    @Test func theContractsExampleIsAFileTheCheckTakes() throws {
+        let contract = try JSONDecoder().decode(JSONValue.self, from: Self.data("openapi"))
+        let markdown = try #require(contract["x-question-format"]?["markdown"]?.stringValue)
+        let opened = try #require(markdown.range(of: "\n```json\n"), "the description has no example")
+        let closed = try #require(markdown.range(of: "\n```\n", range: opened.upperBound..<markdown.endIndex))
+        let check = ImportChecker.check(String(markdown[opened.upperBound..<closed.lowerBound]))
+        #expect(check.ok)
+        #expect(check.errors.isEmpty, "\(check.errors)")
+        #expect(check.warnings.isEmpty, "\(check.warnings)")
+        #expect(!check.questions.isEmpty)
+    }
+
     /// An import also stores a hash of each question and the set's counts, which no check reports and no answer carries. A bank
     /// archive the server wrote holds both beside the columns they are made from.
     @Test func theHashesAndCountsAnImportStoresAreTheServers() throws {

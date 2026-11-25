@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "deletion-contents",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.179Z",
+      "at": "2026-11-25T09:50:06.847Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:47.179Z"
+          "expiresAt": "2027-12-30T09:50:06.847Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.229Z",
+      "at": "2026-11-25T09:50:06.891Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.235Z",
+      "at": "2026-11-25T09:50:06.897Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.239Z",
+      "at": "2026-11-25T09:50:06.900Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -149,7 +149,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.246Z",
+      "at": "2026-11-25T09:50:06.907Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -190,7 +190,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.252Z",
+      "at": "2026-11-25T09:50:06.912Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -231,7 +231,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.257Z",
+      "at": "2026-11-25T09:50:06.916Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -272,7 +272,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.262Z",
+      "at": "2026-11-25T09:50:06.921Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -311,7 +311,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.267Z",
+      "at": "2026-11-25T09:50:06.926Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000701/course-exams",
@@ -345,7 +345,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.272Z",
+      "at": "2026-11-25T09:50:06.930Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000701",
@@ -517,7 +517,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.278Z",
+      "at": "2026-11-25T09:50:06.935Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -544,7 +544,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.278Z",
+          "answeredAt": "2026-11-25T09:50:06.935Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -556,7 +556,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.286Z",
+      "at": "2026-11-25T09:50:06.942Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000701",
@@ -723,7 +723,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8015-000000000005",
-            "startedAt": "2026-11-25T04:29:47.278Z",
+            "startedAt": "2026-11-25T09:50:06.935Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8015-000000000001"
             ],
@@ -735,7 +735,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.278Z",
+                "answeredAt": "2026-11-25T09:50:06.935Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -754,7 +754,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.292Z",
+      "at": "2026-11-25T09:50:06.946Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -781,7 +781,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.292Z",
+          "answeredAt": "2026-11-25T09:50:06.946Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -793,7 +793,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.298Z",
+      "at": "2026-11-25T09:50:06.952Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000701",
@@ -960,7 +960,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8015-000000000005",
-            "startedAt": "2026-11-25T04:29:47.278Z",
+            "startedAt": "2026-11-25T09:50:06.935Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8015-000000000001",
               "00000000-0000-4000-8015-000000000002"
@@ -973,7 +973,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.278Z",
+                "answeredAt": "2026-11-25T09:50:06.935Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -991,7 +991,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.292Z",
+                "answeredAt": "2026-11-25T09:50:06.946Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -1010,7 +1010,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.304Z",
+      "at": "2026-11-25T09:50:06.957Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1037,7 +1037,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.304Z",
+          "answeredAt": "2026-11-25T09:50:06.957Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -1049,7 +1049,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.313Z",
+      "at": "2026-11-25T09:50:06.964Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702",
@@ -1185,7 +1185,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.317Z",
+      "at": "2026-11-25T09:50:06.968Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1212,7 +1212,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.317Z",
+          "answeredAt": "2026-11-25T09:50:06.968Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -1224,7 +1224,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.324Z",
+      "at": "2026-11-25T09:50:06.974Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000704",
@@ -1360,7 +1360,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.328Z",
+      "at": "2026-11-25T09:50:06.977Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1387,7 +1387,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.328Z",
+          "answeredAt": "2026-11-25T09:50:06.977Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -1399,7 +1399,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.335Z",
+      "at": "2026-11-25T09:50:06.983Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000704",
@@ -1530,7 +1530,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8015-000000000012",
-            "startedAt": "2026-11-25T04:29:47.328Z",
+            "startedAt": "2026-11-25T09:50:06.977Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8015-000000000009"
             ],
@@ -1542,7 +1542,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.328Z",
+                "answeredAt": "2026-11-25T09:50:06.977Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -1561,7 +1561,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.340Z",
+      "at": "2026-11-25T09:50:06.987Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -1588,7 +1588,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.340Z",
+          "answeredAt": "2026-11-25T09:50:06.987Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -1600,7 +1600,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.346Z",
+      "at": "2026-11-25T09:50:06.993Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000705/delete-preview",
@@ -1654,7 +1654,7 @@
             "body": "Its 1 question goes with it. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "e4530cd65dffa865",
+          "confirm": "c339d0edf705a512",
           "undoDays": 30
         }
       }
@@ -1662,12 +1662,12 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.351Z",
+      "at": "2026-11-25T09:50:06.998Z",
       "request": {
         "method": "DELETE",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000705",
         "query": {
-          "confirm": "e4530cd65dffa865"
+          "confirm": "c339d0edf705a512"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -1680,16 +1680,16 @@
     },
     {
       "step": "write",
-      "at": "2026-11-25T04:29:47.357Z",
+      "at": "2026-11-25T09:50:07.003Z",
       "table": "practice_set",
       "id": "5e700000-0000-4000-8000-000000000705",
       "column": "deleted_at",
-      "value": "2026-10-25T04:29:47.351Z"
+      "value": "2026-10-25T09:50:06.998Z"
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.358Z",
+      "at": "2026-11-25T09:50:07.003Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000701/exams",
@@ -1721,12 +1721,12 @@
             "Week 2"
           ],
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:47.358Z",
-          "endsAt": "2026-11-25T04:34:17.358Z",
+          "startedAt": "2026-11-25T09:50:07.003Z",
+          "endsAt": "2026-11-25T09:54:37.003Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:47.358Z",
+          "serverNow": "2026-11-25T09:50:07.003Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8015-000000000009",
@@ -1848,7 +1848,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.365Z",
+      "at": "2026-11-25T09:50:07.009Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000704",
@@ -1979,7 +1979,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8015-000000000012",
-            "startedAt": "2026-11-25T04:29:47.328Z",
+            "startedAt": "2026-11-25T09:50:06.977Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8015-000000000009",
               "00000000-0000-4000-8015-000000000011"
@@ -1992,7 +1992,7 @@
                 "points": 1,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.328Z",
+                "answeredAt": "2026-11-25T09:50:06.977Z",
                 "inReview": false,
                 "label": "Correct",
                 "pointsText": null,
@@ -2010,7 +2010,7 @@
                 "points": 0,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:47.340Z",
+                "answeredAt": "2026-11-25T09:50:06.987Z",
                 "inReview": true,
                 "label": "Not correct",
                 "pointsText": null,
@@ -2029,7 +2029,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.372Z",
+      "at": "2026-11-25T09:50:07.015Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2057,7 +2057,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.372Z",
+          "answeredAt": "2026-11-25T09:50:07.015Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -2069,7 +2069,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.378Z",
+      "at": "2026-11-25T09:50:07.019Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2097,7 +2097,7 @@
           "points": 1,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:47.378Z",
+          "answeredAt": "2026-11-25T09:50:07.019Z",
           "inReview": false,
           "label": "Correct",
           "pointsText": null,
@@ -2109,7 +2109,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.383Z",
+      "at": "2026-11-25T09:50:07.023Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000701/finish",
@@ -2138,12 +2138,12 @@
             "Week 2"
           ],
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:47.358Z",
-          "endsAt": "2026-11-25T04:34:17.358Z",
+          "startedAt": "2026-11-25T09:50:07.003Z",
+          "endsAt": "2026-11-25T09:54:37.003Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:47.383Z",
+          "finishedAt": "2026-11-25T09:50:07.023Z",
           "endReason": "finished",
-          "serverNow": "2026-11-25T04:29:47.383Z",
+          "serverNow": "2026-11-25T09:50:07.023Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8015-000000000009",
@@ -2341,7 +2341,7 @@
     {
       "step": "request",
       "name": "practice-set-delete-preview",
-      "at": "2026-11-25T04:29:47.389Z",
+      "at": "2026-11-25T09:50:07.029Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702/delete-preview",
@@ -2395,7 +2395,7 @@
             "body": "Its 3 questions go with it. You have answered 1 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "fceb079d992cf4f8",
+          "confirm": "f64c9b319acbc978",
           "undoDays": 30
         }
       }
@@ -2403,7 +2403,7 @@
     {
       "step": "request",
       "name": "practice-set-delete-preview-exam",
-      "at": "2026-11-25T04:29:47.393Z",
+      "at": "2026-11-25T09:50:07.032Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703/delete-preview",
@@ -2457,7 +2457,7 @@
             "body": "Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "0afc764fc7d5ed77",
+          "confirm": "e5637566897e88d3",
           "undoDays": 30
         }
       }
@@ -2465,7 +2465,7 @@
     {
       "step": "request",
       "name": "practice-set-delete-changed",
-      "at": "2026-11-25T04:29:47.397Z",
+      "at": "2026-11-25T09:50:07.036Z",
       "request": {
         "method": "DELETE",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702",
@@ -2487,12 +2487,12 @@
     {
       "step": "request",
       "name": "practice-set-delete",
-      "at": "2026-11-25T04:29:47.402Z",
+      "at": "2026-11-25T09:50:07.041Z",
       "request": {
         "method": "DELETE",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702",
         "query": {
-          "confirm": "fceb079d992cf4f8"
+          "confirm": "f64c9b319acbc978"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2506,7 +2506,7 @@
     {
       "step": "request",
       "name": "practice-set-undo-delete",
-      "at": "2026-11-25T04:29:47.407Z",
+      "at": "2026-11-25T09:50:07.045Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000702/undo-delete",
@@ -2528,13 +2528,13 @@
               "title": "Heart A",
               "description": "Invented set.",
               "questionCount": 4,
-              "importedAt": "2026-11-25T04:29:47.239Z",
-              "activeSince": "2026-11-25T04:29:47.239Z",
+              "importedAt": "2026-11-25T09:50:06.900Z",
+              "activeSince": "2026-11-25T09:50:06.900Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 3,
               "fullyRightCount": 2,
-              "lastAnsweredAt": "2026-11-25T04:29:47.304Z",
+              "lastAnsweredAt": "2026-11-25T09:50:06.957Z",
               "run": "midway",
               "sitting": {
                 "answeredCount": 3
@@ -2552,13 +2552,13 @@
               "title": "Heart B",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-11-25T04:29:47.246Z",
-              "activeSince": "2026-11-25T04:29:47.246Z",
+              "importedAt": "2026-11-25T09:50:06.907Z",
+              "activeSince": "2026-11-25T09:50:06.907Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 0,
-              "lastAnsweredAt": "2026-11-25T04:29:47.317Z",
+              "lastAnsweredAt": "2026-11-25T09:50:06.968Z",
               "run": "midway",
               "sitting": {
                 "answeredCount": 1
@@ -2586,7 +2586,7 @@
     {
       "step": "request",
       "name": "folder-delete-unconfirmed",
-      "at": "2026-11-25T04:29:47.415Z",
+      "at": "2026-11-25T09:50:07.052Z",
       "request": {
         "method": "DELETE",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701",
@@ -2606,7 +2606,7 @@
     {
       "step": "request",
       "name": "folder-delete-preview",
-      "at": "2026-11-25T04:29:47.419Z",
+      "at": "2026-11-25T09:50:07.056Z",
       "request": {
         "method": "GET",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701/delete-preview",
@@ -2682,7 +2682,7 @@
             "body": "Its 3 sets go with it: Heart A, Heart B and Heart A exam, 10 questions in all. You have answered 4 of them: those answers stop counting toward your progress, and 2 questions leave your Review list. It comes off Exam 1. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "ac6c82244b9aba99",
+          "confirm": "1a8234b03a7255c7",
           "undoDays": 30
         }
       }
@@ -2690,7 +2690,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.425Z",
+      "at": "2026-11-25T09:50:07.062Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -2730,12 +2730,12 @@
     {
       "step": "request",
       "name": "folder-delete-changed",
-      "at": "2026-11-25T04:29:47.430Z",
+      "at": "2026-11-25T09:50:07.066Z",
       "request": {
         "method": "DELETE",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701",
         "query": {
-          "confirm": "ac6c82244b9aba99"
+          "confirm": "1a8234b03a7255c7"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2752,7 +2752,7 @@
     {
       "step": "request",
       "name": "folder-delete-preview-changed",
-      "at": "2026-11-25T04:29:47.435Z",
+      "at": "2026-11-25T09:50:07.070Z",
       "request": {
         "method": "GET",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701/delete-preview",
@@ -2835,7 +2835,7 @@
             "body": "Its 4 sets go with it: Heart A, Heart B, Heart C and Heart A exam, 12 questions in all. You have answered 4 of them: those answers stop counting toward your progress, and 2 questions leave your Review list. It comes off Exam 1. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "3fd1882b8dca9442",
+          "confirm": "f875dc9dae87f481",
           "undoDays": 30
         }
       }
@@ -2843,12 +2843,12 @@
     {
       "step": "request",
       "name": "folder-delete",
-      "at": "2026-11-25T04:29:47.439Z",
+      "at": "2026-11-25T09:50:07.074Z",
       "request": {
         "method": "DELETE",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701",
         "query": {
-          "confirm": "3fd1882b8dca9442"
+          "confirm": "f875dc9dae87f481"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2862,7 +2862,7 @@
     {
       "step": "request",
       "name": "practice-set-undo-with-folder",
-      "at": "2026-11-25T04:29:47.444Z",
+      "at": "2026-11-25T09:50:07.078Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000701/undo-delete",
@@ -2882,7 +2882,7 @@
     {
       "step": "request",
       "name": "exam-delete-preview",
-      "at": "2026-11-25T04:29:47.448Z",
+      "at": "2026-11-25T09:50:07.081Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000701/delete-preview",
@@ -2896,8 +2896,8 @@
         "body": {
           "examId": "e0000000-0000-4000-8000-000000000701",
           "courseId": "c0000000-0000-4000-8000-000000000701",
-          "startedAt": "2026-11-25T04:29:47.358Z",
-          "finishedAt": "2026-11-25T04:29:47.383Z",
+          "startedAt": "2026-11-25T09:50:07.003Z",
+          "finishedAt": "2026-11-25T09:50:07.023Z",
           "questionCount": 3,
           "answeredCount": 2,
           "changedCount": 1,
@@ -2934,7 +2934,7 @@
             "body": "Your 2 answers on it go with it and stop counting toward your progress. 1 question goes back to your answer before it, and 1 question goes back to not answered. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "5fc5e2c8fc38c67b",
+          "confirm": "8b25b779fe371c8e",
           "undoDays": 30
         }
       }
@@ -2942,12 +2942,12 @@
     {
       "step": "request",
       "name": "exam-delete",
-      "at": "2026-11-25T04:29:47.453Z",
+      "at": "2026-11-25T09:50:07.086Z",
       "request": {
         "method": "DELETE",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000701",
         "query": {
-          "confirm": "5fc5e2c8fc38c67b"
+          "confirm": "8b25b779fe371c8e"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -2961,7 +2961,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.458Z",
+      "at": "2026-11-25T09:50:07.090Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000704/delete-preview",
@@ -3015,7 +3015,7 @@
             "body": "Its 3 questions go with it. You have answered 2 of them: those answers stop counting toward your progress, and 1 question leaves your Review list. You can undo this for 30 days."
           },
           "refusal": null,
-          "confirm": "09f52b24cdbd0fa9",
+          "confirm": "ddbe53466ff451c4",
           "undoDays": 30
         }
       }
@@ -3023,12 +3023,12 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.462Z",
+      "at": "2026-11-25T09:50:07.094Z",
       "request": {
         "method": "DELETE",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000704",
         "query": {
-          "confirm": "09f52b24cdbd0fa9"
+          "confirm": "ddbe53466ff451c4"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -3042,7 +3042,7 @@
     {
       "step": "request",
       "name": "course-deleted",
-      "at": "2026-11-25T04:29:47.467Z",
+      "at": "2026-11-25T09:50:07.098Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000701/deleted",
@@ -3087,8 +3087,8 @@
                   "questionCount": 3
                 }
               ],
-              "deletedAt": "2026-11-25T04:29:47.439Z",
-              "undoUntil": "2026-12-25T04:29:47.439Z",
+              "deletedAt": "2026-11-25T09:50:07.074Z",
+              "undoUntil": "2026-12-25T09:50:07.074Z",
               "undoRefusal": null,
               "deletedByAgent": null
             }
@@ -3101,8 +3101,8 @@
               "questionCount": 3,
               "folderId": "f0000000-0000-4000-8000-000000000702",
               "folderName": "Week 2",
-              "deletedAt": "2026-11-25T04:29:47.462Z",
-              "undoUntil": "2026-12-25T04:29:47.462Z",
+              "deletedAt": "2026-11-25T09:50:07.094Z",
+              "undoUntil": "2026-12-25T09:50:07.094Z",
               "undoRefusal": null,
               "deletedByAgent": null
             }
@@ -3124,18 +3124,18 @@
               ],
               "questionCount": 3,
               "timeLimitSeconds": 270,
-              "startedAt": "2026-11-25T04:29:47.358Z",
-              "endsAt": "2026-11-25T04:34:17.358Z",
+              "startedAt": "2026-11-25T09:50:07.003Z",
+              "endsAt": "2026-11-25T09:54:37.003Z",
               "status": "ended",
-              "finishedAt": "2026-11-25T04:29:47.383Z",
+              "finishedAt": "2026-11-25T09:50:07.023Z",
               "endReason": "finished",
               "answeredCount": 2,
               "fullyRight": 2,
               "points": 2,
               "maxPoints": 3,
               "minutesUsed": 1,
-              "deletedAt": "2026-11-25T04:29:47.453Z",
-              "undoUntil": "2026-12-25T04:29:47.453Z"
+              "deletedAt": "2026-11-25T09:50:07.086Z",
+              "undoUntil": "2026-12-25T09:50:07.086Z"
             }
           ]
         }
@@ -3144,7 +3144,7 @@
     {
       "step": "request",
       "name": "exam-undo-delete",
-      "at": "2026-11-25T04:29:47.474Z",
+      "at": "2026-11-25T09:50:07.105Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000701/undo-delete",
@@ -3171,10 +3171,10 @@
           ],
           "questionCount": 3,
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:47.358Z",
-          "endsAt": "2026-11-25T04:34:17.358Z",
+          "startedAt": "2026-11-25T09:50:07.003Z",
+          "endsAt": "2026-11-25T09:54:37.003Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:47.383Z",
+          "finishedAt": "2026-11-25T09:50:07.023Z",
           "endReason": "finished",
           "answeredCount": 2,
           "fullyRight": 2,
@@ -3187,7 +3187,7 @@
     {
       "step": "request",
       "name": "folder-undo-delete",
-      "at": "2026-11-25T04:29:47.480Z",
+      "at": "2026-11-25T09:50:07.110Z",
       "request": {
         "method": "POST",
         "path": "/api/folders/f0000000-0000-4000-8000-000000000701/undo-delete",
@@ -3209,13 +3209,13 @@
               "title": "Heart A",
               "description": "Invented set.",
               "questionCount": 4,
-              "importedAt": "2026-11-25T04:29:47.239Z",
-              "activeSince": "2026-11-25T04:29:47.239Z",
+              "importedAt": "2026-11-25T09:50:06.900Z",
+              "activeSince": "2026-11-25T09:50:06.900Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 3,
               "fullyRightCount": 2,
-              "lastAnsweredAt": "2026-11-25T04:29:47.304Z",
+              "lastAnsweredAt": "2026-11-25T09:50:06.957Z",
               "run": "midway",
               "sitting": {
                 "answeredCount": 3
@@ -3233,13 +3233,13 @@
               "title": "Heart B",
               "description": "Invented set.",
               "questionCount": 3,
-              "importedAt": "2026-11-25T04:29:47.246Z",
-              "activeSince": "2026-11-25T04:29:47.246Z",
+              "importedAt": "2026-11-25T09:50:06.907Z",
+              "activeSince": "2026-11-25T09:50:06.907Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 1,
               "fullyRightCount": 0,
-              "lastAnsweredAt": "2026-11-25T04:29:47.317Z",
+              "lastAnsweredAt": "2026-11-25T09:50:06.968Z",
               "run": "midway",
               "sitting": {
                 "answeredCount": 1
@@ -3256,8 +3256,8 @@
               "title": "Heart C",
               "description": "Invented set.",
               "questionCount": 2,
-              "importedAt": "2026-11-25T04:29:47.425Z",
-              "activeSince": "2026-11-25T04:29:47.425Z",
+              "importedAt": "2026-11-25T09:50:07.062Z",
+              "activeSince": "2026-11-25T09:50:07.062Z",
               "status": "imported",
               "canRestore": false,
               "answeredCount": 0,
@@ -3287,7 +3287,7 @@
     {
       "step": "request",
       "name": "practice-set-undo-expired",
-      "at": "2026-11-25T04:29:47.489Z",
+      "at": "2026-11-25T09:50:07.119Z",
       "request": {
         "method": "POST",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000705/undo-delete",
@@ -3307,7 +3307,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:47.493Z",
+      "at": "2026-11-25T09:50:07.123Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000701/exams",
@@ -3337,12 +3337,12 @@
           "pool": "all",
           "practiceWeeks": [],
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:47.493Z",
-          "endsAt": "2026-11-25T04:34:17.493Z",
+          "startedAt": "2026-11-25T09:50:07.123Z",
+          "endsAt": "2026-11-25T09:54:37.123Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:47.493Z",
+          "serverNow": "2026-11-25T09:50:07.123Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8015-000000000015",
@@ -3464,7 +3464,7 @@
     {
       "step": "request",
       "name": "practice-set-delete-preview-in-use",
-      "at": "2026-11-25T04:29:47.499Z",
+      "at": "2026-11-25T09:50:07.129Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703/delete-preview",
@@ -3518,7 +3518,7 @@
             "body": "Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days."
           },
           "refusal": "An exam in progress asks questions from Heart A exam. Finish or leave that exam first.",
-          "confirm": "0afc764fc7d5ed77",
+          "confirm": "e5637566897e88d3",
           "undoDays": 30
         }
       }
@@ -3526,12 +3526,12 @@
     {
       "step": "request",
       "name": "practice-set-delete-in-use",
-      "at": "2026-11-25T04:29:47.504Z",
+      "at": "2026-11-25T09:50:07.133Z",
       "request": {
         "method": "DELETE",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703",
         "query": {
-          "confirm": "0afc764fc7d5ed77"
+          "confirm": "e5637566897e88d3"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
@@ -3548,7 +3548,7 @@
     {
       "step": "request",
       "name": "exam-delete-preview-in-progress",
-      "at": "2026-11-25T04:29:47.509Z",
+      "at": "2026-11-25T09:50:07.138Z",
       "request": {
         "method": "GET",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000702/delete-preview",
@@ -3562,7 +3562,7 @@
         "body": {
           "examId": "e0000000-0000-4000-8000-000000000702",
           "courseId": "c0000000-0000-4000-8000-000000000701",
-          "startedAt": "2026-11-25T04:29:47.493Z",
+          "startedAt": "2026-11-25T09:50:07.123Z",
           "finishedAt": null,
           "questionCount": 3,
           "answeredCount": 0,
@@ -3600,7 +3600,7 @@
             "body": "You answered none of its questions, so your progress stays as it is. You can undo this for 30 days."
           },
           "refusal": "This exam is still going. Finish or leave it, then delete it.",
-          "confirm": "ae71eccdb046017b",
+          "confirm": "0624e26e7e349e4a",
           "undoDays": 30
         }
       }
@@ -3608,12 +3608,12 @@
     {
       "step": "request",
       "name": "exam-delete-in-progress",
-      "at": "2026-11-25T04:29:47.513Z",
+      "at": "2026-11-25T09:50:07.141Z",
       "request": {
         "method": "DELETE",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000702",
         "query": {
-          "confirm": "ae71eccdb046017b"
+          "confirm": "0624e26e7e349e4a"
         },
         "authorization": "Bearer synthetic-session-token",
         "body": null
