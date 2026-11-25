@@ -201,6 +201,40 @@ struct AppleSignInTests {
         #expect(server.calls.count == (kept ? 2 : 1))
     }
 
+    @Test(arguments: [("invalid_apple_token", 401), ("password_account", 409), ("email_in_use", 409)])
+    func aRefusedResendAsksForSignInWithAppleAgainAfterARelaunch(code: String, status: Int) async throws {
+        let server = StubServer([Self.route: .error(status, code, "Refused.")])
+        let unsent = AppleSignInRequest(identityToken: "synthetic.apple.token", nonce: String(repeating: "c", count: 64))
+        let (app, store) = TestApp.free(server, awaitsServer: true, unsent: unsent)
+        #expect(!app.needsAppleSignInAgain, "a kept sign-in is still sent again on its own")
+        await app.sendAppleSignInAgain()
+        #expect(app.needsAppleSignInAgain)
+
+        let client = QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: server, sessionStore: store)
+        let relaunched = AppModel(client: client, appleSignIn: Apple(), storage: .memory())
+        #expect(relaunched.route == .signedIn(.store()), "the bank on the phone still opens")
+        #expect(relaunched.awaitsServer)
+        #expect(relaunched.needsAppleSignInAgain)
+        #expect(relaunched.serverSignInProblem == nil)
+        await relaunched.refreshSession()
+        #expect(server.calls.count == 1, "nothing is sent again on its own")
+
+        server[Self.route] = Reply(status: 201, body: Bodies.appleSignedIn())
+        #expect(await relaunched.signInWithApple(Apple().credential, nonce: AppleSignInNonce()) == .signedIn)
+        #expect(!relaunched.awaitsServer)
+        #expect(!relaunched.needsAppleSignInAgain)
+    }
+
+    @Test func settingsSaysOnlyANewSignInWithAppleConnectsAPhoneWhoseKeptOneWasRefused() {
+        #expect(AppleSignInWording.awaitsServer.contains("tries again on its own"))
+        let wording = AppleSignInWording.needsAppleSignInAgain
+        #expect(!wording.contains("tries again on its own"))
+        #expect(wording.contains("not connected to the QBank service"))
+        #expect(wording.contains("Sign in with Apple again"))
+        #expect(wording.contains("use an existing QBank account"))
+        #expect(!wording.localizedCaseInsensitiveContains("student"))
+    }
+
     @Test func signingOutWhileWaitingKeepsTheBankAndAsksNoServer() async throws {
         let server = StubServer([Self.route: .offline])
         let (app, store) = signedOut(server)

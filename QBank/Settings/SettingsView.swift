@@ -234,7 +234,7 @@ struct SettingsView: View {
     /// and Sign in with Apple again to finish now.
     private var awaitingServer: some View {
         VStack(alignment: .leading, spacing: QBankSpacing.space3) {
-            Text(AppleSignInWording.awaitsServer)
+            Text(app.needsAppleSignInAgain ? AppleSignInWording.needsAppleSignInAgain : AppleSignInWording.awaitsServer)
                 .qbankFont(.footnote)
                 .foregroundStyle(.qbank(.text2))
                 .fixedSize(horizontal: false, vertical: true)

@@ -51,6 +51,10 @@ final class AppModel {
     /// server until it answers. The sign-in is sent again at launch, when QBank is on screen again and
     /// when the network comes back (`sendAppleSignInAgain`).
     private(set) var awaitsServer = false
+    /// True while `awaitsServer` once the server refused the kept Sign in with Apple, or the stored
+    /// session keeps none: nothing is sent again on its own, and only a new Sign in with Apple connects
+    /// this phone to the server.
+    private(set) var needsAppleSignInAgain = false
     /// What the server answered, or why it could not, the last time it was sent a Sign in with Apple
     /// it has not confirmed. Nil when nothing was heard yet.
     private(set) var serverSignInProblem: String?
@@ -154,6 +158,7 @@ final class AppModel {
         kind = opened == nil ? .invited : .free
         let waiting = opened != nil && stored?.awaitsServer == true
         awaitsServer = waiting
+        needsAppleSignInAgain = waiting && stored?.unsent == nil
         if let opened {
             self.client = waiting ? client.routingBankWithoutServer(to: opened.bank) : client.routingBank(to: opened.bank)
         } else {
@@ -321,6 +326,7 @@ final class AppModel {
             serverSignInProblem = AppleSignInWording.problem(error)
             if !AppleSignInWording.serverCannotAnswer(error), error.serverCode != .tooManyAttempts {
                 try? server.forgetUnsentAppleSignIn(kept)
+                needsAppleSignInAgain = (try? server.storedSession())?.unsent == nil
             }
         }
     }
@@ -346,6 +352,7 @@ final class AppModel {
             connection = network
         }
         awaitsServer = false
+        needsAppleSignInAgain = false
         serverSignInProblem = nil
         temporaryPassword = nil
         if !isConfirming { beginSignIn() }
@@ -372,6 +379,7 @@ final class AppModel {
         client = server.routingBankWithoutServer(to: bank)
         connection = Connection.onThisPhone()
         awaitsServer = true
+        needsAppleSignInAgain = false
         serverSignInProblem = problem
         temporaryPassword = nil
         if samePerson == nil { beginSignIn() }
@@ -496,6 +504,7 @@ final class AppModel {
         temporaryPassword = nil
         hasLanded = false
         awaitsServer = false
+        needsAppleSignInAgain = false
         serverSignInProblem = nil
         route = .signedOut
     }

@@ -20,6 +20,12 @@ enum AppleSignInWording {
         "QBank's server has not confirmed your sign-in yet. Your questions are on this \(Device.model) and work without it, and QBank tries again on its own."
     }
 
+    /// Said in Settings while QBank's server has not confirmed a Sign in with Apple and refused the one
+    /// kept to send again, so QBank does not try again on its own.
+    static var needsAppleSignInAgain: String {
+        "This \(Device.model) is not connected to the QBank service yet. Your questions stay on this \(Device.model). Sign in with Apple again to connect it, or sign out and use an existing QBank account."
+    }
+
     /// Said under Color while QBank's server has not confirmed a Sign in with Apple.
     static let paletteAwaitsServer = "Your color is saved to your account once QBank's server confirms your sign-in."
 
