@@ -59,6 +59,9 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: QBankSpacing.space7) {
                     account
+                    if CloudModel.isOffered(to: app) {
+                        CloudSection(app: app)
+                    }
                     lock
                     if app.offersQuestionMaker, app.aiConsent.isAllowed || Twins.listsJobs(maker) {
                         anthropic

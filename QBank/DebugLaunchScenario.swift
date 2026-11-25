@@ -288,6 +288,7 @@ nonisolated enum DebugLaunchScenario {
             banks: context.banks,
             sampleSet: SampleSet.bundledSource(),
             appleSignIn: context.appleSignIn,
+            store: context.store,
             look: lookStore,
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),

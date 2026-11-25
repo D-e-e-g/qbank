@@ -29,8 +29,7 @@ nonisolated struct DebugScenario: Hashable, Sendable {
 
 /// What a launch gives every scenario: the phone's own settings, storage, banks and answers file, the
 /// network and the device owner the launch asked for, the scripted Sign in with Apple the launch
-/// environment picks, and the fake store, which is empty until the pull request that needs it fills
-/// it in.
+/// environment picks, and the fake store that sells Cloud in the App Store's place.
 struct DebugScenarioContext {
     let defaults: UserDefaults
     let storage: PhoneStorage

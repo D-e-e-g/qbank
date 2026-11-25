@@ -45,14 +45,29 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         var role = "student"
         /// Apple's id of the person, for an account Sign in with Apple made.
         var appleUser: String?
+        /// The token a store account buys Cloud with, issued at its first read of its Cloud.
+        var storeToken: String?
+        /// When the Cloud period a store account bought ends.
+        var cloudUntil: Date?
 
         /// "store" for an account Sign in with Apple made, "invited" for one the owner set up.
         var origin: String { password == nil ? "store" : "invited" }
 
+        /// The account's Cloud, as a session and the Cloud routes name it: an invited account always
+        /// has it, a store account while a period it bought has not ended.
+        var cloud: [String: Any] {
+            ["active": origin == "invited" || cloudUntil.map { $0 > .now } == true, "expiresAt": cloudUntil.map(QBankJSON.formatDate) ?? NSNull()]
+        }
+
+        /// The answer of the Cloud routes: the account's Cloud, with the token it buys with.
+        var cloudStatus: [String: Any] {
+            cloud.merging(["storeToken": storeToken ?? NSNull()]) { _, token in token }
+        }
+
         var json: [String: Any] {
             [
                 "id": id, "email": email, "name": name, "role": role, "mustChangePassword": mustChangePassword, "palette": palette,
-                "origin": origin, "cloud": ["active": origin == "invited", "expiresAt": NSNull()],
+                "origin": origin, "cloud": cloud,
                 "signInWith": [password == nil ? nil : "password", appleUser == nil ? nil : "apple"].compactMap(\.self),
             ]
         }
@@ -320,6 +335,10 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             return deleteAccount(account, password: body["password"] as? String ?? "")
         case ("POST", "/api/me/apple"):
             return linkApple(account, body: body)
+        case ("GET", "/api/me/cloud"):
+            return cloudStatus(of: account)
+        case ("POST", "/api/me/cloud/transactions"):
+            return recordCloudTransaction(body["signedTransaction"] as? String ?? "", for: account)
         default:
             break
         }
