@@ -6,7 +6,7 @@ import UIKit
 /// (`DebugFakeStore`), so a test never reaches the App Store.
 ///
 /// The App Store's word never turns Cloud on by itself: `CloudModel` sends each transaction to QBank's
-/// server, and finishes it only once the server answers that Cloud is active.
+/// server, and finishes it only once the server has recorded it or refused it for good.
 protocol CloudStore: AnyObject {
     /// The Cloud plans the App Store sells in this storefront, with their names, periods and prices.
     /// Empty when it sells none here, or before App Store Connect has them.

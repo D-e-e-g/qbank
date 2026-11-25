@@ -7,9 +7,10 @@ import UIKit
 ///
 /// QBank's server is the authority on who has Cloud. Each transaction the App Store signs, whether
 /// from a purchase here, from Restore, or from the App Store's updates, goes to the server with the
-/// account's session, and is finished only once the server answers that Cloud is active. One the
-/// server did not confirm stays unfinished: the App Store gives it to the app again at the next launch,
-/// and `refresh()` sends it again. The app shows Cloud as on only when the server says so.
+/// account's session, and is finished only once the server has handled it for good: recorded it, or
+/// refused it for a reason sending it again would not change. One the server gave no lasting answer
+/// for stays unfinished: the App Store gives it to the app again at the next launch, and `refresh()`
+/// sends it again. The app shows Cloud as on only when the server says so.
 ///
 /// One model serves the whole app, as the App Store's updates do. It follows the account signed in
 /// (`follow(_:)`), so what it says of one account is gone when another signs in.
@@ -207,20 +208,28 @@ final class CloudModel {
     }
 
     /// A transaction from the App Store's updates. With no store account signed in to send it for, or
-    /// with no answer from the server, it stays unfinished, and the App Store gives it again.
+    /// with no lasting answer from the server, it stays unfinished, and the App Store gives it again.
     private func receive(_ transaction: CloudTransaction) async {
         guard case let (client, owner)? = reach(), let status = try? await send(transaction, with: client), owner == accountID else { return }
         self.status = status
     }
 
-    /// Sends a transaction to QBank's server, and finishes it once the server answers that Cloud is
-    /// active: never on the App Store's word alone, and never after a refusal or no answer.
+    /// Sends a transaction to QBank's server, and finishes it once the server has handled it for good:
+    /// recorded it, whatever Cloud state that leaves (a refund or an ended period leaves Cloud off), or
+    /// refused it with 400 or 409, which sending it again would not change. Never on the App Store's word
+    /// alone. An answer that may change, such as no connection, a 5xx, a 429 or a session to sign in
+    /// again, leaves it unfinished for the App Store to give again.
     private func send(_ transaction: CloudTransaction, with client: QBankClient) async throws(QBankError) -> CloudStatus {
-        let status = try await client.recordCloudTransaction(transaction.signed)
-        if status.active {
+        do throws(QBankError) {
+            let status = try await client.recordCloudTransaction(transaction.signed)
             await transaction.finish()
+            return status
+        } catch {
+            if case .server(let refusal) = error, [400, 409].contains(refusal.status) {
+                await transaction.finish()
+            }
+            throw error
         }
-        return status
     }
 
     /// The token the account buys with, which the server issues at its first read and keeps.

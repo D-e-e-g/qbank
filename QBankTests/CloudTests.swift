@@ -5,8 +5,8 @@ import UIKit
 @testable import QBank
 
 /// QBank Cloud in the model: buying with the token the server gave the account, sending what the App
-/// Store signed to the server, and finishing a transaction only once the server answers that Cloud is
-/// active; the App Store's updates, Restore, and who is offered Cloud at all. The App Store is a
+/// Store signed to the server, and finishing a transaction only once the server has recorded it or
+/// refused it for good; the App Store's updates, Restore, and who is offered Cloud at all. The App Store is a
 /// scripted stand-in and the server a stub with the contract's shapes and words. Invented data only.
 @MainActor
 struct CloudTests {
@@ -45,7 +45,7 @@ struct CloudTests {
         }
 
         func updates() -> AsyncStream<CloudTransaction> { updateStream.stream }
-        func unfinished() async -> [CloudTransaction] { unfinishedTransactions }
+        func unfinished() async -> [CloudTransaction] { unfinishedTransactions.filter { !finished.contains($0.id) } }
         func currentEntitlements() async -> [CloudTransaction] { entitlements }
 
         func sync() async throws(CloudStoreFailure) {
@@ -56,18 +56,18 @@ struct CloudTests {
         func manageSubscriptions(in scene: UIWindowScene?) async throws(CloudStoreFailure) {}
     }
 
-    private static let token = "00000000-0000-4000-8000-000000000001"
+    nonisolated private static let token = "00000000-0000-4000-8000-000000000001"
     private static let read = "GET /api/me/cloud"
     private static let record = "POST /api/me/cloud/transactions"
 
-    private static func status(active: Bool, expiresAt: String? = nil, token: String? = CloudTests.token) -> Reply {
+    nonisolated private static func status(active: Bool, expiresAt: String? = nil, token: String? = CloudTests.token) -> Reply {
         let expires = expiresAt.map { #""\#($0)""# } ?? "null"
         let token = token.map { #""\#($0)""# } ?? "null"
         return .ok(#"{"active":\#(active),"expiresAt":\#(expires),"storeToken":\#(token)}"#)
     }
 
-    private static let off = status(active: false)
-    private static let on = status(active: true, expiresAt: "2027-12-03T00:00:00.000Z")
+    nonisolated private static let off = status(active: false)
+    nonisolated private static let on = status(active: true, expiresAt: "2027-12-03T00:00:00.000Z")
 
     /// A model signed in with a session as `account`, a free store account unless the test says,
     /// whose App Store is `store`.
@@ -122,14 +122,14 @@ struct CloudTests {
         #expect(app.cloud.buying == nil)
     }
 
-    @Test func aPurchaseTheServerSaysLeavesCloudOffIsNotFinished() async throws {
+    @Test func aPurchaseTheServerRecordedButSaysLeavesCloudOffIsFinished() async throws {
         let server = StubServer([Self.read: Self.off, Self.record: Self.status(active: false, expiresAt: "2026-01-01T00:00:00.000Z")])
         let store = ScriptedStore()
         let app = free(server, store: store)
         await app.cloud.buy(DebugFakeStore.plans[1], in: nil)
 
         #expect(try sentTransactions(server) == ["synthetic.signed.1"])
-        #expect(store.finished.isEmpty)
+        #expect(store.finished == [1], "the server recorded it; sending it again would change nothing")
         #expect(app.cloud.status?.active == false)
         #expect(app.cloud.problem == CloudWording.notActive)
     }
@@ -155,16 +155,59 @@ struct CloudTests {
         #expect(app.cloud.status?.active == true)
     }
 
-    @Test func aPurchaseBoughtForAnotherAccountIsRefusedInTheServersWordsAndNotFinished() async throws {
+    @Test func aPurchaseBoughtForAnotherAccountIsRefusedInTheServersWordsAndFinished() async throws {
         let message = "This App Store subscription belongs to another QBank account. Nothing was recorded."
         let server = StubServer([Self.read: Self.off, Self.record: .error(409, "transaction_other_account", message)])
         let store = ScriptedStore()
         let app = free(server, store: store)
         await app.cloud.buy(DebugFakeStore.plans[0], in: nil)
 
-        #expect(store.finished.isEmpty)
+        #expect(store.finished == [1], "a refusal for good is not sent again")
         #expect(app.cloud.problem == message)
         #expect(app.route == .signedIn(.store()), "a refusal signs nobody out")
+    }
+
+    /// The server's answer to a recorded transaction, and whether the app then finishes it: finished once
+    /// the server has handled it for good (`docs/cloud.md`), unfinished while the answer may change.
+    nonisolated fileprivate static let answers: [(reply: Reply, finished: Bool)] = [
+        (on, true),
+        (status(active: false, expiresAt: "2026-01-01T00:00:00.000Z"), true),
+        (.error(400, "transaction_unverified", "This purchase could not be checked with the App Store. Nothing was recorded."), true),
+        (.error(409, "transaction_other_account", "This App Store subscription belongs to another QBank account. Nothing was recorded."), true),
+        (.error(409, "cloud_included", "This account has Cloud already, at no charge. Nothing was recorded."), true),
+        (.offline, false),
+        (.error(500, "internal", "Something went wrong."), false),
+        (.error(503, "unavailable", "QBank is down for a moment."), false),
+        (.error(429, "too_many_requests", "Too many requests."), false),
+        (.error(401, "unauthenticated", "Sign in to continue."), false),
+    ]
+
+    @Test(arguments: answers.indices)
+    func aTransactionIsFinishedOnlyOnceTheServerHasHandledItForGood(index: Int) async throws {
+        let (reply, finished) = Self.answers[index]
+        let server = StubServer()
+        server.script(Self.record, [reply])
+        let store = ScriptedStore()
+        store.unfinishedTransactions = [store.transaction(5)]
+        let app = free(server, store: store)
+        await app.cloud.refresh()
+
+        #expect(try sentTransactions(server) == ["synthetic.signed.5"])
+        #expect(store.finished == (finished ? [5] : []), "reply \(reply.status)")
+    }
+
+    @Test func a503KeepsTheTransactionUnfinishedAndTheNextRefreshSendsItAgain() async throws {
+        let server = StubServer([Self.read: Self.off])
+        server.script(Self.record, [.error(503, "unavailable", "QBank is down for a moment."), Self.on])
+        let store = ScriptedStore()
+        store.unfinishedTransactions = [store.transaction(6)]
+        let app = free(server, store: store)
+        await app.cloud.refresh()
+        #expect(store.finished.isEmpty)
+
+        await app.cloud.refresh()
+        #expect(try sentTransactions(server) == ["synthetic.signed.6", "synthetic.signed.6"])
+        #expect(store.finished == [6])
     }
 
     @Test(arguments: [CloudPurchase.cancelled, .pending, .unverified])
@@ -228,6 +271,23 @@ struct CloudTests {
         #expect(app.cloud.status?.active == true)
     }
 
+    @Test func aRevokedUpdateTheServerAnswersOffIsFinishedAndNotSentAgain() async throws {
+        let server = StubServer([Self.read: Self.off, Self.record: Self.status(active: false, expiresAt: "2026-11-01T00:00:00.000Z")])
+        let store = ScriptedStore()
+        let revoked = store.transaction(9)
+        store.unfinishedTransactions = [revoked]
+        let app = free(server, store: store)
+        app.cloud.listen()
+        store.updateStream.continuation.yield(revoked)
+
+        try await waitUntil { store.finished == [9] }
+        #expect(app.cloud.status?.active == false)
+        #expect(await store.unfinished().isEmpty, "the App Store has nothing left to give at the next launch")
+
+        await app.cloud.refresh()
+        #expect(try sentTransactions(server) == ["synthetic.signed.9"], "opening Settings sends it no more")
+    }
+
     @Test func anUpdateWithNoStoreAccountSignedInStaysUnfinished() async throws {
         let server = StubServer([Self.record: Self.on])
         let store = ScriptedStore()
@@ -254,6 +314,22 @@ struct CloudTests {
         #expect(store.finished == [3])
         #expect(app.cloud.status?.active == true)
         #expect(app.cloud.notice == .done(CloudWording.restored))
+    }
+
+    @Test func restoreTurnsCloudOnFromASubscriptionFinishedBefore() async throws {
+        let server = StubServer([Self.read: Self.off, Self.record: Self.on])
+        let store = ScriptedStore()
+        let app = free(server, store: store)
+        await app.cloud.buy(DebugFakeStore.plans[0], in: nil)
+        #expect(store.finished == [1])
+
+        // A later launch: the App Store still lists the finished subscription as current.
+        let other = free(server, store: store)
+        store.entitlements = [store.transaction(1)]
+        await other.cloud.restore()
+        #expect(try sentTransactions(server) == ["synthetic.signed.1", "synthetic.signed.1"])
+        #expect(other.cloud.status?.active == true)
+        #expect(other.cloud.notice == .done(CloudWording.restored))
     }
 
     @Test func restoreWithNothingToRestoreSaysSo() async {
