@@ -1,5 +1,6 @@
 import Observation
 import QBankKit
+import UIKit
 
 /// The app's top-level state: who is signed in, what kind of account it is, the client every screen
 /// talks through, and what the phone keeps for her account to study without signal.
@@ -72,9 +73,12 @@ final class AppModel {
     /// What the server answered, or why it could not, the last time it was sent a Sign in with Apple
     /// it has not confirmed. Nil when nothing was heard yet.
     private(set) var serverSignInProblem: String?
-    /// Why the last try to delete a store account stopped after this phone's copy was erased, for the
-    /// screen that finishes it. Nil when none did.
+    /// Why the last try to delete a store account stopped after this phone's copy was erased, or while
+    /// it was, for the screen that finishes it. Nil when none did.
     private(set) var deletionProblem: String?
+    /// True while a store account's delete runs, from the server's check to its last step, so every
+    /// screen shows it under way and a second one never begins.
+    private(set) var isDeletingAccount = false
     /// Who asks Apple to sign the person in.
     let appleSignIn: any AppleSignInProvider
     /// Light or dark, chosen in Settings and kept on this phone.
@@ -608,6 +612,30 @@ final class AppModel {
         let reason: String?
     }
 
+    /// Deletes the store account signed in: checks QBank's server, asks Apple over `window` for a fresh
+    /// Sign in with Apple, then deletes (`deleteAccount(confirmedWith:nonce:)`). Closing Apple's sheet
+    /// says nothing and deletes nothing. A delete already under way is not begun again.
+    func deleteAccountWithApple(over window: UIWindow?) async throws(DeletionStop) {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        deletionProblem = nil
+        defer { isDeletingAccount = false }
+        do throws(DeletionStop) {
+            try await checkBeforeDeletingAccount()
+            let nonce = AppleSignInNonce()
+            let credential: AppleCredential
+            do {
+                credential = try await appleSignIn.signIn(hashedNonce: nonce.hashed, over: window)
+            } catch {
+                throw DeletionStop(reason: error == .canceled ? nil : AppleSignInWording.appleDidNotFinish)
+            }
+            try await deleteAccount(confirmedWith: credential, nonce: nonce)
+        } catch {
+            if isFinishingDeletion { deletionProblem = error.reason }
+            throw error
+        }
+    }
+
     /// Checks, before Apple is asked, that QBank's server can take the delete: a Sign in with Apple it
     /// has not confirmed is sent again first, and the session must still be the server's. Nothing is
     /// erased here. A session the server ended signs the person out, as any ended session does; the
@@ -643,7 +671,6 @@ final class AppModel {
         // Another Apple Account's yes deletes nothing: the server would refuse it after the erase.
         guard credential.user == appleUser else { throw DeletionStop(reason: AccountDeletionWording.otherAppleAccount) }
         guard let code = credential.authorizationCode, !code.isEmpty else { throw DeletionStop(reason: AppleSignInWording.appleDidNotFinish) }
-        deletionProblem = nil
         if kept.deletion == nil {
             // Kept before anything is erased, so from here on the delete is finished, never begun again.
             do {
@@ -660,7 +687,7 @@ final class AppModel {
             try await server.deleteAccount(confirmedWithApple: request)
         } catch {
             guard error.needsSignIn else {
-                throw stopDeleting(account, reason: Wording.problem(error) ?? AccountDeletionWording.tryAgain)
+                throw DeletionStop(reason: Wording.problem(error) ?? AccountDeletionWording.tryAgain)
             }
             // The server has no session for this phone: an earlier try deleted the account and its
             // answer never came, or the session ended another way. Either way nothing more can be
@@ -674,18 +701,20 @@ final class AppModel {
 
     /// Erases what this phone keeps of the account: its bank and anything kept beside it, the saved
     /// courses and waiting answers of an account whose bank is on the server, and the sets it was
-    /// writing. Nothing reaches the bank again. A failure leaves `finishingDeletion`, still at the
-    /// erase, so trying again erases again.
+    /// writing. Nothing reaches the bank again: from here only finishing the delete is on screen, and a
+    /// failure leaves it still at the erase, so trying again erases again.
     private func erasePhoneCopy(of account: Account, appleUser: String) async throws(DeletionStop) {
+        let saved = offline
         phoneBank?.bank.close()
         phoneBank = nil
         client = server
-        await offline?.close()
-        offline = nil
+        connection = network
+        route = .finishingDeletion(account)
+        await saved?.close()
         do {
             try banks.erase(appleUser)
         } catch {
-            throw stopDeleting(account, reason: AccountDeletionWording.phoneNotErased)
+            throw DeletionStop(reason: AccountDeletionWording.phoneNotErased)
         }
         storage.erase(account.id)
         drafts.erase(accountID: appleUser)
@@ -709,16 +738,6 @@ final class AppModel {
         }
         forgetDeletedAccount(reason: AccountDeletionWording.sessionEndedAfterErasing)
         throw DeletionStop(reason: nil)
-    }
-
-    /// The delete stopped once this phone's copy was erased, or while it was: only finishing it is
-    /// offered from here, and the reason is kept for that screen.
-    private func stopDeleting(_ account: Account, reason: String) -> DeletionStop {
-        deletionProblem = reason
-        client = server
-        connection = network
-        route = .finishingDeletion(account)
-        return DeletionStop(reason: reason)
     }
 
     /// The delete's last step: the session, and with it the record of the delete, leaves the

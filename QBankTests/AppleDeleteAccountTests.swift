@@ -294,6 +294,50 @@ struct AppleDeleteAccountTests {
         #expect(AppleDeleteAccountModel(app: phone.app).problem == words)
     }
 
+    // MARK: While the server deletes
+
+    /// The server's step exchanges Apple's code and revokes its token, so it can take a while. Once
+    /// the erase began, no screen of the erased bank stays, and the screen that finishes the delete
+    /// shows it under way and does not begin a second one.
+    @Test func whileTheServerDeletesOnlyTheDeleteUnderWayIsOnScreen() async throws {
+        let phone = try await freePhone()
+        phone.server.hold("DELETE /api/me")
+        let deleting = Task { await AppleDeleteAccountModel(app: phone.app).delete(over: nil) }
+        try await waitUntil { phone.server.calls.contains("DELETE /api/me") }
+
+        #expect(phone.app.route == .finishingDeletion(.store()))
+        #expect(phone.app.bank == nil)
+        let finishing = AppleDeleteAccountModel(app: phone.app)
+        #expect(finishing.isFinishing)
+        #expect(finishing.isDeleting)
+        let asked = phone.log.steps.count
+        await finishing.delete(over: nil)
+        #expect(phone.log.steps.count == asked, "a second try checks, asks and deletes nothing")
+
+        phone.server.release("DELETE /api/me")
+        await deleting.value
+        #expect(!finishing.isDeleting)
+        #expect(phone.app.route == .signedOut)
+        #expect(phone.server.calls.filter { $0 == "DELETE /api/me" } == ["DELETE /api/me"])
+        #expect(phone.log.count("erase bank") == 1)
+    }
+
+    @Test func aStopAfterTheEraseIsSaidOnTheScreenThatOpenedMeanwhile() async throws {
+        let phone = try await freePhone()
+        phone.server.script("DELETE /api/me", [.offline])
+        phone.server.hold("DELETE /api/me")
+        let deleting = Task { await AppleDeleteAccountModel(app: phone.app).delete(over: nil) }
+        try await waitUntil { phone.server.calls.contains("DELETE /api/me") }
+        let finishing = AppleDeleteAccountModel(app: phone.app)
+        #expect(finishing.problem == nil)
+
+        phone.server.release("DELETE /api/me")
+        await deleting.value
+        #expect(finishing.problem == "No connection. Check Wi-Fi or cellular data and try again.")
+        #expect(!finishing.isDeleting)
+        #expect(phone.app.route == .finishingDeletion(.store()))
+    }
+
     // MARK: Nothing erased
 
     @Test func anotherAppleAccountDeletesNothing() async throws {
