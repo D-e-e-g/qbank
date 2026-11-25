@@ -17,7 +17,7 @@ struct AppleDeleteAccountView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: QBankSpacing.space4) {
-                Text(model.isFinishing ? AccountDeletionWording.finishing : AccountDeletionWording.whatGoes)
+                Text(model.message)
                     .qbankFont(.body)
                     .foregroundStyle(.qbank(.text1))
                     .accessibilityIdentifier("deleteAccount.message")

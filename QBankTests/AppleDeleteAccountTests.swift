@@ -126,6 +126,8 @@ struct AppleDeleteAccountTests {
         #expect(try await topics(in: phone.banks) == ["Invented Pharmacology"])
         let start = phone.log.steps.count
         let model = AppleDeleteAccountModel(app: phone.app)
+        // A free bank is on this phone alone, so the screen says so and promises nothing of other devices.
+        #expect(model.message == AccountDeletionWording.whatGoes(bankIsOnPhone: true))
         await model.delete(over: nil)
 
         #expect(model.problem == nil)
@@ -187,6 +189,7 @@ struct AppleDeleteAccountTests {
         let finishing = AppleDeleteAccountModel(app: phone.app)
         #expect(finishing.isFinishing)
         #expect(finishing.problem == noConnection)
+        #expect(finishing.message == AccountDeletionWording.finishing)
 
         let start = phone.log.steps.count
         await finishing.delete(over: nil)

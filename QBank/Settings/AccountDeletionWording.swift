@@ -2,10 +2,15 @@
 /// Apple, and when that delete stops. Every sentence that ends a try says whether anything was
 /// deleted, since this is the one place the person's own bank is erased.
 enum AccountDeletionWording {
-    /// What goes, said before the delete. The same for a free bank on the phone and a Cloud bank on
-    /// the server: the delete erases both sides.
-    static var whatGoes: String {
-        "Your QBank account and everything in it are deleted for good, on this \(Device.model) and on QBank's server: your courses and study topics, their sets, your answers, progress and past exams. You are signed out on every device. Nothing goes to Recently deleted, and there is no Undo."
+    /// What goes, said before the delete, by where the bank is. A free account's bank is on this
+    /// phone and the server holds only the account, so another device keeps its own copy and is not
+    /// signed out by the delete. A Cloud account's bank is on the server, which signs every device out.
+    static func whatGoes(bankIsOnPhone: Bool) -> String {
+        if bankIsOnPhone {
+            "Your QBank account is deleted for good from QBank's server, and everything in it is erased from this \(Device.model): your courses and study topics, their sets, your answers, progress and past exams. Nothing goes to Recently deleted, and there is no Undo."
+        } else {
+            "Your QBank account and everything in it are deleted for good, on QBank's server and on this \(Device.model): your courses and study topics, their sets, your answers, progress and past exams. You are signed out on every device. Nothing goes to Recently deleted, and there is no Undo."
+        }
     }
 
     /// Said once this phone's copy is erased, or being erased, and the server has not deleted the

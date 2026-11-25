@@ -25,7 +25,9 @@ final class DeleteAccountUITests: XCTestCase {
 
         openDeleteAccount(app)
         let message = app.staticTexts["deleteAccount.message"]
-        XCTAssertTrue(message.label.contains("on this iPhone and on QBank's server"), message.label)
+        // A free bank is on this iPhone alone: the server holds only the account.
+        XCTAssertTrue(message.label.contains("deleted for good from QBank's server, and everything in it is erased from this iPhone"), message.label)
+        XCTAssertFalse(message.label.contains("signed out on every device"), "another device keeps its own bank")
         XCTAssertTrue(message.label.contains("there is no Undo"), message.label)
         let subscription = app.staticTexts["deleteAccount.subscription"]
         XCTAssertTrue(subscription.label.contains("does not cancel a QBank Cloud subscription"), subscription.label)
