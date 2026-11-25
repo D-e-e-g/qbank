@@ -126,11 +126,24 @@ code {
   overflow-wrap: anywhere;
 }
 
-/* A field or type name in a table's first column stays whole, so a narrow
-   screen does not shrink that column below the width of one name. */
-td:first-child code {
+/* A name in a table stays whole, so a narrow screen does not shrink its column
+   below the width of one name. In a first column it may break at a <wbr>, which
+   the format page puts after each underscore. */
+td:not(:last-child) code {
   overflow-wrap: normal;
-  white-space: nowrap;
+}
+
+/* A long word in a table's last column, such as a data URL, breaks rather than
+   push the table off a phone screen. */
+td:last-child {
+  overflow-wrap: anywhere;
+}
+
+/* On a phone the sentence in a three-column table gets most of the width. */
+@media (max-width: 34rem) {
+  th:nth-child(3):last-child {
+    width: 60%;
+  }
 }
 
 pre {

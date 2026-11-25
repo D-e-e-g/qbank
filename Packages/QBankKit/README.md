@@ -35,7 +35,7 @@ Nothing in a test run reaches the network: the client talks through `HTTPTranspo
 
 `Tests/QBankKitTests/Fixtures/contract/` holds one exchange per file: the request the app sends and the response the server gave. Every file is a live recording from the server commit in `Fixtures/pin.json` and carries that commit as `recordedFrom`; a test requires it of every file. They hold no real student data and no real credentials.
 
-`test/record-contract.sh` records them from a checkout of the pinned server. It copies the checkout to a scratch tree, adds the scenarios in `test/record-contract/`, and runs them there in-process: the server's own app over a throwaway in-memory database, with invented accounts and invented course content, and nothing over the network. Make questions and exam twins run on the server's own fake model (`apps/api/src/question-maker/fake-model.ts`), so no model is called. The end of the 30-day Undo window is reached the way the server's own tests reach it: the deleted row's `deleted_at` is moved 31 days back. The recorder fails when a scenario's call answers a status it did not expect, or when a fixture in the directory has no scenario.
+`test/record-contract.sh` records them from a checkout of the pinned server, and pins its import check cases (below). It copies the checkout to a scratch tree, adds the scenarios in `test/record-contract/`, and runs them there in-process: the server's own app over a throwaway in-memory database, with invented accounts and invented course content, and nothing over the network. Make questions and exam twins run on the server's own fake model (`apps/api/src/question-maker/fake-model.ts`), so no model is called. The end of the 30-day Undo window is reached the way the server's own tests reach it: the deleted row's `deleted_at` is moved 31 days back. The recorder fails when a scenario's call answers a status it did not expect, or when a fixture in the directory has no scenario.
 
 A recording keeps what the server sent, rewritten only so that a re-record changes what the server changed and nothing else:
 
@@ -44,6 +44,10 @@ A recording keeps what the server sent, rewritten only so that a re-record chang
 - Times and delete `confirm` tokens stay as the server sent them, so tests read them from the recording instead of naming them.
 
 `Tests/QBankKitTests/Fixtures/openapi.json` is a copy of the server's OpenAPI document (`apps/api/openapi.json` in the server repository, served at `https://qbank.dimitrygallego.com/openapi.json`). `Fixtures/pin.json` names the server commit that copy and every fixture come from. A test checks that every recorded call and status is documented there, that every key in a recorded response is allowed by that schema, and that every key the kit reads while decoding a recording (watched through a recording `Decoder`) is a property of it.
+
+### Import check cases
+
+The server's `POST /api/imports/check` is the one judge of a question file. The phone ports it (`LocalBank/ImportCheck.swift`) to check a file with no network, and the server's own cases hold the port to it: `Fixtures/import-cases.json` is the server's conformance corpus (`packages/questions/conformance/import-cases.json`), copied byte for byte, and `Fixtures/import-cases.pin.json` names its commit and its SHA-256. `test/record-contract.sh` writes both with the rest of the pin. `ImportParityTests` requires that the corpus's commit is `pin.json`'s, that the phone reports for every case what the server reported (the verdict, the set, its questions, terms and counts by format, and the errors, warnings and issues in order), and that the phone has every rule code and severity the contract lists under `x-question-format`. What an import stores that no report carries (each question's content hash and the set's counts) is checked against the recorded bank archive. The tests hold no case of their own: a case belongs in the server's corpus.
 
 ### Transcripts and the replay helper
 

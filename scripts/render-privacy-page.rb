@@ -14,11 +14,9 @@
 # and "Last reviewed against the code:" lines are published; links to other
 # docs in them point at those docs on GitHub.
 
-require "cgi"
+require_relative "site_page"
 
-ROOT = File.expand_path("..", __dir__)
-SOURCE = File.join(ROOT, "docs", "privacy-policy.md")
-TARGET = File.join(ROOT, "site", "privacy", "index.html")
+SOURCE = File.join(SitePage::ROOT, "docs", "privacy-policy.md")
 DOCS_URL = "https://github.com/D-e-e-g/qbank/blob/main/docs/"
 
 def refuse(number, line)
@@ -73,47 +71,11 @@ def render_body(markdown)
   html.join("\n")
 end
 
-def page(body)
-  <<~HTML
-    <!doctype html>
-    <html lang="en">
-    <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>QBank privacy policy</title>
-    <meta name="description" content="What the QBank app and its server keep, why, and how to delete your data.">
-    <link rel="stylesheet" href="../style.css">
-    </head>
-    <body>
-    <header>
-    <a class="brand" href="../">QBank</a>
-    <nav aria-label="Pages"><ul>
-    <li><a href="../privacy/" aria-current="page">Privacy</a></li>
-    <li><a href="../support/">Support</a></li>
-    <li><a href="../format/">Question file format</a></li>
-    </ul></nav>
-    </header>
-    <main>
-    <h1>QBank privacy policy</h1>
-    #{body}
-    </main>
-    <footer>
-    <p>Questions: <a href="mailto:dimitrygallego@gmail.com">dimitrygallego@gmail.com</a></p>
-    </footer>
-    </body>
-    </html>
-  HTML
-end
-
-output = page(render_body(File.read(SOURCE)))
-if ARGV == ["--check"]
-  if File.exist?(TARGET) && File.read(TARGET) == output
-    exit 0
-  end
-  warn "site/privacy/index.html is out of date; run scripts/render-privacy-page.rb"
-  exit 1
-elsif ARGV.empty?
-  File.write(TARGET, output)
-else
-  abort "usage: scripts/render-privacy-page.rb [--check]"
-end
+body = render_body(File.read(SOURCE, encoding: "UTF-8"))
+output = SitePage.html(
+  slug: "privacy",
+  title: "QBank privacy policy",
+  description: "What the QBank app and its server keep, why, and how to delete your data.",
+  main: "<h1>QBank privacy policy</h1>\n#{body}"
+)
+SitePage.publish("privacy", output, script: "scripts/render-privacy-page.rb", arguments: ARGV)

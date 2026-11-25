@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "topics",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.174Z",
+      "at": "2026-11-25T04:29:49.721Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:50.174Z"
+          "expiresAt": "2027-12-30T04:29:49.721Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.222Z",
+      "at": "2026-11-25T04:29:49.769Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.228Z",
+      "at": "2026-11-25T04:29:49.775Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.231Z",
+      "at": "2026-11-25T04:29:49.780Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -134,7 +134,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.236Z",
+      "at": "2026-11-25T04:29:49.787Z",
       "request": {
         "method": "PATCH",
         "path": "/api/semesters/3d9a9957-5eb2-4949-b1f7-086f1e51ff62",
@@ -153,7 +153,7 @@
           "name": "Semester 2",
           "startsOn": null,
           "endsOn": null,
-          "archivedAt": "2026-11-24T01:48:50.236Z",
+          "archivedAt": "2026-11-25T04:29:49.787Z",
           "courses": []
         }
       }
@@ -161,7 +161,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.241Z",
+      "at": "2026-11-25T04:29:49.793Z",
       "request": {
         "method": "POST",
         "path": "/api/topics",
@@ -195,7 +195,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.244Z",
+      "at": "2026-11-25T04:29:49.796Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -232,7 +232,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.250Z",
+      "at": "2026-11-25T04:29:49.802Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -268,7 +268,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.255Z",
+      "at": "2026-11-25T04:29:49.808Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/70000000-0000-4000-8000-000000000001",
@@ -306,8 +306,8 @@
                   "title": "Invented cardiac drugs",
                   "description": "Invented practice questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-24T01:48:50.244Z",
-                  "activeSince": "2026-11-24T01:48:50.244Z",
+                  "importedAt": "2026-11-25T04:29:49.796Z",
+                  "activeSince": "2026-11-25T04:29:49.796Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -332,8 +332,8 @@
                   "title": "Invented loose questions",
                   "description": "Invented practice questions.",
                   "questionCount": 1,
-                  "importedAt": "2026-11-24T01:48:50.250Z",
-                  "activeSince": "2026-11-24T01:48:50.250Z",
+                  "importedAt": "2026-11-25T04:29:49.802Z",
+                  "activeSince": "2026-11-25T04:29:49.802Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -362,8 +362,8 @@
                   "title": "Invented loose questions",
                   "description": "Invented practice questions.",
                   "questionCount": 1,
-                  "importedAt": "2026-11-24T01:48:50.250Z",
-                  "activeSince": "2026-11-24T01:48:50.250Z",
+                  "importedAt": "2026-11-25T04:29:49.802Z",
+                  "activeSince": "2026-11-25T04:29:49.802Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -391,8 +391,8 @@
                   "title": "Invented cardiac drugs",
                   "description": "Invented practice questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-24T01:48:50.244Z",
-                  "activeSince": "2026-11-24T01:48:50.244Z",
+                  "importedAt": "2026-11-25T04:29:49.796Z",
+                  "activeSince": "2026-11-25T04:29:49.796Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -418,7 +418,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.263Z",
+      "at": "2026-11-25T04:29:49.816Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/70000000-0000-4000-8000-000000000001/course-exams",
@@ -453,7 +453,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.268Z",
+      "at": "2026-11-25T04:29:49.822Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -480,7 +480,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-24T01:48:50.268Z",
+          "answeredAt": "2026-11-25T04:29:49.822Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -492,7 +492,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.275Z",
+      "at": "2026-11-25T04:29:49.829Z",
       "request": {
         "method": "POST",
         "path": "/api/topics",
@@ -526,7 +526,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.278Z",
+      "at": "2026-11-25T04:29:49.833Z",
       "request": {
         "method": "PATCH",
         "path": "/api/courses/70000000-0000-4000-8000-000000000002",
@@ -545,7 +545,7 @@
           "code": "",
           "title": "Invented Spanish Verbs",
           "sortOrder": 2,
-          "archivedAt": "2026-11-24T01:48:50.278Z",
+          "archivedAt": "2026-11-25T04:29:49.833Z",
           "questionCount": 0,
           "weekCount": 0,
           "folderCount": 0,
@@ -560,7 +560,7 @@
     {
       "step": "request",
       "name": "semesters-with-topics",
-      "at": "2026-11-24T01:48:50.284Z",
+      "at": "2026-11-25T04:29:49.840Z",
       "request": {
         "method": "GET",
         "path": "/api/semesters",
@@ -605,7 +605,7 @@
               "name": "Semester 2",
               "startsOn": null,
               "endsOn": null,
-              "archivedAt": "2026-11-24T01:48:50.236Z",
+              "archivedAt": "2026-11-25T04:29:49.787Z",
               "courses": []
             }
           ],
@@ -632,7 +632,7 @@
               "code": "",
               "title": "Invented Spanish Verbs",
               "sortOrder": 2,
-              "archivedAt": "2026-11-24T01:48:50.278Z",
+              "archivedAt": "2026-11-25T04:29:49.833Z",
               "questionCount": 0,
               "weekCount": 0,
               "folderCount": 0,
@@ -649,7 +649,7 @@
     {
       "step": "request",
       "name": "topic",
-      "at": "2026-11-24T01:48:50.288Z",
+      "at": "2026-11-25T04:29:49.844Z",
       "request": {
         "method": "GET",
         "path": "/api/courses/70000000-0000-4000-8000-000000000001",
@@ -687,13 +687,13 @@
                   "title": "Invented cardiac drugs",
                   "description": "Invented practice questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-24T01:48:50.244Z",
-                  "activeSince": "2026-11-24T01:48:50.244Z",
+                  "importedAt": "2026-11-25T04:29:49.796Z",
+                  "activeSince": "2026-11-25T04:29:49.796Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 0,
-                  "lastAnsweredAt": "2026-11-24T01:48:50.268Z",
+                  "lastAnsweredAt": "2026-11-25T04:29:49.822Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -715,8 +715,8 @@
                   "title": "Invented loose questions",
                   "description": "Invented practice questions.",
                   "questionCount": 1,
-                  "importedAt": "2026-11-24T01:48:50.250Z",
-                  "activeSince": "2026-11-24T01:48:50.250Z",
+                  "importedAt": "2026-11-25T04:29:49.802Z",
+                  "activeSince": "2026-11-25T04:29:49.802Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -745,13 +745,13 @@
                   "title": "Invented cardiac drugs",
                   "description": "Invented practice questions.",
                   "questionCount": 2,
-                  "importedAt": "2026-11-24T01:48:50.244Z",
-                  "activeSince": "2026-11-24T01:48:50.244Z",
+                  "importedAt": "2026-11-25T04:29:49.796Z",
+                  "activeSince": "2026-11-25T04:29:49.796Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 1,
                   "fullyRightCount": 0,
-                  "lastAnsweredAt": "2026-11-24T01:48:50.268Z",
+                  "lastAnsweredAt": "2026-11-25T04:29:49.822Z",
                   "run": "midway",
                   "sitting": {
                     "answeredCount": 1
@@ -777,8 +777,8 @@
                   "title": "Invented loose questions",
                   "description": "Invented practice questions.",
                   "questionCount": 1,
-                  "importedAt": "2026-11-24T01:48:50.250Z",
-                  "activeSince": "2026-11-24T01:48:50.250Z",
+                  "importedAt": "2026-11-25T04:29:49.802Z",
+                  "activeSince": "2026-11-25T04:29:49.802Z",
                   "status": "imported",
                   "canRestore": false,
                   "answeredCount": 0,
@@ -817,7 +817,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:50.295Z",
+      "at": "2026-11-25T04:29:49.851Z",
       "request": {
         "method": "PUT",
         "path": "/api/me/place",
@@ -838,7 +838,7 @@
     {
       "step": "request",
       "name": "place-topic",
-      "at": "2026-11-24T01:48:50.299Z",
+      "at": "2026-11-25T04:29:49.856Z",
       "request": {
         "method": "GET",
         "path": "/api/me/place",
@@ -857,7 +857,7 @@
     {
       "step": "request",
       "name": "topic-create",
-      "at": "2026-11-24T01:48:50.301Z",
+      "at": "2026-11-25T04:29:49.858Z",
       "request": {
         "method": "POST",
         "path": "/api/topics",
@@ -891,7 +891,7 @@
     {
       "step": "request",
       "name": "topic-order",
-      "at": "2026-11-24T01:48:50.304Z",
+      "at": "2026-11-25T04:29:49.861Z",
       "request": {
         "method": "PUT",
         "path": "/api/topic-order",
@@ -948,7 +948,7 @@
               "code": "",
               "title": "Invented Spanish Verbs",
               "sortOrder": 3,
-              "archivedAt": "2026-11-24T01:48:50.278Z",
+              "archivedAt": "2026-11-25T04:29:49.833Z",
               "questionCount": 0,
               "weekCount": 0,
               "folderCount": 0,

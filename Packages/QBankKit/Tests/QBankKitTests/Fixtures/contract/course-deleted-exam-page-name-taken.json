@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "GET",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000901/deleted",
@@ -32,8 +32,8 @@
             }
           ],
           "pastExamCount": 1,
-          "deletedAt": "2026-11-24T01:48:49.544Z",
-          "undoUntil": "2026-12-24T01:48:49.544Z",
+          "deletedAt": "2026-11-25T04:29:49.072Z",
+          "undoUntil": "2026-12-25T04:29:49.072Z",
           "undoRefusal": "This course already has a page named Exam 2. Rename one of them, then bring this one back.",
           "deletedByAgent": null
         }

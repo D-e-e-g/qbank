@@ -12,10 +12,10 @@ enum ImportMedia {
 
     // MARK: Tables
 
-    /// Why a question's table cannot be drawn, or nil when it can (or there is none).
-    static func tableProblem(_ value: JSNode?) -> String? {
+    /// Why a question's table cannot be drawn, at its place below the table, or nil when it can (or there is none).
+    static func tableFinding(_ value: JSNode?) -> ImportFinding? {
         guard let value, value != .null else { return nil }
-        if case .failure(let problem) = parseTable(value) { return problem.text }
+        if case .failure(let problem) = parseTable(value) { return problem }
         return nil
     }
 
@@ -31,56 +31,68 @@ enum ImportMedia {
         let rows: [[String]]
     }
 
-    private static func parseTable(_ value: JSNode?) -> Result<Table, Problem> {
-        guard let object = value?.record else { return .failure(Problem(tableShape)) }
+    private static func parseTable(_ value: JSNode?) -> Result<Table, ImportFinding> {
+        guard let object = value?.record else { return .failure(ImportFinding(.tableShape, tableShape)) }
         let caption = object["caption"] ?? .null
         let head = object["head"] ?? .null
-        if caption != .null, !caption.isString { return .failure(Problem("table \"caption\" must be text")) }
+        if caption != .null, !caption.isString { return .failure(ImportFinding(.tableCaption, "table \"caption\" must be text", at: ["caption"])) }
         var headCells: [String] = []
         if head != .null {
-            guard let cells = cells(of: head) else { return .failure(Problem("table \"head\" must be a list of cell texts")) }
-            headCells = cells
+            switch cells(of: head) {
+            case .success(let cells): headCells = cells
+            case .failure(let bad): return .failure(ImportFinding(.tableHead, "table \"head\" must be a list of cell texts", at: ["head"] + bad.at))
+            }
         }
-        guard let rows = object["rows"]?.list, !rows.isEmpty else { return .failure(Problem(tableShape)) }
+        let noRows = ImportFinding(.tableShape, tableShape, at: ["rows"])
+        guard let rows = object["rows"]?.list, !rows.isEmpty else { return .failure(noRows) }
         var bodyRows: [[String]] = []
-        for row in rows {
-            guard let cells = cells(of: row) else { return .failure(Problem(tableShape)) }
-            bodyRows.append(cells)
+        for (index, row) in rows.enumerated() {
+            switch cells(of: row) {
+            case .success(let cells): bodyRows.append(cells)
+            case .failure(let bad): return .failure(ImportFinding(.tableShape, tableShape, at: ["rows", String(index)] + bad.at))
+            }
         }
         let width = max(headCells.count, bodyRows.map(\.count).max() ?? 0)
-        if width == 0 { return .failure(Problem(tableShape)) }
+        if width == 0 { return .failure(noRows) }
         func pad(_ cells: [String]) -> [String] { cells.count < width ? cells + Array(repeating: "", count: width - cells.count) : cells }
         let trimmed = caption.text.map(JS.trim) ?? ""
         return .success(Table(caption: trimmed.isEmpty ? nil : trimmed, head: headCells.isEmpty ? [] : pad(headCells), rows: bodyRows.map(pad)))
     }
 
-    private static func cells(of value: JSNode) -> [String]? {
-        guard let items = value.list else { return nil }
+    /// Where the first cell that cannot be text is, below a row: empty when the row is not a list.
+    private struct BadCell: Error {
+        let at: [String]
+    }
+
+    private static func cells(of value: JSNode) -> Result<[String], BadCell> {
+        guard let items = value.list else { return .failure(BadCell(at: [])) }
         var cells: [String] = []
-        for item in items {
+        for (index, item) in items.enumerated() {
             switch item {
             case .null: cells.append("")
             case .string(let text): cells.append(JS.trim(text))
             case .number(let number): cells.append(JS.numberString(number))
             case .bool(let flag): cells.append(flag ? "true" : "false")
-            case .array, .object: return nil
+            case .array, .object: return .failure(BadCell(at: [String(index)]))
             }
         }
-        return cells
+        return .success(cells)
     }
 
     // MARK: Images
 
-    /// Every reason a question's images cannot be drawn. Empty when they all can (or there are none).
-    static func imageProblems(_ value: JSNode?) -> [String] {
+    /// Every reason a question's images cannot be drawn, each at its place below the list. Empty when they all can (or there are none).
+    static func imageFindings(_ value: JSNode?) -> [ImportFinding] {
         guard let value, value != .null else { return [] }
-        guard let items = value.list else { return ["\"images\" must be a list"] }
-        var problems: [String] = []
-        if items.count > imagesPerQuestion { problems.append("has \(items.count) images; the limit is \(imagesPerQuestion)") }
-        for (index, item) in items.enumerated() {
-            if case .failure(let problem) = parseImage(item, index + 1) { problems.append(problem.text) }
+        guard let items = value.list else { return [ImportFinding(.imagesNotList, "\"images\" must be a list")] }
+        var found: [ImportFinding] = []
+        if items.count > imagesPerQuestion {
+            found.append(ImportFinding(.imagesOver, "has \(items.count) images; the limit is \(imagesPerQuestion)"))
         }
-        return problems
+        for (index, item) in items.enumerated() {
+            if case .failure(let problem) = parseImage(item, index + 1) { found.append(problem.below([String(index)])) }
+        }
+        return found
     }
 
     /// The images a question body carries that are safe to draw, at most four, as the set answers them.
@@ -103,40 +115,36 @@ enum ImportMedia {
         let at: String
     }
 
-    private static func parseImage(_ value: JSNode, _ number: Int) -> Result<Image, Problem> {
-        let name = "image \(number)"
-        guard let object = value.record else { return .failure(Problem("\(name) is not an object")) }
-        guard let alt = object["alt"]?.filledText else { return .failure(Problem("\(name) needs \"alt\": a short description of what it shows")) }
+    /// The image, or why it cannot be drawn, at its place below the image.
+    private static func parseImage(_ value: JSNode, _ number: Int) -> Result<Image, ImportFinding> {
+        let name = "image \(number) "
+        func refuse(_ rule: FormatRule, _ words: String, at place: [String] = []) -> Result<Image, ImportFinding> {
+            .failure(ImportFinding(rule, name + words, at: place))
+        }
+        guard let object = value.record else { return refuse(.imageNotObject, "is not an object") }
+        guard let alt = object["alt"]?.filledText else { return refuse(.imageNeedsAlt, "needs \"alt\": a short description of what it shows", at: ["alt"]) }
         let caption = object["caption"] ?? .null
-        if caption != .null, !caption.isString { return .failure(Problem("\(name) \"caption\" must be text")) }
+        if caption != .null, !caption.isString { return refuse(.imageCaption, "\"caption\" must be text", at: ["caption"]) }
         let placed = object["at"] ?? .null
         let at = placed == .null ? "stem" : (placed.text ?? "")
-        if at != "stem" && at != "rationale" {
-            return .failure(Problem("\(name) \"at\" must be \"stem\" or \"rationale\""))
-        }
+        if at != "stem" && at != "rationale" { return refuse(.imageAt, "\"at\" must be \"stem\" or \"rationale\"", at: ["at"]) }
         let source = object["src"] ?? .null
         let markup = object["svg"] ?? .null
         if (source != .null) == (markup != .null) {
-            return .failure(Problem("\(name) needs either \"src\" (a base64 data URL) or \"svg\" (SVG markup), not both"))
+            return refuse(.imageSource, "needs either \"src\" (a base64 data URL) or \"svg\" (SVG markup), not both")
         }
         let url: String
         if markup != .null {
-            guard let svg = markup.text else { return .failure(Problem("\(name) \"svg\" must be text")) }
-            if let problem = svgProblem(svg, bytes: svg.utf8.count) { return .failure(Problem("\(name) \(problem)")) }
+            guard let svg = markup.text else { return refuse(.imageSvgText, "\"svg\" must be text", at: ["svg"]) }
+            if let problem = svgProblem(svg, bytes: svg.utf8.count) { return .failure(problem.below(["svg"], prefix: name)) }
             url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(JS.trim(svg))
         } else {
-            guard let src = source.text else { return .failure(Problem("\(name) \"src\" must be text")) }
-            if let problem = dataURLProblem(JS.trim(src)) { return .failure(Problem("\(name) \(problem)")) }
+            guard let src = source.text else { return refuse(.imageSrcText, "\"src\" must be text", at: ["src"]) }
+            if let problem = dataURLProblem(JS.trim(src)) { return .failure(problem.below(["src"], prefix: name)) }
             url = JS.trim(src)
         }
         let trimmedCaption = caption.text.map(JS.trim) ?? ""
         return .success(Image(url: url, alt: JS.trim(alt), caption: trimmedCaption.isEmpty ? nil : trimmedCaption, at: at))
-    }
-
-    /// The refusal text for one table or image, kept apart from a success so the two cannot be mixed up.
-    private struct Problem: Error {
-        let text: String
-        init(_ text: String) { self.text = text }
     }
 
     // MARK: Data URLs
@@ -158,22 +166,25 @@ enum ImportMedia {
         return (type, String(rest[paramsStart..<at]), String(rest[(at + 1)...]))
     }
 
-    private static func dataURLProblem(_ src: String) -> String? {
-        guard let parts = splitDataURL(src) else { return "\"src\" must be a data URL such as data:image/png;base64,..." }
+    /// Why `src` is not an image the screens can draw, in words that follow the image's name, or nil when it is.
+    private static func dataURLProblem(_ src: String) -> ImportFinding? {
+        guard let parts = splitDataURL(src) else { return ImportFinding(.srcNotDataURL, "\"src\" must be a data URL such as data:image/png;base64,...") }
         let type = parts.type.lowercased()
         let params = parts.params.lowercased().split(separator: ";", omittingEmptySubsequences: false).map(String.init)
         let payload = parts.payload
-        guard let kind = imageKinds[type] else { return "must be PNG, JPEG, WebP, or SVG (found \(type))" }
-        if !params.contains("base64") { return "\"src\" must be base64 (data:\(type);base64,...). Put SVG markup in \"svg\" instead" }
+        guard let kind = imageKinds[type] else { return ImportFinding(.imageTypeNotAccepted, "must be PNG, JPEG, WebP, or SVG (found \(type))") }
+        if !params.contains("base64") {
+            return ImportFinding(.srcNotBase64, "\"src\" must be base64 (data:\(type);base64,...). Put SVG markup in \"svg\" instead")
+        }
         let letters = Array(payload.utf8)
-        if letters.isEmpty || !isBase64(letters) || letters.count % 4 == 1 { return "\"src\" is not valid base64" }
+        if letters.isEmpty || !isBase64(letters) || letters.count % 4 == 1 { return ImportFinding(.srcBadBase64, "\"src\" is not valid base64") }
         let padding = payload.hasSuffix("==") ? 2 : (payload.hasSuffix("=") ? 1 : 0)
         let bytes = letters.count * 3 / 4 - padding
         if bytes > imageMaxBytes { return sizeProblem(bytes) }
         if type == "image/svg+xml" {
             return svgProblem(String(String.UnicodeScalarView(decodeBase64(letters).map { Unicode.Scalar($0) })), bytes: bytes)
         }
-        return startsLike(type, decodeBase64(Array(letters.prefix(16)))) ? nil : "is not a real \(kind) file"
+        return startsLike(type, decodeBase64(Array(letters.prefix(16)))) ? nil : ImportFinding(.imageNotReal, "is not a real \(kind) file")
     }
 
     /// `/^[A-Za-z0-9+/]+={0,2}$/`
@@ -224,20 +235,20 @@ enum ImportMedia {
         }
     }
 
-    private static func sizeProblem(_ bytes: Int) -> String {
-        "is \(Int((Double(bytes) / 1024).rounded(.up))) KB; the limit is \(imageMaxBytes / 1024) KB"
+    private static func sizeProblem(_ bytes: Int) -> ImportFinding {
+        ImportFinding(.imageTooBig, "is \(Int((Double(bytes) / 1024).rounded(.up))) KB; the limit is \(imageMaxBytes / 1024) KB")
     }
 
     // MARK: SVG
 
-    private static func svgProblem(_ svg: String, bytes: Int) -> String? {
+    private static func svgProblem(_ svg: String, bytes: Int) -> ImportFinding? {
         if bytes > imageMaxBytes { return sizeProblem(bytes) }
         let text = Array(svg.lowercased().unicodeScalars)
         func has(_ word: String) -> Bool { JS.includes(text, word) }
-        if !has("<svg") { return "SVG markup must contain an <svg> element" }
+        if !has("<svg") { return ImportFinding(.svgNoElement, "SVG markup must contain an <svg> element") }
         let words = ["<script", "<foreignobject", "<!entity", "javascript:", "@import"]
         if words.contains(where: has) || hasEventHandler(text) || hasLink(text) || hasURLFunction(text) {
-            return "SVG has a script, an event handler, or a link to another file; remove it"
+            return ImportFinding(.svgUnsafe, "SVG has a script, an event handler, or a link to another file; remove it")
         }
         return nil
     }

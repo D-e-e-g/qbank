@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "request": {
     "method": "GET",
     "path": "/api/exams/e0000000-0000-4000-8000-000000000702/delete-preview",
@@ -13,7 +13,7 @@
     "body": {
       "examId": "e0000000-0000-4000-8000-000000000702",
       "courseId": "c0000000-0000-4000-8000-000000000701",
-      "startedAt": "2026-11-24T01:48:48.044Z",
+      "startedAt": "2026-11-25T04:29:47.493Z",
       "finishedAt": null,
       "questionCount": 3,
       "answeredCount": 0,
@@ -51,7 +51,7 @@
         "body": "You answered none of its questions, so your progress stays as it is. You can undo this for 30 days."
       },
       "refusal": "This exam is still going. Finish or leave it, then delete it.",
-      "confirm": "73d0a4fd853f2c8d",
+      "confirm": "ae71eccdb046017b",
       "undoDays": 30
     }
   }

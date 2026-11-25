@@ -5,13 +5,16 @@
 // from the iPhone repository. Each scenario boots its own throwaway server over an in-memory
 // database, signs in with invented accounts, drives the real routes (Make questions and exam
 // twins with the server's fake model), and keeps the exchanges it names. Every fixture is written
-// stamped with the commit, openapi.json is copied, and pin.json names the commit. Each world is also
-// written as a transcript in transcripts/: all its calls in order, named or not, so a replay of the
-// requests meets the same state the recording did. It does not fetch or modify the checkout, and it
-// fails when a fixture or a transcript in the directory has no scenario.
+// stamped with the commit, openapi.json is copied, and pin.json names the commit. The server's
+// import conformance corpus is copied byte for byte, and import-cases.pin.json names the same
+// commit and the copy's hash. Each world is also written as a transcript in transcripts/: all its
+// calls in order, named or not, so a replay of the requests meets the same state the recording did.
+// It does not fetch or modify the checkout, and it fails when a fixture or a transcript in the
+// directory has no scenario.
 
-import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { recordAccountDeletion } from "./account";
 import { recordAdmin } from "./admin";
 import { recordAgents } from "./agents";
@@ -37,6 +40,7 @@ const IMAGES: Record<string, string> = {
   "8e7eef46a434e1de1bb679021e51b6c40543455c": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:bf1aeedcb4a4082006ef0554f0977515e24d030b3a25ccfc39349915bf9ec39e",
   "6acfbcfcd662769400ce1cd99512bfa6ae4b0c50": "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:6a50b3571d305bbd6696e1e26dbb7d07101d27b84c307f0f8d21e5df90654a5c",
   f7c237391ee5d956070660c5f09577f75873ca63: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:2618da990fad47672234586c261354b7c4ec82e6c3b17af37956654f2c108878",
+  cfb52a360d6b8be5b602eb3431e2fab893bb672e: "ghcr.io/d-e-e-g/nclex-qbank-api@sha256:4d54c9bbc2337d3ba4312933e360707724dd5b1bd89cc83ce1b794fc3f00b53e",
 };
 
 const SCENARIOS: (() => Promise<World[]>)[] = [recordAdmin, recordSessions, recordAccountDeletion, recordAgents, recordPractice, recordOrganizing, recordDeletion, recordTopics, recordMakeQuestions, recordTwins];
@@ -80,8 +84,16 @@ for (const [name, fixture] of recorded) {
 for (const [name, transcript] of transcripts) {
   writeFileSync(join(transcriptDir, `${name}.json`), `${JSON.stringify(transcript, null, 2)}\n`);
 }
+const repository = "D-e-e-g/qbank-server";
 copyFileSync(openapiPath, join(fixturesDir, "openapi.json"));
-writeFileSync(join(fixturesDir, "pin.json"), `${JSON.stringify({ repository: "D-e-e-g/qbank-server", commit, path: "apps/api/openapi.json", image }, null, 2)}\n`);
+writeFileSync(join(fixturesDir, "pin.json"), `${JSON.stringify({ repository, commit, path: "apps/api/openapi.json", image }, null, 2)}\n`);
+
+// openapi.json is at apps/api/ of the checkout, so the checkout is two directories up.
+const corpusPath = "packages/questions/conformance/import-cases.json";
+const corpus = readFileSync(join(dirname(openapiPath), "../..", corpusPath));
+writeFileSync(join(fixturesDir, "import-cases.json"), corpus);
+const sha256 = createHash("sha256").update(corpus).digest("hex");
+writeFileSync(join(fixturesDir, "import-cases.pin.json"), `${JSON.stringify({ repository, commit, path: corpusPath, sha256 }, null, 2)}\n`);
 console.log(`recorded ${String(recorded.size)} fixtures and ${String(transcripts.size)} transcripts live at ${commit}`);
 if (unrecorded.length > 0) {
   throw new Error(`No scenario records these fixtures: ${unrecorded.join(", ")}`);

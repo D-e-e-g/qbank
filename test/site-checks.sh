@@ -3,7 +3,8 @@
 # and the workflow that publishes it.
 #
 # Run by test/release-checks.sh. Credential-free and network-free: it reads
-# tracked files and renders the privacy page from the policy.
+# tracked files, and renders the privacy page from the policy and the format page
+# from the pinned contract.
 # shellcheck disable=SC2016 # the Ruby programs are single-quoted on purpose
 set -u
 
@@ -38,7 +39,7 @@ else
   fail "$SITE/CNAME is qbank-app.dimitrygallego.com on one line"
 fi
 
-for page in "$SITE/privacy/index.html" "$SITE/support/index.html"; do
+for page in "$SITE/privacy/index.html" "$SITE/support/index.html" "$SITE/format/index.html"; do
   if grep -qF "mailto:$CONTACT" "$page" 2>/dev/null && grep -qF ">$CONTACT<" "$page"; then
     pass "$page shows the contact address $CONTACT"
   else
@@ -91,52 +92,12 @@ else
   fail "site/privacy/index.html is docs/privacy-policy.md rendered (run scripts/render-privacy-page.rb)"
 fi
 
-# --- The format page describes the API's import check -----------------------------
+# --- The format page is the contract's description -------------------------------
 
-FORMAT="$SITE/format/index.html"
-OPENAPI=Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json
-
-# The oracle for the types is the server's published API (the pinned OpenAPI
-# fixture): the type enum of DraftQuestion, a question as the importer stores it.
-# The oracle for the limits is the server's import check
-# (packages/questions/src/media.ts in the private server repository): at most 4
-# images per question, each at most 300 KB after decoding.
-format_check="$(ruby -rjson -rcgi -e '
-  html, api = File.read(ARGV[0]), JSON.parse(File.read(ARGV[1]))
-  types = api.dig("components", "schemas", "DraftQuestion", "properties", "type", "enum") or abort "#{ARGV[1]}: no DraftQuestion type enum"
-  section = lambda do |title|
-    html[%r{<h2>#{Regexp.escape(title)}</h2>(.*?)(?=<h2>|</main>)}m, 1] or abort "no #{title.inspect} section"
-  end
-  rows = section.("The nine question formats").scan(%r{<tr><td><code>([^<]+)</code></td>}).flatten
-  abort "the format table lists #{rows.inspect}, the API #{types.inspect}" unless rows.sort == types.sort && rows.uniq == rows
-  type_row = section.("Every question")[%r{<tr><td><code>type</code></td><td>(.*?)</td></tr>}m, 1] or abort "no type row under Every question"
-  listed = type_row.scan(%r{<code>([^<]+)</code>}).flatten
-  abort "the type row lists #{listed.inspect}, the API #{types.inspect}" unless listed.sort == types.sort && listed.uniq == listed
-  media = CGI.unescapeHTML(section.("Tables and pictures").gsub(/<[^>]+>/, ""))
-  count = media[/images is a list of at most (\d+) pictures per question/, 1]
-  abort "the picture count limit is #{count.inspect}, the importer 4" unless count == "4"
-  size = media[/An image may be at most (\d+) KB after decoding/, 1]
-  abort "the image size limit is #{size.inspect} KB, the importer 300" unless size == "300"
-' "$FORMAT" "$OPENAPI" 2>&1)"
-# shellcheck disable=SC2181 # the program's output is the failure message
-if [ $? -eq 0 ]; then
-  pass "the format page lists the API's nine types and the importer's image limits"
+if ruby scripts/render-format-page.rb --check; then
+  pass "site/format/index.html is the pinned contract's question file format rendered"
 else
-  fail "the format page lists the API's nine types and the importer's image limits: $format_check"
-fi
-
-ruby_example="$(ruby -rjson -rcgi -e '
-  html = File.read(ARGV[0])
-  block = html[%r{<pre><code>(.*?)</code></pre>}m, 1] or abort "no example"
-  data = JSON.parse(CGI.unescapeHTML(block))
-  abort "no questions" unless data["questions"].is_a?(Array) && !data["questions"].empty?
-  data["questions"].each { |q| abort "#{q["id"]}: no ask" unless q["ask"].is_a?(String) && !q["ask"].strip.empty? }
-' "$FORMAT" 2>&1)"
-# shellcheck disable=SC2181 # the program's output is the failure message
-if [ $? -eq 0 ]; then
-  pass "the format page's example is JSON whose questions each have an ask"
-else
-  fail "the format page's example is JSON whose questions each have an ask: $ruby_example"
+  fail "site/format/index.html is the pinned contract's question file format rendered (run scripts/render-format-page.rb)"
 fi
 
 # --- The Pages workflow ---------------------------------------------------------
@@ -151,6 +112,10 @@ else
     abort "permissions must be exactly pages: write and id-token: write (got #{wf["permissions"].inspect})" unless wf["permissions"] == { "pages" => "write", "id-token" => "write" }
     abort "triggers must be push and workflow_dispatch (got #{on.keys.inspect})" unless on.keys.map(&:to_s).sort == %w[push workflow_dispatch]
     abort "push must be branches: [main] (got #{on["push"].inspect})" unless on["push"]["branches"] == ["main"]
+    renderer = "scripts/render-format-page.rb"
+    inputs = ["site/**", renderer, "scripts/site_page.rb", "Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json"]
+    missed = inputs - Array(on["push"]["paths"])
+    abort "a push that changes #{missed.inspect} must publish" unless missed.empty?
     jobs = wf["jobs"] || {}
     abort "no jobs" if jobs.empty?
     jobs.each do |name, job|
@@ -160,6 +125,8 @@ else
     steps = jobs.values.flat_map { |job| job["steps"] || [] }
     upload = steps.find { |step| step["uses"].to_s.start_with?("actions/upload-pages-artifact@") }
     abort "no step uploads site/" unless upload && upload.dig("with", "path") == "site"
+    render = steps.index { |step| step["run"].to_s.strip == "ruby #{renderer}" }
+    abort "no step runs ruby #{renderer} before site/ is uploaded" unless render && render < steps.index(upload)
     abort "no step deploys with actions/deploy-pages" unless steps.any? { |step| step["uses"].to_s.start_with?("actions/deploy-pages@") }
     strings = lambda do |node|
       case node
@@ -172,9 +139,9 @@ else
     used = strings.(wf).grep(/\$\{\{[^}]*\bsecrets\b/)
     abort "the workflow uses secrets: #{used.inspect}" unless used.empty?
   ' "$PAGES" 2>&1; then
-    pass "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
+    pass "$PAGES renders the format page and publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   else
-    fail "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
+    fail "$PAGES renders the format page and publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   fi
 fi
 

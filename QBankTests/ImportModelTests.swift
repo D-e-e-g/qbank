@@ -262,7 +262,8 @@ struct ImportModelTests {
 
     static func report(ok: Bool = true, questions: Int = 3, terms: Int = 2, errors: [String] = []) -> String {
         let list = errors.map { "\"\($0)\"" }.joined(separator: ",")
-        return #"{"ok":\#(ok),"title":"Invented Sleep","description":"","kind":"practice","questionCount":\#(questions),"termCount":\#(terms),"formats":[{"type":"single","label":"Single answer","count":\#(questions)}],"errors":[\#(list)],"warnings":[]}"#
+        let issues = errors.map { #"{"severity":"error","code":"invented_rule","question":null,"path":"","message":"\#($0)"}"# }.joined(separator: ",")
+        return #"{"ok":\#(ok),"title":"Invented Sleep","description":"","kind":"practice","questionCount":\#(questions),"termCount":\#(terms),"formats":[{"type":"single","label":"Single answer","count":\#(questions)}],"errors":[\#(list)],"warnings":[],"issues":[\#(issues)]}"#
     }
 
     static func imported(kind: String = "imported", folder: String = "u1", folderName: String = "Unsorted", page: String? = nil) -> String {

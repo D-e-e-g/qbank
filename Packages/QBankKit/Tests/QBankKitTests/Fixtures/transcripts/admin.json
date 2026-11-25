@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "f7c237391ee5d956070660c5f09577f75873ca63",
+  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
   "world": "admin",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:34.776Z",
+      "at": "2026-11-25T04:29:33.961Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:34.776Z"
+          "expiresAt": "2027-12-30T04:29:33.961Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:34.875Z",
+      "at": "2026-11-25T04:29:34.064Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -76,14 +76,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:34.875Z"
+          "expiresAt": "2027-12-30T04:29:34.064Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-24T01:48:34.966Z",
+      "at": "2026-11-25T04:29:34.157Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -115,14 +115,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-29T01:48:34.966Z"
+          "expiresAt": "2027-12-30T04:29:34.157Z"
         }
       }
     },
     {
       "step": "request",
       "name": "admin-students",
-      "at": "2026-11-24T01:48:35.013Z",
+      "at": "2026-11-25T04:29:34.204Z",
       "request": {
         "method": "GET",
         "path": "/api/admin/students",
@@ -139,13 +139,13 @@
               "id": "synthetic-user-2",
               "email": "student@example.com",
               "name": "Sam Student",
-              "createdAt": "2026-11-24T01:48:34.831Z"
+              "createdAt": "2026-11-25T04:29:34.019Z"
             },
             {
               "id": "synthetic-user-3",
               "email": "second.user@example.com",
               "name": "Second User",
-              "createdAt": "2026-11-24T01:48:34.922Z"
+              "createdAt": "2026-11-25T04:29:34.113Z"
             }
           ],
           "viewingId": "synthetic-user-2"
@@ -155,7 +155,7 @@
     {
       "step": "request",
       "name": "admin-read-only",
-      "at": "2026-11-24T01:48:35.017Z",
+      "at": "2026-11-25T04:29:34.209Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",

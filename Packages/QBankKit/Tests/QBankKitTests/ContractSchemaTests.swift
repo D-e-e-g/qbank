@@ -105,7 +105,7 @@ struct ContractSchemaTests {
         }
     }
 
-    private struct Pin: Decodable {
+    struct Pin: Decodable {
         let repository: String
         let commit: String
         let path: String

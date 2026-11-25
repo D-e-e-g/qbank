@@ -13,6 +13,7 @@ nonisolated struct FakeImportCheck {
     let formats: [(type: QuestionType, count: Int)]
     let errors: [String]
     let warnings: [String]
+    let issues: [ImportReport.Issue]
     private let labels: [String: String]
 
     var ok: Bool { errors.isEmpty }
@@ -23,8 +24,18 @@ nonisolated struct FakeImportCheck {
             "ok": ok, "title": title.map { $0 as Any } ?? NSNull(), "description": description, "kind": kind,
             "questionCount": questionCount, "termCount": termCount,
             "formats": formats.map { ["type": $0.type.rawValue, "label": labels[$0.type.rawValue] ?? $0.type.rawValue, "count": $0.count] },
-            "errors": errors, "warnings": warnings,
+            "errors": errors, "warnings": warnings, "issues": issues.map(Self.json),
         ]
+    }
+
+    private static func json(_ issue: ImportReport.Issue) -> [String: Any] {
+        let question: Any =
+            issue.question.map { question in
+                var fields: [String: Any] = ["index": question.index]
+                fields["id"] = question.id
+                return fields
+            } ?? NSNull()
+        return ["severity": issue.severity.rawValue, "code": issue.code, "question": question, "path": issue.path, "message": issue.message]
     }
 
     init(source: String) {
@@ -38,6 +49,7 @@ nonisolated struct FakeImportCheck {
         labels = Dictionary(report.formats.map { ($0.type, $0.label) }, uniquingKeysWith: { first, _ in first })
         errors = report.errors
         warnings = report.warnings
+        issues = report.issues
     }
 
     /// A small question file for UI tests and review: three invented questions in two formats.
