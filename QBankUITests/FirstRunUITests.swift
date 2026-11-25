@@ -36,6 +36,8 @@ final class FirstRunUITests: XCTestCase {
         tapVisible(sample, in: app)
         XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("1 of 10"))
+        XCTAssertTrue(app.buttons["practice.image"].appears(timeout: 5), "the first question shows its diagram")
+        attach(app, "first launch, the first question")
         tapVisible(app.buttons["practice.option.1"], in: app)
         app.buttons["practice.check"].tap()
         let feedback = app.descendants(matching: .any)["practice.feedback"]

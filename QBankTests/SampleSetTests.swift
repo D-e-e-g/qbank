@@ -54,6 +54,20 @@ struct SampleSetTests {
         #expect(trueOrFalse.count == 2)
     }
 
+    @Test func itsDiagramsAreOnesTheAppDraws() throws {
+        let file = try JSONDecoder().decode(JSONValue.self, from: Data(source().utf8))
+        let questions = try #require(file["questions"]?.arrayValue)
+        var shown: [String: [QuestionImage.Placement]] = [:]
+        for question in questions {
+            guard let listed = question["images"] else { continue }
+            let id = try #require(question["id"]?.stringValue)
+            let images = QuestionImage.read(listed)
+            #expect(images.count == listed.arrayValue?.count, "\(id) has an image the app would leave out")
+            shown[id] = images.map(\.placement)
+        }
+        #expect(shown == ["G1": [.stem], "G3": [.rationale]], "one diagram with the question, one with the answer")
+    }
+
     // MARK: Filing it
 
     @Test func aNewFreeBankIsGivenItAsAnOrdinarySet() async throws {
