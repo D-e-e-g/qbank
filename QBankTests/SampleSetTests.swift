@@ -13,14 +13,7 @@ struct SampleSetTests {
     }
 
     private func freeApp(bank: LocalBank, sampleSet: String?) -> AppModel {
-        let store = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
-        let client = QBankClient(
-            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: StubServer(), sessionStore: store)
-        let defaults = TestApp.freshDefaults()
-        return AppModel(
-            client: client, kind: .free, bank: bank, sampleSet: sampleSet, look: LookStore(defaults: defaults),
-            lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
-            aiConsent: AIConsentStore(defaults: defaults), storage: .memory(), connection: Connection())
+        TestApp.free(bank: bank, sampleSet: sampleSet).0
     }
 
     // MARK: The file

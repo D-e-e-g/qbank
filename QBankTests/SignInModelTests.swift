@@ -73,11 +73,14 @@ struct SignInModelTests {
         #expect(server.requests.isEmpty)
     }
 
+    /// The first screen says it above both doors, and the email door starts with nothing to say.
     @Test func showsWhyTheLastSessionEnded() async {
         let server = StubServer(["GET /api/session": .error(401, "unauthenticated", "Sign in to continue.")])
         let (app, _) = TestApp.make(server, account: .student())
         await app.refreshSession()
-        #expect(SignInModel(app: app).problem == "Your session ended. Sign in again.")
+        #expect(app.route == .signedOut)
+        #expect(app.signedOutReason == "Your session ended. Sign in again.")
+        #expect(SignInModel(app: app).problem == nil)
     }
 }
 

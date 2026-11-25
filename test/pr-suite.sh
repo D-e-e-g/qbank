@@ -31,9 +31,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # The smoke walk, chosen by hand. One short test for each main screen, the
-# same six on every quick check: sign in and Home, the course screen, one
-# practice question, starting an exam, an import, and a folder.
+# same seven on every quick check: Sign in with Apple to the bank on the phone,
+# sign in with a password and Home, the course screen, one practice question,
+# starting an exam, an import, and a folder.
 smoke_tests=(
+  "QBankUITests/WelcomeUITests/testSignInWithAppleOpensTheBankOnThisIPhone"
   "QBankUITests/QBankUITests/testSignInLandsOnHerLastCourseAndSignsOut"
   "QBankUITests/QBankUITests/testTilesOpenExamReviewAndTerms"
   "QBankUITests/SataAllCorrectUITests/testPickingEveryOptionIsFullyCorrect"

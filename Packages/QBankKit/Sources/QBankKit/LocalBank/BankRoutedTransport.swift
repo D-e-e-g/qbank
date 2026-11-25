@@ -40,3 +40,12 @@ public struct BankRoutedTransport: HTTPTransport {
         return bankResources.contains(String(parts[1]))
     }
 }
+
+/// The account's side of a bank on the phone while the server has not answered a Sign in with Apple:
+/// there is no session on the server to send, so every request of the account fails here, before the
+/// network, as one that could not reach QBank. It never answers, so it never signs anyone out.
+struct NoServerSession: HTTPTransport {
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        throw URLError(.userAuthenticationRequired)
+    }
+}

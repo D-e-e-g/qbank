@@ -55,7 +55,7 @@ struct FakeServerRoutesTests {
 
     // MARK: Accounts and the admin
 
-    @Test func everyCallButSignInAndSignUpNeedsASession() async throws {
+    @Test func everyCallButSigningInNeedsASession() async throws {
         var calls = Calls(FakeQBankServer(signedIn: false))
         calls.token = nil
         let none = try await calls.call("GET", "/api/semesters")
@@ -64,6 +64,28 @@ struct FakeServerRoutesTests {
         #expect(none.message == "Sign in to continue.")
         calls.token = "not-a-session"
         #expect(try await calls.call("GET", "/api/session").status == 401)
+    }
+
+    @Test func theFakeServerTakesAnAppleTokenOnceAndOnlyWithItsNonce() async throws {
+        var calls = Calls(FakeQBankServer(signedIn: false))
+        calls.token = nil
+        let nonce = AppleSignInNonce()
+        let token = FakeQBankServer.appleToken(user: "004000.fakeapple.0004", email: "four@privaterelay.appleid.com", hashedNonce: nonce.hashed)
+        let otherNonce = AppleSignInNonce().value
+        let wrong = try await calls.call("POST", "/api/sign-in/apple", ["identityToken": token, "nonce": otherNonce])
+        #expect(wrong.status == 401)
+        #expect(wrong.error == "invalid_apple_token")
+        let made = try await calls.call("POST", "/api/sign-in/apple", ["identityToken": token, "nonce": nonce.value])
+        #expect(made.status == 201)
+        #expect((made["user"] as? [String: Any])?["origin"] as? String == "store")
+        let replayed = try await calls.call("POST", "/api/sign-in/apple", ["identityToken": token, "nonce": nonce.value])
+        #expect(replayed.status == 401, "a token is taken once")
+
+        let again = AppleSignInNonce()
+        let returning = FakeQBankServer.appleToken(user: "004000.fakeapple.0004", email: "four@privaterelay.appleid.com", hashedNonce: again.hashed)
+        let signedIn = try await calls.call("POST", "/api/sign-in/apple", ["identityToken": returning, "nonce": again.value])
+        #expect(signedIn.status == 200, "the same Apple identity signs in to the account it has")
+        #expect((made["user"] as? [String: Any])?["id"] as? String == (signedIn["user"] as? [String: Any])?["id"] as? String)
     }
 
     @Test func aTemporaryPasswordAllowsOnlyTheAccountRoutes() async throws {

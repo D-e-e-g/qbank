@@ -36,10 +36,20 @@ struct SettingsView: View {
     @State private var exportProblem: String?
     /// The bank's file, while the share sheet is open over Settings.
     @State private var exported: SharedFile?
+    /// Sign in with Apple again, while QBank's server has not confirmed her sign-in.
+    @State private var apple: AppleSignInModel
 
     init(app: AppModel) {
         self.app = app
         _catalog = State(initialValue: CatalogModel(app: app))
+        _apple = State(initialValue: AppleSignInModel(app: app))
+    }
+
+    /// Who the account rows say is signed in: the account's email, or her Apple Account when Apple
+    /// shared none, or the server named it `<Apple's id>@apple.invalid`, which reaches no one.
+    static func signedInName(_ account: Account?) -> String {
+        guard let email = account?.email, !email.isEmpty, !email.hasSuffix("@apple.invalid") else { return "Your Apple Account" }
+        return email
     }
 
     var body: some View {
@@ -124,7 +134,7 @@ struct SettingsView: View {
                 Text("Signed in as")
                     .qbankFont(.footnote)
                     .foregroundStyle(.qbank(.text3))
-                Text(app.account?.email ?? "")
+                Text(Self.signedInName(app.account))
                     .qbankFont(.body)
                     .foregroundStyle(.qbank(.text1))
             }
@@ -133,6 +143,9 @@ struct SettingsView: View {
             .padding(.vertical, 11)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("settings.account")
+            if app.awaitsServer {
+                awaitingServer
+            }
             if app.kind.hasPassword {
                 NavigationLink(value: SettingsRoute.changePassword) {
                     QBankListRow("Change password", showsChevron: true)
@@ -173,31 +186,9 @@ struct SettingsView: View {
             } message: {
                 Text(waitingWarning)
             }
-            // Always asked, as on the web: it signs her out of every device, this one included.
-            Button {
-                asksToSignOutEverywhere = true
-            } label: {
-                QBankListRow("Sign out everywhere", isDestructive: true) {
-                    if isSigningOutEverywhere {
-                        ProgressView()
-                    }
-                }
-            }
-            .buttonStyle(.qbankRow)
-            .disabled(isLeaving)
-            .accessibilityIdentifier("settings.signOutEverywhere")
-            .confirmationDialog(
-                "Sign out of QBank on every device, including this one?",
-                isPresented: $asksToSignOutEverywhere,
-                titleVisibility: .visible
-            ) {
-                let isWaiting = app.offline?.waiting.isEmpty == false
-                Button(isWaiting ? "Sign out everywhere and delete" : "Sign out everywhere", role: .destructive, action: signOutEverywhere)
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                if app.offline?.waiting.isEmpty == false {
-                    Text(waitingWarning)
-                }
+            // With no session on the server yet, there is nowhere else to sign out of.
+            if !app.awaitsServer {
+                signOutEverywhereRow
             }
             if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
                 NavigationLink(value: SettingsRoute.deleteAccount) {
@@ -208,6 +199,62 @@ struct SettingsView: View {
                 .accessibilityIdentifier("settings.deleteAccount")
             }
         }
+    }
+
+    // Always asked, as on the web: it signs her out of every device, this one included.
+    private var signOutEverywhereRow: some View {
+        Button {
+            asksToSignOutEverywhere = true
+        } label: {
+            QBankListRow("Sign out everywhere", isDestructive: true) {
+                if isSigningOutEverywhere {
+                    ProgressView()
+                }
+            }
+        }
+        .buttonStyle(.qbankRow)
+        .disabled(isLeaving)
+        .accessibilityIdentifier("settings.signOutEverywhere")
+        .confirmationDialog(
+            "Sign out of QBank on every device, including this one?",
+            isPresented: $asksToSignOutEverywhere,
+            titleVisibility: .visible
+        ) {
+            let isWaiting = app.offline?.waiting.isEmpty == false
+            Button(isWaiting ? "Sign out everywhere and delete" : "Sign out everywhere", role: .destructive, action: signOutEverywhere)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if app.offline?.waiting.isEmpty == false {
+                Text(waitingWarning)
+            }
+        }
+    }
+
+    /// QBank's server has not confirmed her Sign in with Apple: what that means, what it last said,
+    /// and Sign in with Apple again to finish now.
+    private var awaitingServer: some View {
+        VStack(alignment: .leading, spacing: QBankSpacing.space3) {
+            Text(Self.serverStatusLine(app))
+                .qbankFont(.footnote)
+                .foregroundStyle(.qbank(.text2))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("settings.awaitsServer")
+            if let problem = apple.problem ?? app.serverSignInProblem {
+                ProblemText(text: problem)
+            }
+            AppleSignInButton(type: .continue, isWorking: apple.isSigningIn, identifier: "settings.continueWithApple") { window in
+                Task { await apple.signIn(over: window) }
+            }
+            .disabled(isLeaving)
+        }
+        .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
+        .padding(.vertical, 11)
+    }
+
+    /// What Settings says while QBank's server has not confirmed her Sign in with Apple: that QBank
+    /// tries again on its own while a kept sign-in waits, or that only a new one connects this phone.
+    static func serverStatusLine(_ app: AppModel) -> String {
+        app.needsAppleSignInAgain ? AppleSignInWording.needsAppleSignInAgain : AppleSignInWording.awaitsServer
     }
 
     /// While she signs out here or everywhere, nothing else on her account can start.

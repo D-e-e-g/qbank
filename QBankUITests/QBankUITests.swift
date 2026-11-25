@@ -83,52 +83,6 @@ final class QBankUITests: XCTestCase {
         expectNoPasskeys(app)
     }
 
-    /// Sign up from the sign-in screen with the email the owner added: a refused email says why,
-    /// "I have an account" goes back, and the new account lands signed in.
-    @MainActor
-    func testSignUpMakesAUserAccountForTheListedEmail() throws {
-        let app = launch("signed-out")
-        XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
-        app.buttons["signIn.signUp"].tap()
-        XCTAssertTrue(app.staticTexts["signUp.title"].appears(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Make a user account with an email the owner has added."].exists)
-        XCTAssertTrue(app.staticTexts["At least 8 characters."].exists)
-        attachLooks(app, "1a-5 sign up")
-
-        let email = app.textFields["signUp.email"]
-        let password = app.secureTextFields["signUp.password"]
-        focus(email, in: app)
-        email.typeText("stranger@example.com")
-        focusNewPassword(password, in: app)
-        password.typeText("synthetic-pass-9")
-        app.buttons["signUp.submit"].tap()
-        XCTAssertTrue(app.staticTexts["This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."].appears(timeout: 5))
-        dismissKeyboard(app)
-        attach(app, "1a-5 sign up, refused")
-
-        app.buttons["signUp.signIn"].tap()
-        XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 5))
-        app.buttons["signIn.signUp"].tap()
-        XCTAssertTrue(app.staticTexts["signUp.title"].appears(timeout: 5))
-        XCTAssertEqual(email.value as? String, "Email", "a fresh form")
-
-        focus(email, in: app)
-        email.typeText("new.user@example.com")
-        focusNewPassword(password, in: app)
-        password.typeText("short")
-        app.buttons["signUp.submit"].tap()
-        XCTAssertTrue(app.staticTexts["Choose a password of at least 8 characters."].appears(timeout: 5))
-        focusNewPassword(password, in: app)
-        password.typeText("-and-longer")
-        app.buttons["signUp.submit"].tap()
-        dismissSavePassword(app)
-        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
-        expectNoPasskeys(app)
-
-        app.tabBars.buttons["Settings"].tap()
-        XCTAssertTrue(app.staticTexts["new.user@example.com"].appears(timeout: 5), "signed in as the new account")
-    }
-
     @MainActor
     func testRestoreAsksFirstThenBringsBackThePreviousVersion() throws {
         let app = launch("signed-in")
@@ -395,22 +349,6 @@ final class QBankUITests: XCTestCase {
     private func type(_ field: XCUIElement, _ text: String) {
         field.tap()
         field.typeText(text)
-    }
-
-    /// Focuses a new-password field. iOS offers a strong password there, in a sheet over the
-    /// keyboard; the tests close it and type their own, as she may.
-    @MainActor
-    private func focusNewPassword(_ field: XCUIElement, in app: XCUIApplication) {
-        focus(field, in: app)
-        let offer = app.staticTexts["Use Strong Password?"]
-        guard offer.appears(timeout: 3) else { return }
-        let close = app.buttons["Close"]
-        XCTAssertTrue(close.appears(timeout: 2), app.debugDescription)
-        tapWhenStill(close)
-        XCTAssertTrue(offer.disappears(timeout: 3), "the strong password offer stayed")
-        if field.value(forKey: "hasKeyboardFocus") as? Bool != true {
-            focus(field, in: app)
-        }
     }
 
     @MainActor

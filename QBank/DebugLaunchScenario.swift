@@ -32,10 +32,12 @@ import UIKit
 /// - `QB_UITEST_DEVICE_OWNER`: how the device answers the Face ID lock, one of
 ///   `DebugDeviceOwner.Kind`'s raw values, such as `face-id`. Absent means the
 ///   simulator's own Face ID or passcode, for a look by hand.
+/// - `QB_UITEST_APPLE`: who answers Sign in with Apple, read by `DebugScriptedAppleSignIn`.
 ///
 /// A scenario, the scripted Sign in with Apple and the fake store are not written here: each is a
 /// file under `QBank/Debug/` (see `DebugScenario`, `DebugScriptedAppleSignIn` and `DebugFakeStore`),
-/// so a pull request that adds one leaves this file and the UI test helpers alone.
+/// so a pull request that adds one leaves this file and the UI test helpers alone. A free account's
+/// bank is a real file, in `Banks/` under the scenario's folder, emptied with it.
 ///
 /// While the app runs, a test turns the network off and on by posting the
 /// Darwin notifications `networkOfflineNotification` and
@@ -213,8 +215,8 @@ nonisolated enum DebugLaunchScenario {
         let storage = phoneData(in: folder, keep: environment[keepPhoneDataKey] == "1")
         let answersFile = serverAnswers(beside: folder, keep: environment[keepServerAnswersKey] == "1")
         let context = DebugScenarioContext(
-            defaults: defaults, storage: storage, answersFile: answersFile, isOnline: environment[networkKey] != "offline",
-            owner: deviceOwner(deviceOwnerKind(in: environment)), appleSignIn: DebugScriptedAppleSignIn(), store: DebugFakeStore()
+            defaults: defaults, storage: storage, banks: .files(root: folder), answersFile: answersFile, isOnline: environment[networkKey] != "offline",
+            owner: deviceOwner(deviceOwnerKind(in: environment)), appleSignIn: DebugScriptedAppleSignIn(environment: environment), store: DebugFakeStore()
         )
         return scenario.make(context)
     }
@@ -283,6 +285,9 @@ nonisolated enum DebugLaunchScenario {
                 transport: server,
                 sessionStore: InMemorySessionStore(session)
             ),
+            banks: context.banks,
+            sampleSet: SampleSet.bundledSource(),
+            appleSignIn: context.appleSignIn,
             look: lookStore,
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),

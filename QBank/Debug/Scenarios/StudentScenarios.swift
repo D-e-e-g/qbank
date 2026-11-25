@@ -2,9 +2,11 @@
 import Foundation
 
 nonisolated extension DebugScenario {
-    /// No session on the phone: the sign-in screen. `FakeQBankServer.student`
-    /// signs in normally; `FakeQBankServer.resetStudent` must choose a new password;
-    /// `FakeQBankServer.signUpEmail` is on the owner's sign-up list and signs up.
+    /// No session on the phone: the first screen. Sign in with Apple answers as
+    /// `QB_UITEST_APPLE` says (`DebugScriptedAppleSignIn`), and a new person's bank on
+    /// the phone is given the sample set. Behind "Use an existing QBank account",
+    /// `FakeQBankServer.student` signs in normally and `FakeQBankServer.resetStudent`
+    /// must choose a new password.
     static let signedOut = DebugScenario("signed-out") { context in
         context.model(server: FakeQBankServer(signedIn: false), session: nil)
     }

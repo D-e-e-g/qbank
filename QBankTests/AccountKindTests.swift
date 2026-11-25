@@ -12,18 +12,7 @@ struct AccountKindTests {
     private func freeApp(
         network: StubServer, connection: Connection = Connection(), bank: LocalBank? = nil
     ) throws -> (AppModel, InMemorySessionStore) {
-        let bank = try bank ?? LocalBank(store: LocalStore.inMemory())
-        let store = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
-        let client = QBankClient(
-            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: network, sessionStore: store
-        )
-        let defaults = TestApp.freshDefaults()
-        let app = AppModel(
-            client: client, kind: .free, bank: bank, look: LookStore(defaults: defaults),
-            lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
-            aiConsent: AIConsentStore(defaults: defaults), storage: .memory(), connection: connection
-        )
-        return (app, store)
+        TestApp.free(network, bank: try bank ?? LocalBank(store: LocalStore.inMemory()), connection: connection)
     }
 
     @Test func aModelIsInvitedUnlessItIsToldOtherwise() {
@@ -90,7 +79,7 @@ struct AccountKindTests {
         let network = StubServer(["GET /api/session": .error(401, "unauthenticated", "Sign in to continue.")])
         let (app, store) = try freeApp(network: network)
         await app.refreshSession()
-        #expect(app.route == .signedIn(.student()))
+        #expect(app.route == .signedIn(.store()))
         #expect(try store.load() != nil)
         #expect(network.requests.isEmpty)
     }
@@ -104,7 +93,7 @@ struct AccountKindTests {
         #expect(app.route == .signedOut)
         #expect(try store.load() == nil)
         // The same person signing in again finds the same bank: sign-out erases no study.
-        let again = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
+        let again = InMemorySessionStore(StoredSession(token: TestApp.token, account: .store(), appleUser: TestApp.appleUser))
         let reopened = QBankClient(
             configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!),
             transport: BankRoutedTransport(bank: bank, account: network), sessionStore: again

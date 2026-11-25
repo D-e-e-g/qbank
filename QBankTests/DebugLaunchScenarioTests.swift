@@ -247,56 +247,70 @@ struct DebugLaunchScenarioTests {
         #expect(app.route == .signedIn(app.account!))
     }
 
-    @Test func fakeServerSignsUpTheListedEmailOnce() async throws {
+    /// Sign in with Apple through the seam: the scripted sheet and the fake server, with the real
+    /// route's rules, as the first screen drives them.
+    @Test func aNewPersonSignsInWithAppleToABankOnThisPhoneWithTheSampleSet() async throws {
         let app = try #require(Self.launch("signed-out"))
-        let short = SignUpModel(app: app)
-        short.email = FakeQBankServer.signUpEmail
-        short.password = "short"
-        await short.signUp()
-        #expect(short.problem == "Choose a password of at least 8 characters.")
-
-        let model = SignUpModel(app: app)
-        model.email = " New.User@example.com "
-        model.password = "synthetic-pass-9"
-        await model.signUp()
-        #expect(model.problem == nil)
-        #expect(app.account?.email == FakeQBankServer.signUpEmail)
-        #expect(app.route == .signedIn(app.account!))
-
-        // The account it made signs in with that password, and cannot sign up again.
-        await app.signOut()
-        let again = SignUpModel(app: app)
-        again.email = FakeQBankServer.signUpEmail
-        again.password = "synthetic-pass-9"
-        await again.signUp()
-        #expect(again.problem?.hasPrefix("This email can't sign up here.") == true)
-        let signIn = SignInModel(app: app)
-        signIn.email = FakeQBankServer.signUpEmail
-        signIn.password = "synthetic-pass-9"
-        await signIn.signIn()
-        #expect(app.account?.email == FakeQBankServer.signUpEmail)
+        let apple = AppleSignInModel(app: app)
+        await apple.signIn(over: nil)
+        #expect(apple.problem == nil)
+        #expect(app.kind == .free)
+        #expect(!app.awaitsServer)
+        #expect(app.account?.origin == .store)
+        #expect(app.account?.email == DebugScriptedAppleSignIn.newPerson.email)
+        #expect(app.phoneKey == DebugScriptedAppleSignIn.newPerson.user)
+        let catalog = try await app.client.catalog()
+        #expect(catalog.topics.map(\.title) == [SampleSet.topic], "the new bank on the phone has the sample set, not the server's courses")
+        #expect(catalog.semesters.isEmpty)
     }
 
-    @Test func fakeServerLocksAnEmailsSignUpAfterFiveRefusals() async throws {
-        let app = try #require(Self.launch("signed-out"))
-        let model = SignUpModel(app: app)
-        model.email = "stranger@example.com"
-        var problems: [String?] = []
-        for _ in 0..<6 {
-            // A refusal empties the password, as she would type it again.
-            model.password = "synthetic-pass-9"
-            await model.signUp()
-            problems.append(model.problem)
-        }
-        let refused = "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email."
-        let locked = "Too many tries. Try again in 15 minutes."
-        #expect(problems == [refused, refused, refused, refused, locked, locked])
+    @Test(arguments: [("password-email", "This email already has a QBank account with a password. Sign in with your email and password instead.")])
+    func anAppleEmailThatBelongsToAPasswordAccountOpensTheEmailDoor(script: String, problem: String) async throws {
+        let app = try #require(Self.launch([DebugLaunchScenario.scenarioKey: "signed-out", DebugScriptedAppleSignIn.scriptKey: script]))
+        let apple = AppleSignInModel(app: app)
+        await apple.signIn(over: nil)
+        #expect(app.route == .signedOut)
+        #expect(apple.problem == problem)
+        #expect(apple.emailDoor == FakeQBankServer.student.email)
+    }
 
-        // The lock is that email's sign-up only.
-        model.email = FakeQBankServer.signUpEmail
-        model.password = "synthetic-pass-9"
-        await model.signUp()
-        #expect(app.account?.email == FakeQBankServer.signUpEmail)
+    @Test func closingApplesSheetSaysNothingAndSignsNoOneIn() async throws {
+        let app = try #require(Self.launch([DebugLaunchScenario.scenarioKey: "signed-out", DebugScriptedAppleSignIn.scriptKey: "cancel"]))
+        let apple = AppleSignInModel(app: app)
+        await apple.signIn(over: nil)
+        #expect(app.route == .signedOut)
+        #expect(apple.problem == nil)
+    }
+
+    @Test func aReturningPersonOpensTheBankTheyLeftOnThisPhone() async throws {
+        let folder = OfflineStoreTests.temporaryFolder()
+        let first = try #require(Self.launch([DebugLaunchScenario.scenarioKey: "free-new-bank"], folder: folder))
+        let made = try await first.client.createTopic(title: "Pharmacology")
+        await first.signOut()
+        let apple = AppleSignInModel(app: first)
+        await apple.signIn(over: nil)
+        #expect(first.phoneKey == DebugScriptedAppleSignIn.newPerson.user)
+        // This scenario gives a new bank no sample set, so someone new finds an empty bank of their own.
+        #expect(try await first.client.catalog().topics.isEmpty, "someone new never sees the bank of the person before")
+
+        await first.signOut()
+        let relaunched = try #require(
+            Self.launch(
+                [DebugLaunchScenario.scenarioKey: "signed-out", DebugScriptedAppleSignIn.scriptKey: "returning-person", DebugLaunchScenario.keepPhoneDataKey: "1"],
+                folder: folder))
+        await AppleSignInModel(app: relaunched).signIn(over: nil)
+        #expect(relaunched.phoneKey == FakeQBankServer.applePerson.user)
+        #expect(try await relaunched.client.catalog().topics.map(\.id) == [made.id], "the bank they left is still on the phone")
+    }
+
+    @Test func aStoredSessionFromBeforeTheUpdateOpensSignedInOnTheServer() async throws {
+        let app = try #require(Self.launch("stored-session-before-update"))
+        #expect(app.route == .signedIn(app.account!))
+        #expect(app.account?.email == FakeQBankServer.student.email)
+        #expect(app.account?.origin == .invited)
+        #expect(app.kind == .invited)
+        #expect(app.offline != nil, "its saved courses and waiting answers are kept as ever")
+        #expect(try await app.client.catalog().semesters.flatMap(\.courses).map(\.code).contains("NURS 310"))
     }
 
     @Test func fakeServerRestoresOnce() async throws {

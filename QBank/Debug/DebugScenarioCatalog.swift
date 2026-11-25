@@ -20,6 +20,7 @@ nonisolated enum DebugScenarioCatalog {
         .sataAllCorrect,
         .freeNewBank,
         .freeFirstLaunch,
+        .storedSessionBeforeUpdate,
     ]
 
     /// The scenario named `name`, or nil when none is.

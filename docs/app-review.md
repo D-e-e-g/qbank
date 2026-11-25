@@ -20,7 +20,7 @@ Today a QBank account exists only for an email the owner put on his sign-up list
 
 The reviewer needs to understand this, so the review notes below say it in short.
 
-1. The app opens on **Sign in**: email and password fields, a **Sign in** button, and **Sign up**. Sign up makes a user account, signed in at once, only for an email the owner added to the sign-up list on the QBank web app's admin screen. Any other email, or one that already has an account, gets the same refusal, and 5 refused tries lock that email's sign-up for 15 minutes.
+1. The app opens on its first screen: **Sign in with Apple**, and below it **Use an existing QBank account**, which shows email and password fields and a **Sign in** button. The app has no Sign up; an account for an email the owner added to the sign-up list is made on the web. Sign in with Apple and its server check are in [cloud.md](cloud.md) (Getting in); the steps below are the email-and-password door.
 2. The app sends the email and password over HTTPS to the QBank server, `https://qbank.dimitrygallego.com`, which answers with a session token. The app keeps the token in the iOS Keychain and sends it with every request. The password is never stored on the phone.
 3. After 5 wrong passwords the server locks that email for a short time and says how long; the app shows that message.
 4. **Forgot password?** explains that the app sends no email: the owner sets a temporary password from his admin account, and the user chooses a new one at the next sign-in (the **Choose a new password** screen).
@@ -29,8 +29,8 @@ The reviewer needs to understand this, so the review notes below say it in short
 
 Login rules this meets:
 
-- **Guideline 4.8 (Sign in with Apple)** does not apply: QBank uses only its own account system, no third-party or social login. 
-- **Guideline 5.1.1(v), account deletion:** required for apps that let people create an account, and QBank's app does: **Sign up**, for an email on the owner's list. **Settings > Delete account** deletes the account from inside the app (step 6 above), through the server's `DELETE /api/me`.
+- **Guideline 4.8 (Sign in with Apple)**: the first screen offers Sign in with Apple; the only other way in is QBank's own email-and-password account.
+- **Guideline 5.1.1(v), account deletion:** required for apps that let people create an account, and QBank's app does: **Sign in with Apple** makes an account for someone new. **Settings > Delete account** deletes an email-and-password account from inside the app (step 6 above), through the server's `DELETE /api/me`; an account made with Apple has no Delete account yet.
 - **Guideline 2.1, demo account:** required because the app has a login; see below. The server must be up during review.
 
 ## Demo account
