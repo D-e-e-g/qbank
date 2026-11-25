@@ -112,10 +112,6 @@ else
     abort "permissions must be exactly pages: write and id-token: write (got #{wf["permissions"].inspect})" unless wf["permissions"] == { "pages" => "write", "id-token" => "write" }
     abort "triggers must be push and workflow_dispatch (got #{on.keys.inspect})" unless on.keys.map(&:to_s).sort == %w[push workflow_dispatch]
     abort "push must be branches: [main] (got #{on["push"].inspect})" unless on["push"]["branches"] == ["main"]
-    renderer = "scripts/render-format-page.rb"
-    inputs = ["site/**", renderer, "scripts/site_page.rb", "Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json"]
-    missed = inputs - Array(on["push"]["paths"])
-    abort "a push that changes #{missed.inspect} must publish" unless missed.empty?
     jobs = wf["jobs"] || {}
     abort "no jobs" if jobs.empty?
     jobs.each do |name, job|
@@ -125,8 +121,6 @@ else
     steps = jobs.values.flat_map { |job| job["steps"] || [] }
     upload = steps.find { |step| step["uses"].to_s.start_with?("actions/upload-pages-artifact@") }
     abort "no step uploads site/" unless upload && upload.dig("with", "path") == "site"
-    render = steps.index { |step| step["run"].to_s.strip == "ruby #{renderer}" }
-    abort "no step runs ruby #{renderer} before site/ is uploaded" unless render && render < steps.index(upload)
     abort "no step deploys with actions/deploy-pages" unless steps.any? { |step| step["uses"].to_s.start_with?("actions/deploy-pages@") }
     strings = lambda do |node|
       case node
@@ -139,9 +133,9 @@ else
     used = strings.(wf).grep(/\$\{\{[^}]*\bsecrets\b/)
     abort "the workflow uses secrets: #{used.inspect}" unless used.empty?
   ' "$PAGES" 2>&1; then
-    pass "$PAGES renders the format page and publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
+    pass "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   else
-    fail "$PAGES renders the format page and publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
+    fail "$PAGES publishes site/ from main with pages: write and id-token: write on Linux, using no secrets"
   fi
 fi
 

@@ -126,9 +126,9 @@ Every package declares a `.macOS` platform next to `.iOS(.v18)` so `swift test` 
 
 ## Public pages: `pages.yml`
 
-`site/` holds the plain static pages the App Store listing and the app link to: `/privacy`, `/support`, and `/format` at https://qbank-app.dimitrygallego.com. No framework, no script, no third-party font or tracker. `pages.yml` publishes `site/` with GitHub Pages on a push to `main` that changes `site/`, the pinned contract, the format page's renderer or the workflow, and on a manual run. It renders `/format` from the contract before it uploads. It runs on a hosted Linux machine, never a Mac, with actions pinned by commit SHA, `pages: write` and `id-token: write` as its only permissions, and no secret.
+`site/` holds the plain static pages the App Store listing and the app link to: `/privacy`, `/support`, and `/format` at https://qbank-app.dimitrygallego.com. No framework, no script, no third-party font or tracker. `pages.yml` publishes `site/` with GitHub Pages on a push to `main` that changes `site/` or the workflow, and on a manual run. It runs on a hosted Linux machine, never a Mac, with actions pinned by commit SHA, `pages: write` and `id-token: write` as its only permissions, and no secret.
 
-`test/site-checks.sh`, run by `test/release-checks.sh`, enforces: the three pages, the 404 page and the style sheet exist; `site/CNAME` is `qbank-app.dimitrygallego.com`; the contact address is on `/support`, `/privacy` and `/format`; the pages load no script and nothing from another host; no secret is in `site/`; `/privacy` is the policy rendered; `/format` is the pinned contract's question file format rendered; the workflow's permissions, triggers, runner, render step and upload path, and that it uses no secret.
+`test/site-checks.sh`, run by `test/release-checks.sh`, enforces: the three pages, the 404 page and the style sheet exist; `site/CNAME` is `qbank-app.dimitrygallego.com`; the contact address is on `/support`, `/privacy` and `/format`; the pages load no script and nothing from another host; no secret is in `site/`; `/privacy` is the policy rendered; `/format` is the pinned contract's question file format rendered; the workflow's permissions, triggers, runner and upload path, and that it uses no secret.
 
 How the pages stay in step:
 

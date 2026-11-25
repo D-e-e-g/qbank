@@ -1,8 +1,7 @@
 # Publishes site/ (the privacy, support, and question-file-format pages) with
 # GitHub Pages at https://qbank-app.dimitrygallego.com. It runs on pushes to main
-# that change the site or what the format page is made from, and by hand. site/ is
-# plain static files; the one build step renders the format page again from the
-# pinned API contract. See docs/ci.md.
+# that change the site, and by hand. It builds nothing: site/ is plain static
+# files. See docs/ci.md.
 name: Pages
 
 on:
@@ -10,9 +9,6 @@ on:
     branches: [main]
     paths:
       - "site/**"
-      - "scripts/render-format-page.rb"
-      - "scripts/site_page.rb"
-      - "Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -37,8 +33,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Render the question file format page from the pinned contract
-        run: ruby scripts/render-format-page.rb
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Upload site/
