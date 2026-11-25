@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "request": {
     "method": "GET",
     "path": "/api/semesters",
@@ -52,7 +52,7 @@
               "code": "NURS 111",
               "title": "Invented Basics II",
               "sortOrder": 1,
-              "archivedAt": "2026-11-25T04:29:44.973Z",
+              "archivedAt": "2026-11-25T09:50:04.826Z",
               "questionCount": 0,
               "weekCount": 0,
               "folderCount": 0,

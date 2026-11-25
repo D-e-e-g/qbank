@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "world": "twins",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.726Z",
+      "at": "2026-11-25T09:50:11.758Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:52.726Z"
+          "expiresAt": "2027-12-30T09:50:11.758Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.824Z",
+      "at": "2026-11-25T09:50:11.843Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -76,14 +76,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T04:29:52.824Z"
+          "expiresAt": "2027-12-30T09:50:11.843Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.873Z",
+      "at": "2026-11-25T09:50:11.887Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -110,7 +110,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.880Z",
+      "at": "2026-11-25T09:50:11.892Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -146,7 +146,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.885Z",
+      "at": "2026-11-25T09:50:11.895Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -182,7 +182,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.894Z",
+      "at": "2026-11-25T09:50:11.901Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -218,7 +218,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.899Z",
+      "at": "2026-11-25T09:50:11.906Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -254,7 +254,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.907Z",
+      "at": "2026-11-25T09:50:11.910Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
@@ -426,7 +426,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.913Z",
+      "at": "2026-11-25T09:50:11.914Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -453,7 +453,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:52.913Z",
+          "answeredAt": "2026-11-25T09:50:11.914Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -465,7 +465,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.923Z",
+      "at": "2026-11-25T09:50:11.921Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
@@ -632,7 +632,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8021-000000000006",
-            "startedAt": "2026-11-25T04:29:52.913Z",
+            "startedAt": "2026-11-25T09:50:11.914Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8021-000000000002"
             ],
@@ -644,7 +644,7 @@
                 "points": 0,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:52.913Z",
+                "answeredAt": "2026-11-25T09:50:11.914Z",
                 "inReview": true,
                 "label": "Not correct",
                 "pointsText": null,
@@ -663,7 +663,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.929Z",
+      "at": "2026-11-25T09:50:11.925Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -690,7 +690,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:52.929Z",
+          "answeredAt": "2026-11-25T09:50:11.925Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -702,7 +702,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.937Z",
+      "at": "2026-11-25T09:50:11.931Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000502",
@@ -802,7 +802,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:52.943Z",
+      "at": "2026-11-25T09:50:11.934Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -829,7 +829,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:52.943Z",
+          "answeredAt": "2026-11-25T09:50:11.934Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -841,7 +841,7 @@
     {
       "step": "request",
       "name": "twin-jobs-not-allowed",
-      "at": "2026-11-25T04:29:52.950Z",
+      "at": "2026-11-25T09:50:11.940Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs",
@@ -861,7 +861,7 @@
     {
       "step": "request",
       "name": "twin-job-no-wrong",
-      "at": "2026-11-25T04:29:52.954Z",
+      "at": "2026-11-25T09:50:11.942Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -887,7 +887,7 @@
     {
       "step": "request",
       "name": "twin-job-start",
-      "at": "2026-11-25T04:29:52.963Z",
+      "at": "2026-11-25T09:50:11.947Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -951,8 +951,8 @@
           "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:52.963-05",
-          "updatedAt": "2026-11-24 23:29:52.963-05",
+          "createdAt": "2026-11-25 04:50:11.947-05",
+          "updatedAt": "2026-11-25 04:50:11.947-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -969,7 +969,7 @@
     {
       "step": "request",
       "name": "twin-job-twins",
-      "at": "2026-11-25T04:29:52.982Z",
+      "at": "2026-11-25T09:50:11.961Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501",
@@ -1027,8 +1027,8 @@
           "note": "QBank writes exam twins of 3 wrong questions in Week 5. Once they are filed, exams over Week 5 ask only its exam twins.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:52.963-05",
-          "updatedAt": "2026-11-24 23:29:52.981-05",
+          "createdAt": "2026-11-25 04:50:11.947-05",
+          "updatedAt": "2026-11-25 04:50:11.96-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1045,7 +1045,7 @@
     {
       "step": "request",
       "name": "twin-job-done",
-      "at": "2026-11-25T04:29:53.002Z",
+      "at": "2026-11-25T09:50:11.977Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501",
@@ -1135,9 +1135,9 @@
             ],
             "pool": "wrong"
           },
-          "createdAt": "2026-11-24 23:29:52.963-05",
-          "updatedAt": "2026-11-24 23:29:53.002-05",
-          "finishedAt": "2026-11-24 23:29:53.002-05",
+          "createdAt": "2026-11-25 04:50:11.947-05",
+          "updatedAt": "2026-11-25 04:50:11.976-05",
+          "finishedAt": "2026-11-25 04:50:11.976-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -1153,7 +1153,7 @@
     {
       "step": "request",
       "name": "twin-exam-start",
-      "at": "2026-11-25T04:29:53.006Z",
+      "at": "2026-11-25T09:50:11.980Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
@@ -1184,26 +1184,26 @@
           "pool": "wrong",
           "practiceWeeks": [],
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:53.006Z",
-          "endsAt": "2026-11-25T04:34:23.006Z",
+          "startedAt": "2026-11-25T09:50:11.980Z",
+          "endsAt": "2026-11-25T09:54:41.980Z",
           "status": "running",
           "finishedAt": null,
           "endReason": null,
-          "serverNow": "2026-11-25T04:29:53.006Z",
+          "serverNow": "2026-11-25T09:50:11.980Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8021-000000000009",
-              "publicId": "XB02",
+              "publicId": "XA01",
               "position": 1,
               "type": "sata",
-              "topic": "Harder B 2",
+              "topic": "Harder A 1",
               "cj": "Recognize cues",
-              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
               "ask": "Which findings need a report? Select all that apply.",
-              "rationale": "Invented twin rationale for Harder B 2.",
+              "rationale": "Invented twin rationale for Harder A 1.",
               "takeaway": "Report changes.",
               "body": {
-                "twinOf": "B02",
+                "twinOf": "A01",
                 "options": [
                   {
                     "t": "Heart rate of 124",
@@ -1279,17 +1279,17 @@
             },
             {
               "id": "00000000-0000-4000-8021-000000000011",
-              "publicId": "XA01",
+              "publicId": "XB02",
               "position": 3,
               "type": "sata",
-              "topic": "Harder A 1",
+              "topic": "Harder B 2",
               "cj": "Recognize cues",
-              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
               "ask": "Which findings need a report? Select all that apply.",
-              "rationale": "Invented twin rationale for Harder A 1.",
+              "rationale": "Invented twin rationale for Harder B 2.",
               "takeaway": "Report changes.",
               "body": {
-                "twinOf": "A01",
+                "twinOf": "B02",
                 "options": [
                   {
                     "t": "Heart rate of 124",
@@ -1329,7 +1329,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:53.014Z",
+      "at": "2026-11-25T09:50:11.987Z",
       "request": {
         "method": "POST",
         "path": "/api/exams/e0000000-0000-4000-8000-000000000501/finish",
@@ -1356,26 +1356,26 @@
           "pool": "wrong",
           "practiceWeeks": [],
           "timeLimitSeconds": 270,
-          "startedAt": "2026-11-25T04:29:53.006Z",
-          "endsAt": "2026-11-25T04:34:23.006Z",
+          "startedAt": "2026-11-25T09:50:11.980Z",
+          "endsAt": "2026-11-25T09:54:41.980Z",
           "status": "ended",
-          "finishedAt": "2026-11-25T04:29:53.014Z",
+          "finishedAt": "2026-11-25T09:50:11.987Z",
           "endReason": "finished",
-          "serverNow": "2026-11-25T04:29:53.014Z",
+          "serverNow": "2026-11-25T09:50:11.987Z",
           "questions": [
             {
               "id": "00000000-0000-4000-8021-000000000009",
-              "publicId": "XB02",
+              "publicId": "XA01",
               "position": 1,
               "type": "sata",
-              "topic": "Harder B 2",
+              "topic": "Harder A 1",
               "cj": "Recognize cues",
-              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
+              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
               "ask": "Which findings need a report? Select all that apply.",
-              "rationale": "Invented twin rationale for Harder B 2.",
+              "rationale": "Invented twin rationale for Harder A 1.",
               "takeaway": "Report changes.",
               "body": {
-                "twinOf": "B02",
+                "twinOf": "A01",
                 "options": [
                   {
                     "t": "Heart rate of 124",
@@ -1451,17 +1451,17 @@
             },
             {
               "id": "00000000-0000-4000-8021-000000000011",
-              "publicId": "XA01",
+              "publicId": "XB02",
               "position": 3,
               "type": "sata",
-              "topic": "Harder A 1",
+              "topic": "Harder B 2",
               "cj": "Recognize cues",
-              "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+              "stem": "On a later shift a different invented person shows signs linked to Harder B 2.",
               "ask": "Which findings need a report? Select all that apply.",
-              "rationale": "Invented twin rationale for Harder A 1.",
+              "rationale": "Invented twin rationale for Harder B 2.",
               "takeaway": "Report changes.",
               "body": {
-                "twinOf": "A01",
+                "twinOf": "B02",
                 "options": [
                   {
                     "t": "Heart rate of 124",
@@ -1568,7 +1568,7 @@
     {
       "step": "request",
       "name": "twin-job-cancel-finished",
-      "at": "2026-11-25T04:29:53.023Z",
+      "at": "2026-11-25T09:50:11.992Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000501/cancel",
@@ -1588,7 +1588,7 @@
     {
       "step": "request",
       "name": "twin-job-already-twinned",
-      "at": "2026-11-25T04:29:53.028Z",
+      "at": "2026-11-25T09:50:11.995Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -1614,7 +1614,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:53.036Z",
+      "at": "2026-11-25T09:50:12.000Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -1678,8 +1678,8 @@
           "note": "QBank writes exam twins of 3 questions in Week 6.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:53.036-05",
-          "updatedAt": "2026-11-24 23:29:53.036-05",
+          "createdAt": "2026-11-25 04:50:12-05",
+          "updatedAt": "2026-11-25 04:50:12-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -1696,7 +1696,7 @@
     {
       "step": "request",
       "name": "twin-job-cancel",
-      "at": "2026-11-25T04:29:53.046Z",
+      "at": "2026-11-25T09:50:12.007Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000502/cancel",
@@ -1754,9 +1754,9 @@
           "note": "QBank writes exam twins of 3 questions in Week 6.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:53.036-05",
-          "updatedAt": "2026-11-24 23:29:53.046-05",
-          "finishedAt": "2026-11-24 23:29:53.046-05",
+          "createdAt": "2026-11-25 04:50:12-05",
+          "updatedAt": "2026-11-25 04:50:12.007-05",
+          "finishedAt": "2026-11-25 04:50:12.007-05",
           "failure": null,
           "warnings": [],
           "usage": {
@@ -1772,7 +1772,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:53.052Z",
+      "at": "2026-11-25T09:50:12.012Z",
       "request": {
         "method": "GET",
         "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000501",
@@ -1939,7 +1939,7 @@
           "run": "midway",
           "sitting": {
             "id": "00000000-0000-4000-8021-000000000006",
-            "startedAt": "2026-11-25T04:29:52.913Z",
+            "startedAt": "2026-11-25T09:50:11.914Z",
             "answeredQuestionIds": [
               "00000000-0000-4000-8021-000000000002",
               "00000000-0000-4000-8021-000000000004"
@@ -1952,7 +1952,7 @@
                 "points": 0,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:52.913Z",
+                "answeredAt": "2026-11-25T09:50:11.914Z",
                 "inReview": true,
                 "label": "Not correct",
                 "pointsText": null,
@@ -1970,7 +1970,7 @@
                 "points": 0,
                 "maxPoints": 1,
                 "guessed": false,
-                "answeredAt": "2026-11-25T04:29:52.929Z",
+                "answeredAt": "2026-11-25T09:50:11.925Z",
                 "inReview": true,
                 "label": "Not correct",
                 "pointsText": null,
@@ -1989,7 +1989,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:53.058Z",
+      "at": "2026-11-25T09:50:12.016Z",
       "request": {
         "method": "POST",
         "path": "/api/attempts",
@@ -2016,7 +2016,7 @@
           "points": 0,
           "maxPoints": 1,
           "guessed": false,
-          "answeredAt": "2026-11-25T04:29:53.058Z",
+          "answeredAt": "2026-11-25T09:50:12.016Z",
           "inReview": true,
           "label": "Not correct",
           "pointsText": null,
@@ -2028,7 +2028,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T04:29:53.066Z",
+      "at": "2026-11-25T09:50:12.021Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -2092,8 +2092,8 @@
           "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:53.066-05",
-          "updatedAt": "2026-11-24 23:29:53.066-05",
+          "createdAt": "2026-11-25 04:50:12.021-05",
+          "updatedAt": "2026-11-25 04:50:12.021-05",
           "finishedAt": null,
           "failure": null,
           "warnings": [],
@@ -2110,7 +2110,7 @@
     {
       "step": "request",
       "name": "twin-job-failed",
-      "at": "2026-11-25T04:29:53.078Z",
+      "at": "2026-11-25T09:50:12.031Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs/a0b00000-0000-4000-8000-000000000503",
@@ -2168,9 +2168,9 @@
           "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
           "sets": [],
           "exam": null,
-          "createdAt": "2026-11-24 23:29:53.066-05",
-          "updatedAt": "2026-11-24 23:29:53.078-05",
-          "finishedAt": "2026-11-24 23:29:53.078-05",
+          "createdAt": "2026-11-25 04:50:12.021-05",
+          "updatedAt": "2026-11-25 04:50:12.03-05",
+          "finishedAt": "2026-11-25 04:50:12.03-05",
           "failure": "The model did not answer.",
           "warnings": [],
           "usage": {
@@ -2186,7 +2186,7 @@
     {
       "step": "request",
       "name": "twin-jobs",
-      "at": "2026-11-25T04:29:53.082Z",
+      "at": "2026-11-25T09:50:12.033Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs",
@@ -2246,9 +2246,9 @@
               "note": "QBank writes exam twins of 1 wrong question in Week 5. 3 questions already have one and stay as they are.",
               "sets": [],
               "exam": null,
-              "createdAt": "2026-11-24 23:29:53.066-05",
-              "updatedAt": "2026-11-24 23:29:53.078-05",
-              "finishedAt": "2026-11-24 23:29:53.078-05",
+              "createdAt": "2026-11-25 04:50:12.021-05",
+              "updatedAt": "2026-11-25 04:50:12.03-05",
+              "finishedAt": "2026-11-25 04:50:12.03-05",
               "failure": "The model did not answer.",
               "warnings": [],
               "usage": {
@@ -2306,9 +2306,9 @@
               "note": "QBank writes exam twins of 3 questions in Week 6.",
               "sets": [],
               "exam": null,
-              "createdAt": "2026-11-24 23:29:53.036-05",
-              "updatedAt": "2026-11-24 23:29:53.046-05",
-              "finishedAt": "2026-11-24 23:29:53.046-05",
+              "createdAt": "2026-11-25 04:50:12-05",
+              "updatedAt": "2026-11-25 04:50:12.007-05",
+              "finishedAt": "2026-11-25 04:50:12.007-05",
               "failure": null,
               "warnings": [],
               "usage": {
@@ -2398,9 +2398,9 @@
                 ],
                 "pool": "wrong"
               },
-              "createdAt": "2026-11-24 23:29:52.963-05",
-              "updatedAt": "2026-11-24 23:29:53.002-05",
-              "finishedAt": "2026-11-24 23:29:53.002-05",
+              "createdAt": "2026-11-25 04:50:11.947-05",
+              "updatedAt": "2026-11-25 04:50:11.976-05",
+              "finishedAt": "2026-11-25 04:50:11.976-05",
               "failure": null,
               "warnings": [],
               "usage": {
@@ -2418,7 +2418,7 @@
     {
       "step": "request",
       "name": "twin-job-daily-limit",
-      "at": "2026-11-25T04:29:53.085Z",
+      "at": "2026-11-25T09:50:12.036Z",
       "request": {
         "method": "POST",
         "path": "/api/twin-jobs",
@@ -2438,14 +2438,14 @@
         "body": {
           "error": "daily_limit",
           "message": "You have started 3 sets in the last 24 hours, the most for one day. You can start another in 24 hours.",
-          "availableAt": "2026-11-26T04:29:52.963Z"
+          "availableAt": "2026-11-26T09:50:11.947Z"
         }
       }
     },
     {
       "step": "request",
       "name": "question-maker-twins-daily-limit",
-      "at": "2026-11-25T04:29:53.093Z",
+      "at": "2026-11-25T09:50:12.041Z",
       "request": {
         "method": "GET",
         "path": "/api/question-maker",
@@ -2461,7 +2461,7 @@
           "reason": "You have started 3 sets in the last 24 hours, the most for one day.",
           "dailyLimit": 3,
           "startedToday": 3,
-          "nextAvailableAt": "2026-11-26T04:29:52.963Z",
+          "nextAvailableAt": "2026-11-26T09:50:11.947Z",
           "levels": [
             {
               "level": "exam",
@@ -2507,7 +2507,7 @@
     {
       "step": "request",
       "name": "twin-job-not-found",
-      "at": "2026-11-25T04:29:53.096Z",
+      "at": "2026-11-25T09:50:12.043Z",
       "request": {
         "method": "GET",
         "path": "/api/twin-jobs/0e000000-0000-4000-8000-000000000501",

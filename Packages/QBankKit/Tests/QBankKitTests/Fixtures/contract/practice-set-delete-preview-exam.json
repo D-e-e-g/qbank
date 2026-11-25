@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "request": {
     "method": "GET",
     "path": "/api/practice-sets/5e700000-0000-4000-8000-000000000703/delete-preview",
@@ -53,7 +53,7 @@
         "body": "Its 3 questions go with it, and exams over Week 1 go back to asking its practice questions. You can undo this for 30 days."
       },
       "refusal": null,
-      "confirm": "0afc764fc7d5ed77",
+      "confirm": "e5637566897e88d3",
       "undoDays": 30
     }
   }

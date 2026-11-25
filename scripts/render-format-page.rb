@@ -13,15 +13,16 @@
 #   scripts/render-format-page.rb --check  exit 1 if that file is out of date
 #
 # The generated Markdown uses a small subset: "#", "##" and "###" headings, "-"
-# bullets, tables, paragraphs, `code`, and a comment on a line of its own. The
-# renderer refuses anything else instead of guessing.
+# bullets, tables, paragraphs, `code`, a "```json" block closed by "```", and a
+# comment on a line of its own. The renderer refuses anything else instead of
+# guessing.
 
 require "json"
 require_relative "site_page"
 
 SOURCE = "Packages/QBankKit/Tests/QBankKitTests/Fixtures/openapi.json"
 SCRIPT = "scripts/render-format-page.rb"
-LEDE = "QBank imports a set of questions from one JSON file. You can write the file by hand or ask an AI chat to write it."
+LEDE = "You can write a question file for QBank by hand, or ask an AI chat to write it."
 
 def refuse(number, line)
   abort "#{SOURCE}: x-question-format.markdown line #{number}: Markdown this renderer does not handle: #{line[0, 60]}"
@@ -42,6 +43,7 @@ def kind(line)
   case line
   when "" then :blank
   when /\A<!--.*-->\z/ then :comment
+  when "```json" then :json
   when /\A\#{1,3} \S/ then :heading
   when /\A- \S/ then :bullet
   when /\A\|.*\|\z/ then :row
@@ -74,12 +76,35 @@ def table(lines)
   ]
 end
 
+# Splits the numbered lines into [kind, lines] blocks. A run of bullets, rows or
+# text is one block, and so is a json fence with everything up to the line that
+# closes it, which is code rather than Markdown.
+def blocks(lines)
+  found = []
+  at = 0
+  while at < lines.length
+    line, number = lines[at]
+    type = kind(line)
+    stop = at + 1
+    case type
+    when :json
+      stop += 1 while stop < lines.length && lines[stop].first != "```"
+      refuse(number, line) if stop == lines.length
+      stop += 1
+    when :bullet, :row, :text
+      stop += 1 while stop < lines.length && kind(lines[stop].first) == type
+    end
+    found << [type, lines[at...stop]]
+    at = stop
+  end
+  found
+end
+
 def render(markdown)
   numbered = markdown.lines.map(&:chomp).each_with_index.map { |line, index| [line, index + 1] }
-  blocks = numbered.chunk_while { |(a, _), (b, _)| kind(a) == kind(b) && %i[bullet row text].include?(kind(a)) }
-  html = blocks.flat_map do |lines|
+  html = blocks(numbered).flat_map do |type, lines|
     line, number = lines.first
-    case kind(line)
+    case type
     when :blank, :comment then []
     when :heading
       marks, text = line.split(" ", 2)
@@ -88,6 +113,7 @@ def render(markdown)
     when :bullet then ["<ul>", *lines.map { |item, at| "<li>#{inline(item[2..-1], at)}</li>" }, "</ul>"]
     when :row then table(lines)
     when :text then ["<p>#{lines.map { |text, at| inline(text, at) }.join(" ")}</p>"]
+    when :json then ["<pre><code>#{CGI.escapeHTML(lines[1...-1].map(&:first).join("\n"))}</code></pre>"]
     else refuse(number, line)
     end
   end

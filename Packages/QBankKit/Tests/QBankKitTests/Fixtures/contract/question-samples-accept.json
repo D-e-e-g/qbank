@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "cfb52a360d6b8be5b602eb3431e2fab893bb672e",
+  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
   "request": {
     "method": "POST",
     "path": "/api/question-jobs/a0b00000-0000-4000-8000-000000000401/samples/accept",
@@ -88,8 +88,8 @@
       "title": null,
       "photoCount": 0,
       "sets": [],
-      "createdAt": "2026-11-24 23:29:50.546-05",
-      "updatedAt": "2026-11-24 23:29:50.586-05",
+      "createdAt": "2026-11-25 04:50:09.878-05",
+      "updatedAt": "2026-11-25 04:50:09.91-05",
       "finishedAt": null,
       "failure": null,
       "warnings": [],
