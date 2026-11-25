@@ -262,9 +262,15 @@ extension XCTestCase {
         XCTFail("still on \(title)")
     }
 
-    /// Fills the sign-in form and presses Sign in. A nil email keeps what is in the field.
+    /// Fills the sign-in form and presses Sign in. A nil email keeps what is in the field. On the
+    /// first screen the form is behind "Use an existing QBank account", which this opens first.
     @MainActor
     func signIn(_ app: XCUIApplication, email: String?, password: String) {
+        let door = app.buttons["welcome.useExistingAccount"]
+        if !app.secureTextFields["signIn.password"].exists, door.exists {
+            door.tap()
+            XCTAssertTrue(app.secureTextFields["signIn.password"].appears(timeout: 5), "the email and password door opens")
+        }
         if let email {
             let field = app.textFields["signIn.email"]
             focus(field, in: app)
@@ -283,6 +289,7 @@ extension XCTestCase {
         for _ in 0..<3 {
             field.tap()
             if field.value(forKey: "hasKeyboardFocus") as? Bool == true { return }
+            if closeKeyboardIntroduction(app) { continue }
             let notNow = app.buttons["Not Now"]
             if notNow.appears(timeout: 2) {
                 tapWhenStill(notNow)
@@ -290,6 +297,22 @@ extension XCTestCase {
             }
         }
         XCTFail("\(field) never got the keyboard")
+    }
+
+    /// Closes the keyboard's slide-to-type introduction with its Continue button, as a person does.
+    /// A new device shows it the first time a keyboard comes up, and until it is closed it takes the
+    /// taps meant for the app, so it stands in the way of whichever test raises a keyboard first.
+    /// Returns whether it was there.
+    @MainActor
+    @discardableResult
+    func closeKeyboardIntroduction(_ app: XCUIApplication) -> Bool {
+        let introduction = app.otherElements["UIContinuousPathIntroductionView"]
+        guard introduction.exists else { return false }
+        let close = introduction.buttons["Continue"]
+        XCTAssertTrue(close.appears(timeout: 2), app.debugDescription)
+        tapWhenStill(close)
+        XCTAssertTrue(introduction.disappears(timeout: 3), "the keyboard's introduction stayed")
+        return true
     }
 
     /// iOS offers to save the password after a sign-in; the tests decline, as she may. On GitHub's

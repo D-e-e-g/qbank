@@ -133,7 +133,7 @@ The plan expected automatic signing to add this capability on the first `scripts
 
 Apple says editing an App ID invalidates the provisioning profiles that contain it. The next signed build regenerates them (`-allowProvisioningUpdates` in `scripts/testflight-upload.sh`), so a development build on a device may ask for a new profile once.
 
-Not part of this step, and not done by it: the capability and its entitlement in the app. I-30 adds `com.apple.developer.applesignin` to `QBank/QBank.entitlements`, changes the pin in `test/release-checks.sh`, and updates the capability section of [release.md](release.md). Until I-30, the app does not use it.
+Not part of this step, and not done by it: the capability and its entitlement in the app. I-30 added `com.apple.developer.applesignin` to `QBank/QBank.entitlements`, pinned in `test/release-checks.sh` and required by the export check in `scripts/testflight-upload.sh` (see the capabilities section of [release.md](release.md)).
 
 Apple: [About Sign in with Apple](https://developer.apple.com/help/account/capabilities/about-sign-in-with-apple/), [Enable app capabilities](https://developer.apple.com/help/account/identifiers/enable-app-capabilities/). Read 2026-11-22. The page that describes grouping apps was not opened.
 

@@ -2,7 +2,8 @@ import Foundation
 import Observation
 import QBankKit
 
-/// The sign-in screen: her QBank email and password, the same as on the web.
+/// The first screen's door for an account the owner set up: her QBank email and password, the same
+/// as on the web.
 @Observable
 final class SignInModel {
     var email = ""
@@ -12,10 +13,8 @@ final class SignInModel {
 
     private let app: AppModel
 
-    init(app: AppModel, handoff: SignInHandoff? = nil) {
+    init(app: AppModel) {
         self.app = app
-        email = handoff?.email ?? ""
-        problem = handoff?.problem ?? app.signedOutReason
     }
 
     func signIn() async {

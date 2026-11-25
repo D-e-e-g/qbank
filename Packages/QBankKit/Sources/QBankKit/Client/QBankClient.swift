@@ -28,6 +28,14 @@ public struct QBankClient: Sendable {
         QBankClient(configuration: configuration, transport: BankRoutedTransport(bank: bank, account: transport), sessionStore: sessionStore)
     }
 
+    /// This client with a bank on the phone and no session on the server yet, while the server has
+    /// not answered a Sign in with Apple: `bank` answers the bank's requests, and every request of the
+    /// account fails on the phone as one that could not reach QBank (`URLError.userAuthenticationRequired`),
+    /// so nothing reaches the server without a session.
+    public func routingBankWithoutServer(to bank: any HTTPTransport) -> QBankClient {
+        QBankClient(configuration: configuration, transport: BankRoutedTransport(bank: bank, account: NoServerSession()), sessionStore: sessionStore)
+    }
+
     // MARK: Sign-in and session
 
     /// `GET /health`.
@@ -58,12 +66,58 @@ public struct QBankClient: Sendable {
         return signedIn
     }
 
+    /// Signs in with Apple's identity token for one sign-in and the nonce the app asked Apple with,
+    /// and stores the session with `appleUser`, Apple's id of the person, which names their bank on
+    /// this phone. The server finds the account by Apple's id, never by email: 200 signs in to the
+    /// account the identity has, and 201 makes a store account for a new one. Either is signed in.
+    ///
+    /// Refusals store nothing and keep any stored session as it was: 401 `invalid_apple_token` (the
+    /// token is not Apple's, is for another app, has ended, does not match the nonce, or was used
+    /// already); 409 `password_account` (Apple's email belongs to an account with a password, which
+    /// signs in with email and password) or `email_in_use`; 429 `too_many_attempts` with
+    /// `retryAfterSeconds`; 502 `apple_unreachable` (the server could not read Apple's keys; the token
+    /// was not used) or `auth_failed`; 503 `apple_sign_in_unavailable` or `auth_unavailable`.
+    @discardableResult
+    public func signInWithApple(_ request: AppleSignInRequest, appleUser: String) async throws(QBankError) -> SignedIn {
+        let signedIn: SignedIn = try await send(Request(.post, "/api/sign-in/apple", body: request, authenticated: false))
+        try save(StoredSession(token: signedIn.token, expiresAt: signedIn.expiresAt, account: signedIn.user, appleUser: appleUser))
+        return signedIn
+    }
+
+    /// Keeps a Sign in with Apple that Apple confirmed and the server did not answer, in place of any
+    /// stored session: `account` as Apple described the person, `appleUser` to name their bank, and
+    /// `request` to send the server again with `sendAppleSignInAgain`. It has no bearer token
+    /// (`StoredSession.awaitsServer`).
+    public func keepAppleSignInForServer(_ request: AppleSignInRequest, account: Account, appleUser: String) throws(QBankError) {
+        try save(StoredSession(token: "", expiresAt: nil, account: account, appleUser: appleUser, unsent: request))
+    }
+
+    /// Sends the server again the Sign in with Apple that `kept` holds (`keepAppleSignInForServer`), as
+    /// `signInWithApple` does, with its answers and refusals. The session it makes is stored only in
+    /// place of `kept`: when the sign-in was signed out, or another took its place, while this was on
+    /// its way, the stored one stays as it is and the answer is nil.
+    public func sendAppleSignInAgain(_ kept: StoredSession) async throws(QBankError) -> SignedIn? {
+        guard kept.awaitsServer, let request = kept.unsent, let appleUser = kept.appleUser else { return nil }
+        let signedIn: SignedIn = try await send(Request(.post, "/api/sign-in/apple", body: request, authenticated: false))
+        guard try loadSession() == kept else { return nil }
+        try save(StoredSession(token: signedIn.token, expiresAt: signedIn.expiresAt, account: signedIn.user, appleUser: appleUser))
+        return signedIn
+    }
+
+    /// Forgets the Sign in with Apple `kept` holds once the server has refused it, so it is not sent
+    /// again, and keeps the rest: the phone's bank still opens without the server. Nothing changes
+    /// when another session took the place of `kept`.
+    public func forgetUnsentAppleSignIn(_ kept: StoredSession) throws(QBankError) {
+        guard kept.unsent != nil, try loadSession() == kept else { return }
+        try save(StoredSession(token: kept.token, expiresAt: kept.expiresAt, account: kept.account, appleUser: kept.appleUser))
+    }
+
     /// Checks the stored session with the server and refreshes the stored account.
     /// A 401 means the session ended; the stored one is left for the app to clear.
     public func session() async throws(QBankError) -> Session {
         let session: Session = try await send(Request(.get, "/api/session"))
         if let stored = try loadSession() {
-            try save(StoredSession(token: stored.token, expiresAt: session.expiresAt, account: session.user))
+            try save(StoredSession(token: stored.token, expiresAt: session.expiresAt, account: session.user, appleUser: stored.appleUser))
         }
         return session
     }
@@ -815,7 +869,8 @@ struct Request {
         var request = URLRequest(url: url, timeoutInterval: configuration.timeout)
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let token {
+        // A Sign in with Apple the server has not answered has no token to send.
+        if let token, !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         if let body {

@@ -7,6 +7,14 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         case admin
     }
 
+    /// How the account came to be, which decides where its bank lives (`AccountKind`).
+    public enum Origin: String, Codable, Sendable {
+        /// Set up by the owner, with an email and password, before the store release or since.
+        case invited
+        /// Made by Sign in with Apple in the iPhone app.
+        case store
+    }
+
     /// The account's color scheme, which follows it to every device. Look (light or dark) stays
     /// per device.
     public enum Palette: String, Codable, Sendable, CaseIterable {
@@ -26,14 +34,21 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
     /// Set with `QBankClient.setPalette`. A server from before color schemes, a session kept from
     /// then, or a scheme this version does not know reads as `.dusk`, as the server asks.
     public let palette: Palette
+    /// A server from before store accounts, a session kept on the phone from then, or an origin this
+    /// version does not know reads as `.invited`: every account that existed then was one, and an
+    /// invited account's bank stays on the server, as it always has.
+    public let origin: Origin
 
-    public init(id: String, email: String, name: String, role: Role, mustChangePassword: Bool, palette: Palette = .dusk) {
+    public init(
+        id: String, email: String, name: String, role: Role, mustChangePassword: Bool, palette: Palette = .dusk, origin: Origin = .invited
+    ) {
         self.id = id
         self.email = email
         self.name = name
         self.role = role
         self.mustChangePassword = mustChangePassword
         self.palette = palette
+        self.origin = origin
     }
 
     public init(from decoder: any Decoder) throws {
@@ -44,6 +59,7 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         role = try container.decode(Role.self, forKey: .role)
         mustChangePassword = try container.decode(Bool.self, forKey: .mustChangePassword)
         palette = try container.decodeIfPresent(String.self, forKey: .palette).flatMap(Palette.init(rawValue:)) ?? .dusk
+        origin = try container.decodeIfPresent(String.self, forKey: .origin).flatMap(Origin.init(rawValue:)) ?? .invited
     }
 }
 
@@ -65,7 +81,8 @@ public struct StudentList: Codable, Sendable, Equatable {
     }
 }
 
-/// The answer to a password sign-in or a password change: a fresh bearer token.
+/// The answer to a sign-in, with a password or with Apple, or to a password change: a fresh bearer
+/// token.
 public struct SignedIn: Codable, Sendable, Equatable {
     public let token: String
     public let user: Account

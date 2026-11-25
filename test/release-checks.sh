@@ -519,10 +519,11 @@ fi
 # An iPad app that shares the screen must support every orientation.
 require_grep 'INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";' "$PBXPROJ" "the iPad supports every orientation"
 require_grep 'INFOPLIST_KEY_NSFaceIDUsageDescription = "[^"]+";' "$PBXPROJ" "the app says why it asks for Face ID"
-# Password AutoFill needs the web domain's webcredentials to offer its saved
-# password, and that is the app's one entitlement. Associated Domains needs the paid team (a free Personal Team
-# cannot sign it), and every capability needs its App ID step in
-# docs/release.md, so no other one comes in unnoticed.
+# The app has two entitlements: Sign in with Apple, its first screen, and the web
+# domain's webcredentials, so Password AutoFill offers the saved password of an
+# existing account. Both need the paid team (a free Personal Team cannot sign
+# them), and every capability needs its App ID step in docs/release.md, so no
+# other one comes in unnoticed.
 ENTITLEMENTS=QBank/QBank.entitlements
 entitlement_files="$(git ls-files | grep -E '\.entitlements$' || true)"
 if [ "$entitlement_files" = "$ENTITLEMENTS" ]; then
@@ -543,14 +544,17 @@ if command -v plutil >/dev/null 2>&1; then
     fail "plutil -lint accepts $ENTITLEMENTS"
   fi
 fi
-ruby_check "the app's only entitlement is webcredentials:qbank.dimitrygallego.com" "$ENTITLEMENTS" '
+ruby_check "the app's only entitlements are Sign in with Apple and webcredentials:qbank.dimitrygallego.com" "$ENTITLEMENTS" '
   require "rexml/document"
   doc = REXML::Document.new(File.read(ARGV[0]))
   dict = doc.root&.elements&.[]("dict") or abort "#{ARGV[0]} has no dict"
   keys = dict.get_elements("key").map(&:text)
-  abort "the entitlements are #{keys.inspect}" unless keys == ["com.apple.developer.associated-domains"]
-  domains = dict.get_elements("array").first.get_elements("string").map(&:text)
-  abort "the associated domains are #{domains.inspect}" unless domains == ["webcredentials:qbank.dimitrygallego.com"]
+  abort "the entitlements are #{keys.inspect}" unless keys == ["com.apple.developer.applesignin", "com.apple.developer.associated-domains"]
+  values = dict.get_elements("array")
+  abort "each entitlement has one array" unless values.length == keys.length
+  apple, domains = values.map { |array| array.elements.to_a.map { |element| [element.name, element.text] } }
+  abort "Sign in with Apple is #{apple.inspect}" unless apple == [["string", "Default"]]
+  abort "the associated domains are #{domains.inspect}" unless domains == [["string", "webcredentials:qbank.dimitrygallego.com"]]
 '
 
 require_grep 'PRODUCT_BUNDLE_IDENTIFIER = com\.dimitrygallego\.qbank;' "$PBXPROJ" "app bundle id is com.dimitrygallego.qbank"

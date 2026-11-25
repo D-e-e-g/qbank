@@ -9,6 +9,12 @@ import QBankKit
 /// connection that is always up. Which kind the account is, and so which rows Settings offers, is
 /// `kind`, not the account's role. A password sign-in is always an invited account's, so it puts the
 /// model back on the server, leaving a free bank on the phone as it was.
+///
+/// Sign in with Apple makes a store account with no Cloud, which is free: its bank is on this phone,
+/// named by Apple's id of the person, so signing out leaves it and signing in again opens it. When
+/// QBank's server cannot answer after Apple said yes, the bank opens all the same and the sign-in is
+/// sent again later (`awaitsServer`). A session kept from before Sign in with Apple is an invited
+/// account's and opens signed in, on the server, as it did.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -22,7 +28,7 @@ final class AppModel {
     private(set) var route: Route {
         didSet {
             openOffline()
-            drafts.open(accountID: account?.id)
+            drafts.open(accountID: phoneKey)
             frozen.isOn = account?.role == .admin
         }
     }
@@ -40,6 +46,16 @@ final class AppModel {
     private(set) var client: QBankClient
     /// What kind of account is signed in, which decides where its bank is and what it can do.
     private(set) var kind: AccountKind
+    /// True while a Sign in with Apple that Apple confirmed waits for QBank's server, which could not
+    /// answer it: the bank on this phone works all the same, and nothing of the account reaches the
+    /// server until it answers. The sign-in is sent again at launch, when QBank is on screen again and
+    /// when the network comes back (`sendAppleSignInAgain`).
+    private(set) var awaitsServer = false
+    /// What the server answered, or why it could not, the last time it was sent a Sign in with Apple
+    /// it has not confirmed. Nil when nothing was heard yet.
+    private(set) var serverSignInProblem: String?
+    /// Who asks Apple to sign the person in.
+    let appleSignIn: any AppleSignInProvider
     /// Light or dark, chosen in Settings and kept on this phone.
     let look: LookStore
     /// The color scheme she picked in Settings while it is on its way to the server, shown at once.
@@ -67,23 +83,34 @@ final class AppModel {
 
     private let storage: PhoneStorage
     /// The bank on this phone, while a free account is signed in and only then.
-    var bank: LocalBank? { kind.bankIsOnPhone ? phoneBank : nil }
-    private let phoneBank: LocalBank?
+    var bank: LocalBank? { kind.bankIsOnPhone ? phoneBank?.bank : nil }
+    /// The bank opened last, kept open while it is the one in use.
+    private var phoneBank: OpenBank?
+    private let banks: PhoneBanks
+    private let sampleSet: String?
     /// The client that talks to the server, and the phone's network path it follows.
     private let server: QBankClient
     private let network: Connection
     private let networkWatcher: NetworkWatcher?
+    /// True while a kept Sign in with Apple is on its way to the server again, so it goes once at a time.
+    @ObservationIgnored private var isSendingAppleSignIn = false
 
-    /// `client` talks to the server. A free account is given its `bank` on this phone, which answers
-    /// the bank's requests, and only a free account is. A free account's bank that is new, with
-    /// nothing ever in it, is given `sampleSet`, a question file, as the first set of a topic made
-    /// for it; a bank that is not new is left as it is, and an account whose bank is on the server
-    /// has no bank here to give it to.
+    private struct OpenBank {
+        let key: String
+        let bank: LocalBank
+    }
+
+    /// `client` talks to the server. The session it keeps decides where the bank is: a store account
+    /// is free, and its bank is opened from `banks` under Apple's id of the person, which the session
+    /// keeps too; any other account's bank is on the server. A free account's bank that is new, with
+    /// nothing ever in it, is given `sampleSet`, a question file, as the first set of a topic made for
+    /// it; a bank that is not new is left as it is, and an account whose bank is on the server has no
+    /// bank here to give it to.
     init(
         client: QBankClient,
-        kind: AccountKind = .invited,
-        bank: LocalBank? = nil,
+        banks: PhoneBanks = .memory(),
         sampleSet: String? = nil,
+        appleSignIn: any AppleSignInProvider = SystemAppleSignIn(),
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
@@ -93,32 +120,56 @@ final class AppModel {
         connection: Connection = Connection(),
         networkWatcher: NetworkWatcher? = nil
     ) {
-        precondition(kind.bankIsOnPhone == (bank != nil), "A free account, and only a free account, has its bank on this phone.")
-        self.kind = kind
         self.look = look
         self.lock = lock
         self.highlighter = highlighter
         self.aiConsent = aiConsent
         self.drafts = drafts
         self.storage = storage
-        phoneBank = bank
+        self.banks = banks
+        self.sampleSet = sampleSet
+        self.appleSignIn = appleSignIn
         server = client
         network = connection
         self.networkWatcher = networkWatcher
-        self.client = bank.map(client.routingBank(to:)) ?? client
-        if let bank, let sampleSet {
-            // The sample is a nicety: a bank that refuses it simply starts empty.
-            _ = try? bank.fileSampleSet(sampleSet, inTopic: SampleSet.topic)
+        let stored = try? client.storedSession()
+        var opened: OpenBank?
+        var reason: String?
+        var start = Route.signedOut
+        if let stored, let account = stored.account {
+            if account.origin == .store {
+                // A store account's bank is on this phone, named by Apple's id of the person. One that
+                // cannot open is not replaced by an empty one: signing in again finds it.
+                if let key = stored.appleUser, let bank = try? Self.openBank(key, from: banks, sampleSet: sampleSet) {
+                    opened = OpenBank(key: key, bank: bank)
+                    start = .signedIn(account)
+                } else {
+                    reason = AppleSignInWording.bankDidNotOpen
+                }
+            } else {
+                start = Self.route(for: account)
+            }
+        }
+        phoneBank = opened
+        kind = opened == nil ? .invited : .free
+        let waiting = opened != nil && stored?.awaitsServer == true
+        awaitsServer = waiting
+        if let opened {
+            self.client = waiting ? client.routingBankWithoutServer(to: opened.bank) : client.routingBank(to: opened.bank)
+        } else {
+            self.client = client
         }
         // A bank on this phone is always reachable, so no network path is followed for it.
-        self.connection = bank == nil ? connection : Connection.onThisPhone()
-        let stored = try? client.storedSession()
-        route = stored?.account.map(Self.route(for:)) ?? .signedOut
+        self.connection = opened == nil ? connection : Connection.onThisPhone()
+        signedOutReason = reason
+        route = start
         openOffline()
-        drafts.open(accountID: account?.id)
+        drafts.open(accountID: phoneKey)
         frozen.isOn = account?.role == .admin
         network.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
+            guard isOnline, self?.awaitsServer == true else { return }
+            Task { await self?.sendAppleSignInAgain() }
         }
     }
 
@@ -127,6 +178,15 @@ final class AppModel {
         case .signedOut: nil
         case .choosingPassword(let account), .signedIn(let account): account
         }
+    }
+
+    /// Who is signed in, as this phone keeps their things apart, such as the sets they are writing: for
+    /// a bank on this phone its key, Apple's id of the person, which stays the same when the server
+    /// confirms a sign-in it had not; for any other account its id.
+    var phoneKey: String? {
+        guard let account else { return nil }
+        guard kind.bankIsOnPhone, let phoneBank else { return account.id }
+        return phoneBank.key
     }
 
     /// The color scheme the screens are drawn in: her account's, which follows it to every device,
@@ -139,6 +199,14 @@ final class AppModel {
     /// server does not take it, the screens go back to her account's and Settings says why.
     func pickPalette(_ palette: Account.Palette) async {
         guard account != nil, palette != self.palette else { return }
+        // The color is the account's, saved on the server, which has no session for her yet.
+        if awaitsServer {
+            await sendAppleSignInAgain()
+            guard !awaitsServer else {
+                paletteProblem = AppleSignInWording.paletteAwaitsServer
+                return
+            }
+        }
         palettePicks += 1
         let pick = palettePicks
         pickedPalette = palette
@@ -161,6 +229,11 @@ final class AppModel {
     /// Checks the stored session with the server. The phone stays signed in when the server
     /// cannot be reached; only a session the server has ended signs her out.
     func refreshSession() async {
+        // A Sign in with Apple the server has not answered is sent again instead.
+        if awaitsServer {
+            await sendAppleSignInAgain()
+            return
+        }
         // A free account's session is checked with the server when it signs in; until then the
         // phone's bank opens as it is.
         guard account != nil, !kind.bankIsOnPhone else { return }
@@ -176,6 +249,7 @@ final class AppModel {
     func becameActive() async {
         guard account != nil else { return }
         await lock.becameActive()
+        await sendAppleSignInAgain()
     }
 
     /// After a sign-in with her password, which only an invited account has: its bank is on the server.
@@ -197,6 +271,141 @@ final class AppModel {
         route = Self.route(for: signedIn.user)
     }
 
+    // MARK: Sign in with Apple
+
+    /// Where a Sign in with Apple that Apple confirmed ended.
+    enum AppleSignInOutcome: Equatable {
+        /// Signed in, with the account's bank open: on this phone for a store account, on the server
+        /// for an account the owner set up that linked Apple.
+        case signedIn
+        /// Signed in on this phone: QBank's server could not answer, so the bank on this phone is open
+        /// and the sign-in is sent again later (`awaitsServer`).
+        case awaitingServer
+        /// Not signed in, for the reason said. `emailDoor` is set when the person's account signs in
+        /// with email and password: the email Apple shared, to put in that door, or empty.
+        case refused(String, emailDoor: String?)
+    }
+
+    /// Sends the server what Apple said, with the nonce Apple was asked with, and opens the account's
+    /// bank. When the server cannot answer, the bank on this phone opens all the same; a refusal leaves
+    /// whoever was signed in as they were.
+    func signInWithApple(_ credential: AppleCredential, nonce: AppleSignInNonce) async -> AppleSignInOutcome {
+        let request = AppleSignInRequest(identityToken: credential.identityToken, nonce: nonce.value)
+        do {
+            let signedIn = try await server.signInWithApple(request, appleUser: credential.user)
+            return await appleSignedIn(signedIn, appleUser: credential.user)
+        } catch {
+            if AppleSignInWording.serverCannotAnswer(error) {
+                return awaitServer(request, credential: credential, problem: AppleSignInWording.problem(error))
+            }
+            let emailDoor = error.serverCode == "password_account" || error.serverCode == "email_in_use" ? credential.email ?? "" : nil
+            return .refused(AppleSignInWording.problem(error), emailDoor: emailDoor)
+        }
+    }
+
+    /// Sends the server again a Sign in with Apple it could not answer, when one is kept. Once it
+    /// answers, the account is the server's, and the screens stay as they are when it is the same
+    /// person. Until the server can answer, the sign-in waits for the next time. A refusal is kept for
+    /// Settings to say, and the same sign-in is not sent again, but after a lock, which ends.
+    func sendAppleSignInAgain() async {
+        guard awaitsServer, !isSendingAppleSignIn, let kept = try? server.storedSession(), kept.awaitsServer, kept.unsent != nil,
+            let appleUser = kept.appleUser
+        else { return }
+        isSendingAppleSignIn = true
+        defer { isSendingAppleSignIn = false }
+        do {
+            guard let signedIn = try await server.sendAppleSignInAgain(kept) else { return }
+            _ = await appleSignedIn(signedIn, appleUser: appleUser)
+        } catch {
+            guard awaitsServer, phoneBank?.key == appleUser else { return }
+            serverSignInProblem = AppleSignInWording.problem(error)
+            if !AppleSignInWording.serverCannotAnswer(error), error.serverCode != .tooManyAttempts {
+                try? server.forgetUnsentAppleSignIn(kept)
+            }
+        }
+    }
+
+    /// After the server answered a Sign in with Apple. A store account's bank is on this phone, under
+    /// Apple's id of the person; an account the owner set up, which linked Apple, has its bank on the
+    /// server, as with its password. The server confirming the person already signed in here on this
+    /// phone keeps the screens as they are.
+    private func appleSignedIn(_ signedIn: SignedIn, appleUser: String) async -> AppleSignInOutcome {
+        let isConfirming = awaitsServer && phoneKey == appleUser && signedIn.user.origin == .store
+        if signedIn.user.origin == .store {
+            guard let bank = try? openBank(appleUser) else {
+                // The server's session is of no use without the bank: end it, and say why.
+                try? await server.signOut()
+                return .refused(AppleSignInWording.bankDidNotOpen, emailDoor: nil)
+            }
+            kind = .free
+            client = server.routingBank(to: bank)
+            connection = Connection.onThisPhone()
+        } else {
+            kind = .invited
+            client = server
+            connection = network
+        }
+        awaitsServer = false
+        serverSignInProblem = nil
+        temporaryPassword = nil
+        if !isConfirming { beginSignIn() }
+        route = Self.route(for: signedIn.user)
+        return .signedIn
+    }
+
+    /// Apple said yes and the server could not answer: the bank on this phone opens under Apple's id of
+    /// the person, with the account as Apple described it, and the sign-in is kept to send again. The
+    /// same person asking again while waiting keeps the screens as they are.
+    private func awaitServer(_ request: AppleSignInRequest, credential: AppleCredential, problem: String) -> AppleSignInOutcome {
+        let samePerson = awaitsServer && phoneKey == credential.user ? account : nil
+        let account =
+            samePerson ?? Account(id: credential.user, email: credential.email ?? "", name: "", role: .student, mustChangePassword: false, origin: .store)
+        guard let bank = try? openBank(credential.user) else {
+            return .refused(AppleSignInWording.bankDidNotOpen, emailDoor: nil)
+        }
+        do {
+            try server.keepAppleSignInForServer(request, account: account, appleUser: credential.user)
+        } catch {
+            return .refused(Wording.problem(error) ?? AppleSignInWording.appleDidNotFinish, emailDoor: nil)
+        }
+        kind = .free
+        client = server.routingBankWithoutServer(to: bank)
+        connection = Connection.onThisPhone()
+        awaitsServer = true
+        serverSignInProblem = problem
+        temporaryPassword = nil
+        if samePerson == nil { beginSignIn() }
+        route = .signedIn(account)
+        return .awaitingServer
+    }
+
+    /// A new person signed in on this phone: fresh screens, the lock as at a sign-in, and no word left
+    /// from the last sign-out.
+    private func beginSignIn() {
+        signIns += 1
+        signedOutReason = nil
+        hasLanded = false
+        lock.signedIn()
+    }
+
+    /// The bank of `key`, opened once and kept open while it is the one in use.
+    private func openBank(_ key: String) throws -> LocalBank {
+        if let phoneBank, phoneBank.key == key { return phoneBank.bank }
+        let bank = try Self.openBank(key, from: banks, sampleSet: sampleSet)
+        phoneBank = OpenBank(key: key, bank: bank)
+        return bank
+    }
+
+    /// A bank that has never held anything is given the sample set. The sample is a nicety: a bank
+    /// that refuses it simply starts empty.
+    private static func openBank(_ key: String, from banks: PhoneBanks, sampleSet: String?) throws -> LocalBank {
+        let bank = try banks.open(key)
+        if let sampleSet {
+            _ = try? bank.fileSampleSet(sampleSet, inTopic: SampleSet.topic)
+        }
+        return bank
+    }
+
     /// Ends the session on the server and on this phone. The phone forgets it even without signal,
     /// with the courses it saved and any answers still waiting to be sent.
     func signOut() async {
@@ -210,6 +419,11 @@ final class AppModel {
     /// in, so she stays signed in here, keeps everything, and the failure is thrown for Settings to
     /// say. A session that had already ended goes back to sign-in, as any ended session does.
     func signOutEverywhere() async throws(QBankError) {
+        // With no session on the server yet, this phone's is the only one.
+        guard !awaitsServer else {
+            await signOut()
+            return
+        }
         do {
             try await client.signOutEverywhere()
         } catch {
@@ -281,6 +495,8 @@ final class AppModel {
         paletteProblem = nil
         temporaryPassword = nil
         hasLanded = false
+        awaitsServer = false
+        serverSignInProblem = nil
         route = .signedOut
     }
 
@@ -314,6 +530,9 @@ final class AppModel {
         let connection = Connection()
         return AppModel(
             client: QBankClient(sessionStore: KeychainSessionStore()),
+            banks: .standard(),
+            sampleSet: SampleSet.bundledSource(),
+            appleSignIn: SystemAppleSignIn(),
             storage: .standard(),
             connection: connection,
             networkWatcher: NetworkWatcher(connection: connection)

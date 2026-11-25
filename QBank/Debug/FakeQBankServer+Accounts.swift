@@ -2,9 +2,9 @@
 import Foundation
 import QBankKit
 
-/// The fake server's accounts and sessions, with the rules and words of the real routes: sign-in,
-/// sign-up from the owner's list, a new password, the color scheme, deleting the account, and
-/// what the owner's read-only view of a user account is answered.
+/// The fake server's accounts and sessions, with the rules and words of the real routes: sign-in with
+/// a password or with Apple, a new password, the color scheme, deleting the account, and what the
+/// owner's read-only view of a user account is answered.
 nonisolated extension FakeQBankServer {
     // MARK: The admin
 
@@ -58,45 +58,11 @@ nonisolated extension FakeQBankServer {
         return startSession { $0.email == normalized && $0.password == password }
     }
 
-    /// A user account for the email on the sign-up list, signed in at once, as the real route makes
-    /// it: the fields' rules first, then the lock, then the list. Any other email, or one that has
-    /// an account, gets the same refusal, and the fifth refusal locks that email's sign-up.
-    func signUp(email: String, password: String) -> Reply {
-        let normalized = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard normalized.contains("@"), (8...128).contains(password.utf16.count) else {
-            return failure(400, "invalid_request", "Check the fields and try again.")
-        }
-        let made = state.withLock { state -> Bool? in
-            if state.signUpRefusals[normalized, default: 0] >= Self.signUpLimit { return nil }
-            guard normalized == Self.signUpEmail, !state.accounts.contains(where: { $0.email == normalized }) else {
-                let refusals = state.signUpRefusals[normalized, default: 0] + 1
-                state.signUpRefusals[normalized] = refusals
-                return refusals >= Self.signUpLimit ? nil : false
-            }
-            state.signUpRefusals[normalized] = nil
-            let name = String(normalized.prefix { $0 != "@" })
-            state.accounts.append(Account(id: "fake-new-user", email: normalized, name: name, password: password, mustChangePassword: false))
-            return true
-        }
-        switch made {
-        case nil:
-            var reply = failure(429, "too_many_attempts", "Too many tries. Try again in 15 minutes.")
-            reply.1["retryAfterSeconds"] = 900
-            return reply
-        case false?:
-            return failure(403, "sign_up_refused", "This email can't sign up here. If you already have an account, sign in. Otherwise, ask the owner to add your email.")
-        case true?:
-            let (status, body) = startSession { $0.email == normalized }
-            return (status == 200 ? 201 : status, body)
-        }
-    }
-
-    private static let signUpLimit = 5
     /// Wrong passwords before deleting the account locks, as sign-in locks.
     private static let passwordLimit = 5
 
     /// A new session for the account that matches, as a sign-in answers it.
-    private func startSession(for matches: (Account) -> Bool) -> Reply {
+    func startSession(for matches: (Account) -> Bool) -> Reply {
         let signedIn = state.withLock { state -> (String, Account)? in
             guard let account = state.accounts.first(where: matches) else { return nil }
             state.tokenCount += 1

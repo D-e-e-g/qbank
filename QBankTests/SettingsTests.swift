@@ -572,16 +572,7 @@ struct BankExportTests {
     }
 
     private func freeApp(_ bank: LocalBank, network: StubServer = StubServer()) -> AppModel {
-        let store = InMemorySessionStore(StoredSession(token: TestApp.token, account: .student()))
-        let client = QBankClient(
-            configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: network, sessionStore: store
-        )
-        let defaults = TestApp.freshDefaults()
-        return AppModel(
-            client: client, kind: .free, bank: bank, look: LookStore(defaults: defaults),
-            lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
-            aiConsent: AIConsentStore(defaults: defaults), storage: .memory()
-        )
+        TestApp.free(network, bank: bank).0
     }
 
     @Test func onlyAUserAccountIsOfferedIt() {

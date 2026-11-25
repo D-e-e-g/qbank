@@ -2,7 +2,7 @@
 
 The design record for who is signed in, where their question bank lives, and how a whole bank moves between the phone and the server. [on-phone-bank.md](on-phone-bank.md) is its other half: the bank on the phone and the bank archive format.
 
-This is a record to build to, not a description of shipped code. Nothing here exists yet. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`).
+This is a record to build to, not a description of shipped code. Only Getting in exists so far (I-30), and its section says what was built. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`).
 
 Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name owner questions. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -73,6 +73,7 @@ So the color scheme is the account's and is saved on the server in every mode. W
 - **The server verifies Apple's identity token** against Apple's public keys: signature, issuer, bundle id, nonce, expiry (A6, S-04). No Apple secret is needed to sign people in.
 - **Accounts are never linked by matching email.** An Apple email that already belongs to a password account is refused with a sentence that points to the email door. Linking is explicit, from Settings, while signed in (S-05, I-31).
 - **The update signs nobody out.** A stored session opens the app signed in (`AppModel.swift:73-74`), and it is an invited account's session, so that phone stays in server mode with its saved copies and waiting answers.
+- **As built (I-30).** `QBank/SignIn/WelcomeView.swift` is the first screen. The app makes a nonce and asks Apple with its SHA-256 (`AppleSignInNonce`); the identity token and the nonce go to `POST /api/sign-in/apple`, which takes no authorization code. A store account opens its bank on the phone. If the server cannot be reached, or answers 502 or 503, the bank opens anyway, Settings says the sign-in is waiting, and the app sends it again when the network returns, when it comes back to the front, and from Settings; a refusal then is said in Settings and the bank stays open. A 401, 409 or 429 at the first screen is said in plain words and signs nobody in, and a 409 opens the email door with the email filled in (`QBank/SignIn/AppleSignInWording.swift`).
 - **The web app is unchanged (A8).** Email and password for invited accounts. No Sign in with Apple on the web, and no web access for store accounts, in the first release.
 - **Deleting a store account** asks for a fresh Sign in with Apple, since the account has no password. The server exchanges its authorization code, revokes Apple's token, then deletes; no Apple token is stored at rest (A10, S-06). Today the route takes a password (`apps/api/src/routes/auth.ts:265-281`), and that stays for invited accounts.
 
@@ -128,7 +129,7 @@ Free or Cloud, a store account does not get these in the first release. The serv
 | The admin's frozen view | The owner can look at invited accounts only. The list, the view, the temporary password and Repair do not reach a store account (S-02). | The admin's view picks among all user accounts (`apps/api/src/auth/accounts.ts:185-203`) |
 | The web app | No Sign in with Apple on the web (A8) | Email and password only |
 | Change password, and the temporary password | A store account has no password | A row in Settings (`SettingsView.swift:112-116`) |
-| Sign up in the app | The screen leaves the app (A7) | A button on the sign-in screen (`QBank/SignIn/SignInView.swift:96`) |
+| Sign up in the app | The screen leaves the app (A7) | Gone since I-30; invited sign-up is on the web |
 | Saved for offline, in free mode only | The whole bank is already on the phone | A row in Settings (`SettingsView.swift:337-345`) |
 
 Cloud accounts keep Saved for offline, since their bank is on the server.

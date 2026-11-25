@@ -105,6 +105,8 @@ enum TestApp {
     ///   - lock: The Face ID lock, off on a device with Face ID unless a test gives another.
     ///   - defaults: Where the phone keeps its settings, empty and the test's own unless it gives one.
     ///   - aiAllowed: Whether she already allowed her material to go to Anthropic; a new phone has not.
+    ///   - apple: Who answers Sign in with Apple in Apple's place.
+    ///   - banks: Where a free account's bank opens, in memory unless a test gives its own.
     static func make(
         _ server: StubServer,
         account: Account? = nil,
@@ -112,7 +114,9 @@ enum TestApp {
         connection: Connection = Connection(),
         lock: AppLock? = nil,
         defaults: UserDefaults = TestApp.freshDefaults(),
-        aiAllowed: Bool = false
+        aiAllowed: Bool = false,
+        apple: any AppleSignInProvider = DebugScriptedAppleSignIn(),
+        banks: PhoneBanks = .memory()
     ) -> (AppModel, InMemorySessionStore) {
         let store = InMemorySessionStore(account.map { StoredSession(token: token, expiresAt: nil, account: $0) })
         let client = QBankClient(
@@ -123,6 +127,8 @@ enum TestApp {
         defaults.set(aiAllowed, forKey: AIConsentStore.key)
         let app = AppModel(
             client: client,
+            banks: banks,
+            appleSignIn: apple,
             look: LookStore(defaults: defaults),
             lock: lock ?? AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
             highlighter: HighlighterStore(defaults: defaults),
@@ -130,6 +136,38 @@ enum TestApp {
             drafts: WriteDraftStore(defaults: defaults),
             storage: storage,
             connection: connection
+        )
+        return (app, store)
+    }
+
+    /// Apple's id of the invented person a free model is signed in as, which names their bank.
+    static let appleUser = "000111.testapple0000000000000000000001.0001"
+
+    /// A free account's model: the store account `Account.store()`, signed in with Apple from an
+    /// earlier launch, or, with `awaitsServer`, signed in on this phone only while the server could
+    /// not answer, with `unsent` kept to send again. Its bank on this phone is `bank`, or one of its
+    /// own, and `server` takes the account's own requests.
+    static func free(
+        _ server: StubServer = StubServer(),
+        bank: LocalBank? = nil,
+        sampleSet: String? = nil,
+        connection: Connection = Connection(),
+        awaitsServer: Bool = false,
+        unsent: AppleSignInRequest? = nil,
+        apple: any AppleSignInProvider = DebugScriptedAppleSignIn(),
+        defaults: UserDefaults = TestApp.freshDefaults()
+    ) -> (AppModel, InMemorySessionStore) {
+        let session =
+            awaitsServer
+            ? StoredSession(token: "", account: .store(), appleUser: appleUser, unsent: unsent)
+            : StoredSession(token: token, account: .store(), appleUser: appleUser)
+        let store = InMemorySessionStore(session)
+        let client = QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: server, sessionStore: store)
+        let banks = bank.map { bank in PhoneBanks { _ in bank } } ?? .memory()
+        let app = AppModel(
+            client: client, banks: banks, sampleSet: sampleSet, appleSignIn: apple, look: LookStore(defaults: defaults),
+            lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)), highlighter: HighlighterStore(defaults: defaults),
+            aiConsent: AIConsentStore(defaults: defaults), drafts: WriteDraftStore(defaults: defaults), storage: .memory(), connection: connection
         )
         return (app, store)
     }
@@ -152,6 +190,16 @@ enum Bodies {
 
     static func signedIn(token: String = "synthetic-new-token", mustChangePassword: Bool = false) -> String {
         #"{"token":"\#(token)","user":\#(account(mustChangePassword: mustChangePassword)),"expiresAt":"2027-01-01T00:00:00.000Z"}"#
+    }
+
+    /// The answer to a Sign in with Apple, as the contract's `SignedIn` shapes it, for a store account or,
+    /// with `origin: "invited"`, for an account the owner set up that linked Apple.
+    static func appleSignedIn(token: String = "synthetic-apple-token", origin: String = "store") -> String {
+        let user =
+            origin == "store"
+            ? #"{"id":"a3","email":"person@privaterelay.appleid.com","name":"person","role":"student","mustChangePassword":false,"palette":"dusk","origin":"store","cloud":{"active":false,"expiresAt":null},"signInWith":["apple"]}"#
+            : #"{"id":"a1","email":"student@example.com","name":"Sam Student","role":"student","mustChangePassword":false,"palette":"dusk","origin":"invited","cloud":{"active":true,"expiresAt":null},"signInWith":["password","apple"]}"#
+        return #"{"token":"\#(token)","user":\#(user),"expiresAt":"2027-01-01T00:00:00.000Z"}"#
     }
 
     static func session(mustChangePassword: Bool = false, palette: String? = nil) -> String {
@@ -228,6 +276,11 @@ extension Account {
     }
 
     static let admin = Account(id: "a2", email: "owner@example.com", name: "Owner", role: .admin, mustChangePassword: false)
+
+    /// A store account, made by Sign in with Apple.
+    static func store(palette: Palette = .dusk) -> Account {
+        Account(id: "a3", email: "person@privaterelay.appleid.com", name: "person", role: .student, mustChangePassword: false, palette: palette, origin: .store)
+    }
 }
 
 /// Waits for something the app does in the background, such as sending answers when the

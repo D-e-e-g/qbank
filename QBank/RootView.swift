@@ -9,7 +9,7 @@ struct RootView: View {
         Group {
             switch model.route {
             case .signedOut:
-                SignedOutView(app: model)
+                WelcomeView(app: model)
                     .transition(.opacity)
             case .choosingPassword:
                 ChoosePasswordView(app: model)
@@ -17,8 +17,9 @@ struct RootView: View {
             case .signedIn(let account):
                 SignedInView(app: model)
                     // A new sign-in starts from fresh screens, even one made while the screens of
-                    // the same account's sign-out still fade.
-                    .id("\(account.id) \(model.signIns)")
+                    // the same account's sign-out still fade. The server confirming a Sign in with
+                    // Apple keeps them: the person, and so the phone's key, is the same.
+                    .id("\(model.phoneKey ?? account.id) \(model.signIns)")
                     .transition(.opacity)
             }
         }

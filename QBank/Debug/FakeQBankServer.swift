@@ -23,9 +23,9 @@ nonisolated final class FakeQBankServer: HTTPTransport {
     static let owner = Credentials(email: "owner@example.com", password: "synthetic-pass-3")
     /// The email the owner's frozen view names for `student`'s account.
     static let viewedEmail = "sam@example.com"
-    /// The one email on the owner's sign-up list, with no account yet: it signs up with any password
-    /// of 8 to 128 characters. Every other email is refused.
-    static let signUpEmail = "new.user@example.com"
+    /// The person who has the fake server's store account, made by Sign in with Apple: no password
+    /// and no Cloud. `user` is Apple's id of them.
+    static let applePerson = (user: "001357.fakeapple0000000000000000000001.0001", email: "apple.person@privaterelay.appleid.com")
     static let sessionToken = "synthetic-session-token"
 
     static let mentalHealthID = "8d7b4f0e-0000-4000-8000-000000000310"
@@ -37,14 +37,24 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         let id: String
         let email: String
         let name: String
-        var password: String
+        /// Nil for a store account, which signs in with Apple only.
+        var password: String?
         var mustChangePassword: Bool
         /// Her color scheme, "dusk" until she picks "slate" in Settings.
         var palette = "dusk"
         var role = "student"
+        /// Apple's id of the person, for an account Sign in with Apple made.
+        var appleUser: String?
+
+        /// "store" for an account Sign in with Apple made, "invited" for one the owner set up.
+        var origin: String { password == nil ? "store" : "invited" }
 
         var json: [String: Any] {
-            ["id": id, "email": email, "name": name, "role": role, "mustChangePassword": mustChangePassword, "palette": palette]
+            [
+                "id": id, "email": email, "name": name, "role": role, "mustChangePassword": mustChangePassword, "palette": palette,
+                "origin": origin, "cloud": ["active": origin == "invited", "expiresAt": NSNull()],
+                "signInWith": [password == nil ? nil : "password", appleUser == nil ? nil : "apple"].compactMap(\.self),
+            ]
         }
     }
 
@@ -110,8 +120,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         /// Sets imported while the app ran, by id.
         var imported: [String: ImportedEntry] = [:]
         var importCount = 0
-        /// Refused sign-ups by email; the fifth locks that email's sign-up.
-        var signUpRefusals: [String: Int] = [:]
+        /// The nonce hashes of the Apple identity tokens taken, so a token is taken once.
+        var takenAppleNonces: Set<String> = []
         /// Wrong passwords to delete an account, by email; the fifth locks deleting it.
         var wrongDeletePasswords: [String: Int] = [:]
     }
@@ -182,6 +192,9 @@ nonisolated final class FakeQBankServer: HTTPTransport {
                     Account(id: "fake-reset", email: Self.resetStudent.email, name: "Robin Reset", password: Self.resetStudent.password, mustChangePassword: true),
                     Account(id: "fake-maker", email: Self.maker.email, name: "Max Maker", password: Self.maker.password, mustChangePassword: false),
                     Account(id: "fake-owner", email: Self.owner.email, name: "Olive Owner", password: Self.owner.password, mustChangePassword: false, role: "admin"),
+                    Account(
+                        id: "fake-apple-person", email: Self.applePerson.email, name: "apple.person", password: nil, mustChangePassword: false,
+                        appleUser: Self.applePerson.user),
                 ],
                 semesters: [
                     FakeSemester(id: Self.semester1ID, number: 1, name: "Semester 1"),
@@ -207,6 +220,18 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             token: sessionToken,
             expiresAt: expiresAt,
             account: QBankKit.Account(id: "fake-student", email: student.email, name: "Sam Student", role: .student, mustChangePassword: false)
+        )
+    }
+
+    /// The session the app keeps for `applePerson`, the store account Sign in with Apple made, when a
+    /// scenario starts signed in as them: with Apple's id of the person, which names their bank.
+    static func storedApplePersonSession(expiresAt: Date = .now.addingTimeInterval(30 * 86_400)) -> StoredSession {
+        StoredSession(
+            token: sessionToken,
+            expiresAt: expiresAt,
+            account: QBankKit.Account(
+                id: "fake-apple-person", email: applePerson.email, name: "apple.person", role: .student, mustChangePassword: false, origin: .store),
+            appleUser: applePerson.user
         )
     }
 
@@ -271,8 +296,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         if method == "POST", path == "/api/sign-in/password" {
             return signIn(email: body["email"] as? String ?? "", password: body["password"] as? String ?? "")
         }
-        if method == "POST", path == "/api/sign-up" {
-            return signUp(email: body["email"] as? String ?? "", password: body["password"] as? String ?? "")
+        if method == "POST", path == "/api/sign-in/apple" {
+            return signInWithApple(identityToken: body["identityToken"] as? String ?? "", nonce: body["nonce"] as? String ?? "")
         }
         guard let token, let account = account(for: token) else {
             return failure(401, "unauthenticated", "Sign in to continue.")

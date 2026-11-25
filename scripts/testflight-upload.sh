@@ -28,7 +28,8 @@ set -euo pipefail
 
 SCHEME="QBank"
 BUNDLE_ID="com.dimitrygallego.qbank"
-# The app's one entitlement, for Password AutoFill: the web domain's webcredentials.
+# The app's two entitlements: Sign in with Apple, and the web domain's webcredentials for Password AutoFill.
+APPLE_SIGN_IN="Default"
 ASSOCIATED_DOMAIN="webcredentials:qbank.dimitrygallego.com"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 SELF="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
@@ -287,6 +288,12 @@ check_export() {
     die "could not read the entitlements of $SCHEME.app"
   [ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.developer.associated-domains:0' "$entitlements" 2>/dev/null)" = "$ASSOCIATED_DOMAIN" ] ||
     die "$SCHEME.app is not signed with $ASSOCIATED_DOMAIN, so Password AutoFill would not offer the web domain's password"
+  # The first screen is Sign in with Apple, which Apple refuses to an app signed without it, under a profile whose
+  # App ID has the capability (docs/app-store-setup.md step 6 ticks it; automatic signing adds it otherwise).
+  /usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.developer.applesignin' "$profile" >/dev/null 2>&1 ||
+    die "the provisioning profile does not allow Sign in with Apple; see docs/release.md"
+  [ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.developer.applesignin:0' "$entitlements" 2>/dev/null)" = "$APPLE_SIGN_IN" ] ||
+    die "$SCHEME.app is not signed with Sign in with Apple, so its first screen could not sign anyone in"
 
   codesign --verify --deep --strict "$app" || die "$SCHEME.app fails codesign --verify"
   signature="$(codesign -d --verbose=2 "$app" 2>&1)" || die "could not read the signature of $SCHEME.app"

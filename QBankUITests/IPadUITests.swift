@@ -167,21 +167,37 @@ final class IPadUITests: XCTestCase {
         XCTAssertTrue(note.appears(timeout: 5))
     }
 
+    /// The first screen on iPad: Sign in with Apple and, behind its door, the email and password of an
+    /// existing account, in one column in the middle, in both orientations.
     @MainActor
     func testSignInIsAColumnInTheMiddle() throws {
         let app = launch("signed-out")
         let title = app.staticTexts["signIn.title"]
         XCTAssertTrue(title.appears(timeout: 10))
+        let apple = app.buttons["welcome.apple"]
+        let field = app.textFields["signIn.email"]
         for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
             XCUIDevice.shared.orientation = orientation
-            let field = app.textFields["signIn.email"]
+            let tag = orientation == .portrait ? "portrait" : "landscape"
+            XCTAssertTrue(apple.appears(timeout: 5))
+            expectInTheMiddle(apple, of: app)
+            if !field.exists {
+                app.buttons["welcome.useExistingAccount"].tap()
+            }
             XCTAssertTrue(field.appears(timeout: 5))
-            // Measured once the turn has settled: just after it, the column can still be moving.
-            let centered = NSPredicate { _, _ in abs(field.frame.midX - app.windows.firstMatch.frame.midX) <= 1 }
-            XCTAssertEqual(XCTWaiter.wait(for: [expectation(for: centered, evaluatedWith: field)], timeout: 5), .completed, "\(field.frame.midX) is not the middle")
-            XCTAssertLessThanOrEqual(field.frame.width, 480)
-            attach(app, "ipad sign in, \(orientation == .portrait ? "portrait" : "landscape")")
+            expectInTheMiddle(field, of: app)
+            expectInTheMiddle(apple, of: app)
+            attach(app, "ipad sign in, \(tag)")
         }
+    }
+
+    /// Measured once a turn has settled: just after it, the column can still be moving.
+    @MainActor
+    private func expectInTheMiddle(_ element: XCUIElement, of app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let centered = NSPredicate { _, _ in abs(element.frame.midX - app.windows.firstMatch.frame.midX) <= 1 }
+        let settled = XCTWaiter.wait(for: [expectation(for: centered, evaluatedWith: element)], timeout: 5)
+        XCTAssertEqual(settled, .completed, "\(element.identifier) at \(element.frame.midX) is not the middle", file: file, line: line)
+        XCTAssertLessThanOrEqual(element.frame.width, 480, file: file, line: line)
     }
 
     /// Every screen, in both orientations and both looks, for a look by eye in the test results.
