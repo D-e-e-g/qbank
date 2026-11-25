@@ -189,7 +189,8 @@ struct AppleDeleteAccountTests {
         let finishing = AppleDeleteAccountModel(app: phone.app)
         #expect(finishing.isFinishing)
         #expect(finishing.problem == noConnection)
-        #expect(finishing.message == AccountDeletionWording.finishing)
+        #expect(finishing.message == AccountDeletionWording.finishing(phoneErased: true))
+        #expect(finishing.message.hasPrefix("Everything QBank kept on this \(Device.model) is erased"))
 
         let start = phone.log.steps.count
         await finishing.delete(over: nil)
@@ -241,6 +242,10 @@ struct AppleDeleteAccountTests {
         #expect(model.problem == AccountDeletionWording.phoneNotErased)
         #expect(phone.app.route == .finishingDeletion(.store()))
         #expect(try phone.store.load()?.deletion == .erasingPhone)
+        // The erase did not finish, so the screen does not say the phone is clean, even after a relaunch.
+        #expect(model.message == AccountDeletionWording.finishing(phoneErased: false))
+        #expect(model.message.hasPrefix("QBank has not finished erasing what it kept on this \(Device.model)"))
+        #expect(AppleDeleteAccountModel(app: phone.relaunched()).message == AccountDeletionWording.finishing(phoneErased: false))
         #expect(!phone.server.calls.contains("DELETE /api/me"))
 
         let relaunched = phone.relaunched()

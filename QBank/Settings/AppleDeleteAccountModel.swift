@@ -41,7 +41,7 @@ final class AppleDeleteAccountModel {
 
     /// What the screen says: what goes, for where this account's bank is, or what is left to finish.
     var message: String {
-        isFinishing ? AccountDeletionWording.finishing : AccountDeletionWording.whatGoes(bankIsOnPhone: app.kind.bankIsOnPhone)
+        isFinishing ? AccountDeletionWording.finishing(phoneErased: app.phoneCopyErased) : AccountDeletionWording.whatGoes(bankIsOnPhone: app.kind.bankIsOnPhone)
     }
 
     /// Checks QBank's server, asks Apple over `window`, then deletes. Closing Apple's sheet says

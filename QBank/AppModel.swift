@@ -25,7 +25,8 @@ import UIKit
 ///
 /// A store account, free or Cloud, is deleted with a fresh Sign in with Apple, in a fixed order: this
 /// phone's copy is erased, then the account on the server, then the session (`deleteAccount(confirmedWith:nonce:)`).
-/// A delete that stopped after the erase opens as `finishingDeletion`, which offers only to finish it.
+/// A delete that stopped after the erase began opens as `finishingDeletion`, which offers to finish it
+/// or to sign out, which keeps the account on QBank's server until it is deleted later from Settings.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -35,7 +36,7 @@ final class AppModel {
         case choosingPassword(Account)
         case signedIn(Account)
         /// A store account's delete that stopped once this phone's copy was erased, or while it was,
-        /// before the server deleted the account: finishing the delete is all that is offered.
+        /// before the server deleted the account: finishing the delete, or signing out, is offered.
         case finishingDeletion(Account)
     }
 
@@ -79,6 +80,8 @@ final class AppModel {
     /// True while a store account's delete runs, from the server's check to its last step, so every
     /// screen shows it under way and a second one never begins.
     private(set) var isDeletingAccount = false
+    /// True once a delete to finish has erased this phone's copy of the account.
+    private(set) var phoneCopyErased = false
     /// Who asks Apple to sign the person in.
     let appleSignIn: any AppleSignInProvider
     /// Light or dark, chosen in Settings and kept on this phone.
@@ -184,7 +187,7 @@ final class AppModel {
         if let stored, let account = stored.account {
             if stored.deletion != nil {
                 // A delete that stopped part way: this phone's copy may be erased already, so nothing
-                // opens it again, and only finishing the delete is offered.
+                // opens it again, and finishing the delete or signing out is offered.
                 start = .finishingDeletion(account)
             } else if account.origin == .store {
                 // A store account's bank is named by Apple's id of the person: on this phone, or in
@@ -222,6 +225,7 @@ final class AppModel {
         // A bank on this phone is always reachable, so no network path is followed for it.
         self.connection = opened == nil ? connection : Connection.onThisPhone()
         signedOutReason = reason
+        phoneCopyErased = stored?.deletion == .phoneErased
         route = start
         openOffline()
         drafts.open(accountID: phoneKey)
@@ -722,6 +726,7 @@ final class AppModel {
         storage.erase(account.id)
         drafts.erase(accountID: appleUser)
         drafts.erase(accountID: account.id)
+        phoneCopyErased = true
         // Not kept, the erase simply runs again next time, and erases nothing more.
         try? server.recordAccountDeletion(.phoneErased)
     }
@@ -799,6 +804,7 @@ final class AppModel {
     private func forgetSession(reason: String?) {
         signedOutReason = reason
         deletionProblem = nil
+        phoneCopyErased = false
         pickedPalette = nil
         paletteProblem = nil
         temporaryPassword = nil

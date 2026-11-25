@@ -13,10 +13,14 @@ enum AccountDeletionWording {
         }
     }
 
-    /// Said once this phone's copy is erased, or being erased, and the server has not deleted the
-    /// account yet.
-    static var finishing: String {
-        "Everything QBank kept on this \(Device.model) is erased, but your account on QBank's server is not deleted yet. Delete it to finish."
+    /// Said while a delete is to be finished: once this phone's copy is erased, or while it still is
+    /// not, and the server has not deleted the account yet.
+    static func finishing(phoneErased: Bool) -> String {
+        if phoneErased {
+            "Everything QBank kept on this \(Device.model) is erased, but your account on QBank's server is not deleted yet. Delete it to finish."
+        } else {
+            "QBank has not finished erasing what it kept on this \(Device.model), and your account on QBank's server is not deleted yet. Delete it to finish both."
+        }
     }
 
     /// Under the delete button: Apple's sheet comes first.
