@@ -117,7 +117,7 @@ public struct QBankClient: Sendable {
     public func session() async throws(QBankError) -> Session {
         let session: Session = try await send(Request(.get, "/api/session"))
         if let stored = try loadSession() {
-            try save(StoredSession(token: stored.token, expiresAt: session.expiresAt, account: session.user, appleUser: stored.appleUser))
+            try save(StoredSession(token: stored.token, expiresAt: session.expiresAt, account: session.user, appleUser: stored.appleUser, unsent: stored.unsent))
         }
         return session
     }
@@ -683,7 +683,7 @@ public struct QBankClient: Sendable {
     public func setPalette(_ palette: Account.Palette) async throws(QBankError) -> Account {
         let account: Account = try await send(Request(.put, "/api/me/palette", body: PaletteUpdate(palette: palette)))
         if let stored = try loadSession() {
-            try save(StoredSession(token: stored.token, expiresAt: stored.expiresAt, account: account))
+            try save(StoredSession(token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent))
         }
         return account
     }

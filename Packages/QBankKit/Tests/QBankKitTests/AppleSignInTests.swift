@@ -174,6 +174,17 @@ struct AppleSignInTests {
         #expect(refreshed.account?.origin == .store)
     }
 
+    @Test func pickingAColorKeepsApplesIDOfThePerson() async throws {
+        let transport = Answers(["PUT /api/me/palette": (200, Self.storeAccount)])
+        let stored = StoredSession(token: "synthetic-apple-session", account: nil, appleUser: Self.appleUser)
+        let (client, store) = client(transport, stored: stored)
+        _ = try await client.setPalette(.slate)
+        let saved = try #require(try store.load())
+        #expect(saved.appleUser == Self.appleUser)
+        #expect(saved.token == "synthetic-apple-session")
+        #expect(saved.account?.origin == .store)
+    }
+
     // MARK: What the phone kept before
 
     @Test func aSessionKeptBeforeSignInWithAppleIsAnInvitedAccountsSignedInSession() throws {

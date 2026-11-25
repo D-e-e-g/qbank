@@ -234,7 +234,7 @@ struct SettingsView: View {
     /// and Sign in with Apple again to finish now.
     private var awaitingServer: some View {
         VStack(alignment: .leading, spacing: QBankSpacing.space3) {
-            Text(app.needsAppleSignInAgain ? AppleSignInWording.needsAppleSignInAgain : AppleSignInWording.awaitsServer)
+            Text(Self.serverStatusLine(app))
                 .qbankFont(.footnote)
                 .foregroundStyle(.qbank(.text2))
                 .fixedSize(horizontal: false, vertical: true)
@@ -249,6 +249,12 @@ struct SettingsView: View {
         }
         .padding(.horizontal, QBankSpacing.rowPaddingHorizontal)
         .padding(.vertical, 11)
+    }
+
+    /// What Settings says while QBank's server has not confirmed her Sign in with Apple: that QBank
+    /// tries again on its own while a kept sign-in waits, or that only a new one connects this phone.
+    static func serverStatusLine(_ app: AppModel) -> String {
+        app.needsAppleSignInAgain ? AppleSignInWording.needsAppleSignInAgain : AppleSignInWording.awaitsServer
     }
 
     /// While she signs out here or everywhere, nothing else on her account can start.

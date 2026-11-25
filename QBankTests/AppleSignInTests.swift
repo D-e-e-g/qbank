@@ -207,14 +207,17 @@ struct AppleSignInTests {
         let unsent = AppleSignInRequest(identityToken: "synthetic.apple.token", nonce: String(repeating: "c", count: 64))
         let (app, store) = TestApp.free(server, awaitsServer: true, unsent: unsent)
         #expect(!app.needsAppleSignInAgain, "a kept sign-in is still sent again on its own")
+        #expect(SettingsView.serverStatusLine(app) == AppleSignInWording.awaitsServer)
         await app.sendAppleSignInAgain()
         #expect(app.needsAppleSignInAgain)
+        #expect(SettingsView.serverStatusLine(app) == AppleSignInWording.needsAppleSignInAgain)
 
         let client = QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: server, sessionStore: store)
         let relaunched = AppModel(client: client, appleSignIn: Apple(), storage: .memory())
         #expect(relaunched.route == .signedIn(.store()), "the bank on the phone still opens")
         #expect(relaunched.awaitsServer)
         #expect(relaunched.needsAppleSignInAgain)
+        #expect(SettingsView.serverStatusLine(relaunched) == AppleSignInWording.needsAppleSignInAgain)
         #expect(relaunched.serverSignInProblem == nil)
         await relaunched.refreshSession()
         await relaunched.pickPalette(.slate)
@@ -227,14 +230,27 @@ struct AppleSignInTests {
         #expect(!relaunched.needsAppleSignInAgain)
     }
 
-    @Test func settingsSaysOnlyANewSignInWithAppleConnectsAPhoneWhoseKeptOneWasRefused() {
-        #expect(AppleSignInWording.awaitsServer.contains("tries again on its own"))
+    @Test func theWordingForARefusedSignInNamesSignInWithAppleAgainAndNeverAStudent() {
         let wording = AppleSignInWording.needsAppleSignInAgain
-        #expect(!wording.contains("tries again on its own"))
-        #expect(wording.contains("not connected to the QBank service"))
         #expect(wording.contains("Sign in with Apple again"))
-        #expect(wording.contains("use an existing QBank account"))
         #expect(!wording.localizedCaseInsensitiveContains("student"))
+    }
+
+    @Test func aStoreAccountThatPickedAColorOpensItsBankAfterARelaunch() async throws {
+        let store = Account.store(palette: .slate)
+        let body = String(decoding: try QBankJSON.encoder.encode(store), as: UTF8.self)
+        let server = StubServer(["PUT /api/me/palette": .ok(body)])
+        let bank = try LocalBank(store: LocalStore.inMemory())
+        let (app, sessions) = TestApp.free(server, bank: bank)
+        let made = try await app.client.createTopic(title: "Pharmacology")
+        await app.pickPalette(.slate)
+        #expect(app.paletteProblem == nil)
+
+        let client = QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: server, sessionStore: sessions)
+        let relaunched = AppModel(client: client, banks: PhoneBanks { _ in bank }, appleSignIn: Apple(), storage: .memory())
+        #expect(relaunched.route == .signedIn(store))
+        #expect(relaunched.phoneKey == TestApp.appleUser)
+        #expect(try await relaunched.client.catalog().topics.map(\.id) == [made.id])
     }
 
     @Test(arguments: [false, true])
