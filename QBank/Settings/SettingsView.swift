@@ -5,6 +5,7 @@ import SwiftUI
 /// Where a Settings row leads.
 enum SettingsRoute: Hashable {
     case changePassword
+    case linkApple
     case connectAgent
     case deleteAccount
     case semester(String)
@@ -12,8 +13,9 @@ enum SettingsRoute: Hashable {
 }
 
 /// The Settings tab, as the web's Settings for a user account: her account, which she can sign out
-/// of here or on every device, or delete, with her agent keys, her semesters by name and dates, and
-/// Look and Color, then what is saved on this phone.
+/// of here or on every device, or delete, and link to Sign in with Apple when it has a password, with
+/// her agent keys, her semesters by name and dates, and Look and Color, then what is saved on this
+/// phone.
 /// Home's + adds a semester, a course or a topic, and holding one on Home renames, moves or
 /// archives it. Export my bank shares the whole bank as one file.
 struct SettingsView: View {
@@ -90,6 +92,8 @@ struct SettingsView: View {
                 switch route {
                 case .changePassword:
                     ChangePasswordView(app: app)
+                case .linkApple:
+                    LinkAppleView(app: app)
                 case .connectAgent:
                     ConnectAgentView(app: app)
                 case .deleteAccount:
@@ -152,6 +156,18 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.qbankRow)
                 .accessibilityIdentifier("settings.changePassword")
+            }
+            if LinkAppleModel.isOffered(to: app.account, kind: app.kind) {
+                NavigationLink(value: SettingsRoute.linkApple) {
+                    QBankListRow(
+                        "Sign in with Apple",
+                        detail: app.account?.signsInWithApple == true ? nil : "No password needed on a new \(Device.model)",
+                        value: app.account?.signsInWithApple == true ? "Linked" : nil,
+                        showsChevron: true
+                    )
+                }
+                .buttonStyle(.qbankRow)
+                .accessibilityIdentifier("settings.linkApple")
             }
             if app.kind.connectsAgents {
                 NavigationLink(value: SettingsRoute.connectAgent) {

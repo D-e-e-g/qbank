@@ -189,6 +189,26 @@ public struct QBankClient: Sendable {
         try? sessionStore.clear()
     }
 
+    /// Links the Apple identity of a Sign in with Apple the app has just done to the signed-in
+    /// account, checked with its current password, so Sign in with Apple lands in this account from
+    /// then on, with the same content. Nothing else about the account changes and no session ends.
+    /// The answer is the account, whose `signInWith` now has `apple`; it replaces the stored session's
+    /// account while that session is still this account's.
+    ///
+    /// Refusals link nothing: 400 `invalid_request`; 401 `unauthenticated`, `invalid_credentials`
+    /// (the password is not the account's; the token was not read) or `invalid_apple_token`; 403
+    /// `must_change_password`; 409 `apple_linked_elsewhere` (the Apple identity is another account's)
+    /// or `apple_already_linked` (this account has another one); 429 `too_many_attempts` with
+    /// `retryAfterSeconds`; 502 `apple_unreachable`; 503 `apple_sign_in_unavailable` or `auth_unavailable`.
+    @discardableResult
+    public func linkApple(_ request: AppleLinkRequest) async throws(QBankError) -> Account {
+        let account: Account = try await send(Request(.post, "/api/me/apple", body: request))
+        if let stored = try loadSession(), stored.account?.id == account.id {
+            try save(StoredSession(token: stored.token, expiresAt: stored.expiresAt, account: account, appleUser: stored.appleUser, unsent: stored.unsent))
+        }
+        return account
+    }
+
     // MARK: Courses
 
     /// Home: her semesters with their courses, and her study topics.

@@ -318,6 +318,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             return changePassword(account, token: token, current: body["currentPassword"] as? String ?? "", new: body["newPassword"] as? String ?? "")
         case ("DELETE", "/api/me"):
             return deleteAccount(account, password: body["password"] as? String ?? "")
+        case ("POST", "/api/me/apple"):
+            return linkApple(account, body: body)
         default:
             break
         }

@@ -1,8 +1,9 @@
 import XCTest
 
 /// The first screen end to end: Sign in with Apple, with the scripted sheet of the Debug launch seam
-/// (`QB_UITEST_APPLE`) in Apple's place, and the small door to the email and password of an account
-/// the owner set up. A unit test cannot do this job: it is Apple's own button on the real screen, the
+/// (`QB_UITEST_APPLE`) in Apple's place, the small door to the email and password of an account the
+/// owner set up, and Sign in with Apple opening such an account once it linked Apple in Settings. A
+/// unit test cannot do this job: it is Apple's own button on the real screen, the
 /// door that opens below it, and the screens each sign-in lands on that show where the person ends up.
 /// Invented accounts only; no real Apple Account and no real server.
 final class WelcomeUITests: XCTestCase {
@@ -93,5 +94,50 @@ final class WelcomeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["student@example.com"].appears(timeout: 5))
         XCTAssertTrue(app.buttons["settings.changePassword"].exists)
         XCTAssertTrue(app.buttons["settings.savedForOffline"].exists)
+    }
+
+    /// An account the owner set up links Sign in with Apple in Settings, with its password, and from
+    /// then on Sign in with Apple on the first screen opens that same account, on its last course on
+    /// the server, as a new phone would. A unit test cannot do this job: it is the real Settings row,
+    /// Apple's button on the link screen, the sign-out to the first screen, and the screens Sign in with
+    /// Apple then lands on that show it is the same account with the same content.
+    @MainActor
+    func testALinkedAccountSignsInWithApple() throws {
+        // Apple answers for the person whose Apple email is the student's own: the first screen sends
+        // them to the email door until the account links this Apple identity.
+        let app = launch("signed-in", environment: ["QB_UITEST_APPLE": "password-email"])
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openTab(app, "Settings")
+        let row = app.buttons["settings.linkApple"]
+        reveal(row, in: app)
+        XCTAssertFalse(row.label.contains("Linked"), row.label)
+        attach(app, "settings, sign in with apple not linked")
+        row.tap()
+
+        XCTAssertTrue(app.navigationBars["Sign in with Apple"].appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["linkApple.message"].exists)
+        let password = app.secureTextFields["linkApple.password"]
+        focus(password, in: app)
+        password.typeText("synthetic-pass-1")
+        attach(app, "link sign in with apple, password typed")
+        app.buttons["linkApple.apple"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["linkApple.linked"].appears(timeout: 10), "linked, and said so")
+        XCTAssertFalse(password.exists, "nothing left to fill in")
+        dismissSavePassword(app)
+        attach(app, "settings, sign in with apple linked")
+        goBack(app, from: "Sign in with Apple")
+        waitForLabel(app.buttons["settings.linkApple"], containing: "Linked")
+
+        tapVisible(app.buttons["settings.signOut"], in: app)
+        XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+        app.buttons["welcome.apple"].tap()
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10), "the same account, on its last course on the server")
+        XCTAssertTrue(app.buttons["course.page.Exam 1"].appears(timeout: 5), "with the same content")
+        XCTAssertFalse(app.staticTexts["This email already has a QBank account with a password. Sign in with your email and password instead."].exists)
+        openTab(app, "Settings")
+        XCTAssertTrue(app.staticTexts["student@example.com"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.changePassword"].exists, "still the account with a password, its bank on the server")
+        XCTAssertTrue(app.buttons["settings.savedForOffline"].exists)
+        waitForLabel(app.buttons["settings.linkApple"], containing: "Linked")
     }
 }
