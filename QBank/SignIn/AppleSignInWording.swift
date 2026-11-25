@@ -29,6 +29,10 @@ enum AppleSignInWording {
     /// Said under Color while QBank's server has not confirmed a Sign in with Apple.
     static let paletteAwaitsServer = "Your color is saved to your account once QBank's server confirms your sign-in."
 
+    /// Said under Color once QBank's server refused the kept Sign in with Apple, so only a new one
+    /// lets the color be saved.
+    static let paletteNeedsAppleSignInAgain = "Sign in with Apple again to save your color to your account."
+
     /// Whether QBank's server could not answer the sign-in, now or at all: no answer reached the
     /// phone, the server failed (5xx), or its answer could not be read. Apple said yes, so the bank on
     /// the phone opens all the same and the sign-in is sent again later. Anything else is a refusal.

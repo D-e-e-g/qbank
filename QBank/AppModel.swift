@@ -208,7 +208,7 @@ final class AppModel {
         if awaitsServer {
             await sendAppleSignInAgain()
             guard !awaitsServer else {
-                paletteProblem = AppleSignInWording.paletteAwaitsServer
+                paletteProblem = needsAppleSignInAgain ? AppleSignInWording.paletteNeedsAppleSignInAgain : AppleSignInWording.paletteAwaitsServer
                 return
             }
         }
@@ -506,6 +506,9 @@ final class AppModel {
         awaitsServer = false
         needsAppleSignInAgain = false
         serverSignInProblem = nil
+        kind = .invited
+        client = server
+        connection = network
         route = .signedOut
     }
 

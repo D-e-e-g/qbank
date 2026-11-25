@@ -217,6 +217,8 @@ struct AppleSignInTests {
         #expect(relaunched.needsAppleSignInAgain)
         #expect(relaunched.serverSignInProblem == nil)
         await relaunched.refreshSession()
+        await relaunched.pickPalette(.slate)
+        #expect(relaunched.paletteProblem == AppleSignInWording.paletteNeedsAppleSignInAgain)
         #expect(server.calls.count == 1, "nothing is sent again on its own")
 
         server[Self.route] = Reply(status: 201, body: Bodies.appleSignedIn())
@@ -233,6 +235,30 @@ struct AppleSignInTests {
         #expect(wording.contains("Sign in with Apple again"))
         #expect(wording.contains("use an existing QBank account"))
         #expect(!wording.localizedCaseInsensitiveContains("student"))
+    }
+
+    @Test(arguments: [false, true])
+    func anExistingAccountSignsInWithItsPasswordAfterSigningOutWhileWaiting(keptFromLastLaunch: Bool) async throws {
+        let server = StubServer([Self.route: .offline, "POST /api/sign-in/password": .ok(Bodies.signedIn())])
+        let app: AppModel
+        if keptFromLastLaunch {
+            let unsent = AppleSignInRequest(identityToken: "synthetic.apple.token", nonce: String(repeating: "c", count: 64))
+            app = TestApp.free(server, awaitsServer: true, unsent: unsent).0
+        } else {
+            app = signedOut(server).0
+            await AppleSignInModel(app: app).signIn(over: nil)
+        }
+        #expect(app.awaitsServer)
+        await app.signOut()
+        #expect(app.route == .signedOut)
+
+        let model = SignInModel(app: app)
+        model.email = "student@example.com"
+        model.password = "synthetic-pass-1"
+        await model.signIn()
+        #expect(model.problem == nil)
+        #expect(app.route == .signedIn(.student()))
+        #expect(server.calls.last == "POST /api/sign-in/password")
     }
 
     @Test func signingOutWhileWaitingKeepsTheBankAndAsksNoServer() async throws {
