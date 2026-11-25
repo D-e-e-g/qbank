@@ -105,7 +105,7 @@ enum LinkAppleWording {
     static func problem(_ error: QBankError) -> String {
         switch error.serverCode?.rawValue {
         case "invalid_credentials":
-            return "That password is not right. Nothing was linked. Enter your current QBank password and try again."
+            return "That password is not right, so nothing was linked. Try again."
         case "invalid_apple_token":
             return "Apple did not confirm this sign-in, so nothing was linked. Try again."
         case "invalid_request":
