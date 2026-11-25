@@ -114,20 +114,29 @@ struct LinkAppleModelTests {
     // MARK: Refusals
 
     @Test(arguments: [
-        (401, "invalid_credentials", "That password is not right.", true),
-        (401, "invalid_apple_token", "Apple did not confirm this sign-in.", false),
-        (400, "invalid_request", "Check the fields and try again.", false),
-        (409, "apple_linked_elsewhere", "This Apple Account is already used by another QBank account.", false),
-        (502, "apple_unreachable", "Apple's keys could not be read.", false),
-        (503, "apple_sign_in_unavailable", "Sign in with Apple is not available yet.", false),
-        (503, "auth_unavailable", "Sign-in is not available right now.", false),
+        (401, "invalid_credentials", "That password is not right.", "That password is not right, so nothing was linked. Try again.", true),
+        (401, "invalid_apple_token", "Apple did not confirm this sign-in.", "Apple did not confirm this sign-in, so nothing was linked. Try again.", false),
+        (400, "invalid_request", "Check the fields and try again.", "Sign in with Apple did not finish. Try again.", false),
+        (
+            409, "apple_linked_elsewhere", "This Apple Account is already used by another QBank account.",
+            "This Apple Account already signs in to another QBank account, so it cannot be linked to this one. Nothing was linked. Try a different Apple Account, or keep signing in with your email and password.",
+            false
+        ),
+        (502, "apple_unreachable", "Apple's keys could not be read.", "QBank could not check this sign-in with Apple, so nothing was linked. Try again in a moment.", false),
+        (
+            503, "apple_sign_in_unavailable", "Sign in with Apple is not available yet.",
+            "Sign in with Apple is not available on QBank's server yet, so nothing was linked. Try again later. Your email and password keep working.", false
+        ),
+        (
+            503, "auth_unavailable", "Sign-in is not available right now.",
+            "QBank's server cannot link Sign in with Apple right now. Try again later. Your email and password keep working.", false
+        ),
     ])
-    func aRefusalLinksNothingKeepsHerSignedInAndSaysWhatToDo(status: Int, code: String, message: String, clearsPassword: Bool) async throws {
+    func aRefusalLinksNothingKeepsHerSignedInAndSaysWhatToDo(status: Int, code: String, message: String, said: String, clearsPassword: Bool) async throws {
         let server = StubServer([Self.route: .error(status, code, message)])
         let (model, app, store) = model(server)
         await model.link(over: nil)
-        let error = QBankError.server(ServerError(status: status, code: .init(rawValue: code), message: message))
-        #expect(model.problem == LinkAppleWording.problem(error))
+        #expect(model.problem == said)
         #expect(model.problem != message, "Settings says it in its own words")
         #expect(model.password.isEmpty == clearsPassword)
         #expect(!model.isLinked)

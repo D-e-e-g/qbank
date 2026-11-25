@@ -66,6 +66,9 @@ struct LinkAppleView: View {
 
     private var linked: some View {
         Group {
+            if let problem = model.problem {
+                ProblemText(text: problem)
+            }
             SavedText(text: "Sign in with Apple is linked to your account.")
                 .accessibilityIdentifier("linkApple.linked")
             Text("On a new \(Device.model), tap Sign in with Apple on QBank's first screen with the Apple Account you linked: it opens this account, with the same courses, sets and progress. Your email and password keep working too.")
