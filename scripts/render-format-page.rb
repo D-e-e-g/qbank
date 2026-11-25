@@ -4,9 +4,10 @@
 # Renders site/format/index.html from the question file format the QBank API
 # publishes: the Markdown under "x-question-format" in the pinned contract,
 # which the server generates from the table its import check reads. The page
-# holds no rule of its own. The Pages workflow runs this before it publishes, and
-# test/site-checks.sh runs it with --check and fails when the committed page
-# differs from the contract.
+# holds no rule of its own. Run this after re-pinning the contract and commit the
+# page with it; test/site-checks.sh runs it with --check and fails when the
+# committed page differs from the contract. The Pages workflow only uploads the
+# committed site/.
 #
 #   scripts/render-format-page.rb          write site/format/index.html
 #   scripts/render-format-page.rb --check  exit 1 if that file is out of date
