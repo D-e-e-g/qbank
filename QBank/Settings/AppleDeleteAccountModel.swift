@@ -55,4 +55,11 @@ final class AppleDeleteAccountModel {
             stopped = error.reason
         }
     }
+
+    /// Leaves a delete to finish without finishing it: the session and the record of the delete are
+    /// forgotten, and the account stays on QBank's server until the person signs in and deletes it.
+    func signOut() async {
+        guard isFinishing, !isDeleting else { return }
+        await app.signOut()
+    }
 }

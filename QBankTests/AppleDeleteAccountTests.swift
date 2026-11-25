@@ -285,13 +285,48 @@ struct AppleDeleteAccountTests {
 
     @Test func aServerRefusalAfterTheEraseIsSaidOnTheFinishingScreen() async throws {
         let phone = try await freePhone()
-        let words = "Apple did not confirm it's you. Sign in with Apple again to delete your account."
-        phone.server.script("DELETE /api/me", [.error(401, "invalid_apple_token", words)])
+        let words = "Apple did not confirm it's you with the Apple Account you signed in to QBank with. Try again with that Apple Account, or sign out."
+        phone.server.script("DELETE /api/me", [.error(401, "invalid_apple_token", "Apple did not confirm it's you.")])
         let model = AppleDeleteAccountModel(app: phone.app)
         await model.delete(over: nil)
         #expect(model.problem == words)
         #expect(phone.app.route == .finishingDeletion(.store()))
         #expect(AppleDeleteAccountModel(app: phone.app).problem == words)
+
+        // Another Apple Account on the finishing screen: the phone's copy is gone, so it does not say nothing was deleted.
+        phone.apple.user = "000999.someoneelse000000000000000000009.0009"
+        let finishing = AppleDeleteAccountModel(app: phone.app)
+        await finishing.delete(over: nil)
+        #expect(finishing.problem == words)
+        #expect(phone.server.calls.filter { $0 == "DELETE /api/me" }.count == 1)
+    }
+
+    /// The server keeps refusing, or the person wants out: signing out forgets the session and the
+    /// record of the delete, so the next launch opens on sign-in, and nothing is deleted again.
+    @Test func signingOutOfAnUnfinishedDeleteForgetsItForGood() async throws {
+        let phone = try await freePhone()
+        phone.server.script("DELETE /api/me", [.error(503, "apple_sign_in_unavailable", "Sign in with Apple is not available yet.")])
+        phone.server["POST /api/sign-out"] = .ok(#"{"status":"ok"}"#)
+        await AppleDeleteAccountModel(app: phone.app).delete(over: nil)
+        #expect(phone.app.route == .finishingDeletion(.store()))
+
+        await AppleDeleteAccountModel(app: phone.app).signOut()
+        #expect(phone.app.route == .signedOut)
+        #expect(try phone.store.load() == nil)
+        #expect(phone.server.calls.last == "POST /api/sign-out")
+        #expect(phone.server.calls.filter { $0 == "DELETE /api/me" }.count == 1)
+        #expect(phone.log.count("erase bank") == 1)
+
+        let relaunched = phone.relaunched()
+        #expect(relaunched.route == .signedOut)
+    }
+
+    @Test func signOutIsOfferedOnlyToFinishADelete() async throws {
+        let phone = try await freePhone()
+        phone.server["POST /api/sign-out"] = .ok(#"{"status":"ok"}"#)
+        await AppleDeleteAccountModel(app: phone.app).signOut()
+        #expect(phone.app.route == .signedIn(.store()))
+        #expect(!phone.server.calls.contains("POST /api/sign-out"))
     }
 
     // MARK: While the server deletes

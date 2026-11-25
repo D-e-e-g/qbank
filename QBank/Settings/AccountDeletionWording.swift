@@ -29,6 +29,15 @@ enum AccountDeletionWording {
     static let otherAppleAccount =
         "Apple confirmed a different Apple Account. Use the Apple Account you signed in to QBank with. Nothing was deleted."
 
+    /// Once this phone's copy is erased, Apple confirmed a different Apple Account, or the server found
+    /// that Apple did not confirm the person.
+    static let appleDidNotConfirm =
+        "Apple did not confirm it's you with the Apple Account you signed in to QBank with. Try again with that Apple Account, or sign out."
+
+    /// Under Sign out on the screen that finishes a delete.
+    static let signOutKeepsAccount =
+        "Signing out keeps your account on QBank's server. To delete it later, sign in with Apple again and delete it in Settings."
+
     /// The phone could not keep the record of the delete, so it did not begin.
     static var notBegun: String {
         "This \(Device.model) could not start the delete. Nothing was deleted. Try again."

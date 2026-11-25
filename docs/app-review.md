@@ -70,7 +70,7 @@ What to try:
 4. Open Exam in the course, pick folders (or "Wrong questions only"), and start a timed exam. "End exam" scores what was answered.
 5. Turn on Airplane Mode and answer a practice question: it is saved on the phone and sent when the connection returns. Exams need a connection.
 
-Accounts: Sign up makes an account only for an email the owner has added. To delete an account in the app, open the Settings tab, tap Delete account, enter the account's password, and tap Delete account: the account and everything in it are deleted for good, on every device. An account made with Sign in with Apple has no password: tap Delete account and confirm with Sign in with Apple. There is no third-party or social login (Guideline 4.8 does not apply).
+Accounts: Sign up makes an account only for an email the owner has added. To delete an account in the app, open the Settings tab, tap Delete account, enter the account's password, and tap Delete account: the account and everything in it are deleted for good, on every device. An account made with Sign in with Apple has no password: tap Delete account and confirm with Sign in with Apple.
 
 The app has no ads, no tracking, no analytics, and no in-app purchases. It uses only standard HTTPS encryption.
 

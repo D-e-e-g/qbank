@@ -45,6 +45,18 @@ struct AppleDeleteAccountView: View {
                         .accessibilityIdentifier("deleteAccount.apple")
                 }
                 .padding(.top, 2)
+                if model.isFinishing {
+                    VStack(alignment: .leading, spacing: QBankSpacing.space2) {
+                        Button("Sign out", action: signOut)
+                            .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
+                            .disabled(model.isDeleting)
+                            .accessibilityIdentifier("deleteAccount.signOut")
+                        Text(AccountDeletionWording.signOutKeepsAccount)
+                            .qbankFont(.footnote, design: .default)
+                            .foregroundStyle(.qbank(.text3))
+                            .accessibilityIdentifier("deleteAccount.signOutNote")
+                    }
+                }
             }
             .screenColumn()
             .padding(.top, QBankSpacing.space3)
@@ -75,5 +87,9 @@ struct AppleDeleteAccountView: View {
 
     private func delete() {
         Task { await model.delete(over: nil) }
+    }
+
+    private func signOut() {
+        Task { await model.signOut() }
     }
 }

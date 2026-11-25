@@ -669,7 +669,9 @@ final class AppModel {
         guard let account, !kind.deletesWithPassword, !awaitsServer, let kept = try? server.storedSession(), let appleUser = kept.appleUser
         else { throw DeletionStop(reason: AccountDeletionWording.tryAgain) }
         // Another Apple Account's yes deletes nothing: the server would refuse it after the erase.
-        guard credential.user == appleUser else { throw DeletionStop(reason: AccountDeletionWording.otherAppleAccount) }
+        guard credential.user == appleUser else {
+            throw DeletionStop(reason: kept.deletion == nil ? AccountDeletionWording.otherAppleAccount : AccountDeletionWording.appleDidNotConfirm)
+        }
         guard let code = credential.authorizationCode, !code.isEmpty else { throw DeletionStop(reason: AppleSignInWording.appleDidNotFinish) }
         if kept.deletion == nil {
             // Kept before anything is erased, so from here on the delete is finished, never begun again.
@@ -687,7 +689,8 @@ final class AppModel {
             try await server.deleteAccount(confirmedWithApple: request)
         } catch {
             guard error.needsSignIn else {
-                throw DeletionStop(reason: Wording.problem(error) ?? AccountDeletionWording.tryAgain)
+                let words = error.serverCode == "invalid_apple_token" ? AccountDeletionWording.appleDidNotConfirm : Wording.problem(error)
+                throw DeletionStop(reason: words ?? AccountDeletionWording.tryAgain)
             }
             // The server has no session for this phone: an earlier try deleted the account and its
             // answer never came, or the session ended another way. Either way nothing more can be

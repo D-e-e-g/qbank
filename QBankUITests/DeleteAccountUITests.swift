@@ -66,6 +66,21 @@ final class DeleteAccountUITests: XCTestCase {
     }
 
     @MainActor
+    func testADeleteThatStopsAfterTheEraseCanBeLeftBySigningOut() throws {
+        try skipOnIPad()
+        let app = launch("free-delete-drops", environment: samePerson)
+        XCTAssertTrue(app.buttons["home.add"].appears(timeout: 10))
+        openDeleteAccount(app)
+        app.buttons["deleteAccount.delete"].tap()
+
+        waitForLabel(app.staticTexts["deleteAccount.message"], containing: "is not deleted yet")
+        XCTAssertTrue(app.staticTexts["deleteAccount.signOutNote"].exists)
+        attach(app, "delete account, finishing, sign out")
+        app.buttons["deleteAccount.signOut"].tap()
+        XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+    }
+
+    @MainActor
     func testAnInvitedAccountStillDeletesWithItsPassword() throws {
         try skipOnIPad()
         let app = launch("signed-in")
