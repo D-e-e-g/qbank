@@ -43,7 +43,7 @@ An invited account is always in server mode. For a store account the transport f
 | Active | `cloud` | Cloud | Runs on the server's bank |
 | Not active | `cloud` | Cloud ended | Hands the bank back to the phone, then switches |
 
-When the server cannot be reached, the phone keeps its recorded authority and stays signed in, as today (`QBank/AppModel.swift:118-128`). A free user is not slowed by it.
+When the server cannot be reached, the phone keeps its recorded authority and stays signed in, as today (`QBank/AppModel.swift:234-251`). A free user is not slowed by it.
 
 ## Who has Cloud
 
@@ -65,14 +65,14 @@ The gate covers the bank, not the account. By the contract's own tags (`Packages
 | The bank archive upload (S-09) | Needs Cloud |
 | `Make questions`, `Agent keys`, `Admin` | Off for every store account, with or without Cloud (below) |
 
-So the color scheme is the account's and is saved on the server in every mode. Without a connection a pick is not saved and Settings says why, as today (`AppModel.swift:95-116`).
+So the color scheme is the account's and is saved on the server in every mode. Without a connection a pick is not saved and Settings says why, as today (`AppModel.swift:203-232`).
 
 ## Getting in
 
 - **The first screen** offers Sign in with Apple, and below it a small "Use an existing QBank account" for email and password (A7). The Sign up screen leaves the iPhone app; invited sign-up stays on the web.
 - **The server verifies Apple's identity token** against Apple's public keys: signature, issuer, bundle id, nonce, expiry (A6, S-04). No Apple secret is needed to sign people in.
 - **Accounts are never linked by matching email.** An Apple email that already belongs to a password account is refused with a sentence that points to the email door. Linking is explicit, from Settings, while signed in (S-05, I-31).
-- **The update signs nobody out.** A stored session opens the app signed in (`AppModel.swift:73-74`), and it is an invited account's session, so that phone stays in server mode with its saved copies and waiting answers.
+- **The update signs nobody out.** A stored session opens the app signed in (`AppModel.swift:139-155`), and it is an invited account's session, so that phone stays in server mode with its saved copies and waiting answers.
 - **As built (I-30).** `QBank/SignIn/WelcomeView.swift` is the first screen. The app makes a nonce and asks Apple with its SHA-256 (`AppleSignInNonce`); the identity token and the nonce go to `POST /api/sign-in/apple`, which takes no authorization code. A store account opens its bank on the phone. When the server cannot be reached (no connection, or a cancelled request), answers with a status of 500 or above, or sends an answer the app cannot read, the bank on the phone opens anyway, Settings says the sign-in is waiting, and the app sends it again when the network returns, when it comes back to the front, and from Settings. Every other answer at the first screen is a refusal said in plain words that signs nobody in: a 400 `invalid_request`, a 401 `invalid_apple_token`, a 409 `password_account` or `email_in_use` (which opens the email door with the email filled in), and a 429 with the minutes to wait. A resend keeps waiting, and is sent again, after a 429, a 5xx, a dropped connection or an answer that cannot be read. Any other answer to a resend is a refusal: Settings says it, the kept sign-in is dropped, the app stops sending it on its own, and Settings says this phone is not connected to the QBank service yet and asks for a new Sign in with Apple, or a sign-out to use an existing QBank account; the bank on the phone stays open and untouched (`QBank/SignIn/AppleSignInWording.swift`).
 - **The web app is unchanged (A8).** Email and password for invited accounts. No Sign in with Apple on the web, and no web access for store accounts, in the first release.
 - **Deleting a store account** asks for a fresh Sign in with Apple, since the account has no password. The server exchanges its authorization code, revokes Apple's token, then deletes; no Apple token is stored at rest (A10, S-06). Today the route takes a password (`apps/api/src/routes/auth.ts:265-281`), and that stays for invited accounts.
@@ -103,7 +103,7 @@ So the color scheme is the account's and is saved on the server in every mode. W
 
 - **A lost answer needs no special case.** If an upload was stored but its answer never arrived, the next try is refused because the account now has a bank, and the second row of the table applies. The phone finds every one of its sets in Cloud, by id, so it has nothing to offer.
 - **A first launch on a second device makes no phone bank.** When the server says Cloud is active at sign-in, the phone adopts the Cloud bank and the sample set is never added (I-22, I-35).
-- **`cloud_required` is a signal, not an error to show.** A store account in server mode that is refused with `cloud_required` has lost Cloud: the app starts the hand-back, the way `AppModel.handle` already turns an ended session into a route change (`AppModel.swift:207-226`).
+- **`cloud_required` is a signal, not an error to show.** A store account in server mode that is refused with `cloud_required` has lost Cloud: the app starts the hand-back, the way `AppModel.handle` already turns an ended session into a route change (`AppModel.swift:480-498`).
 - **Waiting answers are never dropped by a hand-back.** In server mode practice answers given without a connection wait in a queue on the phone, and the queue discards an answer the server refuses with a 4xx (`Packages/QBankKit/Sources/QBankKit/Offline/AttemptQueue.swift:18-25`). After Cloud ends the server would refuse them with `cloud_required`. So a hand-back does not let the queue discard on that code. Once the fresh file is written it replays the waiting answers into the phone's bank through the local engine, which records an answer once per `clientAttemptId` as the server does, and only then clears them.
 - **Work done on the phone after Cloud ended does not join a bank already on the server.** A returning subscriber whose earlier bank is still on the server gets that bank as the authority (the second row). Sets made on the phone since are offered as new sets. Answers given on the phone since, to sets that are in both, stay only in the safety copy. Whether a returning subscriber finds a bank on the server at all is OD2. I-35 must tell the person this before the switch.
 
@@ -112,7 +112,7 @@ So the color scheme is the account's and is saved on the server in every mode. W
 | Event | The bank file | Safety copies | Saved copies and waiting answers of server mode |
 |---|---|---|---|
 | Sign out, free | Kept. It is the only copy. Signing in again as the same person opens it. | Kept | None exist |
-| Sign out, Cloud or invited | None is active | Kept | Erased, as today (`AppModel.swift:183-190`) |
+| Sign out, Cloud or invited | None is active | Kept | Erased, as today (`AppModel.swift:454-462`) |
 | Move to Cloud | Becomes a safety copy | Kept | Start empty |
 | Move back to the phone | A fresh file, from the download | Kept | Waiting answers are replayed, then erased with the saved copies |
 | Delete account | Erased, before the server account is deleted | Erased | Erased |
