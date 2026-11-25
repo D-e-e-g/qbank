@@ -21,7 +21,7 @@ public final class LocalBank: HTTPTransport {
     /// Where the bank gets a random whole number below its argument, for the order of questions a runner is given.
     public typealias Randomness = @Sendable (Int) -> Int
 
-    private let store: LocalStore
+    let store: LocalStore
     private let clock: Clock
     private let ids: IDGenerator
     private let random: Randomness
@@ -82,7 +82,7 @@ public final class LocalBank: HTTPTransport {
         return (data, response)
     }
 
-    private func respond(method: String, url: URL, body: Data?) throws -> BankAnswer {
+    func respond(method: String, url: URL, body: Data?) throws -> BankAnswer {
         guard let (route, params) = router.find(method, path: url.path) else { throw BankRefusal.notServed(method, url.path) }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         let query = Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })

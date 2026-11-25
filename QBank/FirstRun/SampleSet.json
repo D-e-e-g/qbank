@@ -1,0 +1,170 @@
+{
+  "title": "General knowledge sampler",
+  "desc": "A short set to try QBank: single answer, select all that apply, and true or false.",
+  "questions": [
+    {
+      "id": "G1",
+      "type": "single",
+      "topic": "Science",
+      "stem": "The diagram shows the Sun and the four planets that orbit nearest to it.",
+      "ask": "Which planet is number 1 in the diagram?",
+      "images": [
+        {
+          "at": "stem",
+          "alt": "The Sun and four planets on their orbits, numbered 1 to 4 from the nearest orbit outward",
+          "caption": "Not to scale",
+          "svg": "<svg xmlns='http://www.w3.org/2000/svg' width='340' height='200' viewBox='0 0 340 200' font-family='-apple-system, Helvetica, sans-serif'><rect width='340' height='200' fill='#ffffff'/><circle cx='66' cy='100' r='52' fill='none' stroke='#94a3b8' stroke-width='1.5' stroke-dasharray='4 4'/><path d='M95 -8 A112 112 0 0 1 95 208' fill='none' stroke='#94a3b8' stroke-width='1.5' stroke-dasharray='4 4'/><path d='M111 -66 A172 172 0 0 1 111 266' fill='none' stroke='#94a3b8' stroke-width='1.5' stroke-dasharray='4 4'/><path d='M126 -124 A232 232 0 0 1 126 324' fill='none' stroke='#94a3b8' stroke-width='1.5' stroke-dasharray='4 4'/><circle cx='66' cy='100' r='20' fill='#f59e0b'/><text x='66' y='138' font-size='13' font-weight='600' text-anchor='middle' fill='#1f2937'>Sun</text><circle cx='107' cy='68' r='6' fill='#6b7280'/><text x='107' y='55' font-size='16' font-weight='700' text-anchor='middle' fill='#111827' stroke='#ffffff' stroke-width='4' paint-order='stroke'>1</text><circle cx='168' cy='146' r='9' fill='#d97706'/><text x='168' y='130' font-size='16' font-weight='700' text-anchor='middle' fill='#111827' stroke='#ffffff' stroke-width='4' paint-order='stroke'>2</text><circle cx='230' cy='50' r='10' fill='#2563eb'/><text x='230' y='33' font-size='16' font-weight='700' text-anchor='middle' fill='#111827' stroke='#ffffff' stroke-width='4' paint-order='stroke'>3</text><circle cx='295' cy='136' r='8' fill='#dc2626'/><text x='295' y='121' font-size='16' font-weight='700' text-anchor='middle' fill='#111827' stroke='#ffffff' stroke-width='4' paint-order='stroke'>4</text></svg>"
+        }
+      ],
+      "options": [
+        { "t": "Venus" },
+        { "t": "Mercury", "ok": true },
+        { "t": "Mars" },
+        { "t": "Earth" }
+      ],
+      "rationale": "Number 1 is on the innermost orbit. Mercury orbits closest to the Sun, about 58 million kilometers away. Number 2 is Venus, 3 is Earth and 4 is Mars.",
+      "takeaway": "The order from the Sun is Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune."
+    },
+    {
+      "id": "G2",
+      "type": "single",
+      "topic": "Science",
+      "stem": "Water boils at 100 degrees Celsius at sea level.",
+      "ask": "Is the statement true or false?",
+      "options": [
+        { "t": "True", "ok": true },
+        { "t": "False" }
+      ],
+      "rationale": "At standard sea-level air pressure, pure water boils at 100 degrees Celsius. Where the air pressure is lower, such as on a high mountain, it boils at a lower temperature.",
+      "takeaway": "The boiling point of water depends on air pressure."
+    },
+    {
+      "id": "G3",
+      "type": "single",
+      "topic": "Math",
+      "stem": "A shop takes 15% off an item that costs 80 dollars.",
+      "ask": "How many dollars does the discount take off?",
+      "images": [
+        {
+          "at": "rationale",
+          "alt": "A bar standing for 80 dollars, with 10 percent marked as 8 and a further 5 percent marked as 4",
+          "caption": "15% of 80, built from two easy pieces",
+          "svg": "<svg xmlns='http://www.w3.org/2000/svg' width='340' height='150' viewBox='0 0 340 150' font-family='-apple-system, Helvetica, sans-serif' font-size='14' fill='#111827'><rect width='340' height='150' fill='#ffffff'/><text x='170' y='22' text-anchor='middle' font-weight='600'>The whole bar is 80 dollars</text><rect x='10' y='60' width='32' height='36' fill='#2563eb'/><rect x='42' y='60' width='16' height='36' fill='#f59e0b'/><rect x='58' y='60' width='272' height='36' fill='#e5e7eb'/><rect x='10' y='60' width='320' height='36' fill='none' stroke='#374151' stroke-width='1.5'/><path d='M26 60 V46' stroke='#374151' stroke-width='1.5'/><text x='10' y='42'>10% = 8</text><path d='M50 96 V112' stroke='#374151' stroke-width='1.5'/><text x='32' y='128'>5% = 4</text><text x='194' y='83' text-anchor='middle'>85% still to pay</text><text x='330' y='128' text-anchor='end' font-weight='700'>15% = 8 + 4 = 12</text></svg>"
+        }
+      ],
+      "options": [
+        { "t": "8" },
+        { "t": "10" },
+        { "t": "12", "ok": true },
+        { "t": "15" }
+      ],
+      "rationale": "10% of 80 is 8 and 5% of 80 is 4, so 15% is 8 + 4 = 12.",
+      "takeaway": "Build a percentage from easy pieces: 10%, then half of that for 5%."
+    },
+    {
+      "id": "G4",
+      "type": "sata",
+      "topic": "Science",
+      "stem": "Mammals are warm-blooded animals that feed their young with milk.",
+      "ask": "Which of these animals are mammals? Select all that apply.",
+      "options": [
+        { "t": "Dolphin", "ok": true },
+        { "t": "Shark" },
+        { "t": "Bat", "ok": true },
+        { "t": "Penguin" },
+        { "t": "Kangaroo", "ok": true }
+      ],
+      "rationale": "Dolphins, bats and kangaroos are mammals. Sharks are fish and penguins are birds, and neither feeds its young with milk.",
+      "takeaway": "Living in the sea or flying does not decide the group; feeding young with milk does."
+    },
+    {
+      "id": "G5",
+      "type": "single",
+      "topic": "Geography",
+      "stem": "The Earth's surface is mostly water, divided into five named oceans.",
+      "ask": "Which ocean is the largest by area?",
+      "options": [
+        { "t": "Atlantic" },
+        { "t": "Indian" },
+        { "t": "Arctic" },
+        { "t": "Pacific", "ok": true }
+      ],
+      "rationale": "The Pacific Ocean covers about a third of the Earth's surface, more than all of the land together.",
+      "takeaway": "Largest to smallest: Pacific, Atlantic, Indian, Southern, Arctic."
+    },
+    {
+      "id": "G6",
+      "type": "single",
+      "topic": "Science",
+      "stem": "Lightning never strikes the same place twice.",
+      "ask": "Is the statement true or false?",
+      "options": [
+        { "t": "True" },
+        { "t": "False", "ok": true }
+      ],
+      "rationale": "Lightning often strikes the same place again. Tall, pointed structures are hit many times a year.",
+      "takeaway": "A saying can sound sure and still be wrong; check the facts."
+    },
+    {
+      "id": "G7",
+      "type": "single",
+      "topic": "Language",
+      "stem": "A synonym is a word with nearly the same meaning as another word.",
+      "ask": "Which word is a synonym of \"brief\"?",
+      "options": [
+        { "t": "Lengthy" },
+        { "t": "Loud" },
+        { "t": "Short", "ok": true },
+        { "t": "Early" }
+      ],
+      "rationale": "\"Brief\" means lasting a short time, so \"short\" is the closest match. \"Lengthy\" is its opposite.",
+      "takeaway": "Test a synonym by swapping it into the sentence and checking the meaning holds."
+    },
+    {
+      "id": "G8",
+      "type": "sata",
+      "topic": "Study skills",
+      "stem": "Research on learning compares many ways of studying.",
+      "ask": "Which habits help you remember what you study? Select all that apply.",
+      "options": [
+        { "t": "Spreading study sessions over several days", "ok": true },
+        { "t": "Testing yourself without looking at your notes", "ok": true },
+        { "t": "Rereading the same page again and again in one sitting" },
+        { "t": "Highlighting every line of a page" },
+        { "t": "Explaining an idea in your own words", "ok": true }
+      ],
+      "rationale": "Spacing sessions, testing yourself and explaining ideas in your own words all make memories stronger. Rereading and highlighting feel productive, but they do much less.",
+      "takeaway": "Practicing questions, as in this app, is itself one of the best ways to learn."
+    },
+    {
+      "id": "G9",
+      "type": "single",
+      "topic": "History",
+      "stem": "In the 15th century, printing with movable metal type spread across Europe.",
+      "ask": "Which person is best known for introducing it there?",
+      "options": [
+        { "t": "Johannes Gutenberg", "ok": true },
+        { "t": "Galileo Galilei" },
+        { "t": "Isaac Newton" },
+        { "t": "Christopher Columbus" }
+      ],
+      "rationale": "Johannes Gutenberg built a printing press with movable metal type in the 1450s, which made books far cheaper to produce.",
+      "takeaway": "Cheaper books helped ideas spread to many more readers."
+    },
+    {
+      "id": "G10",
+      "type": "single",
+      "topic": "Study skills",
+      "stem": "Spaced repetition is a way of reviewing material.",
+      "ask": "What does spaced repetition mean?",
+      "options": [
+        { "t": "Reviewing the same material again after longer and longer gaps", "ok": true },
+        { "t": "Reading all of the material once, very slowly" },
+        { "t": "Studying only on the night before a test" },
+        { "t": "Leaving a blank line between every note" }
+      ],
+      "rationale": "Each review comes just as the memory starts to fade, so every pass makes it last longer.",
+      "takeaway": "Short reviews spread over time beat one long session."
+    }
+  ]
+}
