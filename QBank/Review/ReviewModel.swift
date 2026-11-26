@@ -31,9 +31,14 @@ final class ReviewModel {
         (list?.questions ?? []).filter { Self.matches($0, filter) }
     }
 
-    /// How many questions the chosen filter holds, for "Practice these N".
+    /// How many questions the chosen filter holds.
     var selectedCount: Int {
         list.map { Self.count(of: filter, in: $0.counts) } ?? 0
+    }
+
+    /// The button that practices the chosen filter's questions.
+    var practiceTitle: String {
+        selectedCount == 1 ? "Practice this question (shuffled)" : "Practice these \(selectedCount) (shuffled)"
     }
 
     var allCount: Int {

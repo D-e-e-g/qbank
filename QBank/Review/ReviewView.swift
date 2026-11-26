@@ -33,7 +33,7 @@ struct ReviewView: View {
                     Button {
                         practicing = model.practice()
                     } label: {
-                        Label("Practice these \(model.selectedCount) (shuffled)", systemImage: "shuffle")
+                        Label(model.practiceTitle, systemImage: "shuffle")
                     }
                     .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
                     .accessibilityIdentifier("review.practice")
