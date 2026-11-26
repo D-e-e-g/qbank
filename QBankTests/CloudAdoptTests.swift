@@ -300,8 +300,8 @@ struct CloudAdoptTests {
         #expect(app.cloudAdopt.offersSets, "Settings offers them")
         #expect(app.cloudAdopt.offeredCount == 2)
         #expect(app.cloudAdopt.into == .phone)
-        #expect(CloudAdoptWording.addSets(.phone) == "Add sets from this iPhone's earlier copy")
-        #expect(CloudAdoptWording.addSetsDetail(2, into: .phone) == "2 sets only in this iPhone's earlier copy")
+        #expect(CloudAdoptWording.addSets(.phone) == "Add sets from this \(Device.model)'s earlier copy")
+        #expect(CloudAdoptWording.addSetsDetail(2, into: .phone) == "2 sets only in this \(Device.model)'s earlier copy")
         let topics = try await app.client.catalog().topics
         #expect(!topics.contains { $0.title == "Geography" }, "nothing is added on its own")
         let sets = try phone.summary(of: record.bankFile).sets
@@ -346,15 +346,15 @@ struct CloudAdoptTests {
     // MARK: Words
 
     @Test func whatOnlyThisPhoneHasIsSaidPlainly() {
-        #expect(CloudAdoptWording.onlyHere(0) == "QBank Cloud has every set on this iPhone.")
-        #expect(CloudAdoptWording.onlyHere(1) == "1 set only on this iPhone. Next, you can add it to QBank Cloud as a new set.")
-        #expect(CloudAdoptWording.onlyHere(3) == "3 sets only on this iPhone. Next, you can add them to QBank Cloud as new sets.")
+        #expect(CloudAdoptWording.onlyHere(0) == "QBank Cloud has every set on this \(Device.model).")
+        #expect(CloudAdoptWording.onlyHere(1) == "1 set only on this \(Device.model). Next, you can add it to QBank Cloud as a new set.")
+        #expect(CloudAdoptWording.onlyHere(3) == "3 sets only on this \(Device.model). Next, you can add them to QBank Cloud as new sets.")
         #expect(CloudAdoptWording.offeringBody(1) == "QBank Cloud does not have this set. It goes in as a new set, in the course or topic and folder of the same name. Nothing in QBank Cloud is replaced, renamed or removed.")
         #expect(CloudAdoptWording.offeringBody(2).hasPrefix("QBank Cloud does not have these sets. Each one goes in as a new set,"))
         #expect(CloudAdoptWording.addedTitle(1) == "Your set is in QBank Cloud")
         #expect(CloudAdoptWording.addedTitle(2) == "Your sets are in QBank Cloud")
-        #expect(CloudAdoptWording.addedBody(1) == "QBank added 1 set to QBank Cloud as a new set. The safety copy on this iPhone is as it was.")
-        #expect(CloudAdoptWording.addedBody(2) == "QBank added 2 sets to QBank Cloud as new sets. The safety copy on this iPhone is as it was.")
+        #expect(CloudAdoptWording.addedBody(1) == "QBank added 1 set to QBank Cloud as a new set. The safety copy on this \(Device.model) is as it was.")
+        #expect(CloudAdoptWording.addedBody(2) == "QBank added 2 sets to QBank Cloud as new sets. The safety copy on this \(Device.model) is as it was.")
         #expect(CloudAdoptWording.add(1) == "Add it to QBank Cloud")
         #expect(CloudAdoptWording.add(2) == "Add all 2 to QBank Cloud")
         #expect(CloudAdoptWording.place(.init(kind: .course, code: "NURS 101", title: "Invented Nursing", semesterNumber: 1, folder: "Week 1")) == "NURS 101 Invented Nursing · Week 1")

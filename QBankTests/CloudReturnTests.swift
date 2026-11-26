@@ -136,12 +136,14 @@ struct CloudReturnTests {
 
     // MARK: A hand-back that does not
 
-    /// Each download that does not arrive whole, with what the screen says.
-    fileprivate nonisolated static let failures: [(name: String, says: String)] = [
-        ("no connection", "No connection, so your bank could not be downloaded. Check Wi-Fi or cellular data and try again."),
-        ("a server that fails", "QBank Cloud could not send your bank right now. Try again in a moment."),
-        ("a download cut off", "Your bank did not arrive whole, so this iPhone did not use it."),
-        ("counts that do not match the rows", "Your bank did not arrive whole, so this iPhone did not use it."),
+    /// Each download that does not arrive whole, with what the screen says. What it says is read on the
+    /// main actor, since a sentence that names the device says "iPhone" or "iPad" as the device the
+    /// tests run on does.
+    fileprivate nonisolated static let failures: [(name: String, says: @MainActor @Sendable () -> String)] = [
+        ("no connection", { "No connection, so your bank could not be downloaded. Check Wi-Fi or cellular data and try again." }),
+        ("a server that fails", { "QBank Cloud could not send your bank right now. Try again in a moment." }),
+        ("a download cut off", { "Your bank did not arrive whole, so this \(Device.model) did not use it." }),
+        ("counts that do not match the rows", { "Your bank did not arrive whole, so this \(Device.model) did not use it." }),
     ]
 
     private static func reply(for name: String, archive: Data) throws -> StubServer.Reply {
@@ -172,7 +174,7 @@ struct CloudReturnTests {
         app.cloudReturn.cloudEnded()
         try await waitForOutcome(app)
 
-        #expect(app.cloudReturn.phase == .failed(failure.says, canRetry: true))
+        #expect(app.cloudReturn.phase == .failed(failure.says(), canRetry: true))
         #expect(app.kind == .store, "QBank Cloud's bank is still the one in use")
         #expect(try phone.record.load() == before, "the record is as it was, with no lease")
         #expect(try phone.files() == files, "every file is as it was, and no fresh file is left")
@@ -183,7 +185,7 @@ struct CloudReturnTests {
         #expect(app.cloudReturn.isOffered)
         #expect(!app.handle(Self.cloudRequired))
         #expect(!app.cloudReturn.isShown)
-        #expect(Wording.problem(Self.cloudRequired) == "QBank Cloud has ended, and your bank is still in it. Bring it back to this iPhone from Settings.")
+        #expect(Wording.problem(Self.cloudRequired) == "QBank Cloud has ended, and your bank is still in it. Bring it back to this \(Device.model) from Settings.")
 
         // Asked again in Settings, with the whole bank sent this time, it comes back.
         server[Self.download] = CloudPhone.reply(try phone.archive())
@@ -362,9 +364,9 @@ struct CloudReturnTests {
 
     @Test func theStepsAndEndingsSayWhatHappenedInPlainWords() {
         let steps: [BankHandBack.Step] = [.downloading, .writing, .checking]
-        #expect(steps.map(CloudReturnWording.step) == ["Downloading your bank from QBank Cloud", "Writing it to this iPhone", "Checking that everything arrived"])
-        #expect(CloudReturnWording.problem(.countsDiffer([.init(table: "attempts", onPhone: 1, inCloud: 2)])) == "This iPhone did not get the same number of answers as QBank Cloud holds, so it did not switch.")
-        #expect(CloudReturnWording.problem(.switchNotRecorded(.closed)) == "Your whole bank arrived, but this iPhone could not note the switch, so it keeps using QBank Cloud's bank.")
+        #expect(steps.map(CloudReturnWording.step) == ["Downloading your bank from QBank Cloud", "Writing it to this \(Device.model)", "Checking that everything arrived"])
+        #expect(CloudReturnWording.problem(.countsDiffer([.init(table: "attempts", onPhone: 1, inCloud: 2)])) == "This \(Device.model) did not get the same number of answers as QBank Cloud holds, so it did not switch.")
+        #expect(CloudReturnWording.problem(.switchNotRecorded(.closed)) == "Your whole bank arrived, but this \(Device.model) could not note the switch, so it keeps using QBank Cloud's bank.")
         #expect(CloudReturnWording.notDownloaded(.transport(.networkConnectionLost)) == "The connection dropped before your whole bank arrived.")
         #expect(CloudReturnWording.notDownloaded(.server(ServerError(status: 404, code: "not_found", message: "No bank here."))) == "No bank here.")
         #expect(CloudReturnWording.canRetry(.notDownloaded(.transport(.timedOut))))
