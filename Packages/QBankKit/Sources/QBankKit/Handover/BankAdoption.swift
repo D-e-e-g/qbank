@@ -19,6 +19,8 @@ public struct BankAdoption: Sendable {
     public struct Finding: Sendable, Equatable {
         /// What QBank Cloud's bank holds, table by table.
         public let counts: BankCounts
+        /// What QBank Cloud's bank holds, as the person counts it.
+        public let summary: BankSummary
         /// This phone's sets that QBank Cloud does not hold, in the order Home lists them.
         public let onlyOnPhone: [BankOffer.PhoneSet]
         let cloudLineages: Set<String>
@@ -87,11 +89,13 @@ public struct BankAdoption: Sendable {
             return .failure(.notDownloaded(error))
         }
         let counts: BankCounts
+        let summary: BankSummary
         let cloudSets: [StoreRow]
         do {
             let cloud = try LocalStore.inMemory()
             defer { cloud.close() }
             counts = try BankArchive.read(archive, into: cloud)
+            summary = try BankSummary.of(cloud)
             cloudSets = try cloud.read { try $0.rows("SELECT lineage_id, file_hash FROM practice_set") }
         } catch {
             return .failure(.notReadable(String(describing: error)))
@@ -100,7 +104,7 @@ public struct BankAdoption: Sendable {
         let files = Set(cloudSets.compactMap { $0.text("file_hash") })
         do {
             let onlyOnPhone = try Self.onlyOnPhone(in: store, lineages: lineages, files: files)
-            return .success(Finding(counts: counts, onlyOnPhone: onlyOnPhone, cloudLineages: lineages, cloudFiles: files))
+            return .success(Finding(counts: counts, summary: summary, onlyOnPhone: onlyOnPhone, cloudLineages: lineages, cloudFiles: files))
         } catch {
             return .failure(.notRead(String(describing: error)))
         }

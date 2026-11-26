@@ -21,7 +21,7 @@ final class CloudReturnModel {
         /// The hand-back is at this step.
         case returning(BankHandBack.Step)
         /// The bank is on this phone again, which holds these counts, the same as QBank Cloud's.
-        case returned(BankCounts)
+        case returned(BankSummary?)
         /// QBank Cloud's bank stays in use, for the reason said; `canRetry` when trying again may help.
         case failed(String, canRetry: Bool)
     }
@@ -90,12 +90,13 @@ final class CloudReturnModel {
             await self?.show(step)
         }
         switch outcome {
-        case .returned(let counts, let store, _):
+        case .returned(_, let store, _):
+            let summary = try? BankSummary.of(store)
             await app.bankReturnedToPhone(made.key, store: store)
             isDue = false
             // A sign-out during the hand-back already closed the screen.
             guard isShown else { return }
-            phase = .returned(counts)
+            phase = .returned(summary)
         case .failed(let failure, _):
             // A session that ended signs out, as everywhere; the bank stays in QBank Cloud.
             if case .notDownloaded(let error) = failure, error.needsSignIn, app.handle(error) { return }

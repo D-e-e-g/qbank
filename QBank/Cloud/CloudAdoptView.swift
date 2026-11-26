@@ -50,12 +50,7 @@ struct CloudAdoptView: View {
             CloudMark(systemImage: "icloud", tone: .tint)
             CloudHeading(CloudAdoptWording.foundTitle, id: "cloudAdopt.found")
             CloudLead(CloudAdoptWording.foundBody, id: "cloudAdopt.body")
-            QBankListGroup(header: "In QBank Cloud") {
-                ForEach(CloudMoveWording.shownCounts, id: \.table) { shown in
-                    QBankListRow(shown.label, value: (found.counts[shown.table] ?? 0).formatted())
-                        .accessibilityIdentifier("cloudAdopt.count.\(shown.table)")
-                }
-            }
+            CloudCounts(summary: found.summary, header: "In QBank Cloud", prefix: "cloudAdopt")
             CloudNote(text: CloudAdoptWording.onlyHere(found.onlyOnPhone.count), systemImage: "iphone", id: "cloudAdopt.onlyHere")
             CloudNote(text: CloudAdoptWording.safetyCopy, systemImage: "lock.iphone", id: "cloudAdopt.safetyCopy")
             VStack(spacing: QBankSpacing.space2) {

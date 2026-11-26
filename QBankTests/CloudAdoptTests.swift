@@ -71,6 +71,7 @@ struct CloudAdoptTests {
         #expect(found.onlyOnPhone.map(\.title) == ["Invented rivers"], "the sample set, filed from the same file, is in QBank Cloud already")
         #expect(found.onlyOnPhone.first?.place.title == "Geography")
         #expect(found.counts["courses"] == 2)
+        #expect(found.summary == BankSummary(sets: 1, questions: 10, answers: 0), "QBank Cloud's sample set, as the person counts it")
         #expect(try phone.record.load() == .onPhone)
         #expect(!server.calls.contains(Self.upload), "nothing is uploaded")
         #expect(app.bank?.holdsWrites == false, "the bank on this phone is still the one in use")

@@ -43,17 +43,12 @@ struct CloudMoveView: View {
 
     // MARK: Moved
 
-    private func moved(_ counts: BankCounts) -> some View {
+    private func moved(_ summary: BankSummary?) -> some View {
         VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "checkmark.icloud", tone: .correct)
             CloudHeading(CloudMoveWording.movedTitle, id: "cloudMove.moved")
             CloudLead(CloudMoveWording.movedBody)
-            QBankListGroup {
-                ForEach(CloudMoveWording.shownCounts, id: \.table) { shown in
-                    QBankListRow(shown.label, value: (counts[shown.table] ?? 0).formatted())
-                        .accessibilityIdentifier("cloudMove.count.\(shown.table)")
-                }
-            }
+            if let summary { CloudCounts(summary: summary, prefix: "cloudMove") }
             CloudNote(text: CloudMoveWording.safetyCopy, systemImage: "iphone", id: "cloudMove.safetyCopy")
             Button("Done") { move.close() }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))

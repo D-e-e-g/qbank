@@ -40,11 +40,9 @@ public enum BankOffer {
         let rows = try tx.rows(
             """
             SELECT s.id, s.title, s.lineage_id, s.file_hash, c.kind, c.code, c.title AS course_title, m.number, f.name AS folder_name
-            FROM practice_set s
-            JOIN course c ON c.id = s.course_id
+            FROM \(BankSummary.openSets)
             LEFT JOIN semester m ON m.id = c.semester_id
-            LEFT JOIN folder f ON f.id = s.folder_id
-            WHERE s.is_current = 1 AND s.deleted_at IS NULL AND c.deleted_at IS NULL AND f.deleted_at IS NULL
+            WHERE \(BankSummary.isOpen)
             ORDER BY c.kind, m.number, c.sort_order, c.id, f.sort_order, s.sort_order, s.id
             """)
         return rows.map { row in

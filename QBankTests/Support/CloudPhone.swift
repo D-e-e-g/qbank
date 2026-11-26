@@ -41,6 +41,13 @@ struct CloudPhone {
         return try BankArchive.counts(of: store)
     }
 
+    /// The bank file `name` as the person counts it, read by a store of the test's own that writes nothing.
+    func summary(of name: String = LocalStore.firstFile) throws -> BankSummary {
+        let store = try LocalStore.readOnly(key: TestApp.appleUser, in: root, file: name)
+        defer { store.close() }
+        return try BankSummary.of(store)
+    }
+
     /// The bank file `name` as a bank archive, as QBank Cloud would send it.
     func archive(of name: String = LocalStore.firstFile) throws -> Data {
         let store = try LocalStore.readOnly(key: TestApp.appleUser, in: root, file: name)

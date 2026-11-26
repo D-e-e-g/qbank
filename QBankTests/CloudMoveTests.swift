@@ -34,7 +34,7 @@ struct CloudMoveTests {
         #expect(!app.cloudMove.isShown)
         #expect(!server.calls.contains(Self.upload))
         await app.cloudMove.plansClosed()
-        #expect(app.cloudMove.phase == .moved(try phone.counts()))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.kind == .store)
     }
 
@@ -54,8 +54,8 @@ struct CloudMoveTests {
         server.release("POST /api/me/cloud/transactions")
         await buying.value
 
-        let counts = try phone.counts()
-        try await waitUntil { app.cloudMove.phase == .moved(counts) }
+        let summary = try phone.summary()
+        try await waitUntil { app.cloudMove.phase == .moved(summary) }
         #expect(!app.cloudMove.isDue)
         #expect(app.kind == .store)
     }
@@ -86,7 +86,7 @@ struct CloudMoveTests {
 
         await app.cloudMove.start()
 
-        #expect(app.cloudMove.phase == .moved(counts))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.cloudMove.isShown, "the outcome waits to be read")
         #expect(app.kind == .store)
         #expect(app.bank == nil)
@@ -245,7 +245,7 @@ struct CloudMoveTests {
         #expect(app.cloudMove.isResumed)
         #expect(try await app.client.catalog().topics.map(\.title) == [SampleSet.topic], "the sample set is not filed again, nor anything else")
         await app.cloudMove.finishLeftOpen()
-        #expect(app.cloudMove.phase == .moved(try phone.counts()))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.kind == .store)
         #expect(try phone.record.load().lease == nil)
         #expect(try phone.bytes() == before)
@@ -317,8 +317,8 @@ struct CloudMoveTests {
 
         await AppleSignInModel(app: app).signIn(over: nil)
 
-        let counts = try phone.counts()
-        try await waitUntil { app.cloudMove.phase == .moved(counts) }
+        let summary = try phone.summary()
+        try await waitUntil { app.cloudMove.phase == .moved(summary) }
         #expect(server.calls.contains(Self.upload))
         #expect(app.kind == .store)
         #expect(try phone.record.load().lease == nil)

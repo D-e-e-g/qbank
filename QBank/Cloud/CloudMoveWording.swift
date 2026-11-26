@@ -27,17 +27,14 @@ enum CloudMoveWording {
     // MARK: Moved
 
     static let movedTitle = "Your bank is in QBank Cloud"
-    static var movedBody: String {
-        "QBank Cloud counted the same sets, questions, answers and progress as this \(Device.model), so QBank now uses your bank in QBank Cloud."
-    }
+    static var movedBody: String { "Everything on this \(Device.model) is now in QBank Cloud, and QBank uses it from there." }
     static var safetyCopy: String { "The bank this \(Device.model) held before the move stays on it, unchanged, as a safety copy." }
 
-    /// The counts the moved screen shows, by archive key, with what each counts.
-    static let shownCounts: [(table: String, label: String)] = [
-        ("practiceSets", "Sets, with earlier versions"),
-        ("questions", "Questions"),
-        ("attempts", "Answers"),
-    ]
+    /// The counts a screen shows of a bank, as the person counts it, each with its key and label. The
+    /// move and the hand-back compare every table; these are only what the screen says.
+    static func shown(_ summary: BankSummary) -> [(key: String, label: String, value: Int)] {
+        [("sets", "Sets", summary.sets), ("questions", "Questions", summary.questions), ("answers", "Answers", summary.answers)]
+    }
 
     // MARK: Failed
 

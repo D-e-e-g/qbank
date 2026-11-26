@@ -37,14 +37,16 @@ struct CloudReturnTests {
         let app = try await ended(on: phone, server, sending: archive)
         let safetyCopy = try phone.bytes()
         let before = try phone.record.load()
-        let sent = try BankArchive.read(archive, into: LocalStore.inMemory())
+        let sentStore = try LocalStore.inMemory()
+        let sent = try BankArchive.read(archive, into: sentStore)
         let earlier = server.calls.count
 
         await app.refreshSession()
 
         #expect(app.cloudReturn.isShown, "the screen covers the app at once")
         try await waitForOutcome(app)
-        #expect(app.cloudReturn.phase == .returned(sent))
+        #expect(app.cloudReturn.phase == .returned(try BankSummary.of(sentStore)))
+        #expect(app.cloudReturn.phase == .returned(BankSummary(sets: 1, questions: 10, answers: 0)), "the sample set, counted as the person counts it")
         let record = try phone.record.load()
         #expect(record.authority == .phone)
         #expect(record.lease == nil)

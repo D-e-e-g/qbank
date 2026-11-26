@@ -20,6 +20,8 @@ final class CloudAdoptModel {
     /// What the look at QBank Cloud found: what its bank holds, and this phone's sets it does not.
     struct Found: Equatable {
         let counts: BankCounts
+        /// QBank Cloud's bank as the person counts it.
+        let summary: BankSummary
         let onlyOnPhone: [BankOffer.PhoneSet]
     }
 
@@ -228,7 +230,7 @@ final class CloudAdoptModel {
         switch await made.adoption.look() {
         case .success(let finding):
             looked = (made.adoption, made.key, finding)
-            return .found(Found(counts: finding.counts, onlyOnPhone: finding.onlyOnPhone))
+            return .found(Found(counts: finding.counts, summary: finding.summary, onlyOnPhone: finding.onlyOnPhone))
         case .failure(let failure):
             if case .notDownloaded(let error) = failure, error.needsSignIn, app.handle(error) { return .idle }
             return .failed(CloudAdoptWording.problem(failure), retry: .look)

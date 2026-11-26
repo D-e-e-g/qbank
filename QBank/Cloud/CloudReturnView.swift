@@ -15,8 +15,8 @@ struct CloudReturnView: View {
             switch handBack.phase {
             case .idle, .returning:
                 returning(handBack.phase)
-            case .returned(let counts):
-                returned(counts)
+            case .returned(let summary):
+                returned(summary)
             case .failed(let problem, let canRetry):
                 failed(problem, canRetry: canRetry)
             }
@@ -43,17 +43,12 @@ struct CloudReturnView: View {
 
     // MARK: Returned
 
-    private func returned(_ counts: BankCounts) -> some View {
+    private func returned(_ summary: BankSummary?) -> some View {
         VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "checkmark.circle", tone: .correct)
             CloudHeading(CloudReturnWording.returnedTitle, id: "cloudReturn.returned")
             CloudLead(CloudReturnWording.returnedBody)
-            QBankListGroup {
-                ForEach(CloudMoveWording.shownCounts, id: \.table) { shown in
-                    QBankListRow(shown.label, value: (counts[shown.table] ?? 0).formatted())
-                        .accessibilityIdentifier("cloudReturn.count.\(shown.table)")
-                }
-            }
+            if let summary { CloudCounts(summary: summary, prefix: "cloudReturn") }
             CloudNote(text: CloudReturnWording.cloudKept, systemImage: "icloud", id: "cloudReturn.cloudKept")
             Button("Done") { handBack.close() }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))

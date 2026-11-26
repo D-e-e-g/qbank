@@ -21,8 +21,9 @@ final class CloudMoveModel {
         case idle
         /// The move is at this step.
         case moving(BankMoveToCloud.Step)
-        /// The bank is in QBank Cloud, which holds these counts, the same as this phone's.
-        case moved(BankCounts)
+        /// The bank is in QBank Cloud, which holds every row this phone's bank does: the bank as the
+        /// person counts it, when it could be read.
+        case moved(BankSummary?)
         /// The bank stays on this phone, for the reason said; `canRetry` when trying again may help.
         case failed(String, canRetry: Bool)
     }
@@ -123,11 +124,12 @@ final class CloudMoveModel {
             await self?.show(step)
         }
         switch outcome {
-        case .moved(let counts, _):
+        case .moved:
+            let summary = app.phoneBankSummary()
             app.bankMovedToCloud(key)
             // A sign-out during the move, after a session ended, already closed the screen.
             guard isShown else { return }
-            phase = .moved(counts)
+            phase = .moved(summary)
         case .failed(let failure, _):
             // QBank Cloud holds a bank for the account already: that bank is the authority, and the
             // person is asked about it, the bank on this phone still as it was.

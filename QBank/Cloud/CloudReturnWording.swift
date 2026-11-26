@@ -28,9 +28,7 @@ enum CloudReturnWording {
     // MARK: Returned
 
     static var returnedTitle: String { "Your bank is on this \(Device.model)" }
-    static var returnedBody: String {
-        "This \(Device.model) counted the same sets, questions, answers and progress as QBank Cloud, so QBank now uses the bank on this \(Device.model). It works without a connection."
-    }
+    static var returnedBody: String { "Everything from QBank Cloud is now on this \(Device.model), and it works without a connection." }
     static let cloudKept = "Nothing was deleted from QBank Cloud."
 
     // MARK: Failed

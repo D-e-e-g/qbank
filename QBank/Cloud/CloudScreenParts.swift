@@ -1,4 +1,5 @@
 import QBankDesign
+import QBankKit
 import SwiftUI
 
 /// The screen over the app while the bank moves between this phone and QBank Cloud: the move to QBank
@@ -103,6 +104,29 @@ struct CloudLead: View {
             lead.accessibilityIdentifier(id)
         } else {
             lead
+        }
+    }
+}
+
+/// A bank's sets, questions and answers, as the person counts them, each row identified as
+/// `<prefix>.count.<key>`.
+struct CloudCounts: View {
+    let summary: BankSummary
+    var header: String?
+    let prefix: String
+
+    var body: some View {
+        if let header {
+            QBankListGroup(header: header) { rows }
+        } else {
+            QBankListGroup { rows }
+        }
+    }
+
+    private var rows: some View {
+        ForEach(CloudMoveWording.shown(summary), id: \.key) { shown in
+            QBankListRow(shown.label, value: shown.value.formatted())
+                .accessibilityIdentifier("\(prefix).count.\(shown.key)")
         }
     }
 }

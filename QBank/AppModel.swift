@@ -597,6 +597,11 @@ final class AppModel {
         return (move, phoneBank.key)
     }
 
+    /// The bank on this phone as the person counts it, or nil when there is none or it cannot be read.
+    func phoneBankSummary() -> BankSummary? {
+        phoneBank.flatMap { try? BankSummary.of($0.bank) }
+    }
+
     /// After a move whose counts matched recorded that the bank is QBank Cloud's: the account is on the
     /// server from now on, with saved copies and waiting answers as any account there has, and the
     /// bank file on this phone is left as it was, its writes held. The same person stays signed in, and

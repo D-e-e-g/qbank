@@ -135,9 +135,9 @@ final class CloudUITests: XCTestCase {
         let moved = app.staticTexts["cloudMove.moved"]
         XCTAssertTrue(moved.appears(timeout: 15))
         XCTAssertEqual(moved.label, "Your bank is in QBank Cloud")
-        XCTAssertTrue(count(app, "practiceSets").label.contains("1"), count(app, "practiceSets").label)
+        XCTAssertTrue(count(app, "sets").label.contains("1"), count(app, "sets").label)
         XCTAssertTrue(count(app, "questions").label.contains("10"), count(app, "questions").label)
-        XCTAssertTrue(count(app, "attempts").label.contains("1"), count(app, "attempts").label)
+        XCTAssertTrue(count(app, "answers").label.contains("1"), count(app, "answers").label)
         XCTAssertTrue(app.staticTexts["cloudMove.safetyCopy"].label.contains("safety copy"))
         attachLooks(app, "moved to cloud")
         app.buttons["cloudMove.done"].tap()
@@ -192,7 +192,7 @@ final class CloudUITests: XCTestCase {
         let found = app.staticTexts["cloudAdopt.found"]
         XCTAssertTrue(found.appears(timeout: 15))
         XCTAssertEqual(found.label, "QBank Cloud already has your bank")
-        XCTAssertTrue(adoptCount(app, "practiceSets").label.contains("1"), adoptCount(app, "practiceSets").label)
+        XCTAssertTrue(adoptCount(app, "sets").label.contains("1"), adoptCount(app, "sets").label)
         XCTAssertTrue(adoptCount(app, "questions").label.contains("3"), adoptCount(app, "questions").label)
         XCTAssertEqual(
             app.staticTexts["cloudAdopt.onlyHere"].label, "1 set only on this iPhone. Next, you can add it to QBank Cloud as a new set.")
@@ -242,7 +242,7 @@ final class CloudUITests: XCTestCase {
         XCTAssertTrue(returned.appears(timeout: 15))
         XCTAssertEqual(returned.label, "Your bank is on this iPhone")
         let counted = app.descendants(matching: .any)
-        XCTAssertTrue(counted["cloudReturn.count.practiceSets"].label.contains("2"), counted["cloudReturn.count.practiceSets"].label)
+        XCTAssertTrue(counted["cloudReturn.count.sets"].label.contains("2"), counted["cloudReturn.count.sets"].label)
         XCTAssertTrue(counted["cloudReturn.count.questions"].label.contains("13"), counted["cloudReturn.count.questions"].label)
         XCTAssertEqual(app.staticTexts["cloudReturn.cloudKept"].label, "Nothing was deleted from QBank Cloud.")
         attachLooks(app, "cloud ended, returned")
@@ -281,7 +281,7 @@ final class CloudUITests: XCTestCase {
 
         let found = app.staticTexts["cloudAdopt.found"]
         XCTAssertTrue(found.appears(timeout: 15))
-        XCTAssertTrue(adoptCount(app, "practiceSets").label.contains("2"), adoptCount(app, "practiceSets").label)
+        XCTAssertTrue(adoptCount(app, "sets").label.contains("2"), adoptCount(app, "sets").label)
         XCTAssertTrue(adoptCount(app, "questions").label.contains("13"), adoptCount(app, "questions").label)
         XCTAssertEqual(
             app.staticTexts["cloudAdopt.onlyHere"].label, "1 set only on this iPhone. Next, you can add it to QBank Cloud as a new set.",
@@ -340,13 +340,13 @@ final class CloudUITests: XCTestCase {
         return sample
     }
 
-    /// A count the moved screen shows, by the table it counts.
+    /// A count the moved screen shows, by what it counts: sets, questions or answers.
     @MainActor
     private func count(_ app: XCUIApplication, _ table: String) -> XCUIElement {
         app.descendants(matching: .any)["cloudMove.count.\(table)"]
     }
 
-    /// A count of QBank Cloud's bank, as the screen that offers it shows it, by the table it counts.
+    /// A count of QBank Cloud's bank, as the screen that offers it shows it, by what it counts.
     @MainActor
     private func adoptCount(_ app: XCUIApplication, _ table: String) -> XCUIElement {
         app.descendants(matching: .any)["cloudAdopt.count.\(table)"]

@@ -69,6 +69,7 @@ struct BankAdoptionTests {
         let finding = try await world.adoption(cloud).look().get()
 
         #expect(finding.counts == world.cloudCounts)
+        #expect(finding.summary == BankSummary(sets: 2, questions: 3, answers: 0), "Capitals and Mountains, as the person counts them")
         #expect(finding.cloudHasBank)
         #expect(finding.onlyOnPhone.map(\.id) == [world.ownSet], "a replaced set and a file both sides imported are in QBank Cloud already")
         let own = try #require(finding.onlyOnPhone.first)
