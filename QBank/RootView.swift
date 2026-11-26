@@ -18,12 +18,18 @@ struct RootView: View {
                 SignedInView(app: model)
                     // A new sign-in starts from fresh screens, even one made while the screens of
                     // the same account's sign-out still fade. The server confirming a Sign in with
-                    // Apple keeps them: the person, and so the phone's key, is the same.
-                    .id("\(model.phoneKey ?? account.id) \(model.signIns)")
+                    // Apple keeps them: the person, and so the phone's key, is the same. A bank that
+                    // moved to QBank Cloud starts them afresh too, under the move's screen, so each
+                    // reads the bank where it is now.
+                    .id("\(model.phoneKey ?? account.id) \(model.signIns) \(model.kind.rawValue)")
                     .transition(.opacity)
             }
         }
         .animation(QBankMotion.reveal, value: model.route)
+        // The move of the bank to QBank Cloud covers the app until its outcome is read.
+        .fullScreenCover(isPresented: .constant(model.cloudMove.isShown)) {
+            CloudMoveView(app: model)
+        }
         .tint(QBankColor(.tint))
         // Her account's color scheme, on every screen and sheet; Dusk on the sign-in screen.
         .qbankPalette(model.palette.design)
@@ -35,6 +41,8 @@ struct RootView: View {
             )
         )
         .task {
+            // A move the app was closed during is finished before anything else.
+            await model.cloudMove.finishLeftOpen()
             // A session kept from an earlier launch: check the server still accepts it.
             await model.refreshSession()
         }

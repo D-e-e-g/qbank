@@ -33,7 +33,7 @@ public struct BankRoutedTransport: HTTPTransport {
     ]
 
     /// Whether the path belongs to the bank. `/api/me/place` does and no other `/api/me` path does.
-    static func isBankPath(_ path: String) -> Bool {
+    public static func isBankPath(_ path: String) -> Bool {
         let parts = path.split(separator: "/", omittingEmptySubsequences: true)
         guard parts.count >= 2, parts[0] == "api" else { return false }
         if parts[1] == "me" { return parts.count == 3 && parts[2] == "place" }

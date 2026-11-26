@@ -21,6 +21,11 @@ struct BankRefusal: Error, Equatable {
         BankRefusal(status: 404, code: "not_found", message: "The bank on this phone does not answer \(method) \(path).")
     }
 
+    /// A write while the bank is moving to QBank Cloud, which holds it as it is until the move ends.
+    /// The phone's own refusal: the server has no bank that moves.
+    static let moving = BankRefusal(
+        status: 409, code: "bank_moving", message: "Your bank is moving to QBank Cloud, so it cannot change until the move ends. Nothing was changed.")
+
     /// What goes wrong inside the engine that no rule explains, as the server words it.
     static let failed = BankRefusal(status: 500, code: "server_error", message: "Something went wrong. Try again.")
 

@@ -9,11 +9,14 @@ import Synchronization
 /// Foreign keys are on. Everything runs under one lock, so a store can be shared across tasks.
 /// The store is not re-entrant: inside a `transaction` or `read` body, use the `StoreTransaction`
 /// it hands you, never the store itself, which would wait on its own lock forever.
-/// A free account's bank is one.
+/// A free account's bank is one. While it moves, `holdWrites()` stops every write until
+/// `releaseWrites()`, and reads go on.
 public final class LocalStore: Sendable {
     /// The file, or nil for an in-memory store.
     public let fileURL: URL?
     private let connection: Mutex<SQLiteConnection>
+    /// True while the bank is held: every transaction is refused before it begins.
+    private let held = Mutex(false)
 
     private init(fileURL: URL?, connection: sending SQLiteConnection) {
         self.fileURL = fileURL
@@ -82,6 +85,26 @@ public final class LocalStore: Sendable {
         connection.withLock { $0.close() }
     }
 
+    // MARK: Holding
+
+    /// Refuses every write from now on, with `StoreError.writesHeld`, until `releaseWrites()`, so the
+    /// bank stays exactly as it is while it moves. A write already running finishes first: this waits
+    /// for it, so once it returns nothing changes the bank. Reads go on. The hold lasts as long as this
+    /// store does; what outlasts the app is the lease in the bank's hand-over record (`BankHandover`).
+    public func holdWrites() {
+        connection.withLock { _ in held.withLock { $0 = true } }
+    }
+
+    /// Takes writes again.
+    public func releaseWrites() {
+        held.withLock { $0 = false }
+    }
+
+    /// Whether writes are held.
+    public var holdsWrites: Bool {
+        held.withLock { $0 }
+    }
+
     // MARK: Using
 
     /// The schema step the file is at.
@@ -94,10 +117,12 @@ public final class LocalStore: Sendable {
     /// Runs `body` in one transaction: its changes all happen or, when it throws, none do. The
     /// error `body` threw is rethrown after the rollback. When SQLite has already rolled the
     /// transaction back on its own (a full disk, an I/O error), every later statement of the body
-    /// and the commit throw `StoreError.rolledBack`, so nothing runs outside the transaction.
+    /// and the commit throw `StoreError.rolledBack`, so nothing runs outside the transaction. While
+    /// writes are held it throws `StoreError.writesHeld` before anything begins.
     public func transaction<Result: Sendable>(_ body: (StoreTransaction) throws -> Result) throws -> Result {
         try connection.withLock { connection in
             guard connection.isOpen else { throw StoreError.closed }
+            guard !held.withLock({ $0 }) else { throw StoreError.writesHeld }
             try connection.run("BEGIN IMMEDIATE")
             let transaction = StoreTransaction(connection)
             defer { transaction.end() }

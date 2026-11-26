@@ -10,7 +10,8 @@ import UIKit
 /// account's session, and is finished only once the server has handled it for good: recorded it, or
 /// refused it for a reason sending it again would not change. One the server gave no lasting answer
 /// for stays unfinished: the App Store gives it to the app again at the next launch, and `refresh()`
-/// sends it again. The app shows Cloud as on only when the server says so.
+/// sends it again. The app shows Cloud as on only when the server says so. Once a purchase or Restore
+/// here turns it on, the bank on this phone moves to QBank Cloud (`CloudMoveModel`).
 ///
 /// One model serves the whole app, as the App Store's updates do. It follows the account signed in
 /// (`follow(_:)`), so what it says of one account is gone when another signs in.
@@ -138,7 +139,11 @@ final class CloudModel {
                 let status = try await send(transaction, with: client)
                 guard owner == accountID else { return }
                 self.status = status
-                if !status.active { problem = CloudWording.notActive }
+                if status.active {
+                    app?.cloudMove.cloudTurnedOn()
+                } else {
+                    problem = CloudWording.notActive
+                }
             } catch {
                 say(error, for: owner, temporary: CloudWording.notConfirmedYet)
             }
@@ -188,6 +193,7 @@ final class CloudModel {
         if let latest { status = latest }
         if latest?.active == true {
             notice = .done(CloudWording.restored)
+            app?.cloudMove.cloudTurnedOn()
         } else if let failure {
             say(failure, for: owner, temporary: CloudWording.notConfirmedYet)
         } else {

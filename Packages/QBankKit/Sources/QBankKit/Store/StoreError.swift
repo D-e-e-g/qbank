@@ -23,6 +23,10 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
     case rolledBack
     /// A schema step left a row naming a row that is not there.
     case foreignKeyCheckFailed(step: Int)
+    /// The bank is held while it moves (`LocalStore.holdWrites()`), so it takes no write.
+    case writesHeld
+    /// The bank's hand-over record is not one this app can read. It is left as it is.
+    case unreadableHandover(String)
 
     public var description: String {
         switch self {
@@ -36,6 +40,8 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
         case .transactionEnded: "the transaction has ended"
         case .rolledBack: "the transaction was rolled back after an error, and nothing of it was kept"
         case .foreignKeyCheckFailed(let step): "schema step \(step) left a row naming a row that is not there"
+        case .writesHeld: "the bank is moving and takes no writes until the move ends"
+        case .unreadableHandover(let reason): "the bank's hand-over record cannot be read: \(reason)"
         }
     }
 }

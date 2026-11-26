@@ -10,6 +10,10 @@ enum AppleSignInWording {
     /// Apple's sheet ended without a yes, for a reason other than her closing it.
     static let appleDidNotFinish = "Sign in with Apple did not finish. Try again."
 
+    /// The person's bank is in QBank Cloud and the server cannot be reached, so they are not signed in:
+    /// the copy this device kept from before the move is never opened in the bank's place.
+    static let bankInCloudNeedsServer = "Your bank is in QBank Cloud, and QBank could not reach it. Nothing was changed. Try again when you're connected."
+
     /// The bank on the phone could not be opened, so she is not signed in.
     static var bankDidNotOpen: String {
         "QBank could not open the questions kept on this \(Device.model). Try again."
