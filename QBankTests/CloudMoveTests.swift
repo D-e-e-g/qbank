@@ -188,17 +188,21 @@ struct CloudMoveTests {
     // MARK: Every other ending
 
     /// Each upload that does not end in a confirmed, matching copy in QBank Cloud, with what the move's
-    /// screen says, and whether it offers to try again.
-    fileprivate nonisolated static let failures: [(name: String, reply: Reply?, says: String, canRetry: Bool)] = [
-        ("no connection", .offline, "No connection, so your bank was not sent. Check Wi-Fi or cellular data and try again.", true),
+    /// screen says, and whether it offers to try again. What it says is read on the main actor, since a
+    /// sentence that names the device says "iPhone" or "iPad" as the device the tests run on does.
+    fileprivate nonisolated static let failures: [(name: String, reply: Reply?, says: @MainActor @Sendable () -> String, canRetry: Bool)] = [
+        ("no connection", .offline, { "No connection, so your bank was not sent. Check Wi-Fi or cellular data and try again." }, true),
         (
             "an account that already has a bank", .error(409, "bank_not_empty", "This account already has a question bank on the server, so the upload was refused. Nothing was changed."),
-            "This account already has a question bank on the server, so the upload was refused. Nothing was changed.", false
+            { "This account already has a question bank on the server, so the upload was refused. Nothing was changed." }, false
         ),
-        ("no Cloud", .error(403, "cloud_required", "This needs Cloud. Your question bank is on this device."), "This needs Cloud. Your question bank is on this device.", false),
-        ("a server that fails", .error(503, "unavailable", "QBank is busy."), "QBank Cloud could not take your bank right now. Try again in a moment.", true),
-        ("an answer that cannot be read", .ok("<html>proxy</html>"), "QBank Cloud's answer could not be read, so it has not confirmed it holds your whole bank.", true),
-        ("counts that differ", nil, "QBank Cloud does not hold the same number of answers as this iPhone, so QBank keeps using the bank on this iPhone.", false),
+        ("no Cloud", .error(403, "cloud_required", "This needs Cloud. Your question bank is on this device."), { "This needs Cloud. Your question bank is on this device." }, false),
+        ("a server that fails", .error(503, "unavailable", "QBank is busy."), { "QBank Cloud could not take your bank right now. Try again in a moment." }, true),
+        ("an answer that cannot be read", .ok("<html>proxy</html>"), { "QBank Cloud's answer could not be read, so it has not confirmed it holds your whole bank." }, true),
+        (
+            "counts that differ", nil,
+            { "QBank Cloud does not hold the same number of answers as this \(Device.model), so QBank keeps using the bank on this \(Device.model)." }, false
+        ),
     ]
 
     @Test(arguments: failures.map(\.name))
@@ -213,7 +217,7 @@ struct CloudMoveTests {
 
         await app.cloudMove.start()
 
-        #expect(app.cloudMove.phase == .failed(failure.says, canRetry: failure.canRetry))
+        #expect(app.cloudMove.phase == .failed(failure.says(), canRetry: failure.canRetry))
         #expect(app.cloudMove.isShown)
         #expect(app.kind == .free)
         #expect(app.bank != nil)
@@ -413,13 +417,13 @@ struct CloudMoveTests {
     @Test func everyFailureIsSaidInPlainWords() {
         #expect(CloudMoveWording.notStored(.transport(.timedOut)) == "QBank Cloud did not answer in time, so it has not confirmed it holds your whole bank.")
         #expect(CloudMoveWording.notStored(.transport(.networkConnectionLost)) == "The connection to QBank Cloud dropped before it confirmed it holds your whole bank.")
-        #expect(CloudMoveWording.notStored(.transport(.userAuthenticationRequired)) == "This iPhone is not connected to the QBank service yet, so your bank was not sent.")
+        #expect(CloudMoveWording.notStored(.transport(.userAuthenticationRequired)) == "This \(Device.model) is not connected to the QBank service yet, so your bank was not sent.")
         let differences = [BankMoveToCloud.Difference(table: "questions", onPhone: 2, inCloud: 1), .init(table: "attempts", onPhone: 3, inCloud: 2), .init(table: "studyPlace", onPhone: 1, inCloud: 0)]
         #expect(
             CloudMoveWording.problem(.countsDiffer(differences))
-                == "QBank Cloud does not hold the same number of questions, answers and places you left off as this iPhone, so QBank keeps using the bank on this iPhone.")
-        #expect(CloudMoveWording.problem(.switchNotRecorded(.writesHeld)) == "Your bank reached QBank Cloud whole, but this iPhone could not note the switch, so it keeps using the bank here.")
-        #expect(CloudMoveWording.problem(.notStarted(.closed)) == "This iPhone could not note that a move was starting, so it did not start.")
+                == "QBank Cloud does not hold the same number of questions, answers and places you left off as this \(Device.model), so QBank keeps using the bank on this \(Device.model).")
+        #expect(CloudMoveWording.problem(.switchNotRecorded(.writesHeld)) == "Your bank reached QBank Cloud whole, but this \(Device.model) could not note the switch, so it keeps using the bank here.")
+        #expect(CloudMoveWording.problem(.notStarted(.closed)) == "This \(Device.model) could not note that a move was starting, so it did not start.")
         #expect(CloudMoveWording.list(["a"]) == "a")
         #expect(CloudMoveWording.list(["a", "b"]) == "a and b")
         #expect(CloudMoveWording.name(of: "practiceSets") == "sets")
