@@ -13,6 +13,8 @@ struct CloudReturnView: View {
     var body: some View {
         CloudPage {
             switch handBack.phase {
+            case .offered(let summary):
+                offered(summary)
             case .idle, .returning:
                 returning(handBack.phase)
             case .returned(let summary):
@@ -23,14 +25,40 @@ struct CloudReturnView: View {
         }
     }
 
+    // MARK: Offered
+
+    private func offered(_ summary: BankSummary) -> some View {
+        VStack(spacing: QBankSpacing.space5) {
+            CloudMark(systemImage: "icloud.and.arrow.down", tone: .tint)
+            CloudHeading(CloudReturnWording.offeredTitle, id: "cloudReturn.offered")
+            CloudLead(CloudReturnWording.offeredBody, id: "cloudReturn.offeredBody")
+            CloudCounts(summary: summary, header: "In QBank", prefix: "cloudReturn")
+            CloudNote(text: CloudReturnWording.offeredEarlierCopy, systemImage: "lock.iphone", id: "cloudReturn.earlierCopy")
+            VStack(spacing: QBankSpacing.space2) {
+                Button(CloudReturnWording.bringIt) {
+                    Task { await handBack.start() }
+                }
+                .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                .accessibilityIdentifier("cloudReturn.bring")
+                Button(CloudReturnWording.notNow) { handBack.close() }
+                    .buttonStyle(.qbank(.plain, size: .large, fullWidth: true))
+                    .accessibilityIdentifier("cloudReturn.later")
+            }
+            .padding(.top, QBankSpacing.space3)
+        }
+        .onAppear {
+            AccessibilityNotification.Announcement(CloudReturnWording.offeredTitle).post()
+        }
+    }
+
     // MARK: Returning
 
     private func returning(_ phase: CloudReturnModel.Phase) -> some View {
         let current: BankHandBack.Step = if case .returning(let step) = phase { step } else { .downloading }
         return VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "icloud.and.arrow.down", tone: .tint)
-            CloudHeading(CloudReturnWording.returningTitle, id: "cloudReturn.returning")
-            CloudLead(CloudReturnWording.returningNote, id: "cloudReturn.note")
+            CloudHeading(handBack.bringsHere ? CloudReturnWording.bringingTitle : CloudReturnWording.returningTitle, id: "cloudReturn.returning")
+            CloudLead(handBack.bringsHere ? CloudReturnWording.bringingNote : CloudReturnWording.returningNote, id: "cloudReturn.note")
             QBankListGroup {
                 ForEach(Self.steps, id: \.self) { step in
                     CloudStepRow(title: CloudReturnWording.step(step), step: step, current: current, order: Self.steps, id: "cloudReturn.step.\(step)")
@@ -50,6 +78,9 @@ struct CloudReturnView: View {
             CloudLead(CloudReturnWording.returnedBody)
             if let summary { CloudCounts(summary: summary, prefix: "cloudReturn") }
             CloudNote(text: CloudReturnWording.cloudKept, systemImage: "icloud", id: "cloudReturn.cloudKept")
+            if app.cloudAdopt.offeredCount > 0 {
+                CloudNote(text: CloudReturnWording.earlierCopyOffered(app.cloudAdopt.offeredCount), systemImage: "plus.square.on.square", id: "cloudReturn.earlierCopy")
+            }
             Button("Done") { handBack.close() }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
                 .accessibilityIdentifier("cloudReturn.done")
@@ -65,7 +96,7 @@ struct CloudReturnView: View {
     private func failed(_ problem: String, canRetry: Bool) -> some View {
         VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "exclamationmark.icloud", tone: .partial)
-            CloudHeading(CloudReturnWording.failedTitle, id: "cloudReturn.failed")
+            CloudHeading(handBack.bringsHere ? CloudReturnWording.notBroughtTitle : CloudReturnWording.failedTitle, id: "cloudReturn.failed")
             CloudProblemCard(problem: problem, unchanged: CloudReturnWording.unchanged, prefix: "cloudReturn")
             VStack(spacing: QBankSpacing.space2) {
                 if canRetry {
@@ -86,7 +117,7 @@ struct CloudReturnView: View {
             .padding(.top, QBankSpacing.space3)
         }
         .onAppear {
-            AccessibilityNotification.Announcement("\(CloudReturnWording.failedTitle). \(problem)").post()
+            AccessibilityNotification.Announcement("\(handBack.bringsHere ? CloudReturnWording.notBroughtTitle : CloudReturnWording.failedTitle). \(problem)").post()
         }
     }
 }

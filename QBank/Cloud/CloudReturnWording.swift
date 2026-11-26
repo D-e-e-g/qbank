@@ -9,6 +9,23 @@ enum CloudReturnWording {
     static let stillInCloud = "QBank Cloud has ended, and your bank is still in it."
     static var stillInCloudProblem: String { "\(stillInCloud) Bring it back to this \(Device.model) from Settings." }
 
+    // MARK: Bringing QBank's bank to a new phone
+
+    static var bringHere: String { "Bring my bank to this \(Device.model)" }
+    static var bringHereDetail: String { "QBank holds a bank for you. This \(Device.model) uses its own." }
+    static let offeredTitle = "QBank has your bank"
+    static var offeredBody: String {
+        "QBank holds the bank you kept in QBank Cloud. Bring it to this \(Device.model) to study it here, without a connection. Nothing in QBank is changed or deleted."
+    }
+    static var offeredEarlierCopy: String {
+        "The bank on this \(Device.model) stays on it, unchanged, as an earlier copy. Sets only in it are offered next, to add as new sets."
+    }
+    static var bringIt: String { "Bring it to this \(Device.model)" }
+    static let notNow = "Not now"
+    static var bringingTitle: String { "Bringing your bank to this \(Device.model)" }
+    static var bringingNote: String { "Your bank is coming from QBank to this \(Device.model). Keep QBank open until it is done." }
+    static var notBroughtTitle: String { "This \(Device.model) keeps its own bank" }
+
     // MARK: Returning
 
     static var returningTitle: String { "Bringing your bank back to this \(Device.model)" }
@@ -31,14 +48,20 @@ enum CloudReturnWording {
     static var returnedBody: String { "Everything from QBank Cloud is now on this \(Device.model), and it works without a connection." }
     static let cloudKept = "Nothing was deleted from QBank Cloud."
 
+    /// The sets of the earlier copy offered once the bank is here.
+    static func earlierCopyOffered(_ count: Int) -> String {
+        "\(CloudAdoptWording.addSetsDetail(count, into: .phone)). Add \(count == 1 ? "it" : "them") to your bank from Settings."
+    }
+
     // MARK: Failed
 
     static let failedTitle = "Your bank is still in QBank Cloud"
     static var unchanged: String { "Nothing on this \(Device.model) or in QBank Cloud was changed or deleted." }
     static var notInCloud: String { "There is no bank in QBank Cloud to bring back to this \(Device.model)." }
 
-    /// Why a hand-back did not make this phone the authority.
-    static func problem(_ failure: BankHandBack.Failure) -> String {
+    /// Why a hand-back did not make this phone the authority. `bringsHere` when it was to bring QBank's
+    /// bank in place of the one on this phone, which stays in use.
+    static func problem(_ failure: BankHandBack.Failure, bringsHere: Bool = false) -> String {
         switch failure {
         case .notStarted:
             "This \(Device.model) could not note that your bank was coming back, so nothing started."
@@ -52,8 +75,10 @@ enum CloudReturnWording {
             "This \(Device.model) did not get the same number of \(CloudMoveWording.list(differences.map { CloudMoveWording.name(of: $0.table) })) as QBank Cloud holds, so it did not switch."
         case .answersNotKept:
             "The answers waiting to be sent could not be kept in the bank on this \(Device.model), so it did not switch."
+        case .notCompared:
+            "The bank on this \(Device.model) could not be read to find the sets only it has, so it did not switch."
         case .switchNotRecorded:
-            "Your whole bank arrived, but this \(Device.model) could not note the switch, so it keeps using QBank Cloud's bank."
+            "Your whole bank arrived, but this \(Device.model) could not note the switch, so it keeps using \(bringsHere ? "its own bank" : "QBank Cloud's bank")."
         }
     }
 

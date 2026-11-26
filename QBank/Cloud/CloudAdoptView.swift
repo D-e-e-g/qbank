@@ -27,6 +27,8 @@ struct CloudAdoptView: View {
                 added(count)
             case .failed(let problem, let retry):
                 failed(problem, retry: retry)
+            case .addFailed(let problem, let allAdded):
+                addFailed(problem, allAdded: allAdded)
             }
         }
     }
@@ -84,8 +86,8 @@ struct CloudAdoptView: View {
     private func offering(_ sets: [BankOffer.PhoneSet]) -> some View {
         VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "plus.square.on.square", tone: .tint)
-            CloudHeading(CloudAdoptWording.offeringTitle(sets.count), id: "cloudAdopt.offering")
-            CloudLead(CloudAdoptWording.offeringBody(sets.count), id: "cloudAdopt.offeringBody")
+            CloudHeading(CloudAdoptWording.offeringTitle(sets.count, into: adopt.into), id: "cloudAdopt.offering")
+            CloudLead(CloudAdoptWording.offeringBody(sets.count, into: adopt.into), id: "cloudAdopt.offeringBody")
             QBankListGroup {
                 ForEach(sets) { set in
                     QBankListRow(set.title, detail: CloudAdoptWording.place(set.place), systemImage: "rectangle.stack")
@@ -93,7 +95,7 @@ struct CloudAdoptView: View {
                 }
             }
             VStack(spacing: QBankSpacing.space2) {
-                Button(CloudAdoptWording.add(sets.count)) {
+                Button(CloudAdoptWording.add(sets.count, into: adopt.into)) {
                     Task { await adopt.add() }
                 }
                 .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
@@ -110,8 +112,8 @@ struct CloudAdoptView: View {
 
     private func adding(_ done: Int, of total: Int) -> some View {
         VStack(spacing: QBankSpacing.space5) {
-            CloudMark(systemImage: "icloud.and.arrow.up", tone: .tint)
-            CloudHeading(CloudAdoptWording.addingTitle(total), id: "cloudAdopt.adding")
+            CloudMark(systemImage: adopt.into == .cloud ? "icloud.and.arrow.up" : "plus.square.on.square", tone: .tint)
+            CloudHeading(CloudAdoptWording.addingTitle(total, into: adopt.into), id: "cloudAdopt.adding")
             CloudLead(CloudAdoptWording.adding(done, of: total), id: "cloudAdopt.progress")
             ProgressView(value: Double(done), total: Double(max(total, 1)))
                 .accessibilityHidden(true)
@@ -122,13 +124,13 @@ struct CloudAdoptView: View {
 
     private func added(_ count: Int) -> some View {
         VStack(spacing: QBankSpacing.space5) {
-            CloudMark(systemImage: "checkmark.icloud", tone: .correct)
-            CloudHeading(CloudAdoptWording.addedTitle(count), id: "cloudAdopt.added")
-            CloudLead(CloudAdoptWording.addedBody(count), id: "cloudAdopt.addedBody")
+            CloudMark(systemImage: adopt.into == .cloud ? "checkmark.icloud" : "checkmark.circle", tone: .correct)
+            CloudHeading(CloudAdoptWording.addedTitle(count, into: adopt.into), id: "cloudAdopt.added")
+            CloudLead(CloudAdoptWording.addedBody(count, into: adopt.into), id: "cloudAdopt.addedBody")
             doneButton
         }
         .onAppear {
-            AccessibilityNotification.Announcement(CloudAdoptWording.addedTitle(count)).post()
+            AccessibilityNotification.Announcement(CloudAdoptWording.addedTitle(count, into: adopt.into)).post()
         }
     }
 
@@ -137,8 +139,8 @@ struct CloudAdoptView: View {
     private func failed(_ problem: String, retry: CloudAdoptModel.Retry?) -> some View {
         VStack(spacing: QBankSpacing.space5) {
             CloudMark(systemImage: "exclamationmark.icloud", tone: .partial)
-            CloudHeading(retry == .add ? CloudAdoptWording.addFailedTitle : CloudAdoptWording.failedTitle, id: "cloudAdopt.failed")
-            CloudProblemCard(problem: problem, unchanged: unchanged(retry), prefix: "cloudAdopt")
+            CloudHeading(CloudAdoptWording.failedTitle, id: "cloudAdopt.failed")
+            CloudProblemCard(problem: problem, unchanged: CloudMoveWording.unchanged, prefix: "cloudAdopt")
             VStack(spacing: QBankSpacing.space2) {
                 if let retry {
                     Button(CloudAdoptWording.tryAgain) {
@@ -162,9 +164,34 @@ struct CloudAdoptView: View {
         }
     }
 
-    /// What stayed as it was: the bank on this iPhone before the switch, the safety copy after it.
-    private func unchanged(_ retry: CloudAdoptModel.Retry?) -> String {
-        retry == .add ? CloudAdoptWording.addUnchanged : CloudMoveWording.unchanged
+    // MARK: Adding failed
+
+    private func addFailed(_ problem: String, allAdded: Bool) -> some View {
+        VStack(spacing: QBankSpacing.space5) {
+            CloudMark(systemImage: "exclamationmark.icloud", tone: .partial)
+            CloudHeading(allAdded ? CloudAdoptWording.addedNotNotedTitle : CloudAdoptWording.addFailedTitle, id: "cloudAdopt.failed")
+            CloudProblemCard(problem: problem, unchanged: CloudAdoptWording.addUnchanged(adopt.into, allAdded: allAdded), prefix: "cloudAdopt")
+            VStack(spacing: QBankSpacing.space2) {
+                if allAdded {
+                    Button(CloudAdoptWording.ok) { adopt.close() }
+                        .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                        .accessibilityIdentifier("cloudAdopt.later")
+                } else {
+                    Button(CloudAdoptWording.tryAgain) {
+                        Task { await adopt.add() }
+                    }
+                    .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                    .accessibilityIdentifier("cloudAdopt.retry")
+                    Button(CloudAdoptWording.notNow) { adopt.close() }
+                        .buttonStyle(.qbank(.plain, size: .large, fullWidth: true))
+                        .accessibilityIdentifier("cloudAdopt.later")
+                }
+            }
+            .padding(.top, QBankSpacing.space3)
+        }
+        .onAppear {
+            AccessibilityNotification.Announcement(problem).post()
+        }
     }
 
     private var doneButton: some View {

@@ -4,13 +4,22 @@ import QBankKit
 /// The words of taking the bank QBank Cloud already holds and of adding this phone's sets to it: the
 /// screen that shows both, and their rows in Settings.
 enum CloudAdoptWording {
+    /// Where the sets offered go: QBank Cloud's bank, from this phone's safety copy, or the bank on
+    /// this phone, from its earlier copy.
+    enum Into: Equatable {
+        case cloud, phone
+    }
+
     static let useCloudBank = "Use my bank in QBank Cloud"
     static var useCloudBankDetail: String { "QBank Cloud holds a bank for you. Your bank is still on this \(Device.model)." }
-    static var addSets: String { "Add sets from this \(Device.model)" }
 
-    /// Under `addSets` in Settings.
-    static func addSetsDetail(_ count: Int) -> String {
-        "\(sets(count)) only on this \(Device.model)'s safety copy"
+    static func addSets(_ into: Into) -> String {
+        into == .cloud ? "Add sets from this \(Device.model)" : "Add sets from this \(Device.model)'s earlier copy"
+    }
+
+    /// Under `addSets` in Settings, and above the sets offered.
+    static func addSetsDetail(_ count: Int, into: Into) -> String {
+        into == .cloud ? "\(sets(count)) only on this \(Device.model)'s safety copy" : "\(sets(count)) only in this \(Device.model)'s earlier copy"
     }
 
     // MARK: Looking
@@ -46,20 +55,31 @@ enum CloudAdoptWording {
 
     // MARK: Offering
 
-    static func offeringTitle(_ count: Int) -> String {
-        "\(sets(count)) only on this \(Device.model)"
+    static func offeringTitle(_ count: Int, into: Into = .cloud) -> String {
+        into == .cloud ? "\(sets(count)) only on this \(Device.model)" : addSetsDetail(count, into: into)
     }
 
-    static func offeringBody(_ count: Int) -> String {
+    static func offeringBody(_ count: Int, into: Into = .cloud) -> String {
+        let bank = bankName(into, capitalized: true)
         let goes =
             count == 1
-            ? "QBank Cloud does not have this set. It goes in as a new set"
-            : "QBank Cloud does not have these sets. Each one goes in as a new set"
-        return "\(goes), in the course or topic and folder of the same name. Nothing in QBank Cloud is replaced, renamed or removed."
+            ? "\(bank) does not have this set. It goes in as a new set"
+            : "\(bank) does not have these sets. Each one goes in as a new set"
+        return "\(goes), in the course or topic and folder of the same name. Nothing in \(bankName(into)) is replaced, renamed or removed."
     }
 
-    static func add(_ count: Int) -> String {
-        count == 1 ? "Add it to QBank Cloud" : "Add all \(count) to QBank Cloud"
+    static func add(_ count: Int, into: Into = .cloud) -> String {
+        count == 1 ? "Add it to \(bankName(into))" : "Add all \(count) to \(bankName(into))"
+    }
+
+    /// The bank the sets go into, as a sentence names it.
+    private static func bankName(_ into: Into, capitalized: Bool = false) -> String {
+        into == .cloud ? "QBank Cloud" : capitalized ? "Your bank" : "your bank"
+    }
+
+    /// The copy the sets come from.
+    private static func copyName(_ into: Into) -> String {
+        into == .cloud ? "safety copy" : "earlier copy"
     }
 
     /// Where a set offered is on this phone, as its row says it.
@@ -75,31 +95,37 @@ enum CloudAdoptWording {
         "Adding \(min(done + 1, total)) of \(total)"
     }
 
-    static func addingTitle(_ count: Int) -> String {
-        count == 1 ? "Adding your set to QBank Cloud" : "Adding your sets to QBank Cloud"
+    static func addingTitle(_ count: Int, into: Into = .cloud) -> String {
+        count == 1 ? "Adding your set to \(bankName(into))" : "Adding your sets to \(bankName(into))"
     }
 
     // MARK: Added
 
-    static func addedTitle(_ count: Int) -> String {
-        count == 1 ? "Your set is in QBank Cloud" : "Your sets are in QBank Cloud"
+    static func addedTitle(_ count: Int, into: Into = .cloud) -> String {
+        count == 1 ? "Your set is in \(bankName(into))" : "Your sets are in \(bankName(into))"
     }
 
-    static func addedBody(_ count: Int) -> String {
-        "QBank added \(sets(count)) to QBank Cloud as \(count == 1 ? "a new set" : "new sets"). The safety copy on this \(Device.model) is as it was."
+    static func addedBody(_ count: Int, into: Into = .cloud) -> String {
+        "QBank added \(sets(count)) to \(bankName(into)) as \(count == 1 ? "a new set" : "new sets"). The \(copyName(into)) on this \(Device.model) is as it was."
     }
 
     // MARK: Failed
 
     static let failedTitle = "QBank Cloud's bank is not in use yet"
     static let addFailedTitle = "Not every set was added"
+    static let addedNotNotedTitle = "Your sets were added"
     static let tryAgain = "Try again"
     static let ok = "OK"
     static let done = "Done"
     static var notOnThisPhone: String { "There is no bank on this \(Device.model) to compare with QBank Cloud." }
-    static let notAdded = "QBank Cloud did not take this set."
-    static var addUnchanged: String {
-        "Nothing in QBank Cloud was replaced, renamed or removed, and the safety copy on this \(Device.model) is as it was. The sets not added yet stay offered in Settings."
+    static func notAdded(_ into: Into) -> String {
+        "\(bankName(into, capitalized: true)) did not take this set."
+    }
+
+    /// What stayed as it was after adding stopped. `allAdded` when no set is left to add.
+    static func addUnchanged(_ into: Into, allAdded: Bool) -> String {
+        let unchanged = "Nothing in \(bankName(into)) was replaced, renamed or removed, and the \(copyName(into)) on this \(Device.model) is as it was."
+        return allAdded ? unchanged : "\(unchanged) The sets not added yet stay offered in Settings."
     }
 
     /// Some sets went and one did not.
@@ -108,8 +134,8 @@ enum CloudAdoptWording {
     }
 
     /// Every set went, but this phone could not note it.
-    static func addedNotNoted(_ count: Int) -> String {
-        "QBank added \(sets(count)) to QBank Cloud, but this \(Device.model) could not note it, so it may offer \(count == 1 ? "it" : "them") again."
+    static func addedNotNoted(_ count: Int, into: Into = .cloud) -> String {
+        "QBank added \(sets(count)) to \(bankName(into)), but this \(Device.model) could not note it, so it may offer \(count == 1 ? "it" : "them") again."
     }
 
     /// Why this phone did not take QBank Cloud's bank.

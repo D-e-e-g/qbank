@@ -16,12 +16,17 @@ struct CloudAdoptTests {
     private static let signIn = "POST /api/sign-in/apple"
     private static let imports = "POST /api/imports"
     private static let rivers = #"{"title":"Invented rivers","questions":[{"id":"R1","type":"single","ask":"Which river is longest?","options":[{"t":"The Sile","ok":true},{"t":"The Orne"}]}]}"#
+    private static let lakes = #"{"title":"Invented lakes","questions":[{"id":"L1","type":"single","ask":"Which lake is deepest?","options":[{"t":"Lake Orta","ok":true},{"t":"Lake Iseo"}]}]}"#
 
-    /// This phone's bank, with the sample set and a set of its own, for a person who signed out; QBank
-    /// Cloud holds the sample set too, and a topic of its own.
-    private func secondDevice(_ phone: CloudPhone, _ server: StubServer) async throws -> AppModel {
+    /// This phone's bank, with the sample set and a set of its own, or two in one topic when
+    /// `twoSets`, for a person who signed out; QBank Cloud holds the sample set too, and a topic of its own.
+    private func secondDevice(_ phone: CloudPhone, _ server: StubServer, twoSets: Bool = false) async throws -> AppModel {
         let free = try await phone.free(server)
         _ = try await free.client.importSet(ImportRequest(source: Self.rivers, title: nil, course: .newTopic(title: "Geography"), folder: .unsorted, decision: .import))
+        if twoSets {
+            let geography = try #require(try await free.client.catalog().topics.first { $0.title == "Geography" })
+            _ = try await free.client.importSet(ImportRequest(source: Self.lakes, title: nil, course: .existing(id: geography.id), folder: .unsorted, decision: .import))
+        }
         try phone.session.clear()
         server[Self.signIn] = .ok(Bodies.appleSignedIn(cloud: true))
         server[Self.download] = CloudPhone.reply(try await CloudPhone.cloudArchive(topics: ["Made in QBank Cloud"]))
@@ -136,7 +141,7 @@ struct CloudAdoptTests {
 
         await app.cloudAdopt.add()
 
-        #expect(app.cloudAdopt.phase == .failed("No connection. Check Wi-Fi or cellular data and try again.", retry: .add))
+        #expect(app.cloudAdopt.phase == .addFailed("No connection. Check Wi-Fi or cellular data and try again.", allAdded: false))
         #expect(try phone.record.load().offeredSets == offered, "the set that did not go is still offered")
         app.cloudAdopt.close()
         #expect(app.cloudAdopt.offersSets, "Settings offers it")
@@ -148,6 +153,54 @@ struct CloudAdoptTests {
         #expect(app.cloudAdopt.phase == .added(1))
         let body = try #require(try JSONSerialization.jsonObject(with: server.requests.last { $0.url?.path() == "/api/imports" }?.httpBody ?? Data()) as? [String: Any])
         #expect((body["newTopic"] as? [String: Any])?["title"] as? String == "Geography", "a topic QBank Cloud lacks is made")
+    }
+
+    /// Two sets of one topic QBank Cloud lacks: the first import makes the topic, and the second goes
+    /// into it, as the catalog read again after the first says, never asking for a second topic of
+    /// the same name.
+    @Test func setsOfOnePlaceQBankCloudLacksGoIntoTheOnePlaceTheFirstImportMade() async throws {
+        let phone = CloudPhone()
+        defer { phone.remove() }
+        let server = StubServer()
+        let app = try await secondDevice(phone, server, twoSets: true)
+        await AppleSignInModel(app: app).signIn(over: nil)
+        _ = try await found(app)
+        app.cloudAdopt.use()
+        #expect(try phone.record.load().offeredSets.count == 2)
+        server.script("GET /api/semesters", [.ok(Bodies.semesters([], topics: [])), .ok(Bodies.semesters([], topics: [Bodies.topic(id: "t-made", title: "Geography")]))])
+        server[Self.imports] = StubServer.Reply(status: 201, body: ImportModelTests.imported())
+
+        await app.cloudAdopt.add()
+
+        #expect(app.cloudAdopt.phase == .added(2))
+        let sent = try server.requests.filter { $0.url?.path() == "/api/imports" }.map { request in
+            try #require(try JSONSerialization.jsonObject(with: request.httpBody ?? Data()) as? [String: Any])
+        }
+        #expect(sent.count == 2)
+        #expect((sent.first?["newTopic"] as? [String: Any])?["title"] as? String == "Geography", "the first makes the topic")
+        #expect(sent.last?["courseId"] as? String == "t-made", "the second goes into it")
+        #expect(sent.last?["newTopic"] == nil)
+    }
+
+    /// The record stops offering a set as soon as it went: a session that ends before the next one
+    /// goes leaves only that next one offered, so signing in again never adds the first a second time.
+    @Test func aSetThatWentIsNotOfferedAgainWhenTheNextOneIsCutOff() async throws {
+        let phone = CloudPhone()
+        defer { phone.remove() }
+        let server = StubServer()
+        let app = try await secondDevice(phone, server, twoSets: true)
+        await AppleSignInModel(app: app).signIn(over: nil)
+        _ = try await found(app)
+        app.cloudAdopt.use()
+        let offered = try phone.record.load().offeredSets
+        #expect(offered.count == 2)
+        server["GET /api/semesters"] = .ok(Bodies.semesters([], topics: [Bodies.topic(id: "t-geo", title: "Geography")]))
+        server.script(Self.imports, [StubServer.Reply(status: 201, body: ImportModelTests.imported()), .error(401, "unauthenticated", "Sign in again.")])
+
+        await app.cloudAdopt.add()
+
+        #expect(app.route == .signedOut, "the session ended")
+        #expect(try phone.record.load().offeredSets == Array(offered.dropFirst()), "only the set that did not go is offered")
     }
 
     @Test func notNowKeepsTheBankOnThisPhoneAndSettingsOffersQBankCloudsBank() async throws {
@@ -212,6 +265,58 @@ struct CloudAdoptTests {
         #expect(app.cloudAdopt.isOffered)
         #expect(!app.cloudMove.isOffered, "the same upload would be refused again")
         _ = try await app.client.createTopic(title: "Invented Botany")
+    }
+
+    // MARK: When Cloud ends with sets still offered
+
+    /// Sets still offered when Cloud ends stay offered once the bank is back on this phone, from the
+    /// earlier file, which stays as it was; a tap adds them into the bank on this phone, one topic for
+    /// the two, and nothing goes to QBank.
+    @Test func setsStillOfferedWhenCloudEndsAreOfferedFromTheEarlierCopyAndGoIntoThePhonesBank() async throws {
+        let phone = CloudPhone()
+        defer { phone.remove() }
+        let server = StubServer()
+        let app = try await secondDevice(phone, server, twoSets: true)
+        await AppleSignInModel(app: app).signIn(over: nil)
+        _ = try await found(app)
+        app.cloudAdopt.use()
+        let offered = try phone.record.load().offeredSets
+        #expect(offered.count == 2)
+        app.cloudAdopt.close()
+        let earlier = try phone.bytes()
+
+        server["GET /api/session"] = .ok(Bodies.storeSession(cloud: false))
+        await app.refreshSession()
+        try await waitUntil { if case .returned = app.cloudReturn.phase { true } else { false } }
+        app.cloudReturn.close()
+
+        #expect(app.kind == .free)
+        let record = try phone.record.load()
+        #expect(record.bankFile != LocalStore.firstFile)
+        #expect(record.offeredSets == offered, "the sets still offered stay offered")
+        #expect(record.offeredFile == LocalStore.firstFile, "from the earlier file")
+        #expect(app.cloudAdopt.offersSets, "Settings offers them")
+        #expect(app.cloudAdopt.offeredCount == 2)
+        #expect(app.cloudAdopt.into == .phone)
+        #expect(CloudAdoptWording.addSets(.phone) == "Add sets from this iPhone's earlier copy")
+        #expect(CloudAdoptWording.addSetsDetail(2, into: .phone) == "2 sets only in this iPhone's earlier copy")
+        let topics = try await app.client.catalog().topics
+        #expect(!topics.contains { $0.title == "Geography" }, "nothing is added on its own")
+        let sets = try phone.summary(of: record.bankFile).sets
+        let before = server.calls.count
+
+        app.cloudAdopt.offerSets()
+        #expect(app.cloudAdopt.phase == .offering(try #require(app.phoneOffer()).sets))
+        await app.cloudAdopt.add()
+
+        #expect(app.cloudAdopt.phase == .added(2))
+        let geography = try await app.client.catalog().topics.filter { $0.title == "Geography" }
+        #expect(geography.count == 1, "the two sets of one topic go into one")
+        #expect(geography.first?.questionCount == 2, "both sets, one question each")
+        #expect(try phone.summary(of: record.bankFile).sets == sets + 2)
+        #expect(try phone.record.load().offeredSets.isEmpty)
+        #expect(try phone.bytes() == earlier, "the earlier file is as it was")
+        #expect(server.calls.count == before, "nothing goes to QBank")
     }
 
     @Test func anUploadWhoseAnswerWasLostFindsEverySetInQBankCloudAndOffersNone() async throws {

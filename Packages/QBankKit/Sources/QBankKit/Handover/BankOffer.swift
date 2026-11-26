@@ -53,6 +53,27 @@ public enum BankOffer {
         }
     }
 
+    /// What a bank holds of every set it ever had, of any version, deleted or not: their lineages and
+    /// their files.
+    struct HeldSets: Sendable, Equatable {
+        let lineages: Set<String>
+        let files: Set<String>
+    }
+
+    static func heldSets(in tx: StoreTransaction) throws -> HeldSets {
+        let rows = try tx.rows("SELECT lineage_id, file_hash FROM practice_set")
+        return HeldSets(lineages: Set(rows.compactMap { $0.text("lineage_id") }), files: Set(rows.compactMap { $0.text("file_hash") }))
+    }
+
+    /// The current sets of `store` that a bank holding `held` does not hold: none of its sets has the
+    /// set's lineage, as a set that moved between the two has, or its very file, as the same file
+    /// imported on each side has.
+    static func sets(of store: LocalStore, notIn held: HeldSets) throws -> [PhoneSet] {
+        try store.read { try currentSets(in: $0) }
+            .filter { !held.lineages.contains($0.lineage) && !held.files.contains($0.file) }
+            .map(\.set)
+    }
+
     /// The sets of `store` named by `ids`, in the order Home lists them. A set that is no longer one of
     /// its current sets is left out.
     public static func sets(_ ids: [String], in store: LocalStore) throws -> [PhoneSet] {

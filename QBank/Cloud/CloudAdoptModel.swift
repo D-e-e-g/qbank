@@ -12,6 +12,10 @@ import QBankKit
 /// import every set goes through, as new sets beside any of the same name, on the person's tap only.
 /// Nothing on either side is removed or renamed.
 ///
+/// Sets still offered when the bank comes back to this phone stay offered, from that earlier file, and
+/// so do the sets of a bank on this phone that QBank's bank took the place of: they go into the bank on
+/// this phone the same way, through its own import, on the person's tap only.
+///
 /// It starts after a Sign in with Apple that the server answers with Cloud on, for a person whose bank
 /// is on this phone (`check()`), and when QBank Cloud refuses the move of this phone's bank because it
 /// holds one already (`moveRefused()`).
@@ -35,17 +39,21 @@ final class CloudAdoptModel {
         case adopted
         /// QBank uses QBank Cloud's bank now; these sets are only on this phone's safety copy.
         case offering([BankOffer.PhoneSet])
-        /// Adding the sets offered to QBank Cloud: `done` of `total` so far.
+        /// Adding the sets offered to the bank in use: `done` of `total` so far.
         case adding(done: Int, total: Int)
-        /// Every set offered is in QBank Cloud now, as a new set.
+        /// Every set offered is in the bank in use now, as a new set.
         case added(Int)
-        /// It stopped, for the reason said; `retry` is what trying again does.
+        /// Looking at QBank Cloud or taking its bank stopped, for the reason said; `retry` is what
+        /// trying again does.
         case failed(String, retry: Retry?)
+        /// Adding stopped, for the reason said, and the sets not added stay offered. `allAdded` when
+        /// every set went in but this phone could not note it, so there is nothing to try again.
+        case addFailed(String, allAdded: Bool)
     }
 
-    /// What trying again after a failure does.
+    /// What trying again after a failure to look or to take QBank Cloud's bank does.
     enum Retry: Equatable {
-        case look, use, add
+        case look, use
     }
 
     private(set) var phase = Phase.idle
@@ -54,8 +62,8 @@ final class CloudAdoptModel {
     /// What the last look found while the bank on this phone is still the one in use, so Settings
     /// offers QBank Cloud's bank after the person said not now. Nil once QBank uses it.
     private(set) var found: Found?
-    /// How many of this phone's sets are offered to QBank Cloud, as the record beside the bank names
-    /// them, once QBank uses QBank Cloud's bank. Read again when Settings shows.
+    /// How many sets of this phone's earlier bank file are offered to the bank in use, as the record
+    /// beside the bank names them. Read again when Settings shows.
     private(set) var offeredCount = 0
 
     @ObservationIgnored weak var app: AppModel?
@@ -77,10 +85,16 @@ final class CloudAdoptModel {
         return found != nil && !isShown
     }
 
-    /// Whether Settings offers to add this phone's sets to QBank Cloud.
+    /// Whether Settings offers to add sets of this phone's earlier bank file to the bank in use.
     var offersSets: Bool {
-        guard let app, app.kind == .store else { return false }
+        guard let app, app.kind != .invited else { return false }
         return offeredCount > 0 && !isShown
+    }
+
+    /// Where the sets offered go: QBank Cloud's bank for an account whose bank is there, else the bank
+    /// on this phone.
+    var into: CloudAdoptWording.Into {
+        app?.kind == .store ? .cloud : .phone
     }
 
     /// After a Sign in with Apple that the server answered with Cloud on, for a person whose bank is on
@@ -143,9 +157,10 @@ final class CloudAdoptModel {
         showOffer()
     }
 
-    /// Adds every set offered to QBank Cloud as a new set, one import at a time, into the course or
-    /// topic and folder of the same name. The record beside the bank keeps offering only the ones that
-    /// did not go.
+    /// Adds every set offered to the bank in use as a new set, one import at a time, into the course or
+    /// topic and folder of the same name. The record beside the bank stops offering each set once it
+    /// went, so a set is never added twice; the ones that did not go stay offered. A course or topic an
+    /// import made is in the next set's catalog, so the sets of one place go into one.
     func add() async {
         guard let app, !isRunning, let offer = app.phoneOffer(), !offer.sets.isEmpty else {
             showOffer()
@@ -156,38 +171,44 @@ final class CloudAdoptModel {
         let total = offer.sets.count
         phase = .adding(done: 0, total: total)
         let client = app.client
-        var added: Set<String> = []
+        var remaining = offer.ids
+        var added = 0
+        var noted = true
         var problem: String?
         do {
-            let catalog = try await client.catalog()
+            var catalog = try await client.catalog()
             for set in offer.sets {
                 let request = try BankOffer.importRequest(for: set, from: offer.store, into: catalog)
                 guard case .imported = try await client.importSet(request) else {
-                    problem = CloudAdoptWording.notAdded
+                    problem = CloudAdoptWording.notAdded(into)
                     break
                 }
-                added.insert(set.id)
-                phase = .adding(done: added.count, total: total)
+                added += 1
+                remaining.removeAll { $0 == set.id }
+                noted = (try? offer.record.save(try offer.record.load().offering(remaining))) != nil
+                phase = .adding(done: added, total: total)
+                if case .existing = request.course { continue }
+                catalog = try await client.catalog()
             }
         } catch let error as QBankError {
             // A session that ended signs out, and Cloud that ended brings the bank back; either covers this.
             if app.handle(error) {
+                refreshOffer()
                 isShown = false
                 phase = .idle
                 return
             }
-            problem = Wording.problem(error) ?? CloudAdoptWording.notAdded
+            problem = Wording.problem(error) ?? CloudAdoptWording.notAdded(into)
         } catch {
-            problem = CloudAdoptWording.notAdded
+            problem = CloudAdoptWording.notAdded(into)
         }
-        let kept = (try? offer.record.save(try offer.record.load().offering(offer.ids.filter { !added.contains($0) }))) != nil
         refreshOffer()
         if let problem {
-            phase = .failed(CloudAdoptWording.someAdded(added.count, of: total, problem: problem), retry: .add)
-        } else if !kept {
-            phase = .failed(CloudAdoptWording.addedNotNoted(added.count), retry: nil)
+            phase = .addFailed(CloudAdoptWording.someAdded(added, of: total, problem: problem), allAdded: false)
+        } else if !noted {
+            phase = .addFailed(CloudAdoptWording.addedNotNoted(added, into: into), allAdded: true)
         } else {
-            phase = .added(added.count)
+            phase = .added(added)
         }
     }
 
@@ -196,7 +217,6 @@ final class CloudAdoptModel {
         switch retry {
         case .look: await ask()
         case .use: use()
-        case .add: await add()
         }
     }
 
@@ -237,22 +257,31 @@ final class CloudAdoptModel {
         }
     }
 
-    /// The sets offered now, or that QBank uses QBank Cloud's bank when there are none.
+    /// The sets offered now. When there are none: that QBank uses QBank Cloud's bank, for a bank there,
+    /// and else the screen closes.
     private func showOffer() {
         let sets = app?.phoneOffer()?.sets ?? []
         offeredCount = sets.count
-        phase = sets.isEmpty ? .adopted : .offering(sets)
+        if !sets.isEmpty {
+            phase = .offering(sets)
+        } else if into == .cloud {
+            phase = .adopted
+        } else {
+            isShown = false
+            phase = .idle
+        }
     }
 }
 
-/// This phone's sets offered to QBank Cloud once QBank uses QBank Cloud's bank, read from the safety
-/// copy, opened only to read, with the record beside it that names them.
+/// Sets of this phone's earlier bank file offered to the bank in use, read from that file, opened only
+/// to read, with the record beside it that names them: the safety copy while QBank uses QBank Cloud's
+/// bank, and the file a bank that came to this phone took the place of.
 struct PhoneOffer {
-    /// The sets offered that the safety copy holds, in the order Home lists them.
+    /// The sets offered that the earlier file holds, in the order Home lists them.
     let sets: [BankOffer.PhoneSet]
     /// Every set the record offers.
     let ids: [String]
-    /// The safety copy, which nothing writes to.
+    /// The earlier file, which nothing writes to.
     let store: LocalStore
     let record: BankHandoverRecord
 }

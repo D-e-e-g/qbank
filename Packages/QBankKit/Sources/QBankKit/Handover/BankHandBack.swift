@@ -19,6 +19,11 @@ import Foundation
 /// 6. Only then is the switch recorded: the authority becomes this phone's, in the fresh file, and
 ///    the lease goes with the same write.
 ///
+/// It also brings QBank's bank to a phone whose bank is its own, in place of that bank, for an
+/// account whose Cloud has ended that signs in on a new device: the same steps, with the bank on this
+/// phone's writes held while they run. Its sets that the bank from QBank does not hold are offered from
+/// then on, from that earlier file, to add to the bank in use as new sets (`BankOffer`).
+///
 /// Whatever fails, the authority stays QBank Cloud's and the record is as it was before, with no
 /// lease. The fresh file, which never became the bank, is taken away: only a file this hand-back made
 /// itself, never one that was there before it, so the safety copy and every earlier file stay as they
@@ -50,6 +55,9 @@ public struct BankHandBack: Sendable {
         case countsDiffer([BankMoveToCloud.Difference])
         /// The answers still waiting to be sent could not be kept in the fresh file.
         case answersNotKept(String)
+        /// The bank on this phone that the one from QBank was to replace could not be read, to name the
+        /// sets only it holds.
+        case notCompared(String)
         /// Everything matched, but this phone could not record the switch, so QBank Cloud's bank stays in use.
         case switchNotRecorded(StoreError)
     }
@@ -68,6 +76,7 @@ public struct BankHandBack: Sendable {
     private let createFile: @Sendable (String) throws -> LocalStore
     private let removeFile: @Sendable (String) -> Void
     private let keepWaitingAnswers: @Sendable (LocalStore) async throws -> Void
+    private let replacing: LocalStore?
 
     /// - Parameters:
     ///   - record: The bank's hand-over record.
@@ -79,11 +88,14 @@ public struct BankHandBack: Sendable {
     ///     It is asked only for a file `createFile` made in this hand-back, or one a lease named.
     ///   - keepWaitingAnswers: Records in the fresh bank the answers this phone was waiting to send to
     ///     QBank Cloud, throwing when one could not be kept. By default there are none.
+    ///   - replacing: The bank on this phone, when the record says the bank is this phone's and the one
+    ///     from QBank is to take its place. Nil for a bank in QBank Cloud.
     public init(
         record: BankHandoverRecord, clock: @escaping @Sendable () -> Date = { Date() }, download: @escaping @Sendable () async throws(QBankError) -> Data,
         createFile: @escaping @Sendable (String) throws -> LocalStore, removeFile: @escaping @Sendable (String) -> Void,
-        keepWaitingAnswers: @escaping @Sendable (LocalStore) async throws -> Void = { _ in }
+        keepWaitingAnswers: @escaping @Sendable (LocalStore) async throws -> Void = { _ in }, replacing: LocalBank? = nil
     ) {
+        self.replacing = replacing?.store
         self.record = record
         self.clock = clock
         self.download = download
@@ -102,7 +114,16 @@ public struct BankHandBack: Sendable {
         } catch {
             return .failed(.notStarted(error), leaseReleased: true)
         }
-        guard found.authority == .cloud else { return .failed(.alreadyOnPhone, leaseReleased: true) }
+        let replaces = found.authority == .phone ? replacing : nil
+        guard found.authority == .cloud || replaces != nil else { return .failed(.alreadyOnPhone, leaseReleased: true) }
+        replaces?.holdWrites()
+        let outcome = await run(from: found, replacing: replaces, progress: progress)
+        if case .failed = outcome { replaces?.releaseWrites() }
+        return outcome
+    }
+
+    /// Steps 1 to 6, from the record as it was found.
+    private func run(from found: BankHandover, replacing replaces: LocalStore?, progress: @escaping @Sendable (Step) async -> Void) async -> Outcome {
         // A hand-back the app was closed during is let go of first: its file never became the bank.
         let before = Self.letGo(found, removeFile: removeFile)
         let store: LocalStore
@@ -120,7 +141,7 @@ public struct BankHandBack: Sendable {
             removeFile(file)
             return .failed(.notStarted(error), leaseReleased: true)
         }
-        switch await handBack(into: store, file: file, progress, from: before) {
+        switch await handBack(into: store, file: file, progress, from: before, replacing: replaces) {
         case .success(let returned):
             return returned
         case .failure(let failure):
@@ -135,7 +156,7 @@ public struct BankHandBack: Sendable {
 
     /// Steps 2 to 6, with the fresh file made and the lease taken.
     private func handBack(
-        into store: LocalStore, file: String, _ progress: @Sendable (Step) async -> Void, from before: BankHandover
+        into store: LocalStore, file: String, _ progress: @Sendable (Step) async -> Void, from before: BankHandover, replacing replaces: LocalStore?
     ) async -> Result<Outcome, Failure> {
         await progress(.downloading)
         let archive: Data
@@ -167,9 +188,18 @@ public struct BankHandBack: Sendable {
         } catch {
             return .failure(.answersNotKept(String(describing: error)))
         }
+        var offering: [String]?
+        if let replaces {
+            do {
+                let held = try store.read { try BankOffer.heldSets(in: $0) }
+                offering = try BankOffer.sets(of: replaces, notIn: held).map(\.id)
+            } catch {
+                return .failure(.notCompared(String(describing: error)))
+            }
+        }
         let returnedAt = clock()
         do {
-            try record.save(before.onPhone(in: file, since: returnedAt))
+            try record.save(before.onPhone(in: file, since: returnedAt, offering: offering))
         } catch {
             return .failure(.switchNotRecorded(error))
         }

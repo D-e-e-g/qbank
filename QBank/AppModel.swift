@@ -28,7 +28,8 @@ import UIKit
 /// second device, or for a returning subscriber, QBank Cloud's bank is the authority: a first launch
 /// with Cloud on makes no bank here, and a bank already here is replaced only on the person's word,
 /// staying as it was, a safety copy whose own sets are offered to QBank Cloud as new sets
-/// (`cloudAdopt`).
+/// (`cloudAdopt`). For an account whose Cloud is not on that signs in on a phone with no bank of its
+/// own yet, a bank QBank holds for it is offered, to bring here on the person's word (`cloudReturn`).
 ///
 /// A store account, free or Cloud, is deleted with a fresh Sign in with Apple, in a fixed order: this
 /// phone's copy is erased, then the account on the server, then the session (`deleteAccount(confirmedWith:nonce:)`).
@@ -448,6 +449,7 @@ final class AppModel {
         let cloudIsOn = signedIn.user.cloud?.active == true
         var moveLeftOpen = false
         var bankIsHere = false
+        let isNewHere = phoneBank?.key != appleUser && !banks.exists(appleUser)
         if signedIn.user.origin == .store {
             // A first launch on a second device: with Cloud on, QBank Cloud's bank is the one in use,
             // and no bank is made on this phone, sample set and all.
@@ -493,6 +495,9 @@ final class AppModel {
         } else if bankIsHere, cloudIsOn {
             // QBank Cloud may hold a bank for the person already, from another device.
             Task { await cloudAdopt.check() }
+        } else if bankIsHere, isNewHere {
+            // QBank may hold a bank for the person from when they had Cloud: offered, never taken on its own.
+            Task { await cloudReturn.lookForServerBank() }
         }
         return .signedIn
     }
@@ -640,13 +645,15 @@ final class AppModel {
         bankMovedToCloud(key)
     }
 
-    /// This phone's sets offered to QBank Cloud, from the safety copy of a bank in QBank Cloud, opened
-    /// only to read, with the record that names them. Nil when there are none to offer, or for any
-    /// account but a store account whose bank is in QBank Cloud.
+    /// The sets of an earlier bank file on this phone offered to the bank in use, opened only to read,
+    /// with the record that names them: from the safety copy of a bank in QBank Cloud, for a store
+    /// account, or from the file a bank that came to this phone took the place of, for a free account.
+    /// Nil when there are none to offer, or for an invited account.
     func phoneOffer() -> PhoneOffer? {
-        guard kind == .store, let key = cloudBankKey, let record = try? banks.handover(key), let handover = try? record.load(),
-            handover.authority == .cloud, handover.lease == nil, !handover.offeredSets.isEmpty,
-            let store = try? banks.readOnly(key, file: handover.bankFile), let sets = try? BankOffer.sets(handover.offeredSets, in: store)
+        let key = kind == .free ? phoneBank?.key : kind == .store ? cloudBankKey : nil
+        guard let key, let record = try? banks.handover(key), let handover = try? record.load(), handover.lease == nil, !handover.offeredSets.isEmpty,
+            handover.authority == .cloud ? kind == .store : kind == .free && handover.offeredFile != handover.bankFile,
+            let store = try? banks.readOnly(key, file: handover.offeredFile), let sets = try? BankOffer.sets(handover.offeredSets, in: store)
         else { return nil }
         return PhoneOffer(sets: sets, ids: handover.offeredSets, store: store, record: record)
     }
@@ -654,11 +661,26 @@ final class AppModel {
     // MARK: Bringing the bank back from QBank Cloud
 
     /// The hand-back of the bank in QBank Cloud to this phone, for a store account whose bank is there,
-    /// with the bank's key; nil for any other, and while the account is being deleted, whose erase the
-    /// hand-back would undo by writing a fresh file and the bank's record. The answers waiting to be
-    /// sent are kept in the bank that comes back.
+    /// with the bank's key. The answers waiting to be sent are kept in the bank that comes back. For a
+    /// free account whose Sign in with Apple the server confirmed, it brings QBank's bank in place of the
+    /// bank on this phone. Nil for any other, and while the account is being deleted, whose erase the
+    /// hand-back would undo by writing a fresh file and the bank's record.
     func bankHandBack() -> (handBack: BankHandBack, key: String)? {
-        guard kind == .store, !isDeletingAccount, let key = cloudBankKey, let record = try? banks.handover(key) else { return nil }
+        guard !isDeletingAccount else { return nil }
+        if kind == .free {
+            guard !awaitsServer, let phoneBank, let record = try? banks.handover(phoneBank.key) else { return nil }
+            let key = phoneBank.key
+            let client = self.client
+            let banks = self.banks
+            let handBack = BankHandBack(
+                record: record,
+                download: { () throws(QBankError) in try await client.downloadBank() },
+                createFile: { file in try banks.create(key, file: file) },
+                removeFile: { file in banks.removeUnused(key, file: file) },
+                replacing: phoneBank.bank)
+            return (handBack, key)
+        }
+        guard kind == .store, let key = cloudBankKey, let record = try? banks.handover(key) else { return nil }
         let client = self.client
         let server = self.server
         let banks = self.banks
@@ -673,12 +695,19 @@ final class AppModel {
     }
 
     /// After a hand-back recorded that the bank is this phone's again, in `store`: the account is free
-    /// once more, its bank on this phone, which answers without a connection. The answers that waited
+    /// once more, its bank on this phone, which answers without a connection. For a free account whose
+    /// bank QBank's took the place of, the bank in `store` is the one in use from now on. The answers that waited
     /// are in the bank already; any that came while it came down are kept in it too, and only then is
     /// what the phone kept for the account on the server erased. The same person stays signed in and
     /// keeps their key. When they signed out meanwhile, the record already says where the bank is for
     /// the next sign-in.
     func bankReturnedToPhone(_ key: String, store: LocalStore) async {
+        if kind == .free, phoneBank?.key == key {
+            let bank = LocalBank(store: store)
+            phoneBank = OpenBank(key: key, bank: bank)
+            client = server.routingBank(to: bank)
+            return
+        }
         guard kind == .store, cloudBankKey == key, let account else { return }
         let bank = LocalBank(store: store)
         let kept = offline

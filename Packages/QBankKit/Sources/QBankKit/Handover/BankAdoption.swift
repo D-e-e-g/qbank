@@ -23,8 +23,7 @@ public struct BankAdoption: Sendable {
         public let summary: BankSummary
         /// This phone's sets that QBank Cloud does not hold, in the order Home lists them.
         public let onlyOnPhone: [BankOffer.PhoneSet]
-        let cloudLineages: Set<String>
-        let cloudFiles: Set<String>
+        let cloudSets: BankOffer.HeldSets
 
         /// Whether QBank Cloud holds a bank for the account: a row in any of the twelve tables.
         public var cloudHasBank: Bool { counts.values.values.contains { $0 > 0 } }
@@ -90,21 +89,19 @@ public struct BankAdoption: Sendable {
         }
         let counts: BankCounts
         let summary: BankSummary
-        let cloudSets: [StoreRow]
+        let cloudSets: BankOffer.HeldSets
         do {
             let cloud = try LocalStore.inMemory()
             defer { cloud.close() }
             counts = try BankArchive.read(archive, into: cloud)
             summary = try BankSummary.of(cloud)
-            cloudSets = try cloud.read { try $0.rows("SELECT lineage_id, file_hash FROM practice_set") }
+            cloudSets = try cloud.read { try BankOffer.heldSets(in: $0) }
         } catch {
             return .failure(.notReadable(String(describing: error)))
         }
-        let lineages = Set(cloudSets.compactMap { $0.text("lineage_id") })
-        let files = Set(cloudSets.compactMap { $0.text("file_hash") })
         do {
-            let onlyOnPhone = try Self.onlyOnPhone(in: store, lineages: lineages, files: files)
-            return .success(Finding(counts: counts, summary: summary, onlyOnPhone: onlyOnPhone, cloudLineages: lineages, cloudFiles: files))
+            let onlyOnPhone = try BankOffer.sets(of: store, notIn: cloudSets)
+            return .success(Finding(counts: counts, summary: summary, onlyOnPhone: onlyOnPhone, cloudSets: cloudSets))
         } catch {
             return .failure(.notRead(String(describing: error)))
         }
@@ -125,7 +122,7 @@ public struct BankAdoption: Sendable {
         guard before.lease == nil else { return .failure(.moving) }
         let offered: [String]
         do {
-            offered = try Self.onlyOnPhone(in: store, lineages: finding.cloudLineages, files: finding.cloudFiles).map(\.id)
+            offered = try BankOffer.sets(of: store, notIn: finding.cloudSets).map(\.id)
         } catch {
             return .failure(.notRead(String(describing: error)))
         }
@@ -145,12 +142,5 @@ public struct BankAdoption: Sendable {
     /// keep and nothing to offer.
     public static func adoptWithNoBankHere(record: BankHandoverRecord, at date: Date = Date()) throws(StoreError) {
         try record.save(BankHandover.onPhone.inCloud(since: date))
-    }
-
-    /// This phone's current sets that QBank Cloud does not hold.
-    private static func onlyOnPhone(in store: LocalStore, lineages: Set<String>, files: Set<String>) throws -> [BankOffer.PhoneSet] {
-        try store.read { try BankOffer.currentSets(in: $0) }
-            .filter { !lineages.contains($0.lineage) && !files.contains($0.file) }
-            .map(\.set)
     }
 }

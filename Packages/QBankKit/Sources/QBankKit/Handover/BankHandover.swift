@@ -66,13 +66,17 @@ public struct BankHandover: Codable, Sendable, Equatable {
     public let bankFile: String
     /// When the bank last came back to this phone from QBank Cloud.
     public let returnedAt: Date?
-    /// The sets of this phone's bank, by id, that QBank Cloud did not hold when this phone took QBank
-    /// Cloud's bank: offered to add to it as new sets, until they are added.
+    /// Sets, by id, of the bank file `offeredFile`, that the bank in use did not hold when it became
+    /// the one in use: when this phone took QBank Cloud's bank, or when QBank's bank came to this phone
+    /// in place of the one it had. Offered to add to the bank in use as new sets, until they are added.
     public let offeredSets: [String]
+    /// The file in the bank's folder that holds `offeredSets`: the safety copy while the bank is QBank
+    /// Cloud's, and that same earlier file once a bank came back to this phone into a fresh one.
+    public let offeredFile: String
 
     public init(
         authority: Authority, lease: Lease? = nil, movedToCloudAt: Date? = nil, bankFile: String = LocalStore.firstFile, returnedAt: Date? = nil,
-        offeredSets: [String] = []
+        offeredSets: [String] = [], offeredFile: String? = nil
     ) {
         version = Self.currentVersion
         self.authority = authority
@@ -81,6 +85,7 @@ public struct BankHandover: Codable, Sendable, Equatable {
         self.bankFile = bankFile
         self.returnedAt = returnedAt
         self.offeredSets = offeredSets
+        self.offeredFile = offeredFile ?? bankFile
     }
 
     public init(from decoder: any Decoder) throws {
@@ -92,6 +97,7 @@ public struct BankHandover: Codable, Sendable, Equatable {
         bankFile = try container.decodeIfPresent(String.self, forKey: .bankFile) ?? LocalStore.firstFile
         returnedAt = try container.decodeIfPresent(Date.self, forKey: .returnedAt)
         offeredSets = try container.decodeIfPresent([String].self, forKey: .offeredSets) ?? []
+        offeredFile = try container.decodeIfPresent(String.self, forKey: .offeredFile) ?? bankFile
     }
 
     /// A bank on this phone with no move under way: what a bank with no record is.
@@ -100,24 +106,33 @@ public struct BankHandover: Codable, Sendable, Equatable {
     /// The same record with `lease` in place of its own.
     public func leased(_ lease: Lease?) -> BankHandover {
         BankHandover(
-            authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offeredSets)
+            authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offeredSets,
+            offeredFile: offeredFile)
     }
 
     /// The record once the bank is QBank Cloud's, since `date`, with no lease: this phone's bank file
-    /// is the safety copy from then on, and `offering` its sets that QBank Cloud does not hold.
-    public func inCloud(since date: Date, offering: [String] = []) -> BankHandover {
-        BankHandover(authority: .cloud, movedToCloudAt: date, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offering)
+    /// is the safety copy from then on. `offering` names its sets that QBank Cloud does not hold; nil
+    /// keeps offering what the record offers already.
+    public func inCloud(since date: Date, offering: [String]? = nil) -> BankHandover {
+        BankHandover(
+            authority: .cloud, movedToCloudAt: date, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offering ?? offeredSets,
+            offeredFile: offering == nil ? offeredFile : bankFile)
     }
 
-    /// The record once the bank came back from QBank Cloud into `file`, at `date`, with no lease: the
-    /// bank on this phone is in that file from then on.
-    public func onPhone(in file: String, since date: Date) -> BankHandover {
-        BankHandover(authority: .phone, movedToCloudAt: movedToCloudAt, bankFile: file, returnedAt: date)
+    /// The record once a bank came to this phone into `file`, at `date`, with no lease: the bank on
+    /// this phone is in that file from then on. `offering` names the sets of the file it replaces that
+    /// it does not hold; nil keeps offering what the record offers already, from the file that holds them.
+    public func onPhone(in file: String, since date: Date, offering: [String]? = nil) -> BankHandover {
+        BankHandover(
+            authority: .phone, movedToCloudAt: movedToCloudAt, bankFile: file, returnedAt: date, offeredSets: offering ?? offeredSets,
+            offeredFile: offering == nil ? offeredFile : bankFile)
     }
 
     /// The same record, offering only `sets`.
     public func offering(_ sets: [String]) -> BankHandover {
-        BankHandover(authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: sets)
+        BankHandover(
+            authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: sets,
+            offeredFile: offeredFile)
     }
 }
 
@@ -183,7 +198,7 @@ public final class BankHandoverRecord: Sendable {
             throw .unreadableHandover("version \(handover.version), and this app reads versions up to \(BankHandover.currentVersion)")
         }
         // A record names a file only in the bank's own folder.
-        for file in [handover.bankFile] + [handover.lease?.file].compactMap(\.self) {
+        for file in [handover.bankFile, handover.offeredFile] + [handover.lease?.file].compactMap(\.self) {
             guard (try? StoreFiles.validate(fileName: file)) != nil else { throw .unreadableHandover("it names \(file), which is not a bank file") }
         }
         return handover

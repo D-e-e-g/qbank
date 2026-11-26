@@ -47,6 +47,75 @@ struct BankHandBackTests {
         #expect(Set(after.keys).subtracting(files.keys) == [file])
     }
 
+    // MARK: In place of a bank on this phone
+
+    /// The hand-back of QBank's bank in place of `world`'s bank on this phone, downloading from `cloud`.
+    private func replacing(_ world: MoveWorld, from cloud: DownloadStandIn) -> BankHandBack {
+        let client = QBankClient(
+            configuration: APIConfiguration(baseURL: TestClient.baseURL), transport: cloud,
+            sessionStore: InMemorySessionStore(StoredSession(token: "synthetic-session-token")))
+        let root = world.root
+        return BankHandBack(
+            record: world.record, clock: { HandBackWorld.start }, download: { () throws(QBankError) in try await client.downloadBank() },
+            createFile: { file in try LocalStore.create(key: MoveWorld.key, in: root, file: file) },
+            removeFile: { file in try? LocalStore.removeUnused(key: MoveWorld.key, in: root, file: file) },
+            replacing: LocalBank(store: world.store))
+    }
+
+    @Test func aBankFromQBankTakesThePlaceOfTheOneHereAndOffersTheSetsOnlyThatOneHolds() async throws {
+        let world = try await MoveWorld.make()
+        defer { try? FileManager.default.removeItem(at: world.root) }
+        // QBank's bank holds no set, so every current set of the one here is offered.
+        let phoneSets = try world.store.read { try BankOffer.currentSets(in: $0) }.map(\.set.id)
+        #expect(!phoneSets.isEmpty)
+        let harness = LocalBankHarness(store: try LocalStore.inMemory(), idPrefix: "cc000000")
+        #expect(try await harness.send("POST", "/api/topics", .object(["title": .string("Kept in QBank")])).status == 201)
+        let cloud = harness.store
+        let archive = try BankArchive.write(from: cloud, at: ArchiveWorld.date)
+
+        let outcome = await replacing(world, from: DownloadStandIn(.sends(archive))).run()
+
+        guard case .returned(_, let store, let at) = outcome else {
+            Issue.record("not returned: \(outcome)")
+            return
+        }
+        let file = StoreFiles.freshFileName(at: HandBackWorld.start)
+        #expect(try world.record.load() == BankHandover.onPhone.onPhone(in: file, since: at, offering: phoneSets))
+        #expect(try BankArchive.counts(of: store) == BankArchive.counts(of: cloud))
+        #expect(world.store.holdsWrites, "the earlier bank takes no writes; the fresh one is the bank in use")
+    }
+
+    @Test func aBankFromQBankThatFailsLeavesTheOneHereInUseAndTakingWrites() async throws {
+        let world = try await MoveWorld.make()
+        defer { try? FileManager.default.removeItem(at: world.root) }
+
+        let outcome = await replacing(world, from: DownloadStandIn(.fails(.notConnectedToInternet))).run()
+
+        guard case .failed(.notDownloaded, let released) = outcome else {
+            Issue.record("not failed: \(outcome)")
+            return
+        }
+        #expect(released)
+        #expect(try world.record.load() == .onPhone)
+        #expect(!world.store.holdsWrites)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: world.root.appendingPathComponent("Banks/\(MoveWorld.key)").path).allSatisfy { !$0.hasPrefix("bank-") })
+    }
+
+    @Test func aBankOnThisPhoneIsNotReplacedWithoutBeingNamed() async throws {
+        let world = try await MoveWorld.make()
+        defer { try? FileManager.default.removeItem(at: world.root) }
+        let client = QBankClient(
+            configuration: APIConfiguration(baseURL: TestClient.baseURL), transport: DownloadStandIn(.fails(.notConnectedToInternet)),
+            sessionStore: InMemorySessionStore(StoredSession(token: "synthetic-session-token")))
+        let handBack = BankHandBack(
+            record: world.record, download: { () throws(QBankError) in try await client.downloadBank() }, createFile: { _ in throw CancellationError() },
+            removeFile: { _ in })
+        guard case .failed(.alreadyOnPhone, _) = await handBack.run() else {
+            Issue.record("not refused")
+            return
+        }
+    }
+
     @Test func aBankThatComesBackOpensFromItsRecordAtTheNextLaunch() async throws {
         let world = try await HandBackWorld.make()
         defer { world.remove() }

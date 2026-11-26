@@ -102,8 +102,9 @@ struct CloudPhone {
     func remove() { try? FileManager.default.removeItem(at: root) }
 
     /// A bank QBank Cloud holds, made as the app makes one: the sample set, when `sample`, then a topic
-    /// for each of `topics`. As a bank archive, the way `GET /api/me/bank` sends it.
-    static func cloudArchive(sample: Bool = true, topics: [String] = []) async throws -> Data {
+    /// for each of `topics`, and each question file of `sets` imported into the first of them. As a bank
+    /// archive, the way `GET /api/me/bank` sends it.
+    static func cloudArchive(sample: Bool = true, topics: [String] = [], sets: [String] = []) async throws -> Data {
         let store = try LocalStore.inMemory()
         let bank = LocalBank(store: store)
         if sample, let source = SampleSet.bundledSource() {
@@ -114,6 +115,12 @@ struct CloudPhone {
             sessionStore: InMemorySessionStore(StoredSession(token: TestApp.token)))
         for topic in topics {
             _ = try await client.createTopic(title: topic)
+        }
+        if !sets.isEmpty {
+            let topic = try #require(try await client.catalog().topics.first { $0.title == topics.first })
+            for source in sets {
+                _ = try await client.importSet(ImportRequest(source: source, title: nil, course: .existing(id: topic.id), folder: .unsorted, decision: .import))
+            }
         }
         return try BankArchive.write(from: store, at: .now)
     }
