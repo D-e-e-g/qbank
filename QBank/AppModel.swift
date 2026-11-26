@@ -669,8 +669,8 @@ final class AppModel {
     /// Each step done is kept with the session before the next begins, so a delete that stops is
     /// finished from where it stopped, even after a relaunch, and never deletes twice: the erase runs
     /// until it is done once, and the server deletes only the account this phone's session is
-    /// signed in to, whose session goes with it. Once the erase began, a failure leaves only
-    /// `finishingDeletion`, and trying again finishes the delete.
+    /// signed in to, whose session goes with it. Once the erase began, a failure leaves
+    /// `finishingDeletion`, where trying again finishes the delete and signing out leaves it.
     func deleteAccount(confirmedWith credential: AppleCredential, nonce: AppleSignInNonce) async throws(DeletionStop) {
         guard let account, !kind.deletesWithPassword, !awaitsServer, let kept = try? server.storedSession(), let appleUser = kept.appleUser
         else { throw DeletionStop(reason: AccountDeletionWording.tryAgain) }
