@@ -26,7 +26,7 @@ public struct AppleAccountDeletionRequest: Codable, Sendable, Equatable {
 ///
 /// The phone's copy of the bank is erased before the account on the server, and the session is
 /// forgotten last. A delete that stopped after the erase leaves the phone with nothing to open, so
-/// the app offers only to finish it.
+/// the app offers to finish it or to sign out.
 public enum AccountDeletionStep: String, Codable, Sendable {
     /// The person confirmed with Apple, and the phone's copy is being erased. A try that finds this
     /// erases again: erasing what is already gone changes nothing.

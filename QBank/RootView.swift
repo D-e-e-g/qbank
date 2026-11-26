@@ -25,7 +25,7 @@ struct RootView: View {
                     .transition(.opacity)
             case .finishingDeletion:
                 // This phone's copy of a store account is erased and the server has not deleted the
-                // account yet: finishing the delete is all there is.
+                // account yet: finishing the delete or signing out is offered.
                 NavigationStack {
                     AppleDeleteAccountView(app: model)
                 }

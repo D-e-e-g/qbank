@@ -13,9 +13,13 @@ final class AppleDeleteAccountModel {
     private var stopped: String?
 
     private let app: AppModel
+    /// Where the account's bank is, as it was when the screen opened, so the words stay while
+    /// signing out fades the screen away.
+    private let bankIsOnPhone: Bool
 
     init(app: AppModel) {
         self.app = app
+        bankIsOnPhone = app.kind.bankIsOnPhone
     }
 
     /// Settings offers it to a store account, which has no password. The admin is never one.
@@ -34,14 +38,14 @@ final class AppleDeleteAccountModel {
         isFinishing ? app.deletionProblem : stopped
     }
 
-    /// True once this phone's copy is erased, or being erased: only finishing the delete is left.
+    /// True once this phone's copy is erased, or being erased: finishing the delete or signing out is offered.
     var isFinishing: Bool {
         app.isFinishingDeletion
     }
 
     /// What the screen says: what goes, for where this account's bank is, or what is left to finish.
     var message: String {
-        isFinishing ? AccountDeletionWording.finishing(phoneErased: app.phoneCopyErased) : AccountDeletionWording.whatGoes(bankIsOnPhone: app.kind.bankIsOnPhone)
+        isFinishing ? AccountDeletionWording.finishing(phoneErased: app.phoneCopyErased) : AccountDeletionWording.whatGoes(bankIsOnPhone: bankIsOnPhone)
     }
 
     /// Checks QBank's server, asks Apple over `window`, then deletes. Closing Apple's sheet says

@@ -708,7 +708,7 @@ final class AppModel {
 
     /// Erases what this phone keeps of the account: its bank and anything kept beside it, the saved
     /// courses and waiting answers of an account whose bank is on the server, and the sets it was
-    /// writing. Nothing reaches the bank again: from here only finishing the delete is on screen, and a
+    /// writing. Nothing reaches the bank again: from here finishing the delete or signing out is on screen, and a
     /// failure leaves it still at the erase, so trying again erases again.
     private func erasePhoneCopy(of account: Account, appleUser: String) async throws(DeletionStop) {
         let saved = offline

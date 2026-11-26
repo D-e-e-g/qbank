@@ -6,8 +6,8 @@ import UIKit
 
 /// Deleting a store account with a fresh Sign in with Apple, in the model: the order of the steps
 /// (the server checked, Apple asked, this phone's copy erased, the server's account deleted, the
-/// keychain cleared), and a delete that stops after the erase, which leaves only finishing it, even
-/// after a relaunch, and never erases or deletes twice. Apple is a stand-in and the server a stub with
+/// keychain cleared), and a delete that stops after the erase, which offers finishing it or signing
+/// out, even after a relaunch, and never erases or deletes twice. Apple is a stand-in and the server a stub with
 /// the contract's shapes and words. Invented data only.
 @MainActor
 struct AppleDeleteAccountTests {
@@ -442,6 +442,19 @@ struct AppleDeleteAccountTests {
     }
 
     // MARK: Who deletes how
+
+    /// Signing out fades the screen away with the app already an invited one's: the words on it stay
+    /// those of the free account it opened for, never the Cloud account's.
+    @Test func aFreeAccountsScreenKeepsItsWordsOnceTheSessionIsForgotten() async throws {
+        let phone = try await freePhone()
+        phone.server["GET /api/session"] = Self.ended
+        let model = AppleDeleteAccountModel(app: phone.app)
+        await model.delete(over: nil)
+        #expect(phone.app.route == .signedOut)
+        #expect(phone.app.kind == .invited)
+        #expect(model.message.contains("deleted for good from QBank's server, and everything in it is erased from this"))
+        #expect(!model.message.contains("signed out on every device"))
+    }
 
     @Test func aStoreAccountDeletesWithAppleAndAnInvitedOneWithItsPassword() {
         #expect(AppleDeleteAccountModel.isOffered(to: .store(), kind: .free))

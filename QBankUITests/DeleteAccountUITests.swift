@@ -2,8 +2,8 @@ import XCTest
 
 /// Delete account in each kind of account the app runs. A store account, free on this iPhone, has no
 /// password: a fresh Sign in with Apple confirms the delete, which erases this iPhone's bank, then
-/// deletes the account on the server, and a delete that stops after the erase leaves only finishing
-/// it. An invited account still deletes with its password. The app has no Cloud mode yet, and a Cloud
+/// deletes the account on the server, and a delete that stops after the erase offers finishing it or
+/// signing out. An invited account still deletes with its password. The app has no Cloud mode yet, and a Cloud
 /// account takes the same screen and steps as a free one. A unit test cannot do this job: it is the
 /// real Settings row, the screen it opens for the account's kind, Apple's step through the Debug seam,
 /// and the screen that follows, over the bank on the phone, that show the person can find, confirm and
@@ -59,7 +59,7 @@ final class DeleteAccountUITests: XCTestCase {
 
         waitForLabel(app.staticTexts["deleteAccount.message"], containing: "is not deleted yet")
         XCTAssertTrue(app.staticTexts["No connection. Check Wi-Fi or cellular data and try again."].exists)
-        XCTAssertFalse(app.tabBars.firstMatch.exists, "only finishing the delete is offered")
+        XCTAssertFalse(app.tabBars.firstMatch.exists, "only finishing the delete or signing out is offered")
         XCTAssertTrue(app.staticTexts["deleteAccount.subscription"].exists)
         attachLooks(app, "delete account, finishing")
 
