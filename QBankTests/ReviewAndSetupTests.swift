@@ -28,6 +28,16 @@ struct ReviewModelTests {
         #expect(server.requests.count == 1, "filters need no connection")
     }
 
+    @Test func thePracticeButtonReadsRightForOneQuestionAndForMany() async {
+        let server = StubServer(["GET /api/courses/c1/review": .ok(StudyBodies.review())])
+        let (app, _) = TestApp.make(server, account: .student())
+        let model = ReviewModel(app: app, course: Self.course)
+        await model.load()
+        #expect(model.practiceTitle == "Practice these 2 (shuffled)")
+        model.choose(.missed)
+        #expect(model.practiceTitle == "Practice this question (shuffled)")
+    }
+
     @Test func withoutAConnectionTheListSavedLastShows() async throws {
         let server = StubServer(["GET /api/courses/c1/review": .ok(StudyBodies.review())])
         let connection = Connection()

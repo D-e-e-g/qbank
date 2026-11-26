@@ -75,7 +75,7 @@ final class FreeModeUITests: XCTestCase {
         let listed = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'review.question.'"))
         XCTAssertEqual(listed.count, 1)
         attach(app, "free new bank, review")
-        tapVisible(app.buttons["Practice these 1 (shuffled)"], in: app)
+        tapVisible(app.buttons["Practice this question (shuffled)"], in: app)
         XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
         XCTAssertTrue(app.staticTexts["practice.count"].label.hasPrefix("1 of 1"))
         app.buttons["practice.close"].tap()

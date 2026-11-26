@@ -80,15 +80,19 @@ public struct QBankButtonStyle: ButtonStyle {
     public let variant: Variant
     public let size: Size
     public let fullWidth: Bool
+    /// The room at each side of the label: the size's own unless buttons sharing a row ask for less.
+    public let horizontalPadding: CGFloat
 
-    public init(_ variant: Variant = .primary, size: Size = .medium, fullWidth: Bool = false) {
+    public init(_ variant: Variant = .primary, size: Size = .medium, fullWidth: Bool = false, horizontalPadding: CGFloat? = nil) {
         self.variant = variant
         self.size = size
         self.fullWidth = fullWidth
+        self.horizontalPadding = horizontalPadding ?? size.horizontalPadding
     }
 
     public func makeBody(configuration: Configuration) -> some View {
-        QBankButtonBody(configuration: configuration, variant: variant, size: size, fullWidth: fullWidth)
+        QBankButtonBody(
+            configuration: configuration, variant: variant, size: size, fullWidth: fullWidth, horizontalPadding: horizontalPadding)
     }
 }
 
@@ -97,9 +101,10 @@ extension ButtonStyle where Self == QBankButtonStyle {
     public static func qbank(
         _ variant: QBankButtonStyle.Variant = .primary,
         size: QBankButtonStyle.Size = .medium,
-        fullWidth: Bool = false
+        fullWidth: Bool = false,
+        horizontalPadding: CGFloat? = nil
     ) -> QBankButtonStyle {
-        QBankButtonStyle(variant, size: size, fullWidth: fullWidth)
+        QBankButtonStyle(variant, size: size, fullWidth: fullWidth, horizontalPadding: horizontalPadding)
     }
 }
 
@@ -108,6 +113,7 @@ private struct QBankButtonBody: View {
     let variant: QBankButtonStyle.Variant
     let size: QBankButtonStyle.Size
     let fullWidth: Bool
+    let horizontalPadding: CGFloat
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -118,7 +124,7 @@ private struct QBankButtonBody: View {
             .qbankFont(size.textStyle, weight: .semibold)
             .multilineTextAlignment(.center)
             .foregroundStyle(.qbank(isEnabled ? foreground : .text3))
-            .padding(.horizontal, size.horizontalPadding)
+            .padding(.horizontal, horizontalPadding)
             .padding(.vertical, size.verticalPadding)
             .frame(minHeight: size.minHeight)
             .frame(maxWidth: fullWidth ? .infinity : nil)

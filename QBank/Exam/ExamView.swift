@@ -106,21 +106,14 @@ struct ExamView: View {
                 .answersWhenFrozen(frozen)
                 .accessibilityIdentifier("exam.finishPending")
             } else if model.isRunning, model.item != nil {
-                HStack(spacing: QBankSpacing.space3) {
-                    Button("Skip for now") {
-                        Task { await model.skip() }
-                    }
-                    .buttonStyle(.qbank(.quiet, size: .large, fullWidth: true))
-                    .disabled(!model.isAnswering)
-                    .accessibilityIdentifier("exam.skip")
-                    Button(model.isLastPending ? "Finish exam" : "Submit and continue") {
-                        Task { await model.submit() }
-                    }
-                    .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
-                    .disabled(!model.canSubmit)
-                    .answersWhenFrozen(frozen)
-                    .accessibilityIdentifier("exam.submit")
-                }
+                ExamAnswerButtons(
+                    submitTitle: model.isLastPending ? "Finish exam" : "Submit and continue",
+                    canSkip: model.isAnswering,
+                    canSubmit: model.canSubmit,
+                    frozen: frozen,
+                    skip: { Task { await model.skip() } },
+                    submit: { Task { await model.submit() } }
+                )
             }
         }
     }
