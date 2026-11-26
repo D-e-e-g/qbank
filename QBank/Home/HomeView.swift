@@ -105,6 +105,8 @@ struct HomeView: View {
         NavigationSplitView(preferredCompactColumn: $navigator.compactColumn) {
             courses
                 .navigationSplitViewColumnWidth(QBankLayout.sidebarWidth)
+                // The split view's own background shows behind the status bar, over both columns.
+                .containerBackground(.qbank(.bg), for: .navigationSplitView)
         } detail: {
             NavigationStack(path: $navigator.path) {
                 Group {
