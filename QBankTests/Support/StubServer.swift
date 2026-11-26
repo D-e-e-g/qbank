@@ -192,14 +192,22 @@ enum Bodies {
         #"{"token":"\#(token)","user":\#(account(mustChangePassword: mustChangePassword)),"expiresAt":"2027-01-01T00:00:00.000Z"}"#
     }
 
-    /// The answer to a Sign in with Apple, as the contract's `SignedIn` shapes it, for a store account or,
-    /// with `origin: "invited"`, for an account the owner set up that linked Apple.
-    static func appleSignedIn(token: String = "synthetic-apple-token", origin: String = "store") -> String {
-        let user =
-            origin == "store"
-            ? #"{"id":"a3","email":"person@privaterelay.appleid.com","name":"person","role":"student","mustChangePassword":false,"palette":"dusk","origin":"store","cloud":{"active":false,"expiresAt":null},"signInWith":["apple"]}"#
-            : #"{"id":"a1","email":"student@example.com","name":"Sam Student","role":"student","mustChangePassword":false,"palette":"dusk","origin":"invited","cloud":{"active":true,"expiresAt":null},"signInWith":["password","apple"]}"#
+    /// The answer to a Sign in with Apple, as the contract's `SignedIn` shapes it, for a store account,
+    /// with Cloud when `cloud`, or, with `origin: "invited"`, for an account the owner set up that linked Apple.
+    static func appleSignedIn(token: String = "synthetic-apple-token", origin: String = "store", cloud: Bool = false) -> String {
+        let user = origin == "store" ? storeAccount(cloud: cloud) : #"{"id":"a1","email":"student@example.com","name":"Sam Student","role":"student","mustChangePassword":false,"palette":"dusk","origin":"invited","cloud":{"active":true,"expiresAt":null},"signInWith":["password","apple"]}"#
         return #"{"token":"\#(token)","user":\#(user),"expiresAt":"2027-01-01T00:00:00.000Z"}"#
+    }
+
+    /// The store account Sign in with Apple made, `TestApp.store(cloud:)`, with Cloud when `cloud`.
+    static func storeAccount(cloud: Bool) -> String {
+        let expires = cloud ? #""2027-12-03T00:00:00.000Z""# : "null"
+        return #"{"id":"a3","email":"person@privaterelay.appleid.com","name":"person","role":"student","mustChangePassword":false,"palette":"dusk","origin":"store","cloud":{"active":\#(cloud),"expiresAt":\#(expires)},"signInWith":["apple"]}"#
+    }
+
+    /// The session of the store account, as `GET /api/session` answers it, with Cloud when `cloud`.
+    static func storeSession(cloud: Bool) -> String {
+        #"{"user":\#(storeAccount(cloud: cloud)),"expiresAt":"2027-01-01T00:00:00.000Z"}"#
     }
 
     static func session(mustChangePassword: Bool = false, palette: String? = nil) -> String {
@@ -278,8 +286,13 @@ extension Account {
     static let admin = Account(id: "a2", email: "owner@example.com", name: "Owner", role: .admin, mustChangePassword: false)
 
     /// A store account, made by Sign in with Apple.
-    static func store(palette: Palette = .dusk) -> Account {
-        Account(id: "a3", email: "person@privaterelay.appleid.com", name: "person", role: .student, mustChangePassword: false, palette: palette, origin: .store)
+    /// The store account Sign in with Apple made, as `Bodies.storeAccount(cloud:)` says it: with Cloud
+    /// paid until 3 December 2027 when `cloud`, else with none ever bought.
+    static func store(palette: Palette = .dusk, cloud: Bool = false) -> Account {
+        let paidUntil = cloud ? Date(timeIntervalSince1970: 1_827_792_000) : nil
+        return Account(
+            id: "a3", email: "person@privaterelay.appleid.com", name: "person", role: .student, mustChangePassword: false, palette: palette, origin: .store,
+            cloud: Account.Cloud(active: cloud, expiresAt: paidUntil))
     }
 }
 

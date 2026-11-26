@@ -7,10 +7,11 @@ private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 final class SQLiteConnection {
     private var handle: OpaquePointer?
 
-    /// Opens `path`, or a private in-memory database when it is `:memory:`.
-    init(path: String) throws(StoreError) {
+    /// Opens `path`, or a private in-memory database when it is `:memory:`. `readOnly` opens a file
+    /// that must already exist, and nothing through this connection can change it.
+    init(path: String, readOnly: Bool = false) throws(StoreError) {
         var opened: OpaquePointer?
-        let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
+        let flags = (readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE) | SQLITE_OPEN_FULLMUTEX
         let code = sqlite3_open_v2(path, &opened, flags, nil)
         guard code == SQLITE_OK, let opened else {
             let message = opened.map { String(cString: sqlite3_errmsg($0)) } ?? "out of memory"

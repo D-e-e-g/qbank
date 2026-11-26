@@ -8,7 +8,7 @@ import Foundation
 /// delete. An invited or store account's bank is on the server and is never given it.
 enum SampleSet {
     /// The topic the sample set is filed in.
-    static let topic = "Getting started"
+    nonisolated static let topic = "Getting started"
 
     /// The question file as the app bundle carries it, or nil when the bundle has none.
     static func bundledSource(in bundle: Bundle = .main) -> String? {

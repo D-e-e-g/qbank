@@ -181,8 +181,9 @@ public actor AttemptQueue {
             return false
         case .server(let server):
             if server.status >= 500 || server.status == 429 || server.status == 401 { return true }
-            // A temporary password: the answer goes once she has chosen a new one.
-            return server.code == .mustChangePassword
+            // A temporary password: the answer goes once a new one is chosen. A store account
+            // whose Cloud ended: the answer is kept in the bank once it is back on the phone.
+            return server.code == .mustChangePassword || server.code == .cloudRequired
         case .unexpectedResponse(let status, _):
             // A 2xx the app cannot read means the server took it; anything else is a proxy or outage.
             return !(200..<300).contains(status)

@@ -4,10 +4,18 @@ import Synchronization
 @testable import QBank
 
 extension PhoneBanks {
-    /// Banks that open as `open` says, each with a record kept in memory for as long as this value
-    /// lives, for a test that never deletes the account.
+    /// Banks where `open` gives the bank for each key, whatever file is asked for, which is there
+    /// already, each with a record kept in memory for as long as this value lives, for a test that
+    /// never deletes the account. A fresh file is made in memory; none opens only to read.
     init(open: @escaping @Sendable (_ key: String) throws -> LocalBank) {
-        self.init(open: open, handover: PhoneBanks.memory().handover, erase: { _ in })
+        self.init(
+            open: { key, _ in try open(key) },
+            create: { _, _ in try LocalStore.inMemory() },
+            removeUnused: { _, _ in },
+            readOnly: { _, file in throw StoreError.storage(operation: "open the bank to read it", reason: "\(file) is not kept here") },
+            exists: { _ in true },
+            handover: PhoneBanks.memory().handover,
+            erase: { _ in })
     }
 }
 
@@ -34,10 +42,14 @@ func loggedBanks(_ log: DeletionLog, failingErases: Int = 0) -> PhoneBanks {
     let memory = PhoneBanks.memory()
     let failures = Mutex(failingErases)
     return PhoneBanks(
-        open: { key in
+        open: { key, file in
             log.add("open bank")
-            return try memory.open(key)
+            return try memory.open(key, file: file)
         },
+        create: { key, file in try memory.create(key, file: file) },
+        removeUnused: { key, file in memory.removeUnused(key, file: file) },
+        readOnly: { key, file in try memory.readOnly(key, file: file) },
+        exists: { key in memory.exists(key) },
         handover: memory.handover,
         erase: { key in
             struct DiskRefused: Error {}

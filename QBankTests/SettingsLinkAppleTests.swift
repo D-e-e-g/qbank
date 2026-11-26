@@ -33,7 +33,8 @@ struct LinkAppleModelTests {
     private static let linkedBody =
         #"{"id":"a1","email":"student@example.com","name":"Sam Student","role":"student","mustChangePassword":false,"palette":"dusk","origin":"invited","cloud":{"active":true,"expiresAt":null},"signInWith":["password","apple"]}"#
     private static let linked = Account(
-        id: "a1", email: "student@example.com", name: "Sam Student", role: .student, mustChangePassword: false, signInWith: [.password, .apple])
+        id: "a1", email: "student@example.com", name: "Sam Student", role: .student, mustChangePassword: false, signInWith: [.password, .apple],
+        cloud: Account.Cloud(active: true, expiresAt: nil))
 
     private func model(
         _ server: StubServer, apple: any AppleSignInProvider = AppleSignInTests.Apple(), clock: Clock = Clock()

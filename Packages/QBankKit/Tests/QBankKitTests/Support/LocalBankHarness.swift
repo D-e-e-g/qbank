@@ -16,8 +16,12 @@ final class LocalBankHarness: Sendable {
 
     private let state = State()
 
-    init() throws {
-        let store = try LocalStore.inMemory()
+    convenience init() throws {
+        try self.init(store: LocalStore.inMemory())
+    }
+
+    /// A bank over `store`, whose ids start with `idPrefix`, so two banks of one test never share one.
+    init(store: LocalStore, idPrefix: String = "ee000000") {
         let state = self.state
         self.store = store
         bank = LocalBank(
@@ -26,7 +30,7 @@ final class LocalBankHarness: Sendable {
             ids: {
                 state.next.withLock { number in
                     number += 1
-                    return String(format: "ee000000-0000-4000-8000-%012x", number)
+                    return String(format: "\(idPrefix)-0000-4000-8000-%012x", number)
                 }
             })
     }

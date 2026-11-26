@@ -28,9 +28,9 @@ struct RootView: View {
             }
         }
         .animation(QBankMotion.reveal, value: model.route)
-        // The move of the bank to QBank Cloud covers the app until its outcome is read.
-        .fullScreenCover(isPresented: .constant(model.cloudMove.isShown)) {
-            CloudMoveView(app: model)
+        // The bank moving between this phone and QBank Cloud covers the app until the outcome is read.
+        .fullScreenCover(isPresented: .constant(model.cloudScreenIsShown)) {
+            CloudCoverView(app: model)
         }
         .tint(QBankColor(.tint))
         // Her account's color scheme, on every screen and sheet; Dusk on the sign-in screen.
