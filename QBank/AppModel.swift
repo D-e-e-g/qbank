@@ -30,6 +30,7 @@ final class AppModel {
             openOffline()
             drafts.open(accountID: phoneKey)
             frozen.isOn = account?.role == .admin
+            cloud.follow(account?.id)
         }
     }
     /// Said on the sign-in screen after the server ended the session.
@@ -82,6 +83,8 @@ final class AppModel {
     let deletions = Deletions()
     /// The admin's look at a user account: each control answers with one note and changes nothing.
     let frozen = FrozenView()
+    /// QBank Cloud for a store account: whether it is on, as QBank's server says, and buying it.
+    let cloud: CloudModel
     /// Saved courses and unsent answers for the account on this phone. Nil when signed out.
     private(set) var offline: OfflineStore?
 
@@ -109,12 +112,13 @@ final class AppModel {
     /// keeps too; any other account's bank is on the server. A free account's bank that is new, with
     /// nothing ever in it, is given `sampleSet`, a question file, as the first set of a topic made for
     /// it; a bank that is not new is left as it is, and an account whose bank is on the server has no
-    /// bank here to give it to.
+    /// bank here to give it to. `store` is the App Store that sells Cloud.
     init(
         client: QBankClient,
         banks: PhoneBanks = .memory(),
         sampleSet: String? = nil,
         appleSignIn: any AppleSignInProvider = SystemAppleSignIn(),
+        store: any CloudStore = StoreKitCloudStore(),
         look: LookStore = LookStore(),
         lock: AppLock = AppLock(),
         highlighter: HighlighterStore = HighlighterStore(),
@@ -133,6 +137,7 @@ final class AppModel {
         self.banks = banks
         self.sampleSet = sampleSet
         self.appleSignIn = appleSignIn
+        cloud = CloudModel(store: store)
         server = client
         network = connection
         self.networkWatcher = networkWatcher
@@ -171,6 +176,8 @@ final class AppModel {
         openOffline()
         drafts.open(accountID: phoneKey)
         frozen.isOn = account?.role == .admin
+        cloud.app = self
+        cloud.follow(account?.id)
         network.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
             guard isOnline, self?.awaitsServer == true else { return }
@@ -542,9 +549,16 @@ final class AppModel {
         store.sendIfWaiting()
     }
 
-    /// The model the app starts with. Debug builds let UI tests choose a scenario through
-    /// `DebugLaunchScenario`; Release builds always talk to the live server.
+    /// The model the app starts with, taking the App Store's Cloud updates from launch on. Debug builds
+    /// let UI tests choose a scenario through `DebugLaunchScenario`; Release builds always talk to the
+    /// live server and the App Store.
     static func launch() -> AppModel {
+        let model = launchModel()
+        model.cloud.listen()
+        return model
+    }
+
+    private static func launchModel() -> AppModel {
         #if DEBUG
         if let model = DebugLaunchScenario.makeModel() {
             return model
@@ -556,6 +570,7 @@ final class AppModel {
             banks: .standard(),
             sampleSet: SampleSet.bundledSource(),
             appleSignIn: SystemAppleSignIn(),
+            store: StoreKitCloudStore(),
             storage: .standard(),
             connection: connection,
             networkWatcher: NetworkWatcher(connection: connection)

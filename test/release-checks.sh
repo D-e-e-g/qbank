@@ -582,6 +582,29 @@ ruby_check "every AppIcon slot names a 1024x1024 PNG that exists, the default on
 # The Apple team id comes from the uploader's shell, never from Git.
 forbid_grep 'DEVELOPMENT_TEAM = [^";]' "$PBXPROJ" "no Apple team id is committed in the project"
 
+# --- StoreKit configuration -----------------------------------------------------
+#
+# StoreKit/QBankCloud.storekit sells the two Cloud plans to a run from Xcode and
+# never ships: it sits outside the folder-synchronized groups, the project names
+# it nowhere, and only the scheme's Run action uses it. The UI tests use the fake
+# store of the Debug launch seam instead. QBankTests/StoreKitConfigurationTests
+# pins its plans and proves the built app carries no .storekit file.
+
+STOREKIT=StoreKit/QBankCloud.storekit
+storekit_files="$(git ls-files --cached --others --exclude-standard | grep -E '\.storekit$' || true)"
+if [ "$storekit_files" = "$STOREKIT" ]; then
+  pass "$STOREKIT is the only StoreKit configuration file"
+else
+  fail "$STOREKIT is the only StoreKit configuration file (found: ${storekit_files:-none})"
+fi
+forbid_grep '\.storekit' "$PBXPROJ" "project.pbxproj names no StoreKit configuration file, so no target copies one"
+storekit_references="$(grep -c 'StoreKitConfigurationFileReference$' "$SCHEME" || true)"
+if [ "$storekit_references" = "1" ] && awk '/<LaunchAction/,/<\/LaunchAction>/' "$SCHEME" | grep -q 'identifier = "\.\./\.\./StoreKit/QBankCloud\.storekit"'; then
+  pass "only the scheme's Run action uses $STOREKIT"
+else
+  fail "only the scheme's Run action uses $STOREKIT"
+fi
+
 # --- Privacy manifest -----------------------------------------------------------
 #
 # The app target's folder-synchronized QBank group is the file's membership.
@@ -649,6 +672,7 @@ ruby_check "privacy manifest lints and matches docs/privacy-manifest.md" "$MANIF
     NSPrivacyCollectedDataTypePhotosorVideos
     NSPrivacyCollectedDataTypeOtherUserContent
     NSPrivacyCollectedDataTypeProductInteraction
+    NSPrivacyCollectedDataTypePurchaseHistory
   ]
   types = elements_of(collected)
   names = types.map { |entry| expect_dict(entry, "collected type")["NSPrivacyCollectedDataType"]&.text }

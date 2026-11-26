@@ -43,6 +43,7 @@ nonisolated enum DebugFreeMode {
             banks: context.banks,
             sampleSet: sampleSet,
             appleSignIn: context.appleSignIn,
+            store: context.store,
             look: lookStore,
             lock: AppLock(defaults: context.defaults, owner: context.owner),
             highlighter: HighlighterStore(defaults: context.defaults),

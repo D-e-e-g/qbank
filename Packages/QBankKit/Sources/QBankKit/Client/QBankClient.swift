@@ -718,6 +718,24 @@ public struct QBankClient: Sendable {
         try await sendForData(Request(.get, "/api/me/bank"))
     }
 
+    // MARK: Cloud
+
+    /// Whether the account has Cloud now, as the server decides it, with the token a store account buys
+    /// Cloud with. A store account without Cloud may read it; its first read issues that token.
+    public func cloudStatus() async throws(QBankError) -> CloudStatus {
+        try await send(Request(.get, "/api/me/cloud"))
+    }
+
+    /// Sends the server a Cloud transaction the App Store signed, after a purchase, a renewal or a
+    /// restore. The server checks Apple's signature, the app, the plan and the account's token, records
+    /// the subscription and answers the Cloud state it leaves the account in. Sending one again changes
+    /// nothing. Every refusal records nothing: a transaction Apple did not sign or of another app is 400,
+    /// one bought for another account 409 `transaction_other_account`, and an invited account, which
+    /// has Cloud already, 409 `cloud_included`.
+    public func recordCloudTransaction(_ signedTransaction: String) async throws(QBankError) -> CloudStatus {
+        try await send(Request(.post, "/api/me/cloud/transactions", body: CloudTransactionUpload(signedTransaction: signedTransaction)))
+    }
+
     // MARK: Agents
 
     /// The agent waiting under the code her agent shows her, before she answers: its name and what

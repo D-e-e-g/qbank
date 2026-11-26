@@ -22,8 +22,9 @@ Everything collected is **linked** to you, because it is stored under your accou
 | User Content | Photos or Videos | `NSPrivacyCollectedDataTypePhotosorVideos` | Make questions: the photos she takes or picks of her notes, slides, or practice questions, sent on to Anthropic's Claude API to read them and deleted from the server once read; the text read from them stays in the set's record | yes | no | App Functionality |
 | User Content | Other User Content | `NSPrivacyCollectedDataTypeOtherUserContent` | answers, guesses, per-question progress, the Review list, exam picks and scores; an imported question file, which becomes that account's own study content, private to the account, not shared course content, and is kept with the account; for Make questions, the notes she pastes and the file she picks, sent on like the photos; their text stays in the set's record | yes | no | App Functionality |
 | Usage Data | Product Interaction | `NSPrivacyCollectedDataTypeProductInteraction` | study-session start and end times and the last-opened course (Apple lists "saved place" under this type) | yes | no | App Functionality |
+| Purchases | Purchase History | `NSPrivacyCollectedDataTypePurchaseHistory` | a QBank Cloud subscription bought in the app: the transaction the App Store signed goes to the server, which keeps the plan, the App Store's ids of the subscription and its latest transaction, when the period it pays for began and ends, whether Apple refunded or revoked it, and the App Store environment, under the account, to decide whether it has Cloud | yes | no | App Functionality |
 
-Answer these in App Store Connect exactly this way: "Yes, we collect data from this app", then the five types above, each "linked to the user", "not used for tracking", purpose "App Functionality" only.
+Answer these in App Store Connect exactly this way: "Yes, we collect data from this app", then the six types above, each "linked to the user", "not used for tracking", purpose "App Functionality" only.
 
 ### Considered and not declared
 
@@ -36,7 +37,7 @@ Answer these in App Store Connect exactly this way: "Yes, we collect data from t
 | Crash data, performance data, other diagnostics | The app has no crash or analytics SDK and sends no diagnostics. TestFlight crash reports and feedback are collected by Apple, and Apple says developers are not responsible for disclosing data Apple collects. |
 | Audio | Not read. |
 | Export file | It goes where you send it; QBank never receives it. |
-| Purchases, financial info, health, location, contacts, browsing, search history, sensitive info | Not handled. |
+| Payment details and other financial info, health, location, contacts, browsing, search history, sensitive info | Not handled. Apple takes the payment for QBank Cloud; the app and the server never see a card or a bank account. |
 
 ### When later phases change the answers
 
@@ -50,6 +51,7 @@ Answer these in App Store Connect exactly this way: "Yes, we collect data from t
 | Connect an agent | shipped: nothing new is collected that Apple's labels count (see Agent key above). The sets an agent imports with its key are Other User Content, already declared. |
 | Q Delete and Undo | shipped: nothing new is collected. Deleting a course or study topic, a page, a set, a folder or a past exam hides it on the server, where it stays with her answers until the account is deleted, which the policy says. |
 | 4 Free on this phone | data in on-phone mode is never sent anywhere and is not collected; the signed-in mode keeps the answers above. |
+| QBank Cloud purchase | shipped: **Purchase History** declared above. The app sends the server the transaction the App Store signed for a Cloud plan, after a purchase, a restore or a renewal, and the server keeps the subscription under the account, since it decides who has Cloud. |
 
 ## `PrivacyInfo.xcprivacy`
 
@@ -117,6 +119,18 @@ The app target carries this file at `QBank/PrivacyInfo.xcprivacy`. The project's
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeProductInteraction</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePurchaseHistory</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>
