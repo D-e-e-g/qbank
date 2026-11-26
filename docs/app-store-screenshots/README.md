@@ -14,6 +14,8 @@ It runs the test on a 6.9-inch iPhone and then a 13-inch iPad, one run-scoped si
 
 They show a free account's first launch with the sample set the app ships with, on the fake server and the fake store of the Debug launch seam: no real account, question or purchase. The order of choices, the exam's order and the times taken differ from one run to the next.
 
+With the sample set alone, the iPhone `03-home` picture is mostly empty; reconsider it before submission.
+
 ## What is here
 
 App Store Connect shows each set in file name order.

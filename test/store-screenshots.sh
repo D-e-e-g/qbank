@@ -39,7 +39,7 @@ if [ "${1:-}" = --on-device ]; then
   xcrun simctl boot "$udid"
   xcrun simctl bootstatus "$udid" >/dev/null
   xcrun simctl ui "$udid" appearance light
-  offset="$(date +%z)"
+  offset="$(date -j -f '%Y-%m-%dT%H:%M:%S' "${STATUS_TIME%.*}" +%z)"
   xcrun simctl status_bar "$udid" override \
     --time "${STATUS_TIME}${offset:0:3}:${offset:3:2}" \
     --dataNetwork wifi --wifiMode active --wifiBars 3 \
