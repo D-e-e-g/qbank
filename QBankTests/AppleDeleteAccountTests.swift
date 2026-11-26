@@ -65,9 +65,7 @@ struct AppleDeleteAccountTests {
         }
     }
 
-    private static let storeUser =
-        #"{"id":"a3","email":"person@privaterelay.appleid.com","name":"person","role":"student","mustChangePassword":false,"palette":"dusk","origin":"store"}"#
-    private static let liveSession = StubServer.Reply.ok(#"{"user":\#(storeUser),"expiresAt":"2027-01-01T00:00:00.000Z"}"#)
+    private static let liveSession = StubServer.Reply.ok(Bodies.storeSession(cloud: false))
     private static let deleted = StubServer.Reply.ok(#"{"status":"deleted"}"#)
     private static let ended = StubServer.Reply.error(401, "unauthenticated", "Sign in to continue.")
 
