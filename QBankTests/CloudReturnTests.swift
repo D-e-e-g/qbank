@@ -364,6 +364,10 @@ struct CloudReturnTests {
 
     @Test func theStepsAndEndingsSayWhatHappenedInPlainWords() {
         let steps: [BankHandBack.Step] = [.downloading, .writing, .checking]
+        #expect(
+            CloudReturnWording.offeredEarlierCopy
+                == "The bank on this iPhone stays on it, unchanged, as an earlier copy. Answers you gave on this iPhone to sets QBank's bank also has stay only in that copy. Sets only in it are offered next, to add as new sets.",
+            "before the tap, it says that answers to sets in both stay only in the earlier copy")
         #expect(steps.map(CloudReturnWording.step) == ["Downloading your bank from QBank Cloud", "Writing it to this \(Device.model)", "Checking that everything arrived"])
         #expect(CloudReturnWording.problem(.countsDiffer([.init(table: "attempts", onPhone: 1, inCloud: 2)])) == "This \(Device.model) did not get the same number of answers as QBank Cloud holds, so it did not switch.")
         #expect(CloudReturnWording.problem(.switchNotRecorded(.closed)) == "Your whole bank arrived, but this \(Device.model) could not note the switch, so it keeps using QBank Cloud's bank.")

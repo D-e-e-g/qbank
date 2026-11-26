@@ -18,7 +18,7 @@ enum CloudReturnWording {
         "QBank holds the bank you kept in QBank Cloud. Bring it to this \(Device.model) to study it here, without a connection. Nothing in QBank is changed or deleted."
     }
     static var offeredEarlierCopy: String {
-        "The bank on this \(Device.model) stays on it, unchanged, as an earlier copy. Sets only in it are offered next, to add as new sets."
+        "The bank on this \(Device.model) stays on it, unchanged, as an earlier copy. Answers you gave on this \(Device.model) to sets QBank's bank also has stay only in that copy. Sets only in it are offered next, to add as new sets."
     }
     static var bringIt: String { "Bring it to this \(Device.model)" }
     static let notNow = "Not now"
