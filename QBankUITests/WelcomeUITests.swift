@@ -59,6 +59,8 @@ final class WelcomeUITests: XCTestCase {
 
         tapVisible(app.buttons["settings.signOut"], in: app)
         XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+        // The signed-in screens fade out over sign-in and take a tap until they are gone.
+        XCTAssertTrue(app.buttons["settings.signOut"].disappears(timeout: 10))
         app.buttons["welcome.apple"].tap()
         XCTAssertTrue(app.navigationBars[topic].appears(timeout: 10), "signing in again opens the same bank, on the topic used last")
         XCTAssertTrue(app.buttons["folder.Unsorted"].appears(timeout: 5))
@@ -130,6 +132,8 @@ final class WelcomeUITests: XCTestCase {
 
         tapVisible(app.buttons["settings.signOut"], in: app)
         XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+        // The signed-in screens fade out over sign-in and take a tap until they are gone.
+        XCTAssertTrue(app.buttons["settings.signOut"].disappears(timeout: 10))
         app.buttons["welcome.apple"].tap()
         XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10), "the same account, on its last course on the server")
         XCTAssertTrue(app.buttons["course.page.Exam 1"].appears(timeout: 5), "with the same content")

@@ -32,7 +32,7 @@ public enum AccountKind: String, Codable, Sendable, CaseIterable {
     /// A bank on the phone has no need of either, since all of it is already here.
     public var savesForOffline: Bool { !bankIsOnPhone }
 
-    /// Whether the account is deleted with its password. A store account is deleted with a fresh
-    /// Sign in with Apple, which a later pull request adds.
+    /// Whether the account is deleted with its password. A store account, free or Cloud, has none,
+    /// and is deleted with a fresh Sign in with Apple instead.
     public var deletesWithPassword: Bool { self == .invited }
 }

@@ -18,12 +18,16 @@ nonisolated enum DebugFreeMode {
 
     /// The fake server stands in for the network the account's requests would reach; the free
     /// account is the one it already knows, signed in from an earlier launch. A new bank is given
-    /// `sampleSet` when there is one. `prepare` sets the fake server up before the app starts.
+    /// `sampleSet` when there is one. The first `droppedAccountDeletes` requests to delete the account
+    /// lose the connection before they reach the server. `prepare` sets the fake server up before the
+    /// app starts.
     @MainActor
-    static func model(context: DebugScenarioContext, sampleSet: String? = nil, prepare: (FakeQBankServer) -> Void = { _ in }) -> AppModel {
+    static func model(
+        context: DebugScenarioContext, sampleSet: String? = nil, droppedAccountDeletes: Int = 0, prepare: (FakeQBankServer) -> Void = { _ in }
+    ) -> AppModel {
         // Sign in with Apple made the account, so it has no password.
         let signedIn = FakeQBankServer.Credentials(email: FakeQBankServer.applePerson.email, password: "")
-        let server = FakeQBankServer(signedIn: true, as: signedIn, answersFile: context.answersFile)
+        let server = FakeQBankServer(signedIn: true, as: signedIn, droppedAccountDeletes: droppedAccountDeletes, answersFile: context.answersFile)
         prepare(server)
         let connection = Connection(isOnline: context.isOnline)
         let network = DebugNetwork(server: server, connection: connection, isOnline: context.isOnline)

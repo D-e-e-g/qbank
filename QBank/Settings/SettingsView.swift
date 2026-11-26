@@ -7,7 +7,8 @@ enum SettingsRoute: Hashable {
     case changePassword
     case linkApple
     case connectAgent
-    case deleteAccount
+    /// Which screen is fixed when the row is tapped, so it stays while signing out fades it away.
+    case deleteAccount(withPassword: Bool)
     case semester(String)
     case savedForOffline
 }
@@ -99,8 +100,14 @@ struct SettingsView: View {
                     LinkAppleView(app: app)
                 case .connectAgent:
                     ConnectAgentView(app: app)
-                case .deleteAccount:
-                    DeleteAccountView(app: app)
+                case .deleteAccount(let withPassword):
+                    // An invited account confirms with its password, as before; a store account,
+                    // which has none, with a fresh Sign in with Apple.
+                    if withPassword {
+                        DeleteAccountView(app: app)
+                    } else {
+                        AppleDeleteAccountView(app: app)
+                    }
                 case .semester(let id):
                     SemesterView(catalog: catalog, id: id)
                 case .savedForOffline:
@@ -209,8 +216,8 @@ struct SettingsView: View {
             if !app.awaitsServer {
                 signOutEverywhereRow
             }
-            if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
-                NavigationLink(value: SettingsRoute.deleteAccount) {
+            if DeleteAccountModel.isOffered(to: app.account, kind: app.kind) || AppleDeleteAccountModel.isOffered(to: app.account, kind: app.kind) {
+                NavigationLink(value: SettingsRoute.deleteAccount(withPassword: app.kind.deletesWithPassword)) {
                     QBankListRow("Delete account", showsChevron: true, isDestructive: true)
                 }
                 .buttonStyle(.qbankRow)

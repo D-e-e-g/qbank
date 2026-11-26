@@ -105,6 +105,32 @@ public final class LocalStore: Sendable {
         held.withLock { $0 }
     }
 
+    // MARK: Erasing
+
+    /// Erases the bank of `key` under `Application Support/QBankKit/Banks/<key>/`: its folder, with
+    /// the bank file and anything kept beside it. Only deleting the account does this. A bank that
+    /// is not there is already erased. Close a bank of `key` that is open first.
+    public static func erase(key: String) throws(StoreError) {
+        let root: URL
+        do {
+            root = try FileLocations.applicationSupport()
+        } catch {
+            throw .storage(operation: error.operation, reason: error.reason)
+        }
+        try erase(key: key, in: root)
+    }
+
+    /// Erases the bank of `key` under `root/Banks/<key>/`, as `erase(key:)` does.
+    public static func erase(key: String, in root: URL) throws(StoreError) {
+        let directory = try StoreFiles.directory(forKey: key, in: root)
+        guard FileManager.default.fileExists(atPath: directory.path) else { return }
+        do {
+            try FileManager.default.removeItem(at: directory)
+        } catch {
+            throw .storage(operation: "erase the bank", reason: error.localizedDescription)
+        }
+    }
+
     // MARK: Using
 
     /// The schema step the file is at.

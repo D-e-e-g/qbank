@@ -22,13 +22,20 @@ public struct StoredSession: Codable, Sendable, Equatable {
     /// The Sign in with Apple to send the server again, while it has not answered one. Nil once the
     /// server answered, and once a try showed the same one cannot be sent again.
     public let unsent: AppleSignInRequest?
+    /// How far deleting this account has come on this phone, once the person confirmed it with Apple.
+    /// Nil until then. It goes with the session when the session is forgotten, the delete's last step.
+    public let deletion: AccountDeletionStep?
 
-    public init(token: String, expiresAt: Date? = nil, account: Account? = nil, appleUser: String? = nil, unsent: AppleSignInRequest? = nil) {
+    public init(
+        token: String, expiresAt: Date? = nil, account: Account? = nil, appleUser: String? = nil, unsent: AppleSignInRequest? = nil,
+        deletion: AccountDeletionStep? = nil
+    ) {
         self.token = token
         self.expiresAt = expiresAt
         self.account = account
         self.appleUser = appleUser
         self.unsent = unsent
+        self.deletion = deletion
     }
 
     /// Apple confirmed a sign-in on this phone and QBank's server has not: there is no session on the
