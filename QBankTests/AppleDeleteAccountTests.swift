@@ -169,6 +169,47 @@ struct AppleDeleteAccountTests {
         #expect(defaults.data(forKey: WriteDraftStore.key(for: Account.store().id)) == nil)
     }
 
+    /// A Cloud account's bank is the server's; the file this phone kept from before the move is a
+    /// safety copy, and it goes with the record that says the bank moved, so nothing of it is left.
+    @Test func aCloudAccountsDeleteErasesTheSafetyCopyAndItsRecord() async throws {
+        let log = DeletionLog()
+        let banks = loggedBanks(log)
+        try banks.handover(TestApp.appleUser).save(BankHandover(authority: .cloud, movedToCloudAt: .now))
+        let server = StubServer(["GET /api/session": Self.liveSession, "DELETE /api/me": Self.deleted])
+        let store = LoggedSessionStore(StoredSession(token: TestApp.token, account: .store(), appleUser: TestApp.appleUser), log: log)
+        let app = Self.model(
+            server: server, store: store, banks: banks, storage: .memory(), defaults: TestApp.freshDefaults(), apple: Apple(log: log), log: log)
+        #expect(app.kind == .store)
+        #expect(app.bank == nil)
+        let start = log.steps.count
+        await AppleDeleteAccountModel(app: app).delete(over: nil)
+
+        #expect(steps(log, from: start) == ["GET /api/session", "apple", "erase bank", "DELETE /api/me", "clear keychain"])
+        #expect(app.route == .signedOut)
+        #expect(try banks.handover(TestApp.appleUser).load() == .onPhone)
+    }
+
+    /// Moving the bank to QBank Cloud writes its record beside it, which would bring back what the
+    /// delete erases: no move begins while a delete runs.
+    @Test func noMoveToCloudBeginsWhileADeleteRuns() async throws {
+        let phone = try await freePhone()
+        phone.server.hold("GET /api/session")
+        let deleting = Task { await AppleDeleteAccountModel(app: phone.app).delete(over: nil) }
+        try await waitUntil { phone.server.calls.contains("GET /api/session") }
+
+        #expect(phone.app.kind == .free)
+        #expect(phone.app.bank != nil)
+        await phone.app.cloudMove.start()
+        #expect(!phone.app.cloudMove.isShown)
+        #expect(!phone.server.calls.contains("PUT /api/me/bank"))
+        #expect(try phone.banks.handover(TestApp.appleUser).load() == .onPhone)
+
+        phone.server.release("GET /api/session")
+        await deleting.value
+        #expect(phone.app.route == .signedOut)
+        #expect(phone.log.count("erase bank") == 1)
+    }
+
     // MARK: A failure after the erase
 
     @Test func aDeleteThatFailsAfterTheEraseIsFinishedByTryingAgainWithoutErasingTwice() async throws {

@@ -544,11 +544,12 @@ final class AppModel {
     // MARK: Moving the bank to QBank Cloud
 
     /// The move of the bank on this phone to QBank Cloud, for a free account, with the bank's key; nil
-    /// for any other. The archive goes up the way the account's own requests go, so a phone whose Sign
-    /// in with Apple the server has not confirmed yet sends nothing, and that move fails at once with
-    /// nothing changed.
+    /// for any other, and while the account is being deleted, whose erase the move would undo by
+    /// writing the bank's record again. The archive goes up the way the account's own requests go, so
+    /// a phone whose Sign in with Apple the server has not confirmed yet sends nothing, and that move
+    /// fails at once with nothing changed.
     func bankMove() -> (move: BankMoveToCloud, key: String)? {
-        guard kind == .free, let phoneBank, let record = try? banks.handover(phoneBank.key) else { return nil }
+        guard kind == .free, !isDeletingAccount, let phoneBank, let record = try? banks.handover(phoneBank.key) else { return nil }
         let client = self.client
         let move = BankMoveToCloud(bank: phoneBank.bank, record: record) { archive throws(QBankError) in
             try await client.uploadBank(archive)
