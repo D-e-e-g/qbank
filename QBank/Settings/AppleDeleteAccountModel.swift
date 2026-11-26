@@ -16,10 +16,14 @@ final class AppleDeleteAccountModel {
     /// Where the account's bank is, as it was when the screen opened, so the words stay while
     /// signing out fades the screen away.
     private let bankIsOnPhone: Bool
+    /// True when the screen opened to finish a delete, so it stays that screen while signing out
+    /// fades it away.
+    private let opensFinishing: Bool
 
     init(app: AppModel) {
         self.app = app
         bankIsOnPhone = app.kind.bankIsOnPhone
+        opensFinishing = app.isFinishingDeletion
     }
 
     /// Settings offers it to a store account, which has no password. The admin is never one.
@@ -40,7 +44,7 @@ final class AppleDeleteAccountModel {
 
     /// True once this phone's copy is erased, or being erased: finishing the delete or signing out is offered.
     var isFinishing: Bool {
-        app.isFinishingDeletion
+        opensFinishing || app.isFinishingDeletion
     }
 
     /// What the screen says: what goes, for where this account's bank is, or what is left to finish.
@@ -63,7 +67,7 @@ final class AppleDeleteAccountModel {
     /// Leaves a delete to finish without finishing it: the session and the record of the delete are
     /// forgotten, and the account stays on QBank's server until the person signs in and deletes it.
     func signOut() async {
-        guard isFinishing, !isDeleting else { return }
+        guard app.isFinishingDeletion, !isDeleting else { return }
         await app.signOut()
     }
 }

@@ -75,12 +75,14 @@ final class AppModel {
     /// it has not confirmed. Nil when nothing was heard yet.
     private(set) var serverSignInProblem: String?
     /// Why the last try to delete a store account stopped after this phone's copy was erased, or while
-    /// it was, for the screen that finishes it. Nil when none did.
+    /// it was, for the screen that finishes it. Nil when none did. Kept past the sign-out that ends
+    /// the delete, so the finishing screen says it until it is gone.
     private(set) var deletionProblem: String?
     /// True while a store account's delete runs, from the server's check to its last step, so every
     /// screen shows it under way and a second one never begins.
     private(set) var isDeletingAccount = false
-    /// True once a delete to finish has erased this phone's copy of the account.
+    /// True once a delete to finish has erased this phone's copy of the account. Kept past the
+    /// sign-out that ends the delete, so the finishing screen says it until it is gone.
     private(set) var phoneCopyErased = false
     /// Who asks Apple to sign the person in.
     let appleSignIn: any AppleSignInProvider
@@ -620,7 +622,7 @@ final class AppModel {
     /// Sign in with Apple, then deletes (`deleteAccount(confirmedWith:nonce:)`). Closing Apple's sheet
     /// says nothing and deletes nothing. A delete already under way is not begun again.
     func deleteAccountWithApple(over window: UIWindow?) async throws(DeletionStop) {
-        guard !isDeletingAccount else { return }
+        guard !isDeletingAccount, account != nil else { return }
         isDeletingAccount = true
         deletionProblem = nil
         defer { isDeletingAccount = false }
@@ -716,6 +718,7 @@ final class AppModel {
         phoneBank = nil
         client = server
         connection = network
+        phoneCopyErased = false
         route = .finishingDeletion(account)
         await saved?.close()
         do {
@@ -803,8 +806,6 @@ final class AppModel {
 
     private func forgetSession(reason: String?) {
         signedOutReason = reason
-        deletionProblem = nil
-        phoneCopyErased = false
         pickedPalette = nil
         paletteProblem = nil
         temporaryPassword = nil

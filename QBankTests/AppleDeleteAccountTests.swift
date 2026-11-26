@@ -326,6 +326,32 @@ struct AppleDeleteAccountTests {
         #expect(relaunched.route == .signedOut)
     }
 
+    /// Signing out fades the finishing screen away: until it is gone it stays the finishing screen,
+    /// with its words, its reason and its Sign out, and a tap on it then begins nothing.
+    @Test func theFinishingScreenStaysItselfWhileSigningOutFadesItAway() async throws {
+        let phone = try await freePhone()
+        let unavailable = "Sign in with Apple is not available yet."
+        phone.server.script("DELETE /api/me", [.error(503, "apple_sign_in_unavailable", unavailable)])
+        phone.server["POST /api/sign-out"] = .ok(#"{"status":"ok"}"#)
+        await AppleDeleteAccountModel(app: phone.app).delete(over: nil)
+        let finishing = AppleDeleteAccountModel(app: phone.app)
+        let reason = finishing.problem
+
+        await finishing.signOut()
+        #expect(phone.app.route == .signedOut)
+        #expect(finishing.isFinishing, "the Sign out stays on the fading screen")
+        #expect(finishing.message.hasPrefix("Everything QBank kept on this \(Device.model) is erased"))
+        #expect(reason != nil)
+        #expect(finishing.problem == reason)
+
+        let calls = phone.server.calls.count
+        await finishing.delete(over: nil)
+        await finishing.signOut()
+        #expect(phone.server.calls.count == calls)
+        #expect(phone.apple.asked.count == 1)
+        #expect(phone.app.signedOutReason == nil)
+    }
+
     @Test func signOutIsOfferedOnlyToFinishADelete() async throws {
         let phone = try await freePhone()
         phone.server["POST /api/sign-out"] = .ok(#"{"status":"ok"}"#)
