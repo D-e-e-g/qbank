@@ -15,8 +15,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 OUTPUT=docs/app-store-screenshots
-# Apple's customary 9:41 and January 9; an iPad's status bar shows the date too.
-STATUS_TIME="2007-01-09T09:41:00.000"
+# Apple's customary 9:41 on January 9. An iPad's status bar shows the date too,
+# and over this app it names January 9 a Sunday whatever the year, so the year
+# is one whose January 9 is a Sunday.
+STATUS_TIME="2022-01-09T09:41:00.000"
 
 usage() {
   sed -n '7p' "$0" | sed 's/^# //' >&2
