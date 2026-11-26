@@ -38,6 +38,8 @@ final class DeleteAccountUITests: XCTestCase {
 
         app.buttons["deleteAccount.delete"].tap()
         XCTAssertTrue(app.staticTexts["signIn.title"].appears(timeout: 10))
+        // The delete's screens fade out over sign-in and take a tap until they are gone.
+        XCTAssertTrue(app.staticTexts["deleteAccount.message"].disappears(timeout: 10))
         attach(app, "delete account, free, deleted")
 
         // The same Apple Account signs in to a new account, whose bank is empty: the topic went with the old one.
