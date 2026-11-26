@@ -105,16 +105,17 @@ private struct RouteChange: Transition {
 
 private extension AppModel {
     /// Which screen the route shows: one for each route, and for a signed-in account one for each
-    /// sign-in, kind of account and phone key. A new sign-in starts from fresh screens, even one made
-    /// while the screens of the same account's sign-out still fade. The server confirming a Sign in
-    /// with Apple keeps them: the person, and so the phone's key, is the same. A bank that moved to
-    /// QBank Cloud starts them afresh too, under the move's screen, so each reads the bank where it is
-    /// now.
+    /// sign-in, kind of account, phone key and bank revision. A new sign-in starts from fresh screens,
+    /// even one made while the screens of the same account's sign-out still fade. The server
+    /// confirming a Sign in with Apple keeps them: the person, and so the phone's key, is the same. A
+    /// bank that moved to QBank Cloud starts them afresh too, under the move's screen, so each reads
+    /// the bank where it is now, and so does a bank that another file took the place of, or that sets
+    /// were added to under a screen over the app.
     var screen: String {
         switch route {
         case .signedOut: "signed out"
         case .choosingPassword: "choosing password"
-        case .signedIn(let account): "signed in \(phoneKey ?? account.id) \(signIns) \(kind.rawValue)"
+        case .signedIn(let account): "signed in \(phoneKey ?? account.id) \(signIns) \(kind.rawValue) \(bankRevision)"
         case .finishingDeletion: "finishing deletion"
         }
     }

@@ -69,6 +69,10 @@ final class AppModel {
     /// Counts sign-ins on this phone, so each starts from fresh screens, even for the account that
     /// just signed out.
     private(set) var signIns = 0
+    /// Counts the times the bank in use changed under the screens without a sign-in or a change of
+    /// kind: another bank file took its place, or sets were added to it from an earlier copy, so the
+    /// screens start afresh and read it as it is now.
+    private(set) var bankRevision = 0
 
     /// The client every screen talks through: the bank on this phone for a free account, else the server.
     private(set) var client: QBankClient
@@ -706,6 +710,7 @@ final class AppModel {
             let bank = LocalBank(store: store)
             phoneBank = OpenBank(key: key, bank: bank)
             client = server.routingBank(to: bank)
+            bankChanged()
             return
         }
         guard kind == .store, cloudBankKey == key, let account else { return }
@@ -722,6 +727,11 @@ final class AppModel {
         if (try? await HandBackAnswers.keep(kept.waiting, in: store, through: server)) != nil {
             storage.erase(account.id)
         }
+    }
+
+    /// The bank in use holds something new that the screens did not read: they start afresh.
+    func bankChanged() {
+        bankRevision += 1
     }
 
     /// Ends the session on the server and on this phone. The phone forgets it even without signal,

@@ -138,9 +138,11 @@ struct CloudAdoptTests {
         let offered = try phone.record.load().offeredSets
         server["GET /api/semesters"] = .ok(Bodies.semesters([], topics: []))
         server[Self.imports] = .offline
+        let revision = app.bankRevision
 
         await app.cloudAdopt.add()
 
+        #expect(app.bankRevision == revision, "nothing was added, so the screens stay as they are")
         #expect(app.cloudAdopt.phase == .addFailed("No connection. Check Wi-Fi or cellular data and try again.", allAdded: false))
         #expect(try phone.record.load().offeredSets == offered, "the set that did not go is still offered")
         app.cloudAdopt.close()
@@ -304,12 +306,14 @@ struct CloudAdoptTests {
         #expect(!topics.contains { $0.title == "Geography" }, "nothing is added on its own")
         let sets = try phone.summary(of: record.bankFile).sets
         let before = server.calls.count
+        let revision = app.bankRevision
 
         app.cloudAdopt.offerSets()
         #expect(app.cloudAdopt.phase == .offering(try #require(app.phoneOffer()).sets))
         await app.cloudAdopt.add()
 
         #expect(app.cloudAdopt.phase == .added(2))
+        #expect(app.bankRevision != revision, "the screens under the cover start afresh on the bank with the sets added")
         let geography = try await app.client.catalog().topics.filter { $0.title == "Geography" }
         #expect(geography.count == 1, "the two sets of one topic go into one")
         #expect(geography.first?.questionCount == 2, "both sets, one question each")

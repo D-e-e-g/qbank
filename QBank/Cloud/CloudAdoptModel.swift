@@ -173,6 +173,7 @@ final class CloudAdoptModel {
         let client = app.client
         var remaining = offer.ids
         var added = 0
+        defer { if added > 0 { app.bankChanged() } }
         var noted = true
         var problem: String?
         do {

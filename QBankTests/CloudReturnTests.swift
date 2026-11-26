@@ -271,8 +271,11 @@ struct CloudReturnTests {
         let app = try await newDeviceAfterCloudEnded(phone, server)
         let earlier = try phone.bytes()
         let since = server.calls.count
+        let revision = app.bankRevision
 
         await app.cloudReturn.start()
+
+        #expect(app.bankRevision != revision, "the kind and key stay the same, and the screens start afresh on the bank that came down all the same")
 
         #expect(app.cloudReturn.phase == .returned(BankSummary(sets: 1, questions: 1, answers: 0)))
         let record = try phone.record.load()
