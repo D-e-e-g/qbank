@@ -15,6 +15,12 @@ import QBankKit
 /// QBank's server cannot answer after Apple said yes, the bank opens all the same and the sign-in is
 /// sent again later (`awaitsServer`). A session kept from before Sign in with Apple is an invited
 /// account's and opens signed in, on the server, as it did.
+///
+/// A store account's bank moves to QBank Cloud once Cloud is on (`cloudMove`). Where it is, the
+/// phone or QBank Cloud, is what the record beside the bank says (`BankHandover`), never the Cloud
+/// state alone: a store account whose bank moved is `.store`, on the server, and the bank file on this
+/// phone stays as it was, a safety copy that is not even opened. A move the app was closed during is
+/// found at launch, with the bank's writes held, and finished before anything else.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -85,6 +91,8 @@ final class AppModel {
     let frozen = FrozenView()
     /// QBank Cloud for a store account: whether it is on, as QBank's server says, and buying it.
     let cloud: CloudModel
+    /// Moving the bank on this phone to QBank Cloud, and the screen that shows the move.
+    let cloudMove = CloudMoveModel()
     /// Saved courses and unsent answers for the account on this phone. Nil when signed out.
     private(set) var offline: OfflineStore?
 
@@ -93,6 +101,9 @@ final class AppModel {
     var bank: LocalBank? { kind.bankIsOnPhone ? phoneBank?.bank : nil }
     /// The bank opened last, kept open while it is the one in use.
     private var phoneBank: OpenBank?
+    /// Apple's id of the person whose bank is in QBank Cloud, while their store account is signed in:
+    /// the key of their safety copy on this phone, which names what this phone keeps for them.
+    private var cloudBankKey: String?
     private let banks: PhoneBanks
     private let sampleSet: String?
     /// The client that talks to the server, and the phone's network path it follows.
@@ -105,6 +116,15 @@ final class AppModel {
     private struct OpenBank {
         let key: String
         let bank: LocalBank
+    }
+
+    /// Where a store account's bank is, as the record beside it says.
+    private enum StoreBank {
+        /// On this phone, open. `moveLeftOpen` when the app was closed during a move of it, whose lease
+        /// the record still holds: the bank's writes are held until that move ends.
+        case onPhone(LocalBank, moveLeftOpen: Bool)
+        /// In QBank Cloud. The bank file on this phone is a safety copy, and it is not opened.
+        case inCloud
     }
 
     /// `client` talks to the server. The session it keeps decides where the bank is: a store account
@@ -143,16 +163,27 @@ final class AppModel {
         self.networkWatcher = networkWatcher
         let stored = try? client.storedSession()
         var opened: OpenBank?
+        var inCloud: String?
+        var moveLeftOpen = false
         var reason: String?
         var start = Route.signedOut
         if let stored, let account = stored.account {
             if account.origin == .store {
-                // A store account's bank is on this phone, named by Apple's id of the person. One that
-                // cannot open is not replaced by an empty one: signing in again finds it.
-                if let key = stored.appleUser, let bank = try? Self.openBank(key, from: banks, sampleSet: sampleSet) {
-                    opened = OpenBank(key: key, bank: bank)
+                // A store account's bank is named by Apple's id of the person: on this phone, or in
+                // QBank Cloud. One that cannot open is not replaced by an empty one: signing in again
+                // finds it.
+                switch stored.appleUser.flatMap({ try? Self.storeBank($0, from: banks, sampleSet: sampleSet) }) {
+                case .onPhone(let bank, let leftOpen)?:
+                    opened = stored.appleUser.map { OpenBank(key: $0, bank: bank) }
+                    moveLeftOpen = leftOpen
                     start = .signedIn(account)
-                } else {
+                case .inCloud? where stored.awaitsServer:
+                    // A bank in QBank Cloud needs the server, which has not confirmed this sign-in.
+                    reason = AppleSignInWording.bankInCloudNeedsServer
+                case .inCloud?:
+                    inCloud = stored.appleUser
+                    start = .signedIn(account)
+                case nil:
                     reason = AppleSignInWording.bankDidNotOpen
                 }
             } else {
@@ -160,7 +191,8 @@ final class AppModel {
             }
         }
         phoneBank = opened
-        kind = opened == nil ? .invited : .free
+        cloudBankKey = inCloud
+        kind = opened != nil ? .free : inCloud != nil ? .store : .invited
         let waiting = opened != nil && stored?.awaitsServer == true
         awaitsServer = waiting
         needsAppleSignInAgain = waiting && stored?.unsent == nil
@@ -178,6 +210,8 @@ final class AppModel {
         frozen.isOn = account?.role == .admin
         cloud.app = self
         cloud.follow(account?.id)
+        cloudMove.app = self
+        if moveLeftOpen { cloudMove.foundLeftOpen() }
         network.onChange = { [weak self] isOnline in
             self?.offline?.connectionChanged(isOnline: isOnline)
             guard isOnline, self?.awaitsServer == true else { return }
@@ -197,8 +231,10 @@ final class AppModel {
     /// confirms a sign-in it had not; for any other account its id.
     var phoneKey: String? {
         guard let account else { return nil }
-        guard kind.bankIsOnPhone, let phoneBank else { return account.id }
-        return phoneBank.key
+        if kind.bankIsOnPhone, let phoneBank { return phoneBank.key }
+        // The same person, after their bank moved to QBank Cloud: their key stays, and so do their drafts.
+        if kind == .store, let cloudBankKey { return cloudBankKey }
+        return account.id
     }
 
     /// The color scheme the screens are drawn in: her account's, which follows it to every device,
@@ -267,6 +303,7 @@ final class AppModel {
     /// After a sign-in with her password, which only an invited account has: its bank is on the server.
     func signedIn(_ signedIn: SignedIn, password: String) {
         kind = .invited
+        cloudBankKey = nil
         client = server
         connection = network
         signIns += 1
@@ -355,17 +392,29 @@ final class AppModel {
     /// phone keeps the screens as they are.
     private func appleSignedIn(_ signedIn: SignedIn, appleUser: String) async -> AppleSignInOutcome {
         let isConfirming = awaitsServer && phoneKey == appleUser && signedIn.user.origin == .store
+        var moveLeftOpen = false
         if signedIn.user.origin == .store {
-            guard let bank = try? openBank(appleUser) else {
+            switch try? storeBank(appleUser) {
+            case .onPhone(let bank, let leftOpen)?:
+                kind = .free
+                cloudBankKey = nil
+                client = server.routingBank(to: bank)
+                connection = Connection.onThisPhone()
+                moveLeftOpen = leftOpen
+            case .inCloud?:
+                // The person's bank moved to QBank Cloud: it is the server's, as an invited account's is.
+                kind = .store
+                cloudBankKey = appleUser
+                client = server
+                connection = network
+            case nil:
                 // The server's session is of no use without the bank: end it, and say why.
                 try? await server.signOut()
                 return .refused(AppleSignInWording.bankDidNotOpen, emailDoor: nil)
             }
-            kind = .free
-            client = server.routingBank(to: bank)
-            connection = Connection.onThisPhone()
         } else {
             kind = .invited
+            cloudBankKey = nil
             client = server
             connection = network
         }
@@ -375,6 +424,7 @@ final class AppModel {
         temporaryPassword = nil
         if !isConfirming { beginSignIn() }
         route = Self.route(for: signedIn.user)
+        if moveLeftOpen { cloudMove.foundLeftOpen() }
         return .signedIn
     }
 
@@ -385,7 +435,17 @@ final class AppModel {
         let samePerson = awaitsServer && phoneKey == credential.user ? account : nil
         let account =
             samePerson ?? Account(id: credential.user, email: credential.email ?? "", name: "", role: .student, mustChangePassword: false, origin: .store)
-        guard let bank = try? openBank(credential.user) else {
+        let bank: LocalBank
+        let moveLeftOpen: Bool
+        switch try? storeBank(credential.user) {
+        case .onPhone(let opened, let leftOpen)?:
+            bank = opened
+            moveLeftOpen = leftOpen
+        case .inCloud?:
+            // The person's bank is in QBank Cloud, which this phone cannot reach yet; the safety copy
+            // on this phone is never opened in its place.
+            return .refused(AppleSignInWording.bankInCloudNeedsServer, emailDoor: nil)
+        case nil:
             return .refused(AppleSignInWording.bankDidNotOpen, emailDoor: nil)
         }
         do {
@@ -394,6 +454,7 @@ final class AppModel {
             return .refused(Wording.problem(error) ?? AppleSignInWording.appleDidNotFinish, emailDoor: nil)
         }
         kind = .free
+        cloudBankKey = nil
         client = server.routingBankWithoutServer(to: bank)
         connection = Connection.onThisPhone()
         awaitsServer = true
@@ -402,6 +463,7 @@ final class AppModel {
         temporaryPassword = nil
         if samePerson == nil { beginSignIn() }
         route = .signedIn(account)
+        if moveLeftOpen { cloudMove.foundLeftOpen() }
         return .awaitingServer
     }
 
@@ -414,22 +476,64 @@ final class AppModel {
         lock.signedIn()
     }
 
-    /// The bank of `key`, opened once and kept open while it is the one in use.
-    private func openBank(_ key: String) throws -> LocalBank {
-        if let phoneBank, phoneBank.key == key { return phoneBank.bank }
-        let bank = try Self.openBank(key, from: banks, sampleSet: sampleSet)
-        phoneBank = OpenBank(key: key, bank: bank)
-        return bank
+    /// Where the bank of `key` is. One on this phone is opened once and kept open while it is the one
+    /// in use.
+    private func storeBank(_ key: String) throws -> StoreBank {
+        if let phoneBank, phoneBank.key == key { return .onPhone(phoneBank.bank, moveLeftOpen: phoneBank.bank.holdsWrites) }
+        let place = try Self.storeBank(key, from: banks, sampleSet: sampleSet)
+        if case .onPhone(let bank, _) = place {
+            phoneBank = OpenBank(key: key, bank: bank)
+        }
+        return place
     }
 
-    /// A bank that has never held anything is given the sample set. The sample is a nicety: a bank
-    /// that refuses it simply starts empty.
-    private static func openBank(_ key: String, from banks: PhoneBanks, sampleSet: String?) throws -> LocalBank {
+    /// Where the bank of `key` is, as the record beside it says, without opening a bank that is in
+    /// QBank Cloud. A bank on this phone that has never held anything is given the sample set; the sample
+    /// is a nicety, and a bank that refuses it simply starts empty. A bank a move left open is not given
+    /// it, nor anything else: its writes are held at once, until that move ends.
+    private static func storeBank(_ key: String, from banks: PhoneBanks, sampleSet: String?) throws -> StoreBank {
+        let handover = try banks.handover(key).load()
+        if handover.authority == .cloud { return .inCloud }
         let bank = try banks.open(key)
+        if handover.lease != nil {
+            bank.holdWrites()
+            return .onPhone(bank, moveLeftOpen: true)
+        }
         if let sampleSet {
             _ = try? bank.fileSampleSet(sampleSet, inTopic: SampleSet.topic)
         }
-        return bank
+        return .onPhone(bank, moveLeftOpen: false)
+    }
+
+    // MARK: Moving the bank to QBank Cloud
+
+    /// The move of the bank on this phone to QBank Cloud, for a free account, with the bank's key; nil
+    /// for any other. The archive goes up the way the account's own requests go, so a phone whose Sign
+    /// in with Apple the server has not confirmed yet sends nothing, and that move fails at once with
+    /// nothing changed.
+    func bankMove() -> (move: BankMoveToCloud, key: String)? {
+        guard kind == .free, let phoneBank, let record = try? banks.handover(phoneBank.key) else { return nil }
+        let client = self.client
+        let move = BankMoveToCloud(bank: phoneBank.bank, record: record) { archive throws(QBankError) in
+            try await client.uploadBank(archive)
+        }
+        return (move, phoneBank.key)
+    }
+
+    /// After a move whose counts matched recorded that the bank is QBank Cloud's: the account is on the
+    /// server from now on, with saved copies and waiting answers as any account there has, and the
+    /// bank file on this phone is left as it was, its writes held. The same person stays signed in, and
+    /// keeps their key, so what this phone keeps for them, such as the sets they are writing, stays.
+    /// Changes nothing when the bank of `key` is no longer the one open, as after a sign-out during
+    /// the move: the record beside it already says where it is for the next sign-in.
+    func bankMovedToCloud(_ key: String) {
+        guard kind == .free, let phoneBank, phoneBank.key == key else { return }
+        cloudBankKey = key
+        self.phoneBank = nil
+        kind = .store
+        client = server
+        connection = network
+        openOffline()
     }
 
     /// Ends the session on the server and on this phone. The phone forgets it even without signal,
@@ -525,8 +629,10 @@ final class AppModel {
         needsAppleSignInAgain = false
         serverSignInProblem = nil
         kind = .invited
+        cloudBankKey = nil
         client = server
         connection = network
+        cloudMove.reset()
         route = .signedOut
     }
 

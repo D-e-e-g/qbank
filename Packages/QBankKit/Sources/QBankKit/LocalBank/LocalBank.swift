@@ -13,6 +13,7 @@ import FoundationNetworking
 /// The bank does not check the bearer token: a file on the phone is already the signed-in
 /// person's (`docs/on-phone-bank.md`). It reads the time from the clock it was given and takes
 /// every id from the generator it was given, so a test sets both. A free account's model uses it, behind `BankRoutedTransport`.
+/// While its store holds writes, for a move to QBank Cloud, every write is refused as `bank_moving`.
 public final class LocalBank: HTTPTransport {
     /// Where the bank reads the time.
     public typealias Clock = @Sendable () -> Date
@@ -58,6 +59,16 @@ public final class LocalBank: HTTPTransport {
         try BankArchive.write(from: store, at: clock())
     }
 
+    /// Refuses every write from now on, as `bank_moving`, while the bank moves to QBank Cloud; reads
+    /// go on (`LocalStore.holdWrites()`). A move holds it itself; the app holds it at launch too, when
+    /// it finds a move the app was closed during, so nothing changes the bank before that move ends.
+    public func holdWrites() {
+        store.holdWrites()
+    }
+
+    /// Whether the bank refuses writes because it is moving.
+    public var holdsWrites: Bool { store.holdsWrites }
+
     /// A random lowercase UUID. Swift's `uuidString` is uppercase.
     public static let randomID: IDGenerator = { UUID().uuidString.lowercased() }
 
@@ -72,6 +83,8 @@ public final class LocalBank: HTTPTransport {
             answer = try respond(method: method, url: url, body: request.httpBody)
         } catch let refusal as BankRefusal {
             answer = BankAnswer(status: refusal.status, body: refusal.body)
+        } catch StoreError.writesHeld {
+            answer = BankAnswer(status: BankRefusal.moving.status, body: BankRefusal.moving.body)
         } catch {
             answer = BankAnswer(status: BankRefusal.failed.status, body: BankRefusal.failed.body)
         }

@@ -6,7 +6,8 @@ import UIKit
 /// The plans sheet: what QBank Cloud is, each plan's name, period and price as the App Store gives
 /// them, the sentence on renewing, the privacy policy and the terms of use, and Restore purchases.
 /// Once QBank's server says Cloud is on, the sheet says so, with Manage subscription, in place of the
-/// plans.
+/// plans, and where the bank is. A purchase or Restore that turns Cloud on with the bank on this phone
+/// closes the sheet, and the bank's move to QBank Cloud starts over the app (`CloudMoveModel`).
 struct CloudPlansView: View {
     let app: AppModel
     @Environment(\.dismiss) private var dismiss
@@ -78,6 +79,10 @@ struct CloudPlansView: View {
         }
         .webPageSheet($openPage)
         .task { await cloud.loadPlans() }
+        .onAppear { app.cloudMove.plansOpened() }
+        .onChange(of: app.cloudMove.isDue) { _, isDue in
+            if isDue { dismiss() }
+        }
     }
 
     /// Each plan the App Store sells, while they load, or why they could not.
@@ -165,11 +170,32 @@ struct CloudPlansView: View {
                             .foregroundStyle(.qbank(.text2))
                             .accessibilityIdentifier("cloud.paidUntil")
                     }
+                    if let place = bankPlace {
+                        Text(place)
+                            .qbankFont(.subheadline)
+                            .foregroundStyle(.qbank(.text2))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("cloud.bankPlace")
+                    }
+                }
+                if app.cloudMove.isOffered {
+                    Button(CloudMoveWording.move) { app.cloudMove.ask() }
+                        .buttonStyle(.qbank(.primary, size: .large, fullWidth: true))
+                        .accessibilityIdentifier("cloud.move")
                 }
                 Button(CloudWording.manage, action: manage)
                     .buttonStyle(.qbank(.secondary, size: .large, fullWidth: true))
                     .accessibilityIdentifier("cloud.manage")
             }
+        }
+    }
+
+    /// Where the bank is, for a store account: on this phone until it moves, then in QBank Cloud.
+    private var bankPlace: String? {
+        switch app.kind {
+        case .free: CloudMoveWording.stillOnPhone
+        case .store: CloudMoveWording.inCloud
+        case .invited: nil
         }
     }
 

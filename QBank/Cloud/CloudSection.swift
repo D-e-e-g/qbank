@@ -1,8 +1,10 @@
 import QBankDesign
 import SwiftUI
 
-/// Settings' Cloud, for a store account: whether QBank Cloud is on, as QBank's server says, and the
-/// plans sheet. Shown only where `CloudModel.isOffered(to:)`.
+/// Settings' Cloud, for a store account: whether QBank Cloud is on, as QBank's server says, the plans
+/// sheet, and, while Cloud is on and the bank is still on this phone, moving it to QBank Cloud. Shown
+/// only where `CloudModel.isOffered(to:)`. A move a purchase or Restore in the sheet made due starts
+/// once the sheet has closed, so the move's screen never opens over it.
 struct CloudSection: View {
     let app: AppModel
     @State private var showsPlans = false
@@ -23,12 +25,25 @@ struct CloudSection: View {
             }
             .buttonStyle(.qbankRow)
             .accessibilityIdentifier("settings.cloud")
+            if app.cloudMove.isOffered {
+                Button {
+                    Task { await app.cloudMove.start() }
+                } label: {
+                    QBankListRow(CloudMoveWording.move, detail: CloudMoveWording.stillOnPhone, systemImage: "icloud.and.arrow.up")
+                }
+                .buttonStyle(.qbankRow)
+                .accessibilityIdentifier("settings.moveToCloud")
+            }
         }
-        .sheet(isPresented: $showsPlans) {
+        .sheet(isPresented: $showsPlans, onDismiss: plansClosed) {
             CloudPlansView(app: app)
         }
         .task {
             await app.cloud.refresh()
         }
+    }
+
+    private func plansClosed() {
+        Task { await app.cloudMove.plansClosed() }
     }
 }

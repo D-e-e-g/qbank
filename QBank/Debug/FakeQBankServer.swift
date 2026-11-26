@@ -139,6 +139,13 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         var takenAppleNonces: Set<String> = []
         /// Wrong passwords to delete an account, by email; the fifth locks deleting it.
         var wrongDeletePasswords: [String: Int] = [:]
+        /// Store accounts' banks uploaded to Cloud, by account id. Each answers its account's bank
+        /// requests from then on, as the server's copy does.
+        var cloudBanks: [String: LocalBank] = [:]
+        /// Store accounts that already have a bank on the server, which refuses an upload into them.
+        var bankHolders: Set<String> = []
+        /// How long the answer to an upload takes to arrive.
+        var uploadReplyDelay = Duration.zero
     }
 
     let state: Mutex<State>
@@ -270,6 +277,10 @@ nonisolated final class FakeQBankServer: HTTPTransport {
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         if isOffline { throw URLError(.notConnectedToInternet) }
+        // An account whose bank moved to Cloud is answered from that bank.
+        if let bank = cloudBank(answering: request) {
+            return try await bank.send(request)
+        }
         let url = request.url ?? URL(string: "https://fake.invalid")!
         if request.httpMethod == "POST", url.path().hasPrefix("/api/exams/"), url.path().hasSuffix("/finish"),
             finishesToDrop.withLock({ left in
@@ -292,6 +303,9 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         // A slow connection: the server has the answer or the Start over, and its reply is on its way.
         if saveReplyDelay > .zero, method == "POST", url.path() == "/api/attempts" || url.path().hasSuffix("/start-over") {
             try await Task.sleep(for: saveReplyDelay)
+        }
+        if method == "PUT", url.path() == "/api/me/bank" {
+            try await Task.sleep(for: state.withLock { $0.uploadReplyDelay })
         }
         // A lock says how long in its header too, as the server's does.
         if let retryAfter = body["retryAfterSeconds"] as? Int {
@@ -339,6 +353,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             return cloudStatus(of: account)
         case ("POST", "/api/me/cloud/transactions"):
             return recordCloudTransaction(body["signedTransaction"] as? String ?? "", for: account)
+        case ("PUT", "/api/me/bank"):
+            return storeBank(rawBody, for: account)
         default:
             break
         }

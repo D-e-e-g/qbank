@@ -718,6 +718,20 @@ public struct QBankClient: Sendable {
         try await sendForData(Request(.get, "/api/me/bank"))
     }
 
+    /// How long the upload of a whole bank may wait for the server, which checks every set before it
+    /// answers: longer than any other call.
+    public static let bankUploadTimeout: TimeInterval = 120
+
+    /// Stores `archive`, a whole bank as bank archive v1, as the account's bank on the server, and
+    /// returns the counts the server read back from the account once it was stored. The server writes
+    /// all of it or none, and only into an account with no bank yet and with Cloud. Every refusal stores
+    /// nothing: 400 `invalid_archive` with its `problems`, 403 `cloud_required`, 409 `bank_not_empty` or
+    /// `bank_ids_taken`, and 413 `archive_too_large`. The archive is sent as it is, byte for byte.
+    public func uploadBank(_ archive: Data) async throws(QBankError) -> BankCounts {
+        let stored: BankStored = try await send(Request(.put, "/api/me/bank", rawBody: archive, timeout: max(configuration.timeout, Self.bankUploadTimeout)))
+        return stored.counts
+    }
+
     // MARK: Cloud
 
     /// Whether the account has Cloud now, as the server decides it, with the token a store account buys
@@ -856,6 +870,11 @@ private struct StartOverResult: Decodable {
     let ended: Bool
 }
 
+/// The body of `PUT /api/me/bank`'s answer: what the account holds once the bank was stored.
+private struct BankStored: Decodable {
+    let counts: BankCounts
+}
+
 /// The body of `PUT /api/courses/{id}/folder-order`'s answer: one list's folders in the new order.
 private struct FolderList: Decodable {
     let folders: [Folder]
@@ -875,20 +894,28 @@ struct Request {
     let path: String
     let query: [(String, String)]
     let body: (any Encodable & Sendable)?
+    /// A JSON body sent byte for byte as it is, in place of an encoded `body`.
+    let rawBody: Data?
     let authenticated: Bool
+    /// How long this call may wait, when it is not the configuration's.
+    let timeout: TimeInterval?
 
     init(
         _ method: Method,
         _ path: String,
         query: [(String, String)] = [],
         body: (any Encodable & Sendable)? = nil,
-        authenticated: Bool = true
+        rawBody: Data? = nil,
+        authenticated: Bool = true,
+        timeout: TimeInterval? = nil
     ) {
         self.method = method
         self.path = path
         self.query = query
         self.body = body
+        self.rawBody = rawBody
         self.authenticated = authenticated
+        self.timeout = timeout
     }
 
     func urlRequest(configuration: APIConfiguration, token: String?) throws(QBankError) -> URLRequest {
@@ -904,14 +931,17 @@ struct Request {
         guard let url = components.url else {
             throw .invalidRequest("Bad path \(path)")
         }
-        var request = URLRequest(url: url, timeoutInterval: configuration.timeout)
+        var request = URLRequest(url: url, timeoutInterval: timeout ?? configuration.timeout)
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         // A Sign in with Apple the server has not answered has no token to send.
         if let token, !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        if let body {
+        if let rawBody {
+            request.httpBody = rawBody
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        } else if let body {
             do {
                 request.httpBody = try QBankJSON.encoder.encode(body)
             } catch {

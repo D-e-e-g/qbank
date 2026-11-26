@@ -7,7 +7,8 @@ public enum AccountKind: String, Codable, Sendable, CaseIterable {
     /// An account the owner set up: email and password, with the bank on the server, as before the
     /// store release.
     case invited
-    /// An account made by Sign in with Apple that has Cloud: the bank is on the server.
+    /// An account made by Sign in with Apple whose bank moved to QBank Cloud: the bank is on the
+    /// server, and the bank file this phone held before the move stays on it, unused, as a safety copy.
     case store
     /// An account made by Sign in with Apple with no Cloud: the bank is on this phone, which is its
     /// only authority and answers every bank request itself.

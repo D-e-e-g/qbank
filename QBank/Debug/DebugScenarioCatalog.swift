@@ -21,6 +21,8 @@ nonisolated enum DebugScenarioCatalog {
         .freeNewBank,
         .freeFirstLaunch,
         .storedSessionBeforeUpdate,
+        .cloudMoveLeftOpen,
+        .cloudMoveRefused,
     ]
 
     /// The scenario named `name`, or nil when none is.
