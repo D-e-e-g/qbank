@@ -350,6 +350,56 @@ struct CloudMoveTests {
         #expect(!FileManager.default.fileExists(atPath: phone.file.path))
     }
 
+    @Test func signingInWithAppleFinishesAMoveTheAppWasClosedDuring() async throws {
+        let phone = Phone()
+        defer { phone.remove() }
+        _ = try await free(on: phone, StubServer())
+        let before = try phone.bytes()
+        try phone.record.save(BankHandover.onPhone.leased(.init(direction: .toCloud, startedAt: .now)))
+        try phone.session.clear()
+        let server = StubServer(["POST /api/sign-in/apple": .ok(Bodies.appleSignedIn()), Self.upload: try phone.stored()])
+        let app = phone.launch(server)
+        #expect(app.route == .signedOut)
+
+        await AppleSignInModel(app: app).signIn(over: nil)
+
+        let counts = try phone.counts()
+        try await waitUntil { app.cloudMove.phase == .moved(counts) }
+        #expect(server.calls.contains(Self.upload))
+        #expect(app.kind == .store)
+        #expect(try phone.record.load().lease == nil)
+        #expect(try phone.bytes() == before)
+        app.cloudMove.close()
+        #expect(!app.cloudMove.isShown)
+    }
+
+    @Test func signingInWithAppleWhileTheServerCannotBeReachedGivesBackTheLeaseOfAMoveTheAppWasClosedDuring() async throws {
+        let phone = Phone()
+        defer { phone.remove() }
+        _ = try await free(on: phone, StubServer())
+        let before = try phone.bytes()
+        try phone.record.save(BankHandover.onPhone.leased(.init(direction: .toCloud, startedAt: .now)))
+        try phone.session.clear()
+        let server = StubServer(["POST /api/sign-in/apple": .offline])
+        let app = phone.launch(server)
+
+        await AppleSignInModel(app: app).signIn(over: nil)
+
+        #expect(app.awaitsServer)
+        try await waitUntil { !app.cloudMove.isMoving && app.cloudMove.phase != .idle }
+        guard case .failed = app.cloudMove.phase else {
+            Issue.record("the move ends in a failure, not \(app.cloudMove.phase)")
+            return
+        }
+        #expect(!server.calls.contains(Self.upload))
+        #expect(app.kind == .free)
+        #expect(try phone.record.load() == .onPhone)
+        #expect(try phone.bytes() == before)
+        app.cloudMove.close()
+        #expect(!app.cloudMove.isShown)
+        _ = try await app.client.createTopic(title: "Invented Botany")
+    }
+
     // MARK: Words
 
     @Test func theStepsSayWhatTheyDoWithoutSoundingLikeTheBankIsOverwritten() {

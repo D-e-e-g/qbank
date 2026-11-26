@@ -424,7 +424,10 @@ final class AppModel {
         temporaryPassword = nil
         if !isConfirming { beginSignIn() }
         route = Self.route(for: signedIn.user)
-        if moveLeftOpen { cloudMove.foundLeftOpen() }
+        if moveLeftOpen {
+            cloudMove.foundLeftOpen()
+            Task { await cloudMove.finishLeftOpen() }
+        }
         return .signedIn
     }
 
@@ -463,7 +466,10 @@ final class AppModel {
         temporaryPassword = nil
         if samePerson == nil { beginSignIn() }
         route = .signedIn(account)
-        if moveLeftOpen { cloudMove.foundLeftOpen() }
+        if moveLeftOpen {
+            cloudMove.foundLeftOpen()
+            Task { await cloudMove.finishLeftOpen() }
+        }
         return .awaitingServer
     }
 
