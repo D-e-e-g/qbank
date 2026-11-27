@@ -42,12 +42,16 @@ final class AppModel {
 
     private(set) var route: Route {
         didSet {
+            routeChanges += 1
             openOffline()
             drafts.open(accountID: phoneKey)
             frozen.isOn = account?.role == .admin
             cloud.follow(account?.id)
         }
     }
+    /// Counts the route's changes, so a screen the route left stays in front of the screens that
+    /// came after it while it fades out.
+    private(set) var routeChanges = 0
     /// Said on the sign-in screen after the server ended the session.
     private(set) var signedOutReason: String?
     /// The password she just signed in with, offered on the choose-a-new-password screen.
