@@ -89,7 +89,10 @@ struct BankOfferTests {
                 courses: [
                     course("c-archived", code: "NURS 101", title: "Invented Nursing", archived: true),
                     course("c1", code: "NURS 101", title: "Invented Nursing"),
-                ])
+                ]),
+            Semester(
+                id: "s3", number: 3, name: "Semester 3", startsOn: nil, endsOn: nil,
+                courses: [course("c3-archived", code: "NURS 301", title: "Invented Pharmacology", archived: true)]),
         ],
         topics: [course("t-archived", kind: .topic, title: "History", archived: true), course("t1", kind: .topic, title: "Geography")])
 
@@ -101,7 +104,10 @@ struct BankOfferTests {
 
     @Test(arguments: [
         (BankOffer.PhoneSet.Place(kind: .topic, code: "", title: " geography ", semesterNumber: nil, folder: nil), ImportRequest.Course.existing(id: "t1")),
-        (.init(kind: .topic, code: "", title: "History", semesterNumber: nil, folder: nil), .newTopic(title: "History")),
+        (.init(kind: .topic, code: "", title: "History", semesterNumber: nil, folder: nil), .existing(id: "t-archived")),
+        (.init(kind: .topic, code: "", title: "Botany", semesterNumber: nil, folder: nil), .newTopic(title: "Botany")),
+        (.init(kind: .course, code: "NURS 101", title: "Fundamentals of Nursing", semesterNumber: 1, folder: nil), .existing(id: "c1")),
+        (.init(kind: .course, code: "nurs 301", title: "Invented Pharmacology", semesterNumber: 3, folder: nil), .existing(id: "c3-archived")),
         (.init(kind: .course, code: "nurs 101", title: "Invented Nursing", semesterNumber: 1, folder: nil), .existing(id: "c1")),
         (.init(kind: .course, code: "NURS 101", title: "Invented Nursing", semesterNumber: 2, folder: nil), .new(code: "NURS 101", title: "Invented Nursing", semesterNumber: 2)),
         (.init(kind: .course, code: "NURS 102", title: "Invented Nursing", semesterNumber: 1, folder: nil), .new(code: "NURS 102", title: "Invented Nursing", semesterNumber: 1)),

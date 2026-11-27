@@ -91,20 +91,25 @@ public enum BankOffer {
         return ImportRequest(source: source, title: nil, course: course(for: set.place, in: catalog), folder: folder, decision: .separate)
     }
 
-    /// QBank Cloud's course or topic for `place`: the one of the same kind and name, in the same
-    /// semester for a course, that is not archived; else a new one of that name.
+    /// The bank's course or topic for `place`, by the name each must not share: a course in the same
+    /// semester with the same code, ignoring case, whatever its title; a topic with the same title,
+    /// ignoring case. One that is not archived comes first; an archived one is named all the same, so
+    /// the import says to unarchive it rather than refuse a second of that name. Else a new one.
     static func course(for place: PhoneSet.Place, in catalog: Catalog) -> ImportRequest.Course {
         func same(_ left: String, _ right: String) -> Bool {
-            left.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(right.trimmingCharacters(in: .whitespaces)) == .orderedSame
+            BankText.sameName(left.trimmingCharacters(in: .whitespaces), right.trimmingCharacters(in: .whitespaces))
+        }
+        func first(_ candidates: [CourseSummary], _ same: (CourseSummary) -> Bool) -> CourseSummary? {
+            candidates.first { $0.archivedAt == nil && same($0) } ?? candidates.first(where: same)
         }
         if place.kind == .course, let number = place.semesterNumber {
             let courses = catalog.semesters.filter { $0.number == number }.flatMap(\.courses)
-            if let match = courses.first(where: { $0.archivedAt == nil && same($0.code, place.code) && same($0.title, place.title) }) {
+            if let match = first(courses, { same($0.code, place.code) }) {
                 return .existing(id: match.id)
             }
             return .new(code: place.code, title: place.title, semesterNumber: number)
         }
-        if let match = catalog.topics.first(where: { $0.archivedAt == nil && same($0.title, place.title) }) {
+        if let match = first(catalog.topics, { same($0.title, place.title) }) {
             return .existing(id: match.id)
         }
         return .newTopic(title: place.title)
