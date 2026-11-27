@@ -55,10 +55,26 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
     /// reads as `password` alone and a store account as `apple` alone, which is all either could have
     /// on the phone then.
     public let signInWith: [SignInMethod]
+    /// Whether the account has Cloud, as the server said with the session or the sign-in. Nil from a
+    /// server from before Cloud, or a session kept on the phone from then: nothing is known.
+    public let cloud: Cloud?
+
+    /// Whether an account has Cloud, which the server decides (`docs/cloud.md`).
+    public struct Cloud: Codable, Sendable, Equatable {
+        /// Whether the account has Cloud now. An invited account always has it.
+        public let active: Bool
+        /// When the latest subscription that was not revoked ends, or ended.
+        public let expiresAt: Date?
+
+        public init(active: Bool, expiresAt: Date?) {
+            self.active = active
+            self.expiresAt = expiresAt
+        }
+    }
 
     public init(
         id: String, email: String, name: String, role: Role, mustChangePassword: Bool, palette: Palette = .dusk, origin: Origin = .invited,
-        signInWith: [SignInMethod]? = nil
+        signInWith: [SignInMethod]? = nil, cloud: Cloud? = nil
     ) {
         self.id = id
         self.email = email
@@ -68,6 +84,7 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         self.palette = palette
         self.origin = origin
         self.signInWith = signInWith ?? Self.waysIn(of: origin)
+        self.cloud = cloud
     }
 
     public init(from decoder: any Decoder) throws {
@@ -80,6 +97,8 @@ public struct Account: Codable, Sendable, Equatable, Identifiable {
         palette = try container.decodeIfPresent(String.self, forKey: .palette).flatMap(Palette.init(rawValue:)) ?? .dusk
         origin = try container.decodeIfPresent(String.self, forKey: .origin).flatMap(Origin.init(rawValue:)) ?? .invited
         signInWith = try container.decodeIfPresent([String].self, forKey: .signInWith)?.compactMap(SignInMethod.init(rawValue:)) ?? Self.waysIn(of: origin)
+        // Added with Cloud. A value this version cannot read is taken as nothing known, never as off.
+        cloud = try? container.decodeIfPresent(Cloud.self, forKey: .cloud)
     }
 
     /// Whether the account signs in with its email and password, so it can link Sign in with Apple.

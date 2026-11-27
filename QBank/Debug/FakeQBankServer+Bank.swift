@@ -6,8 +6,9 @@ import QBankKit
 /// words: it needs Cloud, it writes only into an account that has no bank yet, and it stores the whole
 /// archive or none of it, answering the counts it then holds. The bank it stores is a real `LocalBank`,
 /// which answers the account's bank requests from then on, as the server's copy of a moved bank does,
-/// and `GET /api/me/bank` downloads it again. An invited account always has a bank here: the fake's
-/// courses. Compiled only into Debug builds.
+/// and `GET /api/me/bank` downloads it again. A store account without Cloud is refused on the bank's
+/// routes with `cloud_required`, but may still download its bank, so it can come back to the phone.
+/// An invited account always has a bank here: the fake's courses. Compiled only into Debug builds.
 nonisolated extension FakeQBankServer {
     static let notEmpty = "This account already has a question bank on the server, so the upload was refused. Nothing was changed."
     static let notABank = "This is not a bank archive QBank can store. Nothing was changed."
@@ -35,14 +36,65 @@ nonisolated extension FakeQBankServer {
     /// The account's Cloud bank answers `request` when it is one of the bank's requests, or the
     /// download of the whole bank, from an account whose bank moved to Cloud.
     func cloudBank(answering request: URLRequest) -> (any HTTPTransport)? {
-        guard let path = request.url?.path(),
-            let token = request.value(forHTTPHeaderField: "Authorization")?.replacingOccurrences(of: "Bearer ", with: ""),
-            let account = account(for: token),
-            let bank = state.withLock({ $0.cloudBanks[account.id] })
-        else { return nil }
+        guard let path = request.url?.path(), let account = requester(of: request), let bank = state.withLock({ $0.cloudBanks[account.id] }) else {
+            return nil
+        }
         if BankRoutedTransport.isBankPath(path) { return bank }
-        if request.httpMethod == "GET", path == "/api/me/bank" { return Download(bank: bank) }
-        return nil
+        guard request.httpMethod == "GET", path == "/api/me/bank" else { return nil }
+        let (delay, drops) = state.withLock { state in
+            defer { state.downloadsToDrop = max(0, state.downloadsToDrop - 1) }
+            return (state.downloadDelay, state.downloadsToDrop > 0)
+        }
+        return Download(bank: bank, delay: delay, drops: drops)
+    }
+
+    /// Whether `request` is one of the bank's, from a store account without Cloud, which the server
+    /// refuses with `cloud_required`. The download of the whole bank is not one of them.
+    func refusesWithoutCloud(_ request: URLRequest) -> Bool {
+        guard let path = request.url?.path(), BankRoutedTransport.isBankPath(path), let account = requester(of: request) else { return false }
+        return account.origin == "store" && account.cloud["active"] as? Bool != true
+    }
+
+    /// The account whose session sent `request`.
+    private func requester(of request: URLRequest) -> Account? {
+        guard let token = request.value(forHTTPHeaderField: "Authorization")?.replacingOccurrences(of: "Bearer ", with: "") else { return nil }
+        return account(for: token)
+    }
+
+    /// `reply` as the server sends it.
+    func reply(_ reply: Reply, to request: URLRequest) throws -> (Data, HTTPURLResponse) {
+        guard let url = request.url, let response = HTTPURLResponse(url: url, statusCode: reply.0, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"]) else {
+            throw URLError(.badServerResponse)
+        }
+        return (try JSONSerialization.data(withJSONObject: reply.1), response)
+    }
+
+    /// The store account `applePerson` has a bank in Cloud already, as if moved from another device:
+    /// the sample set when `sample` is given, then `sets`. It answers the account's bank requests while
+    /// the account has Cloud, and its download at any time.
+    func giveApplePersonACloudBank(sample: String?, sets: [DebugBanks.Set]) {
+        guard let store = try? LocalStore.inMemory() else { fatalError("The fake server's Cloud bank could not be made.") }
+        let bank = LocalBank(store: store)
+        DebugBanks.fill(bank, sample: sample, with: sets)
+        state.withLock { $0.cloudBanks["fake-apple-person"] = bank }
+    }
+
+    /// The store account `applePerson`'s Cloud ended yesterday, as when a subscription lapses.
+    func endApplePersonCloud() {
+        state.withLock { state in
+            guard let index = state.accounts.firstIndex(where: { $0.id == "fake-apple-person" }) else { return }
+            state.accounts[index].storeToken = state.accounts[index].storeToken ?? UUID().uuidString.lowercased()
+            state.accounts[index].cloudUntil = Calendar(identifier: .gregorian).date(byAdding: .day, value: -1, to: .now)
+        }
+    }
+
+    /// Makes each download of a Cloud bank take `delay`, and the first `dropped` of them lose the
+    /// connection then, before the bank arrives.
+    func slowBankDownloads(by delay: Duration, dropping dropped: Int = 0) {
+        state.withLock { state in
+            state.downloadDelay = delay
+            state.downloadsToDrop = dropped
+        }
     }
 
     /// The store account `applePerson` already has a bank on the server: an upload into it is refused.
@@ -64,11 +116,16 @@ nonisolated extension FakeQBankServer {
         state.withLock { $0.uploadReplyDelay = delay }
     }
 
-    /// The whole Cloud bank as one archive, as `GET /api/me/bank` answers it.
+    /// The whole Cloud bank as one archive, as `GET /api/me/bank` answers it, after `delay`, or the
+    /// connection lost then when it `drops`.
     private struct Download: HTTPTransport {
         let bank: LocalBank
+        let delay: Duration
+        let drops: Bool
 
         func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+            if delay > .zero { try await Task.sleep(for: delay) }
+            if drops { throw URLError(.networkConnectionLost) }
             guard let url = request.url,
                 let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])
             else {

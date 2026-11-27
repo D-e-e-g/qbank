@@ -25,26 +25,95 @@ public final class LocalStore: Sendable {
 
     // MARK: Opening
 
-    /// Opens the bank of `key` under `Application Support/QBankKit/Banks/<key>/`, making it when
-    /// it does not exist.
-    public static func standard(key: String) throws(StoreError) -> LocalStore {
-        let root: URL
-        do {
-            root = try FileLocations.applicationSupport()
-        } catch {
-            throw .storage(operation: error.operation, reason: error.reason)
+    /// The name of a bank's first file in its folder. A bank that came back from QBank Cloud is in a
+    /// fresh file beside it, which the bank's hand-over record names (`BankHandover.bankFile`).
+    public static let firstFile = "bank.sqlite"
+
+    /// Opens the bank file `file` of `key` under `Application Support/QBankKit/Banks/<key>/`, making
+    /// the first file when it does not exist.
+    public static func standard(key: String, file: String = LocalStore.firstFile) throws(StoreError) -> LocalStore {
+        try open(directory: StoreFiles.directory(forKey: key, in: try applicationSupport()), file: file)
+    }
+
+    /// Opens the bank file `file` of `key` under `root/Banks/<key>/`.
+    public static func open(key: String, in root: URL, file: String = LocalStore.firstFile) throws(StoreError) -> LocalStore {
+        try open(directory: StoreFiles.directory(forKey: key, in: root), file: file)
+    }
+
+    /// Opens the bank file `file` in `directory`, making the folder, and the first file, when they do
+    /// not exist. A later file that is missing does not open.
+    public static func open(directory: URL, file: String = LocalStore.firstFile) throws(StoreError) -> LocalStore {
+        try StoreFiles.validate(fileName: file)
+        // Only the first file is made on first use. A later file is one a hand-back wrote and checked;
+        // when it is missing, an empty bank in its place would hide that, so it does not open.
+        guard file == firstFile || FileManager.default.fileExists(atPath: directory.appendingPathComponent(file).path) else {
+            throw .storage(operation: "open the bank", reason: "\(file) is not in the bank's folder")
         }
-        return try open(directory: StoreFiles.directory(forKey: key, in: root))
+        return try open(directory: directory, steps: SchemaSteps.all, file: file)
     }
 
-    /// Opens the bank of `key` under `root/Banks/<key>/`.
-    public static func open(key: String, in root: URL) throws(StoreError) -> LocalStore {
-        try open(directory: StoreFiles.directory(forKey: key, in: root))
+    /// Makes `file`, a new, empty bank file of `key` under `Application Support/QBankKit/Banks/<key>/`,
+    /// beside the bank's other files. A file already there is refused, never overwritten.
+    public static func createStandard(key: String, file: String) throws(StoreError) -> LocalStore {
+        try create(directory: StoreFiles.directory(forKey: key, in: try applicationSupport()), file: file)
     }
 
-    /// Opens the bank file in `directory`, making the folder and the file when they do not exist.
-    public static func open(directory: URL) throws(StoreError) -> LocalStore {
-        try open(directory: directory, steps: SchemaSteps.all)
+    /// Makes `file`, a new, empty bank file of `key` under `root/Banks/<key>/`, refusing one already there.
+    public static func create(key: String, in root: URL, file: String) throws(StoreError) -> LocalStore {
+        try create(directory: StoreFiles.directory(forKey: key, in: root), file: file)
+    }
+
+    /// Opens the bank file `file` of `key` under `Application Support/QBankKit/Banks/<key>/` to read it
+    /// only (`readOnly(directory:file:)`).
+    public static func readOnlyStandard(key: String, file: String) throws(StoreError) -> LocalStore {
+        try readOnly(directory: StoreFiles.directory(forKey: key, in: try applicationSupport()), file: file)
+    }
+
+    /// Opens the bank file `file` of `key` under `root/Banks/<key>/` to read it only.
+    public static func readOnly(key: String, in root: URL, file: String) throws(StoreError) -> LocalStore {
+        try readOnly(directory: StoreFiles.directory(forKey: key, in: root), file: file)
+    }
+
+    /// Opens an existing bank file to read it and nothing else, such as a safety copy: no schema step
+    /// runs and no mark is set, so the file stays byte for byte as it was. Every write is refused. A
+    /// file from a newer app is refused, as at any opening.
+    public static func readOnly(directory: URL, file: String) throws(StoreError) -> LocalStore {
+        try StoreFiles.validate(fileName: file)
+        let url = directory.appendingPathComponent(file)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw .storage(operation: "open the bank to read it", reason: "\(file) is not in the bank's folder")
+        }
+        let store = LocalStore(fileURL: url, connection: try SQLiteConnection(path: url.path, readOnly: true))
+        try store.connection.withLock { (connection) throws(StoreError) in try SchemaSteps.refuseNewer(connection, steps: SchemaSteps.all) }
+        store.holdWrites()
+        return store
+    }
+
+    /// Whether the bank of `key` under `root/Banks/<key>/` has ever been made on this phone: its folder
+    /// holds a bank file or a hand-over record. Nothing is made or opened to find out.
+    public static func exists(key: String, in root: URL) throws(StoreError) -> Bool {
+        let directory = try StoreFiles.directory(forKey: key, in: root)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        return names.contains { name in name == "handover.json" || (try? StoreFiles.validate(fileName: name)) != nil }
+    }
+
+    /// Whether the bank of `key` under `Application Support/QBankKit/Banks/<key>/` was ever made.
+    public static func existsStandard(key: String) throws(StoreError) -> Bool {
+        try exists(key: key, in: try applicationSupport())
+    }
+
+    /// Takes away `file` of `key` under `root/Banks/<key>/`, with what SQLite kept beside it: a fresh
+    /// file a hand-back began writing and never made the bank (`BankHandBack`). Any other name is
+    /// refused, so a bank's first file can never go this way.
+    public static func removeUnused(key: String, in root: URL, file: String) throws(StoreError) {
+        try StoreFiles.validate(fileName: file)
+        guard file != firstFile else { throw .invalidFileName(file) }
+        StoreFiles.removeUnused(try StoreFiles.directory(forKey: key, in: root).appendingPathComponent(file))
+    }
+
+    /// The same, under `Application Support/QBankKit/Banks/<key>/`.
+    public static func removeUnusedStandard(key: String, file: String) throws(StoreError) {
+        try removeUnused(key: key, in: try applicationSupport(), file: file)
     }
 
     /// An empty bank in memory, gone when it is closed. For tests.
@@ -52,13 +121,28 @@ public final class LocalStore: Sendable {
         try inMemory(steps: SchemaSteps.all)
     }
 
-    static func open(directory: URL, steps: [SchemaStep]) throws(StoreError) -> LocalStore {
+    static func open(directory: URL, steps: [SchemaStep], file name: String = LocalStore.firstFile) throws(StoreError) -> LocalStore {
         try StoreFiles.prepare(directory: directory)
-        let file = directory.appendingPathComponent(StoreFiles.fileName)
+        let file = directory.appendingPathComponent(name)
         let store = LocalStore(fileURL: file, connection: try SQLiteConnection(path: file.path))
         try store.configure(steps: steps)
         try StoreFiles.markFiles(at: file)
         return store
+    }
+
+    private static func create(directory: URL, file: String) throws(StoreError) -> LocalStore {
+        try StoreFiles.validate(fileName: file)
+        let url = directory.appendingPathComponent(file)
+        guard !(([""] + StoreFiles.sideFileSuffixes).contains { FileManager.default.fileExists(atPath: url.path + $0) }) else { throw .fileExists(file) }
+        return try open(directory: directory, steps: SchemaSteps.all, file: file)
+    }
+
+    private static func applicationSupport() throws(StoreError) -> URL {
+        do {
+            return try FileLocations.applicationSupport()
+        } catch {
+            throw .storage(operation: error.operation, reason: error.reason)
+        }
     }
 
     static func inMemory(steps: [SchemaStep]) throws(StoreError) -> LocalStore {

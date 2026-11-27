@@ -115,7 +115,7 @@ public struct BankMoveToCloud: Sendable {
             return .failed(.notStarted(error), leaseReleased: true)
         }
         store.holdWrites()
-        switch await move(progress) {
+        switch await move(progress, from: before) {
         case .success(let moved):
             return moved
         case .failure(let failure):
@@ -127,7 +127,7 @@ public struct BankMoveToCloud: Sendable {
     }
 
     /// Steps 2 to 5, with the lease taken and writes held.
-    private func move(_ progress: @Sendable (Step) async -> Void) async -> Result<Outcome, Failure> {
+    private func move(_ progress: @Sendable (Step) async -> Void, from before: BankHandover) async -> Result<Outcome, Failure> {
         await progress(.writing)
         let archive: Data
         let archived: BankCounts
@@ -155,7 +155,8 @@ public struct BankMoveToCloud: Sendable {
         guard differences.isEmpty else { return .failure(.countsDiffer(differences)) }
         let movedAt = clock()
         do {
-            try record.save(BankHandover(authority: .cloud, movedToCloudAt: movedAt))
+            // The bank file stays the record's own, so a bank that came back once keeps its fresh file.
+            try record.save(before.inCloud(since: movedAt))
         } catch {
             return .failure(.switchNotRecorded(error))
         }

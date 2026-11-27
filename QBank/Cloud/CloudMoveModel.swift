@@ -12,15 +12,18 @@ import QBankKit
 /// A move starts when a purchase or Restore turns Cloud on: once the plans sheet has closed (`isDue`),
 /// or at once when it already has; when the person asks for it in Settings; and at launch, before
 /// anything else, when the app was closed during one (`foundLeftOpen()`). While it runs, its screen covers the app and the
-/// bank takes no writes.
+/// bank takes no writes. When QBank Cloud refuses the bank because it holds one for the account already,
+/// as on a second device or after an upload whose answer was lost, that bank is the authority and the
+/// person is asked about it (`CloudAdoptModel`).
 @Observable
 final class CloudMoveModel {
     enum Phase: Equatable {
         case idle
         /// The move is at this step.
         case moving(BankMoveToCloud.Step)
-        /// The bank is in QBank Cloud, which holds these counts, the same as this phone's.
-        case moved(BankCounts)
+        /// The bank is in QBank Cloud, which holds every row this phone's bank does: the bank as the
+        /// person counts it, when it could be read.
+        case moved(BankSummary?)
         /// The bank stays on this phone, for the reason said; `canRetry` when trying again may help.
         case failed(String, canRetry: Bool)
     }
@@ -50,7 +53,7 @@ final class CloudMoveModel {
     /// Whether the bank on this phone can be moved now: a free account's, with Cloud on as the server
     /// last said, and no move already running or waiting.
     var isOffered: Bool {
-        guard let app, app.kind == .free, !app.awaitsServer, app.cloud.status?.active == true else { return false }
+        guard let app, app.kind == .free, !app.awaitsServer, app.cloud.status?.active == true, app.cloudAdopt.found == nil else { return false }
         return !isMoving && !isDue && !isLeftOpen
     }
 
@@ -121,12 +124,22 @@ final class CloudMoveModel {
             await self?.show(step)
         }
         switch outcome {
-        case .moved(let counts, _):
+        case .moved:
+            let summary = app.phoneBankSummary()
             app.bankMovedToCloud(key)
             // A sign-out during the move, after a session ended, already closed the screen.
             guard isShown else { return }
-            phase = .moved(counts)
+            phase = .moved(summary)
         case .failed(let failure, _):
+            // QBank Cloud holds a bank for the account already: that bank is the authority, and the
+            // person is asked about it, the bank on this phone still as it was.
+            if case .notStored(let error) = failure, error.serverCode == .bankNotEmpty {
+                app.cloudAdopt.moveRefused()
+                isShown = false
+                isResumed = false
+                phase = .idle
+                return
+            }
             // A session that ended signs out, as everywhere; the bank stays on this phone as it was.
             if case .notStored(let error) = failure, app.handle(error) { return }
             guard isShown else { return }

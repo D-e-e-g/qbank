@@ -11,7 +11,8 @@ import UIKit
 /// refused it for a reason sending it again would not change. One the server gave no lasting answer
 /// for stays unfinished: the App Store gives it to the app again at the next launch, and `refresh()`
 /// sends it again. The app shows Cloud as on only when the server says so. Once a purchase or Restore
-/// here turns it on, the bank on this phone moves to QBank Cloud (`CloudMoveModel`).
+/// here turns it on, the bank on this phone moves to QBank Cloud (`CloudMoveModel`); once the server
+/// says it has ended, a bank in QBank Cloud comes back to this phone (`CloudReturnModel`).
 ///
 /// One model serves the whole app, as the App Store's updates do. It follows the account signed in
 /// (`follow(_:)`), so what it says of one account is gone when another signs in.
@@ -83,6 +84,7 @@ final class CloudModel {
             let status = try await client.cloudStatus()
             guard owner == accountID else { return }
             self.status = status
+            followed(status)
         } catch {
             app?.handle(error)
         }
@@ -140,6 +142,7 @@ final class CloudModel {
                 guard owner == accountID else { return }
                 self.status = status
                 if status.active {
+                    app?.cloudReturn.cloudTurnedOn()
                     app?.cloudMove.cloudTurnedOn()
                 } else {
                     problem = CloudWording.notActive
@@ -193,6 +196,7 @@ final class CloudModel {
         if let latest { status = latest }
         if latest?.active == true {
             notice = .done(CloudWording.restored)
+            app?.cloudReturn.cloudTurnedOn()
             app?.cloudMove.cloudTurnedOn()
         } else if let failure {
             say(failure, for: owner, temporary: CloudWording.notConfirmedYet)
@@ -218,6 +222,17 @@ final class CloudModel {
     private func receive(_ transaction: CloudTransaction) async {
         guard case let (client, owner)? = reach(), let status = try? await send(transaction, with: client), owner == accountID else { return }
         self.status = status
+        followed(status)
+    }
+
+    /// Cloud's state as the server just said it, for a bank in QBank Cloud: one whose Cloud ended
+    /// comes back to this phone, and one whose Cloud is on again stays.
+    private func followed(_ status: CloudStatus) {
+        if status.active {
+            app?.cloudReturn.cloudTurnedOn()
+        } else {
+            app?.cloudReturn.cloudEnded()
+        }
     }
 
     /// Sends a transaction to QBank's server, and finishes it once the server has handled it for good:

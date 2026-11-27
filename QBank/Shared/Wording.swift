@@ -291,6 +291,9 @@ nonisolated enum Wording {
     @MainActor
     static func problem(_ error: QBankError) -> String? {
         switch error {
+        case .server(let server) where server.code == .cloudRequired:
+            // Only a bank in QBank Cloud is refused for want of Cloud; it comes back from Settings.
+            return CloudReturnWording.stillInCloudProblem
         case .server(let server):
             return server.message
         case .transport(let code):

@@ -37,12 +37,65 @@ struct BankHandoverTests {
         try record.save(moved)
         #expect(try record.load() == moved)
         let text = try String(contentsOf: try #require(record.fileURL), encoding: .utf8)
-        #expect(text == #"{"authority":"cloud","movedToCloudAt":"2027-01-15T08:00:00.000Z","version":1}"#)
+        #expect(text == #"{"authority":"cloud","bankFile":"bank.sqlite","movedToCloudAt":"2027-01-15T08:00:00.000Z","offeredFile":"bank.sqlite","offeredSets":[],"version":2}"#)
+    }
+
+    @Test func aRecordOfTheFirstVersionNamesTheFirstFile() throws {
+        let root = StoreFixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let record = try BankHandoverRecord.file(key: MoveWorld.key, in: root)
+        let file = try #require(record.fileURL)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // As the move to QBank Cloud wrote it before records named a file.
+        try Data(#"{"authority":"cloud","movedToCloudAt":"2027-01-15T08:00:00.000Z","version":1}"#.utf8).write(to: file)
+
+        let found = try record.load()
+        #expect(found.version == 1)
+        #expect(found.authority == .cloud)
+        #expect(found.bankFile == LocalStore.firstFile)
+        #expect(found.offeredSets.isEmpty)
+        #expect(found.inCloud(since: MoveWorld.start) == BankHandover(authority: .cloud, movedToCloudAt: MoveWorld.start))
+    }
+
+    @Test func aRecordKeepsItsBankFileAndOfferAcrossEveryChange() {
+        let back = BankHandover.onPhone.inCloud(since: MoveWorld.start).onPhone(in: "bank-20270115T080000000Z.sqlite", since: MoveWorld.start)
+        #expect(back.authority == .phone)
+        #expect(back.bankFile == "bank-20270115T080000000Z.sqlite")
+        #expect(back.returnedAt == MoveWorld.start)
+        #expect(back.movedToCloudAt == MoveWorld.start)
+        let leased = back.leased(.init(direction: .toCloud, startedAt: MoveWorld.start))
+        #expect(leased.bankFile == back.bankFile)
+        let moved = leased.inCloud(since: MoveWorld.start, offering: ["s1"])
+        #expect(moved.bankFile == back.bankFile, "a bank that moves again keeps its file as the safety copy")
+        #expect(moved.lease == nil)
+        #expect(moved.offeredSets == ["s1"])
+        #expect(moved.offering([]).offeredSets.isEmpty)
+        #expect(moved.offering([]).authority == .cloud)
+        #expect(moved.offeredFile == back.bankFile, "the sets offered are in the file that becomes the safety copy")
+    }
+
+    /// Sets still offered stay offered, from the file that holds them, through a hand-back and a later
+    /// move; a bank that comes in place of the one on this phone offers that one's sets, from it.
+    @Test func theSetsOfferedFollowTheFileThatHoldsThem() {
+        let adopted = BankHandover.onPhone.inCloud(since: MoveWorld.start, offering: ["s1"])
+        let back = adopted.onPhone(in: "bank-20270115T080000000Z.sqlite", since: MoveWorld.start)
+        #expect(back.offeredSets == ["s1"])
+        #expect(back.offeredFile == LocalStore.firstFile)
+        let movedAgain = back.inCloud(since: MoveWorld.start)
+        #expect(movedAgain.offeredSets == ["s1"])
+        #expect(movedAgain.offeredFile == LocalStore.firstFile)
+        let replaced = BankHandover.onPhone.onPhone(in: "bank-20270115T080000000Z.sqlite", since: MoveWorld.start, offering: ["s2"])
+        #expect(replaced.offeredSets == ["s2"])
+        #expect(replaced.offeredFile == LocalStore.firstFile)
+        #expect(replaced.bankFile == "bank-20270115T080000000Z.sqlite")
     }
 
     @Test(arguments: [
-        "not json", #"{"authority":"cloud","version":2}"#, #"{"authority":"somewhere","version":1}"#, #"{"version":1}"#,
+        "not json", #"{"authority":"cloud","version":3}"#, #"{"authority":"somewhere","version":1}"#, #"{"version":1}"#,
         #"{"authority":"phone","lease":{"direction":"sideways","startedAt":"2027-01-15T08:00:00.000Z"},"version":1}"#,
+        #"{"authority":"phone","bankFile":"../elsewhere.sqlite","version":2}"#,
+        #"{"authority":"phone","offeredFile":"../elsewhere.sqlite","version":2}"#,
+        #"{"authority":"cloud","lease":{"direction":"toPhone","file":"handover.json","startedAt":"2027-01-15T08:00:00.000Z"},"version":2}"#,
     ])
     func aRecordThisAppCannotReadIsNeverTakenForEitherSideAndIsLeftAsItIs(_ text: String) throws {
         let root = StoreFixtures.temporaryDirectory()

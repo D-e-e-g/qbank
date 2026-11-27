@@ -27,6 +27,10 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
     case writesHeld
     /// The bank's hand-over record is not one this app can read. It is left as it is.
     case unreadableHandover(String)
+    /// The name is not one a bank file in a bank's folder can have.
+    case invalidFileName(String)
+    /// A fresh bank file was asked for where a file is already, which is never overwritten.
+    case fileExists(String)
 
     public var description: String {
         switch self {
@@ -42,6 +46,8 @@ public enum StoreError: Error, Sendable, Equatable, CustomStringConvertible {
         case .foreignKeyCheckFailed(let step): "schema step \(step) left a row naming a row that is not there"
         case .writesHeld: "the bank is moving and takes no writes until the move ends"
         case .unreadableHandover(let reason): "the bank's hand-over record cannot be read: \(reason)"
+        case .invalidFileName(let name): "\"\(name)\" is not the name of a bank file"
+        case .fileExists(let name): "a file named \(name) is already in the bank's folder, and it is never overwritten"
         }
     }
 }

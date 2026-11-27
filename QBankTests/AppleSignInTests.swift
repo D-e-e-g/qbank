@@ -56,9 +56,11 @@ struct AppleSignInTests {
         #expect(sent["identityToken"] == "synthetic.apple.token")
         #expect(apple.asked == [AppleSignInNonce(value: try #require(sent["nonce"])).hashed])
 
+        // A bank new on this phone looks, read-only, for one QBank holds for her (`CloudReturnTests`).
+        try await waitUntil { !server.calls.dropFirst().isEmpty }
         let made = try await app.client.createTopic(title: "Pharmacology")
         #expect(try await app.client.catalog().topics.map(\.id) == [made.id])
-        #expect(server.calls == [Self.route], "her study stays on the phone")
+        #expect(server.calls == [Self.route, "GET /api/me/bank"], "her study stays on the phone")
     }
 
     @Test func eachSignInAsksWithANewNonce() async throws {

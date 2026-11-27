@@ -195,6 +195,8 @@ struct AttemptQueueTests {
         QBankError.server(ServerError(status: 503, code: .authUnavailable, message: "Down.")),
         .server(ServerError(status: 401, code: .unauthenticated, message: "Sign in.")),
         .server(ServerError(status: 403, code: .mustChangePassword, message: "New password.")),
+        // A store account whose Cloud ended: the answer goes into its bank once that is back on the phone.
+        .server(ServerError(status: 403, code: .cloudRequired, message: "This needs Cloud. Your question bank is on this device.")),
         .server(ServerError(status: 429, code: .tooManyAttempts, message: "Later.")),
         .unexpectedResponse(status: 502, detail: "Bad Gateway"),
         .notSignedIn,

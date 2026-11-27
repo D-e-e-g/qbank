@@ -11,60 +11,11 @@ import Testing
 @MainActor
 struct CloudMoveTests {
     nonisolated private static let upload = "PUT /api/me/bank"
-    nonisolated private static let on = Reply.ok(#"{"active":true,"expiresAt":"2027-12-03T00:00:00.000Z","storeToken":"00000000-0000-4000-8000-000000000001"}"#)
-
-    /// The phone's folder for one test: a free person's bank holding the sample set, and its record.
-    @MainActor
-    private struct Phone {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("QBankCloudMove-\(UUID().uuidString)", isDirectory: true)
-        let defaults = TestApp.freshDefaults()
-        let session = InMemorySessionStore(StoredSession(token: TestApp.token, account: .store(), appleUser: TestApp.appleUser))
-
-        var banks: PhoneBanks { .files(root: root) }
-        var file: URL { root.appendingPathComponent("Banks/\(TestApp.appleUser)/bank.sqlite") }
-        var record: BankHandoverRecord { get throws { try banks.handover(TestApp.appleUser) } }
-
-        func bytes() throws -> Data { try Data(contentsOf: file) }
-
-        /// The bank's counts, read from the file by a store of the test's own.
-        func counts() throws -> BankCounts {
-            let store = try LocalStore.open(key: TestApp.appleUser, in: root)
-            defer { store.close() }
-            return try BankArchive.counts(of: store)
-        }
-
-        /// The answer QBank Cloud gives an upload of this bank, with `change` made to its counts.
-        func stored(_ change: (inout [String: Int]) -> Void = { _ in }) throws -> Reply {
-            var values = try counts().values
-            change(&values)
-            let text = String(decoding: try JSONSerialization.data(withJSONObject: values, options: [.sortedKeys]), as: UTF8.self)
-            return .ok(#"{"counts":\#(text)}"#)
-        }
-
-        /// The app as it launches on this phone, its server `server` and its App Store `store`.
-        func launch(
-            _ server: StubServer, store: CloudTests.ScriptedStore = CloudTests.ScriptedStore(), apple: any AppleSignInProvider = AppleSignInTests.Apple()
-        ) -> AppModel {
-            let client = QBankClient(configuration: APIConfiguration(baseURL: URL(string: "https://stub.invalid")!), transport: server, sessionStore: session)
-            return AppModel(
-                client: client, banks: banks, sampleSet: SampleSet.bundledSource(), appleSignIn: apple, store: store,
-                look: LookStore(defaults: defaults), lock: AppLock(defaults: defaults, owner: DebugDeviceOwner(.faceID)),
-                highlighter: HighlighterStore(defaults: defaults), aiConsent: AIConsentStore(defaults: defaults), drafts: WriteDraftStore(defaults: defaults),
-                storage: .memory()
-            )
-        }
-
-        func remove() { try? FileManager.default.removeItem(at: root) }
-    }
+    private static let on = CloudPhone.cloudOn
 
     /// A free model on `phone` whose server says Cloud is on, with the bank's sample set filed.
     private func free(on phone: Phone, _ server: StubServer) async throws -> AppModel {
-        server["GET /api/me/cloud"] = Self.on
-        let app = phone.launch(server)
-        #expect(app.kind == .free)
-        #expect(try await app.client.catalog().topics.map(\.title) == [SampleSet.topic], "the bank holds the sample set")
-        await app.cloud.refresh()
-        return app
+        try await phone.free(server)
     }
 
     // MARK: Starting
@@ -83,7 +34,7 @@ struct CloudMoveTests {
         #expect(!app.cloudMove.isShown)
         #expect(!server.calls.contains(Self.upload))
         await app.cloudMove.plansClosed()
-        #expect(app.cloudMove.phase == .moved(try phone.counts()))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.kind == .store)
     }
 
@@ -103,8 +54,8 @@ struct CloudMoveTests {
         server.release("POST /api/me/cloud/transactions")
         await buying.value
 
-        let counts = try phone.counts()
-        try await waitUntil { app.cloudMove.phase == .moved(counts) }
+        let summary = try phone.summary()
+        try await waitUntil { app.cloudMove.phase == .moved(summary) }
         #expect(!app.cloudMove.isDue)
         #expect(app.kind == .store)
     }
@@ -135,7 +86,7 @@ struct CloudMoveTests {
 
         await app.cloudMove.start()
 
-        #expect(app.cloudMove.phase == .moved(counts))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.cloudMove.isShown, "the outcome waits to be read")
         #expect(app.kind == .store)
         #expect(app.bank == nil)
@@ -188,14 +139,12 @@ struct CloudMoveTests {
     // MARK: Every other ending
 
     /// Each upload that does not end in a confirmed, matching copy in QBank Cloud, with what the move's
-    /// screen says, and whether it offers to try again. What it says is read on the main actor, since a
-    /// sentence that names the device says "iPhone" or "iPad" as the device the tests run on does.
+    /// screen says, and whether it offers to try again. An account that already has a bank in QBank
+    /// Cloud is asked about that bank instead (`CloudAdoptTests`). What it says is read on the main
+    /// actor, since a sentence that names the device says "iPhone" or "iPad" as the device the tests
+    /// run on does.
     fileprivate nonisolated static let failures: [(name: String, reply: Reply?, says: @MainActor @Sendable () -> String, canRetry: Bool)] = [
         ("no connection", .offline, { "No connection, so your bank was not sent. Check Wi-Fi or cellular data and try again." }, true),
-        (
-            "an account that already has a bank", .error(409, "bank_not_empty", "This account already has a question bank on the server, so the upload was refused. Nothing was changed."),
-            { "This account already has a question bank on the server, so the upload was refused. Nothing was changed." }, false
-        ),
         ("no Cloud", .error(403, "cloud_required", "This needs Cloud. Your question bank is on this device."), { "This needs Cloud. Your question bank is on this device." }, false),
         ("a server that fails", .error(503, "unavailable", "QBank is busy."), { "QBank Cloud could not take your bank right now. Try again in a moment." }, true),
         ("an answer that cannot be read", .ok("<html>proxy</html>"), { "QBank Cloud's answer could not be read, so it has not confirmed it holds your whole bank." }, true),
@@ -296,7 +245,7 @@ struct CloudMoveTests {
         #expect(app.cloudMove.isResumed)
         #expect(try await app.client.catalog().topics.map(\.title) == [SampleSet.topic], "the sample set is not filed again, nor anything else")
         await app.cloudMove.finishLeftOpen()
-        #expect(app.cloudMove.phase == .moved(try phone.counts()))
+        #expect(app.cloudMove.phase == .moved(try phone.summary()))
         #expect(app.kind == .store)
         #expect(try phone.record.load().lease == nil)
         #expect(try phone.bytes() == before)
@@ -326,14 +275,15 @@ struct CloudMoveTests {
         defer { phone.remove() }
         try phone.record.save(BankHandover(authority: .cloud, movedToCloudAt: .now))
         try phone.session.clear()
-        let server = StubServer(["POST /api/sign-in/apple": .ok(Bodies.appleSignedIn())])
+        let server = StubServer(["POST /api/sign-in/apple": .ok(Bodies.appleSignedIn(cloud: true))])
         let app = phone.launch(server)
         #expect(app.route == .signedOut)
 
         await AppleSignInModel(app: app).signIn(over: nil)
 
-        #expect(app.route == .signedIn(.store()))
+        #expect(app.route == .signedIn(.store(cloud: true)))
         #expect(app.kind == .store)
+        #expect(!app.cloudReturn.isShown, "Cloud is on, so the bank stays in QBank Cloud")
         #expect(app.phoneKey == TestApp.appleUser)
         #expect(!FileManager.default.fileExists(atPath: phone.file.path), "the safety copy, had there been one, is not opened")
     }
@@ -367,8 +317,8 @@ struct CloudMoveTests {
 
         await AppleSignInModel(app: app).signIn(over: nil)
 
-        let counts = try phone.counts()
-        try await waitUntil { app.cloudMove.phase == .moved(counts) }
+        let summary = try phone.summary()
+        try await waitUntil { app.cloudMove.phase == .moved(summary) }
         #expect(server.calls.contains(Self.upload))
         #expect(app.kind == .store)
         #expect(try phone.record.load().lease == nil)
@@ -443,3 +393,4 @@ struct CloudMoveTests {
 }
 
 private typealias Reply = StubServer.Reply
+private typealias Phone = CloudPhone

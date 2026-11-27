@@ -15,12 +15,52 @@ nonisolated extension DebugScenario {
         }
     }
 
-    /// The same move left open, but the fake server already holds a bank for the account, so it
-    /// refuses the upload with `bank_not_empty` and the bank stays on this iPhone, unchanged.
+    /// The same move left open, but the fake server already holds a bank for the account, moved from
+    /// another device, with a set of its own and not the sample set. It refuses the upload with
+    /// `bank_not_empty`, and the app asks whether to use that bank, the bank on this iPhone unchanged.
     static let cloudMoveRefused = DebugScenario("cloud-move-refused") { context in
         DebugCloudMove.model(context: context) { server in
-            server.giveApplePersonABank()
+            server.giveApplePersonACloudBank(sample: nil, sets: [DebugBanks.capitals])
         }
+    }
+
+    /// A store account whose bank moved to QBank Cloud, signed in from an earlier launch, whose Cloud
+    /// has ended. This iPhone holds the safety copy, with the sample set, and the record saying the bank
+    /// is in QBank Cloud, where it holds the sample set and a set added there since. At launch the bank
+    /// comes back to this iPhone. Each download takes a few seconds, so the screen can be seen while it
+    /// runs, and the first loses the connection, so the first try fails and changes nothing.
+    static let cloudEnded = DebugScenario("cloud-ended") { context in
+        guard let sample = SampleSet.bundledSource() else { fatalError("The app ships with its sample set.") }
+        let key = FakeQBankServer.applePerson.user
+        do {
+            DebugBanks.fill(try context.banks.open(key), sample: sample, with: [])
+            try context.banks.handover(key).save(BankHandover.onPhone.inCloud(since: .now.addingTimeInterval(-30 * 86_400)))
+        } catch {
+            fatalError("The scenario's safety copy could not be made: \(error)")
+        }
+        return DebugFreeMode.model(context: context, sampleSet: sample) { server in
+            server.giveApplePersonACloudBank(sample: sample, sets: [DebugBanks.capitals])
+            server.endApplePersonCloud()
+            server.slowBankDownloads(by: DebugCloudMove.uploadReplyDelay, dropping: 1)
+        }
+    }
+
+    /// A second device: no one is signed in, and this iPhone holds a bank for the fake server's store
+    /// account from before it had Cloud, with the sample set and a set of its own. The account has
+    /// Cloud, and QBank Cloud holds its bank from another device, with the sample set and another set.
+    /// Signing in with Apple (`QB_UITEST_APPLE=returning-person`) opens the bank on this iPhone, then
+    /// asks whether to use QBank Cloud's, and offers the set only this iPhone has.
+    static let cloudSecondDevice = DebugScenario("cloud-second-device") { context in
+        guard let sample = SampleSet.bundledSource() else { fatalError("The app ships with its sample set.") }
+        do {
+            DebugBanks.fill(try context.banks.open(FakeQBankServer.applePerson.user), sample: sample, with: [DebugBanks.rivers])
+        } catch {
+            fatalError("The scenario's bank could not be made: \(error)")
+        }
+        let server = FakeQBankServer(signedIn: false)
+        server.giveApplePersonCloud()
+        server.giveApplePersonACloudBank(sample: sample, sets: [DebugBanks.capitals])
+        return context.model(server: server, session: nil)
     }
 }
 

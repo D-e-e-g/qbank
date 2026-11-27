@@ -146,6 +146,10 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         var bankHolders: Set<String> = []
         /// How long the answer to an upload takes to arrive.
         var uploadReplyDelay = Duration.zero
+        /// How long the download of a Cloud bank takes, and how many downloads still to lose the
+        /// connection once that time has passed.
+        var downloadDelay = Duration.zero
+        var downloadsToDrop = 0
     }
 
     let state: Mutex<State>
@@ -283,6 +287,10 @@ nonisolated final class FakeQBankServer: HTTPTransport {
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         if isOffline { throw URLError(.notConnectedToInternet) }
+        // A store account without Cloud is refused on the bank's routes, as the server refuses it.
+        if refusesWithoutCloud(request) {
+            return try reply(failure(403, "cloud_required", Self.cloudRequired), to: request)
+        }
         // An account whose bank moved to Cloud is answered from that bank.
         if let bank = cloudBank(answering: request) {
             return try await bank.send(request)

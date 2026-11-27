@@ -92,6 +92,10 @@ public struct ServerError: Error, Sendable, Equatable {
         public static let signUpRefused: Code = "sign_up_refused"
         public static let tooManyAttempts: Code = "too_many_attempts"
         public static let mustChangePassword: Code = "must_change_password"
+        /// A store account without Cloud asked for its bank on the server: the sign that its Cloud ended.
+        public static let cloudRequired: Code = "cloud_required"
+        /// An upload of a whole bank into an account that already has one on the server.
+        public static let bankNotEmpty: Code = "bank_not_empty"
         public static let samePassword: Code = "same_password"
         public static let authFailed: Code = "auth_failed"
         public static let authUnavailable: Code = "auth_unavailable"
