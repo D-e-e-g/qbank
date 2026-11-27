@@ -30,7 +30,8 @@ import Testing
 
     private func snapshot(_ world: ExamWorld) throws -> [[[StoreValue]]] {
         try ["question_progress ORDER BY question_lineage_id", "study_session ORDER BY id", "attempt ORDER BY id", "review_clear ORDER BY question_lineage_id"].map {
-            try world.harness.rows("SELECT * FROM \($0)")
+            // Ending, deleting and restoring a sitting each leave their own change time.
+            try world.harness.rows("SELECT * FROM \($0)", omitting: "updated_at")
         }
     }
 

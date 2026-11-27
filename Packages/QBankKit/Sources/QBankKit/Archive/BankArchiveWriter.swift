@@ -17,6 +17,11 @@ enum BankArchiveWriter {
             out += "  \"writtenBy\": \"phone\",\n"
             out += "  \"complete\": true,\n"
             out += "  \"counts\": { " + lists.map { "\(quote($0.table.key)): \($0.rows.count)" }.joined(separator: ", ") + " },\n"
+            if case .integer(let version) = try transaction.value("PRAGMA user_version"), version >= BankChangeTimeStep.step.number,
+                case .text(let stamp) = try transaction.value("SELECT stamp FROM bank_archive")
+            {
+                out += "  \"stamp\": \(quote(stamp)),\n"
+            }
             for (index, list) in lists.enumerated() {
                 let tail = index == lists.count - 1 ? "\n" : ",\n"
                 if list.table.single {
@@ -46,7 +51,11 @@ enum BankArchiveWriter {
     }
 
     private static func object(_ row: StoreRow, of table: ArchiveTable) throws -> String {
-        let members = try table.fields.map { "\(quote($0.name)): \(try literal(row[$0.column], $0, in: table))" }
+        let members = try table.fields.compactMap { field -> String? in
+            let value = row[field.column]
+            if field.optional && value == .null { return nil }
+            return "\(quote(field.name)): \(try literal(value, field, in: table))"
+        }
         return "{ " + members.joined(separator: ", ") + " }"
     }
 

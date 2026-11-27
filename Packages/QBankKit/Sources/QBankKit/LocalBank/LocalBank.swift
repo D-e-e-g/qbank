@@ -26,7 +26,7 @@ public final class LocalBank: HTTPTransport {
     private let clock: Clock
     private let ids: IDGenerator
     private let random: Randomness
-    private let router: BankRouter
+    let router: BankRouter
 
     public init(
         store: LocalStore, clock: @escaping Clock = { Date() }, ids: @escaping IDGenerator = LocalBank.randomID,
@@ -106,12 +106,14 @@ public final class LocalBank: HTTPTransport {
         let query = Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
         let lists = Dictionary(grouping: items, by: \.name).mapValues { $0.map { $0.value ?? "" } }
         let json = body.flatMap { $0.isEmpty ? nil : try? JSONDecoder().decode(JSONValue.self, from: $0) }
-        let now = clock()
+        let clock = clock
         let ids = ids
         let random = random
         let handler = route.handler
         let run: (StoreTransaction) throws -> BankAnswer = { tx in
-            try handler(BankCall(params: params, query: query, queryLists: lists, body: json, tx: tx, now: now, ids: ids, random: random))
+            let call = BankCall(params: params, query: query, queryLists: lists, body: json, tx: tx, now: clock(), ids: ids, random: random)
+            if route.writes { return try BankWriteTime.withTime(call.nowText, in: tx) { try handler(call) } }
+            return try handler(call)
         }
         // A write that is refused after it began leaves nothing behind: the transaction undoes it.
         return route.writes ? try store.transaction(run) : try store.read(run)

@@ -30,30 +30,30 @@ import Testing
     @Test(arguments: cases)
     func undoLeavesEveryTableRowForRowAsItWas(_ item: Case) async throws {
         let world = try await DeleteWorld()
-        let before = try world.snapshot()
+        let before = try world.snapshot(omittingChangeTimes: true)
         let counts = before.mapValues(\.count)
 
         let deleted = try await world.confirmedDelete(item.path(world))
         #expect(deleted.status == 204 && deleted.body == .null, "\(item.name): \(deleted.body)")
-        let hidden = try world.snapshot()
+        let hidden = try world.snapshot(omittingChangeTimes: true)
         #expect(hidden != before, "\(item.name) is hidden while deleted")
         #expect(hidden.mapValues(\.count) == counts, "\(item.name): a delete removes no row")
 
         world.advance(days: 29)
         let undone = try await world.send("POST", item.undo(world))
         #expect(undone.status == 200, "\(item.name): \(undone.body)")
-        for table in DeleteWorld.tables { #expect(try world.snapshot()[table] == before[table], "\(item.name): \(table) is as it was") }
+        for table in DeleteWorld.tables { #expect(try world.snapshot(omittingChangeTimes: true)[table] == before[table], "\(item.name): \(table) is as it was") }
     }
 
     @Test func everythingDeletedAtOnceIsBroughtBackInAnyOrder() async throws {
         let world = try await DeleteWorld()
-        let before = try world.snapshot()
+        let before = try world.snapshot(omittingChangeTimes: true)
         let deletes = [
             "/api/practice-sets/\(world.heartB.setID)", "/api/folders/\(world.week2)", "/api/course-exams/\(world.page)", "/api/folders/\(world.week1)",
             "/api/courses/\(world.topic)", "/api/courses/\(world.course)",
         ]
         for path in deletes { #expect(try await world.confirmedDelete(path).status == 204, "\(path)") }
-        #expect(try world.snapshot().mapValues(\.count) == before.mapValues(\.count))
+        #expect(try world.snapshot(omittingChangeTimes: true).mapValues(\.count) == before.mapValues(\.count))
         // The course first (the sets and folders come back inside it), then its folders and its page, then the set that went alone.
         for path in [
             "/api/courses/\(world.topic)", "/api/courses/\(world.course)", "/api/course-exams/\(world.page)", "/api/folders/\(world.week1)",
@@ -62,20 +62,20 @@ import Testing
             let undone = try await world.send("POST", path + "/undo-delete")
             #expect(undone.status == 200, "\(path) \(undone.body)")
         }
-        #expect(try world.snapshot() == before)
+        #expect(try world.snapshot(omittingChangeTimes: true) == before)
     }
 
     @Test func aDeleteReadsTheSameWhenTheClockMovedBetweenTheStepsAsItWouldInOneBreath() async throws {
         let world = try await DeleteWorld()
-        let before = try world.snapshot()
+        let before = try world.snapshot(omittingChangeTimes: true)
         let preview = try await world.send("GET", "/api/folders/\(world.week1)/delete-preview")
         world.advance(days: 3)
         let deleted = try await world.send("DELETE", "/api/folders/\(world.week1)?confirm=\(preview.body["confirm"]?.stringValue ?? "")")
         #expect(deleted.status == 204)
-        #expect(try world.snapshot() != before)
+        #expect(try world.snapshot(omittingChangeTimes: true) != before)
         world.advance(days: 5)
         #expect(try await world.send("POST", "/api/folders/\(world.week1)/undo-delete").status == 200)
-        #expect(try world.snapshot() == before)
+        #expect(try world.snapshot(omittingChangeTimes: true) == before)
     }
 
     // MARK: Confirming

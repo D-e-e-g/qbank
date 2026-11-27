@@ -161,6 +161,7 @@ public final class LocalStore: Sendable {
             try connection.run("PRAGMA synchronous = FULL")
             try SchemaSteps.upgrade(connection, steps: steps)
             try connection.run("PRAGMA foreign_keys = ON")
+            if steps.count >= BankChangeTimeStep.step.number { try BankWriteTime.install(on: connection) }
         }
     }
 

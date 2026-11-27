@@ -1,7 +1,7 @@
 {
   "format": "qbank-bank-archive",
   "version": 1,
-  "exportedAt": "2026-11-23T13:53:14.809Z",
+  "exportedAt": "2026-11-27T02:27:03.040Z",
   "writtenBy": "server",
   "complete": true,
   "counts": {
@@ -18,6 +18,7 @@
     "reviewClears": 2,
     "studyPlace": 1
   },
+  "stamp": "6e8a2f70743a17836119c71e23c25f328e5763d23f2a2dbe97479e106171ba23",
   "semesters": [
     {
       "id": "00000000-0000-4000-8030-000000000023",
@@ -26,22 +27,10 @@
       "startsOn": null,
       "endsOn": null,
       "archivedAt": null,
-      "createdAt": "2026-11-23T13:53:14.630Z"
+      "createdAt": "2026-11-27T02:27:02.558Z"
     }
   ],
   "courses": [
-    {
-      "id": "00000000-0000-4000-8030-000000000020",
-      "semesterId": null,
-      "kind": "topic",
-      "code": "",
-      "title": "Deleted topic",
-      "sortOrder": 2,
-      "archivedAt": null,
-      "createdAt": "2026-11-23T13:53:14.786Z",
-      "deletedAt": "2026-11-23T13:53:14.801Z",
-      "deletionId": "00000000-0000-4000-8030-000000000024"
-    },
     {
       "id": "00000000-0000-4000-8030-000000000002",
       "semesterId": "00000000-0000-4000-8030-000000000023",
@@ -50,7 +39,7 @@
       "title": "Invented",
       "sortOrder": 1,
       "archivedAt": null,
-      "createdAt": "2026-11-23T13:53:14.630Z",
+      "createdAt": "2026-11-27T02:27:02.558Z",
       "deletedAt": null,
       "deletionId": null
     },
@@ -62,9 +51,22 @@
       "title": "Invented topic",
       "sortOrder": 1,
       "archivedAt": null,
-      "createdAt": "2026-11-23T13:53:14.678Z",
+      "createdAt": "2026-11-27T02:27:02.696Z",
       "deletedAt": null,
       "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000020",
+      "semesterId": null,
+      "kind": "topic",
+      "code": "",
+      "title": "Deleted topic",
+      "sortOrder": 2,
+      "archivedAt": null,
+      "createdAt": "2026-11-27T02:27:02.914Z",
+      "deletedAt": "2026-11-27T02:27:03.003Z",
+      "deletionId": "00000000-0000-4000-8030-000000000024",
+      "updatedAt": "2026-11-27T02:27:03.003Z"
     }
   ],
   "courseExams": [
@@ -75,7 +77,7 @@
       "sortOrder": 1,
       "linkUrl": null,
       "badge": "concept",
-      "createdAt": "2026-11-23T13:53:14.671Z",
+      "createdAt": "2026-11-27T02:27:02.680Z",
       "deletedAt": null,
       "deletionId": null
     },
@@ -86,29 +88,41 @@
       "sortOrder": 2,
       "linkUrl": null,
       "badge": null,
-      "createdAt": "2026-11-23T13:53:14.763Z",
-      "deletedAt": "2026-11-23T13:53:14.768Z",
-      "deletionId": "00000000-0000-4000-8030-000000000025"
+      "createdAt": "2026-11-27T02:27:02.870Z",
+      "deletedAt": "2026-11-27T02:27:02.880Z",
+      "deletionId": "00000000-0000-4000-8030-000000000025",
+      "updatedAt": "2026-11-27T02:27:02.880Z"
     }
   ],
   "folders": [
-    {
-      "id": "00000000-0000-4000-8030-000000000007",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "name": "Week 2",
-      "courseExamId": "00000000-0000-4000-8030-000000000009",
-      "sortOrder": 1,
-      "createdAt": "2026-11-23T13:53:14.658Z",
-      "deletedAt": null,
-      "deletionId": null
-    },
     {
       "id": "00000000-0000-4000-8030-000000000022",
       "courseId": "00000000-0000-4000-8030-000000000020",
       "name": "Unsorted",
       "courseExamId": null,
       "sortOrder": 1,
-      "createdAt": "2026-11-23T13:53:14.790Z",
+      "createdAt": "2026-11-27T02:27:02.922Z",
+      "deletedAt": null,
+      "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000007",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "name": "Week 2",
+      "courseExamId": "00000000-0000-4000-8030-000000000009",
+      "sortOrder": 1,
+      "createdAt": "2026-11-27T02:27:02.645Z",
+      "deletedAt": null,
+      "deletionId": null,
+      "updatedAt": "2026-11-27T02:27:02.680Z"
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000012",
+      "courseId": "00000000-0000-4000-8030-000000000010",
+      "name": "Unsorted",
+      "courseExamId": null,
+      "sortOrder": 1,
+      "createdAt": "2026-11-27T02:27:02.703Z",
       "deletedAt": null,
       "deletionId": null
     },
@@ -118,33 +132,23 @@
       "name": "Week 1",
       "courseExamId": null,
       "sortOrder": 1,
-      "createdAt": "2026-11-23T13:53:14.630Z",
-      "deletedAt": null,
-      "deletionId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000012",
-      "courseId": "00000000-0000-4000-8030-000000000010",
-      "name": "Unsorted",
-      "courseExamId": null,
-      "sortOrder": 1,
-      "createdAt": "2026-11-23T13:53:14.683Z",
+      "createdAt": "2026-11-27T02:27:02.558Z",
       "deletedAt": null,
       "deletionId": null
     }
   ],
   "practiceSets": [
     {
-      "id": "00000000-0000-4000-8030-000000000004",
+      "id": "00000000-0000-4000-8030-000000000001",
       "courseId": "00000000-0000-4000-8030-000000000002",
       "lineageId": "00000000-0000-4000-8030-000000000001",
       "title": "Set A",
-      "description": "A replaced set.",
+      "description": "Invented practice questions.",
       "weekLabel": "Week 1",
       "folderId": "00000000-0000-4000-8030-000000000003",
       "sortOrder": 1,
-      "importedAt": "2026-11-23T13:53:14.643Z",
-      "fileHash": "5efaa00561061a53af8a669cf9d4f9c9175bdafbbd460f48212914110da60cdd",
+      "importedAt": "2026-11-27T02:27:02.558Z",
+      "fileHash": "747eaeca82b80fd2cd694e7843f8864da108516cc5158c6d9b26f1ba15e3bc59",
       "stats": {
         "byCj": {
           "Analyze cues": 2
@@ -161,11 +165,12 @@
         },
         "questionCount": 2
       },
-      "isCurrent": true,
-      "replacedAt": null,
+      "isCurrent": false,
+      "replacedAt": "2026-11-27T02:27:02.603Z",
       "kind": "practice",
       "deletedAt": null,
-      "deletionId": null
+      "deletionId": null,
+      "updatedAt": "2026-11-27T02:27:02.603Z"
     },
     {
       "id": "00000000-0000-4000-8030-000000000006",
@@ -176,7 +181,7 @@
       "weekLabel": "Week 2",
       "folderId": "00000000-0000-4000-8030-000000000007",
       "sortOrder": 3,
-      "importedAt": "2026-11-23T13:53:14.658Z",
+      "importedAt": "2026-11-27T02:27:02.645Z",
       "fileHash": "f56b7f2d1821cba1952ea469dc5437dee46df9ec855ecb69beaa8fcc1a7f7e0d",
       "stats": {
         "byCj": {
@@ -197,35 +202,6 @@
       "deletionId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000008",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "lineageId": "00000000-0000-4000-8030-000000000008",
-      "title": "Set C exam",
-      "description": "Invented practice questions.",
-      "weekLabel": "Week 2",
-      "folderId": "00000000-0000-4000-8030-000000000007",
-      "sortOrder": 4,
-      "importedAt": "2026-11-23T13:53:14.665Z",
-      "fileHash": "e37f8560f467e09f405c81e175b7578883c7e017a0fd74126bc44602e1d51397",
-      "stats": {
-        "byCj": {
-          "Analyze cues": 2
-        },
-        "byNeed": {},
-        "byType": {
-          "single": 2
-        },
-        "termCount": 0,
-        "byDifficulty": {},
-        "questionCount": 2
-      },
-      "isCurrent": true,
-      "replacedAt": null,
-      "kind": "exam",
-      "deletedAt": null,
-      "deletionId": null
-    },
-    {
       "id": "00000000-0000-4000-8030-000000000021",
       "courseId": "00000000-0000-4000-8030-000000000020",
       "lineageId": "00000000-0000-4000-8030-000000000021",
@@ -234,107 +210,8 @@
       "weekLabel": "Unsorted",
       "folderId": "00000000-0000-4000-8030-000000000022",
       "sortOrder": 1,
-      "importedAt": "2026-11-23T13:53:14.790Z",
+      "importedAt": "2026-11-27T02:27:02.922Z",
       "fileHash": "fc1b5bc6ad1492548aa5b1e719c26844316cfd93f726ac9e39604257183bba92",
-      "stats": {
-        "byCj": {
-          "Analyze cues": 2
-        },
-        "byNeed": {
-          "Physiological integrity": 2
-        },
-        "byType": {
-          "single": 2
-        },
-        "termCount": 1,
-        "byDifficulty": {
-          "3": 2
-        },
-        "questionCount": 2
-      },
-      "isCurrent": true,
-      "replacedAt": null,
-      "kind": "practice",
-      "deletedAt": null,
-      "deletionId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000018",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "lineageId": "00000000-0000-4000-8030-000000000018",
-      "title": "Set gone",
-      "description": "Invented practice questions.",
-      "weekLabel": "Week 1",
-      "folderId": "00000000-0000-4000-8030-000000000003",
-      "sortOrder": 5,
-      "importedAt": "2026-11-23T13:53:14.745Z",
-      "fileHash": "9f000a5ffdc822d70764e987f2c81f814321456501b80dd260f5cdceee0bba0f",
-      "stats": {
-        "byCj": {
-          "Analyze cues": 2
-        },
-        "byNeed": {
-          "Physiological integrity": 2
-        },
-        "byType": {
-          "single": 2
-        },
-        "termCount": 1,
-        "byDifficulty": {
-          "3": 2
-        },
-        "questionCount": 2
-      },
-      "isCurrent": true,
-      "replacedAt": null,
-      "kind": "practice",
-      "deletedAt": "2026-11-23T13:53:14.757Z",
-      "deletionId": "00000000-0000-4000-8030-000000000026"
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000001",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "lineageId": "00000000-0000-4000-8030-000000000001",
-      "title": "Set A",
-      "description": "Invented practice questions.",
-      "weekLabel": "Week 1",
-      "folderId": "00000000-0000-4000-8030-000000000003",
-      "sortOrder": 1,
-      "importedAt": "2026-11-23T13:53:14.630Z",
-      "fileHash": "747eaeca82b80fd2cd694e7843f8864da108516cc5158c6d9b26f1ba15e3bc59",
-      "stats": {
-        "byCj": {
-          "Analyze cues": 2
-        },
-        "byNeed": {
-          "Physiological integrity": 2
-        },
-        "byType": {
-          "single": 2
-        },
-        "termCount": 1,
-        "byDifficulty": {
-          "3": 2
-        },
-        "questionCount": 2
-      },
-      "isCurrent": false,
-      "replacedAt": "2026-11-23T13:53:14.643Z",
-      "kind": "practice",
-      "deletedAt": null,
-      "deletionId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000005",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "lineageId": "00000000-0000-4000-8030-000000000005",
-      "title": "Set B",
-      "description": "Invented practice questions.",
-      "weekLabel": "Week 1",
-      "folderId": "00000000-0000-4000-8030-000000000003",
-      "sortOrder": 2,
-      "importedAt": "2026-11-23T13:53:14.651Z",
-      "fileHash": "0be5ff3f38d31c790dadc7efcc28e0a98e696e822075662292afe4a04212d13e",
       "stats": {
         "byCj": {
           "Analyze cues": 2
@@ -366,7 +243,7 @@
       "weekLabel": "Unsorted",
       "folderId": "00000000-0000-4000-8030-000000000012",
       "sortOrder": 1,
-      "importedAt": "2026-11-23T13:53:14.683Z",
+      "importedAt": "2026-11-27T02:27:02.703Z",
       "fileHash": "93b45a6024bd966dbd046d5144a5582de52545c797ba28c331f7beca886a7f98",
       "stats": {
         "byCj": {
@@ -389,319 +266,142 @@
       "kind": "practice",
       "deletedAt": null,
       "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000008",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "lineageId": "00000000-0000-4000-8030-000000000008",
+      "title": "Set C exam",
+      "description": "Invented practice questions.",
+      "weekLabel": "Week 2",
+      "folderId": "00000000-0000-4000-8030-000000000007",
+      "sortOrder": 4,
+      "importedAt": "2026-11-27T02:27:02.666Z",
+      "fileHash": "e37f8560f467e09f405c81e175b7578883c7e017a0fd74126bc44602e1d51397",
+      "stats": {
+        "byCj": {
+          "Analyze cues": 2
+        },
+        "byNeed": {},
+        "byType": {
+          "single": 2
+        },
+        "termCount": 0,
+        "byDifficulty": {},
+        "questionCount": 2
+      },
+      "isCurrent": true,
+      "replacedAt": null,
+      "kind": "exam",
+      "deletedAt": null,
+      "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000004",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "lineageId": "00000000-0000-4000-8030-000000000001",
+      "title": "Set A",
+      "description": "A replaced set.",
+      "weekLabel": "Week 1",
+      "folderId": "00000000-0000-4000-8030-000000000003",
+      "sortOrder": 1,
+      "importedAt": "2026-11-27T02:27:02.603Z",
+      "fileHash": "5efaa00561061a53af8a669cf9d4f9c9175bdafbbd460f48212914110da60cdd",
+      "stats": {
+        "byCj": {
+          "Analyze cues": 2
+        },
+        "byNeed": {
+          "Physiological integrity": 2
+        },
+        "byType": {
+          "single": 2
+        },
+        "termCount": 1,
+        "byDifficulty": {
+          "3": 2
+        },
+        "questionCount": 2
+      },
+      "isCurrent": true,
+      "replacedAt": null,
+      "kind": "practice",
+      "deletedAt": null,
+      "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000005",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "lineageId": "00000000-0000-4000-8030-000000000005",
+      "title": "Set B",
+      "description": "Invented practice questions.",
+      "weekLabel": "Week 1",
+      "folderId": "00000000-0000-4000-8030-000000000003",
+      "sortOrder": 2,
+      "importedAt": "2026-11-27T02:27:02.630Z",
+      "fileHash": "0be5ff3f38d31c790dadc7efcc28e0a98e696e822075662292afe4a04212d13e",
+      "stats": {
+        "byCj": {
+          "Analyze cues": 2
+        },
+        "byNeed": {
+          "Physiological integrity": 2
+        },
+        "byType": {
+          "single": 2
+        },
+        "termCount": 1,
+        "byDifficulty": {
+          "3": 2
+        },
+        "questionCount": 2
+      },
+      "isCurrent": true,
+      "replacedAt": null,
+      "kind": "practice",
+      "deletedAt": null,
+      "deletionId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000018",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "lineageId": "00000000-0000-4000-8030-000000000018",
+      "title": "Set gone",
+      "description": "Invented practice questions.",
+      "weekLabel": "Week 1",
+      "folderId": "00000000-0000-4000-8030-000000000003",
+      "sortOrder": 5,
+      "importedAt": "2026-11-27T02:27:02.832Z",
+      "fileHash": "9f000a5ffdc822d70764e987f2c81f814321456501b80dd260f5cdceee0bba0f",
+      "stats": {
+        "byCj": {
+          "Analyze cues": 2
+        },
+        "byNeed": {
+          "Physiological integrity": 2
+        },
+        "byType": {
+          "single": 2
+        },
+        "termCount": 1,
+        "byDifficulty": {
+          "3": 2
+        },
+        "questionCount": 2
+      },
+      "isCurrent": true,
+      "replacedAt": null,
+      "kind": "practice",
+      "deletedAt": "2026-11-27T02:27:02.858Z",
+      "deletionId": "00000000-0000-4000-8030-000000000026",
+      "updatedAt": "2026-11-27T02:27:02.858Z"
     }
   ],
   "questions": [
     {
-      "id": "00000000-0000-4000-8030-000000000013",
-      "setId": "00000000-0000-4000-8030-000000000005",
-      "lineageId": "00000000-0000-4000-8030-000000000027",
-      "publicId": "B1",
-      "position": 1,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Week 1",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000028",
-      "setId": "00000000-0000-4000-8030-000000000021",
-      "lineageId": "00000000-0000-4000-8030-000000000029",
-      "publicId": "D1",
-      "position": 1,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Unsorted",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000016",
-      "setId": "00000000-0000-4000-8030-000000000004",
-      "lineageId": "00000000-0000-4000-8030-000000000030",
-      "publicId": "A2",
-      "position": 2,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Week 1",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000031",
-      "setId": "00000000-0000-4000-8030-000000000001",
-      "lineageId": "00000000-0000-4000-8030-000000000032",
-      "publicId": "A1",
-      "position": 1,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Week 1",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000033",
+      "id": "00000000-0000-4000-8030-000000000027",
       "setId": "00000000-0000-4000-8030-000000000011",
-      "lineageId": "00000000-0000-4000-8030-000000000034",
-      "publicId": "T2",
-      "position": 2,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Unsorted",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000035",
-      "setId": "00000000-0000-4000-8030-000000000021",
-      "lineageId": "00000000-0000-4000-8030-000000000036",
-      "publicId": "D2",
-      "position": 2,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": "Physiological integrity",
-      "difficulty": 3,
-      "weekLabel": "Unsorted",
-      "stem": "An invented client presents with a finding about Invented topic.",
-      "ask": "Which action should the nurse take first?",
-      "body": {
-        "options": [
-          {
-            "t": "The action that addresses the finding",
-            "ok": true,
-            "why": "It addresses the finding."
-          },
-          {
-            "t": "An action for a different finding",
-            "why": "It does not change this finding."
-          },
-          {
-            "t": "Waiting to reassess later",
-            "why": "It delays care."
-          },
-          {
-            "t": "Documenting only",
-            "why": "It does not treat the client."
-          }
-        ]
-      },
-      "rationale": "The first action addresses the invented finding.",
-      "takeaway": "Match the action to the finding.",
-      "termKeys": [
-        "invented-term"
-      ],
-      "source": "Invented lecture notes",
-      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000037",
-      "setId": "00000000-0000-4000-8030-000000000006",
-      "lineageId": "00000000-0000-4000-8030-000000000038",
-      "publicId": "C1",
-      "position": 1,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": null,
-      "difficulty": null,
-      "weekLabel": "Week 2",
-      "stem": "An invented stem.",
-      "ask": "Which is right?",
-      "body": {
-        "options": [
-          {
-            "t": "Right",
-            "ok": true
-          },
-          {
-            "t": "Wrong"
-          },
-          {
-            "t": "Also wrong"
-          }
-        ]
-      },
-      "rationale": "Invented rationale.",
-      "takeaway": "Invented takeaway.",
-      "termKeys": [],
-      "source": null,
-      "contentHash": "f4a40e4f71304bb41d74f7af3f3b2453c6e85a0730b21d11173dc5cd3fcb7afd",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000039",
-      "setId": "00000000-0000-4000-8030-000000000011",
-      "lineageId": "00000000-0000-4000-8030-000000000040",
+      "lineageId": "00000000-0000-4000-8030-000000000028",
       "publicId": "T1",
       "position": 1,
       "type": "single",
@@ -744,9 +444,9 @@
       "twinOfLineageId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000041",
-      "setId": "00000000-0000-4000-8030-000000000001",
-      "lineageId": "00000000-0000-4000-8030-000000000030",
+      "id": "00000000-0000-4000-8030-000000000017",
+      "setId": "00000000-0000-4000-8030-000000000004",
+      "lineageId": "00000000-0000-4000-8030-000000000029",
       "publicId": "A2",
       "position": 2,
       "type": "single",
@@ -791,7 +491,7 @@
     {
       "id": "00000000-0000-4000-8030-000000000014",
       "setId": "00000000-0000-4000-8030-000000000005",
-      "lineageId": "00000000-0000-4000-8030-000000000042",
+      "lineageId": "00000000-0000-4000-8030-000000000030",
       "publicId": "B2",
       "position": 2,
       "type": "single",
@@ -834,10 +534,302 @@
       "twinOfLineageId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000043",
+      "id": "00000000-0000-4000-8030-000000000031",
+      "setId": "00000000-0000-4000-8030-000000000006",
+      "lineageId": "00000000-0000-4000-8030-000000000032",
+      "publicId": "C1",
+      "position": 1,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": null,
+      "difficulty": null,
+      "weekLabel": "Week 2",
+      "stem": "An invented stem.",
+      "ask": "Which is right?",
+      "body": {
+        "options": [
+          {
+            "t": "Right",
+            "ok": true
+          },
+          {
+            "t": "Wrong"
+          },
+          {
+            "t": "Also wrong"
+          }
+        ]
+      },
+      "rationale": "Invented rationale.",
+      "takeaway": "Invented takeaway.",
+      "termKeys": [],
+      "source": null,
+      "contentHash": "f4a40e4f71304bb41d74f7af3f3b2453c6e85a0730b21d11173dc5cd3fcb7afd",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000033",
       "setId": "00000000-0000-4000-8030-000000000018",
-      "lineageId": "00000000-0000-4000-8030-000000000044",
+      "lineageId": "00000000-0000-4000-8030-000000000034",
       "publicId": "G2",
+      "position": 2,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Week 1",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
+      "body": {
+        "options": [
+          {
+            "t": "The action that addresses the finding",
+            "ok": true,
+            "why": "It addresses the finding."
+          },
+          {
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
+          },
+          {
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
+          }
+        ]
+      },
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000035",
+      "setId": "00000000-0000-4000-8030-000000000001",
+      "lineageId": "00000000-0000-4000-8030-000000000036",
+      "publicId": "A1",
+      "position": 1,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Week 1",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
+      "body": {
+        "options": [
+          {
+            "t": "The action that addresses the finding",
+            "ok": true,
+            "why": "It addresses the finding."
+          },
+          {
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
+          },
+          {
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
+          }
+        ]
+      },
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000037",
+      "setId": "00000000-0000-4000-8030-000000000021",
+      "lineageId": "00000000-0000-4000-8030-000000000038",
+      "publicId": "D2",
+      "position": 2,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Unsorted",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
+      "body": {
+        "options": [
+          {
+            "t": "The action that addresses the finding",
+            "ok": true,
+            "why": "It addresses the finding."
+          },
+          {
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
+          },
+          {
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
+          }
+        ]
+      },
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000013",
+      "setId": "00000000-0000-4000-8030-000000000005",
+      "lineageId": "00000000-0000-4000-8030-000000000039",
+      "publicId": "B1",
+      "position": 1,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Week 1",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
+      "body": {
+        "options": [
+          {
+            "t": "The action that addresses the finding",
+            "ok": true,
+            "why": "It addresses the finding."
+          },
+          {
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
+          },
+          {
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
+          }
+        ]
+      },
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000040",
+      "setId": "00000000-0000-4000-8030-000000000006",
+      "lineageId": "00000000-0000-4000-8030-000000000041",
+      "publicId": "C2",
+      "position": 2,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": null,
+      "difficulty": null,
+      "weekLabel": "Week 2",
+      "stem": "An invented stem.",
+      "ask": "Which is right?",
+      "body": {
+        "options": [
+          {
+            "t": "Right",
+            "ok": true
+          },
+          {
+            "t": "Wrong"
+          },
+          {
+            "t": "Also wrong"
+          }
+        ]
+      },
+      "rationale": "Invented rationale.",
+      "takeaway": "Invented takeaway.",
+      "termKeys": [],
+      "source": null,
+      "contentHash": "f4a40e4f71304bb41d74f7af3f3b2453c6e85a0730b21d11173dc5cd3fcb7afd",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000042",
+      "setId": "00000000-0000-4000-8030-000000000008",
+      "lineageId": "00000000-0000-4000-8030-000000000043",
+      "publicId": "C2",
+      "position": 2,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": null,
+      "difficulty": null,
+      "weekLabel": "Week 2",
+      "stem": "An invented exam stem.",
+      "ask": "Which is right?",
+      "body": {
+        "twinOf": "C2",
+        "options": [
+          {
+            "t": "Right",
+            "ok": true,
+            "why": "Yes."
+          },
+          {
+            "t": "Wrong",
+            "why": "No."
+          },
+          {
+            "t": "Also wrong",
+            "why": "No."
+          }
+        ]
+      },
+      "rationale": "Invented exam rationale.",
+      "takeaway": "Invented exam takeaway.",
+      "termKeys": [],
+      "source": null,
+      "contentHash": "b0020b5520c2e5f1d93ddc17c5a0dd016e29ceb1c8d1d34d8f6f417c4133f91f",
+      "twinOf": "C2",
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000044",
+      "setId": "00000000-0000-4000-8030-000000000001",
+      "lineageId": "00000000-0000-4000-8030-000000000029",
+      "publicId": "A2",
       "position": 2,
       "type": "single",
       "topic": "Invented topic",
@@ -919,9 +911,54 @@
       "twinOfLineageId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000017",
+      "id": "00000000-0000-4000-8030-000000000047",
+      "setId": "00000000-0000-4000-8030-000000000011",
+      "lineageId": "00000000-0000-4000-8030-000000000048",
+      "publicId": "T2",
+      "position": 2,
+      "type": "single",
+      "topic": "Invented topic",
+      "cj": "Analyze cues",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Unsorted",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
+      "body": {
+        "options": [
+          {
+            "t": "The action that addresses the finding",
+            "ok": true,
+            "why": "It addresses the finding."
+          },
+          {
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
+          },
+          {
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
+          }
+        ]
+      },
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
+      "twinOfLineageId": null
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000016",
       "setId": "00000000-0000-4000-8030-000000000004",
-      "lineageId": "00000000-0000-4000-8030-000000000032",
+      "lineageId": "00000000-0000-4000-8030-000000000036",
       "publicId": "A1",
       "position": 1,
       "type": "single",
@@ -964,9 +1001,9 @@
       "twinOfLineageId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000047",
+      "id": "00000000-0000-4000-8030-000000000049",
       "setId": "00000000-0000-4000-8030-000000000018",
-      "lineageId": "00000000-0000-4000-8030-000000000048",
+      "lineageId": "00000000-0000-4000-8030-000000000050",
       "publicId": "G1",
       "position": 1,
       "type": "single",
@@ -1009,121 +1046,90 @@
       "twinOfLineageId": null
     },
     {
-      "id": "00000000-0000-4000-8030-000000000049",
-      "setId": "00000000-0000-4000-8030-000000000006",
-      "lineageId": "00000000-0000-4000-8030-000000000050",
-      "publicId": "C2",
-      "position": 2,
-      "type": "single",
-      "topic": "Invented topic",
-      "cj": "Analyze cues",
-      "clientNeed": null,
-      "difficulty": null,
-      "weekLabel": "Week 2",
-      "stem": "An invented stem.",
-      "ask": "Which is right?",
-      "body": {
-        "options": [
-          {
-            "t": "Right",
-            "ok": true
-          },
-          {
-            "t": "Wrong"
-          },
-          {
-            "t": "Also wrong"
-          }
-        ]
-      },
-      "rationale": "Invented rationale.",
-      "takeaway": "Invented takeaway.",
-      "termKeys": [],
-      "source": null,
-      "contentHash": "f4a40e4f71304bb41d74f7af3f3b2453c6e85a0730b21d11173dc5cd3fcb7afd",
-      "twinOf": null,
-      "twinOfLineageId": null
-    },
-    {
       "id": "00000000-0000-4000-8030-000000000051",
-      "setId": "00000000-0000-4000-8030-000000000008",
+      "setId": "00000000-0000-4000-8030-000000000021",
       "lineageId": "00000000-0000-4000-8030-000000000052",
-      "publicId": "C2",
-      "position": 2,
+      "publicId": "D1",
+      "position": 1,
       "type": "single",
       "topic": "Invented topic",
       "cj": "Analyze cues",
-      "clientNeed": null,
-      "difficulty": null,
-      "weekLabel": "Week 2",
-      "stem": "An invented exam stem.",
-      "ask": "Which is right?",
+      "clientNeed": "Physiological integrity",
+      "difficulty": 3,
+      "weekLabel": "Unsorted",
+      "stem": "An invented client presents with a finding about Invented topic.",
+      "ask": "Which action should the nurse take first?",
       "body": {
-        "twinOf": "C2",
         "options": [
           {
-            "t": "Right",
+            "t": "The action that addresses the finding",
             "ok": true,
-            "why": "Yes."
+            "why": "It addresses the finding."
           },
           {
-            "t": "Wrong",
-            "why": "No."
+            "t": "An action for a different finding",
+            "why": "It does not change this finding."
           },
           {
-            "t": "Also wrong",
-            "why": "No."
+            "t": "Waiting to reassess later",
+            "why": "It delays care."
+          },
+          {
+            "t": "Documenting only",
+            "why": "It does not treat the client."
           }
         ]
       },
-      "rationale": "Invented exam rationale.",
-      "takeaway": "Invented exam takeaway.",
-      "termKeys": [],
-      "source": null,
-      "contentHash": "b0020b5520c2e5f1d93ddc17c5a0dd016e29ceb1c8d1d34d8f6f417c4133f91f",
-      "twinOf": "C2",
+      "rationale": "The first action addresses the invented finding.",
+      "takeaway": "Match the action to the finding.",
+      "termKeys": [
+        "invented-term"
+      ],
+      "source": "Invented lecture notes",
+      "contentHash": "6a92e0c1ff3404d909c8ee5660810f4884c7b90c3ee00ef95ca6dca07ddb4a33",
+      "twinOf": null,
       "twinOfLineageId": null
     }
   ],
   "terms": [
     {
       "id": "00000000-0000-4000-8030-000000000053",
-      "setId": "00000000-0000-4000-8030-000000000001",
+      "setId": "00000000-0000-4000-8030-000000000004",
       "key": "invented-term",
       "term": "Invented term",
       "meaning": "An invented meaning."
     },
     {
       "id": "00000000-0000-4000-8030-000000000054",
-      "setId": "00000000-0000-4000-8030-000000000005",
+      "setId": "00000000-0000-4000-8030-000000000001",
       "key": "invented-term",
       "term": "Invented term",
       "meaning": "An invented meaning."
     },
     {
       "id": "00000000-0000-4000-8030-000000000055",
-      "setId": "00000000-0000-4000-8030-000000000018",
-      "key": "invented-term",
-      "term": "Invented term",
-      "meaning": "An invented meaning."
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000056",
-      "setId": "00000000-0000-4000-8030-000000000011",
-      "key": "invented-term",
-      "term": "Invented term",
-      "meaning": "An invented meaning."
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000057",
       "setId": "00000000-0000-4000-8030-000000000021",
       "key": "invented-term",
       "term": "Invented term",
       "meaning": "An invented meaning."
     },
     {
+      "id": "00000000-0000-4000-8030-000000000056",
+      "setId": "00000000-0000-4000-8030-000000000018",
+      "key": "invented-term",
+      "term": "Invented term",
+      "meaning": "An invented meaning."
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000057",
+      "setId": "00000000-0000-4000-8030-000000000005",
+      "key": "invented-term",
+      "term": "Invented term",
+      "meaning": "An invented meaning."
+    },
+    {
       "id": "00000000-0000-4000-8030-000000000058",
-      "setId": "00000000-0000-4000-8030-000000000004",
+      "setId": "00000000-0000-4000-8030-000000000011",
       "key": "invented-term",
       "term": "Invented term",
       "meaning": "An invented meaning."
@@ -1131,34 +1137,15 @@
   ],
   "studySessions": [
     {
-      "id": "00000000-0000-4000-8030-000000000059",
-      "courseId": "00000000-0000-4000-8030-000000000002",
-      "mode": "practice",
-      "setId": "00000000-0000-4000-8030-000000000005",
-      "questionIds": [],
-      "examWeeks": null,
-      "examFolderIds": null,
-      "timeLimitSeconds": null,
-      "startedAt": "2026-11-23T13:53:14.696Z",
-      "finishedAt": "2026-11-23T13:53:14.707Z",
-      "score": null,
-      "endReason": "finished",
-      "examPool": "all",
-      "examPracticeWeeks": null,
-      "seededQuestionIds": [],
-      "deletedAt": null,
-      "deletionId": null
-    },
-    {
       "id": "00000000-0000-4000-8030-000000000015",
       "courseId": "00000000-0000-4000-8030-000000000002",
       "mode": "exam",
       "setId": null,
       "questionIds": [
         "00000000-0000-4000-8030-000000000016",
+        "00000000-0000-4000-8030-000000000017",
         "00000000-0000-4000-8030-000000000013",
-        "00000000-0000-4000-8030-000000000014",
-        "00000000-0000-4000-8030-000000000017"
+        "00000000-0000-4000-8030-000000000014"
       ],
       "examWeeks": [
         "Week 1"
@@ -1167,8 +1154,8 @@
         "00000000-0000-4000-8030-000000000003"
       ],
       "timeLimitSeconds": 360,
-      "startedAt": "2026-11-23T13:53:14.715Z",
-      "finishedAt": "2026-11-23T13:53:14.732Z",
+      "startedAt": "2026-11-27T02:27:02.765Z",
+      "finishedAt": "2026-11-27T02:27:02.804Z",
       "score": {
         "points": 0,
         "answered": 1,
@@ -1184,8 +1171,29 @@
         "Week 1"
       ],
       "seededQuestionIds": null,
-      "deletedAt": "2026-11-23T13:53:14.779Z",
-      "deletionId": "00000000-0000-4000-8030-000000000060"
+      "deletedAt": "2026-11-27T02:27:02.905Z",
+      "deletionId": "00000000-0000-4000-8030-000000000059",
+      "updatedAt": "2026-11-27T02:27:02.905Z"
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000060",
+      "courseId": "00000000-0000-4000-8030-000000000002",
+      "mode": "practice",
+      "setId": "00000000-0000-4000-8030-000000000005",
+      "questionIds": [],
+      "examWeeks": null,
+      "examFolderIds": null,
+      "timeLimitSeconds": null,
+      "startedAt": "2026-11-27T02:27:02.727Z",
+      "finishedAt": "2026-11-27T02:27:02.747Z",
+      "score": null,
+      "endReason": "finished",
+      "examPool": "all",
+      "examPracticeWeeks": null,
+      "seededQuestionIds": [],
+      "deletedAt": null,
+      "deletionId": null,
+      "updatedAt": "2026-11-27T02:27:02.747Z"
     }
   ],
   "attempts": [
@@ -1203,28 +1211,12 @@
       "points": 0,
       "maxPoints": 1,
       "guessed": true,
-      "answeredAt": "2026-11-23T13:53:14.725Z"
+      "answeredAt": "2026-11-27T02:27:02.788Z"
     },
     {
       "id": "00000000-0000-4000-8030-000000000062",
-      "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
-      "studySessionId": "00000000-0000-4000-8030-000000000059",
-      "questionId": "00000000-0000-4000-8030-000000000013",
-      "response": {
-        "type": "single",
-        "choice": 0
-      },
-      "shuffle": null,
-      "status": "correct",
-      "points": 1,
-      "maxPoints": 1,
-      "guessed": false,
-      "answeredAt": "2026-11-23T13:53:14.696Z"
-    },
-    {
-      "id": "00000000-0000-4000-8030-000000000063",
       "clientAttemptId": "c1000000-0000-4000-8000-000000000002",
-      "studySessionId": "00000000-0000-4000-8030-000000000059",
+      "studySessionId": "00000000-0000-4000-8030-000000000060",
       "questionId": "00000000-0000-4000-8030-000000000014",
       "response": {
         "type": "single",
@@ -1235,49 +1227,65 @@
       "points": 0,
       "maxPoints": 1,
       "guessed": false,
-      "answeredAt": "2026-11-23T13:53:14.707Z"
+      "answeredAt": "2026-11-27T02:27:02.747Z"
+    },
+    {
+      "id": "00000000-0000-4000-8030-000000000063",
+      "clientAttemptId": "c1000000-0000-4000-8000-000000000001",
+      "studySessionId": "00000000-0000-4000-8030-000000000060",
+      "questionId": "00000000-0000-4000-8030-000000000013",
+      "response": {
+        "type": "single",
+        "choice": 0
+      },
+      "shuffle": null,
+      "status": "correct",
+      "points": 1,
+      "maxPoints": 1,
+      "guessed": false,
+      "answeredAt": "2026-11-27T02:27:02.727Z"
     }
   ],
   "questionProgress": [
     {
-      "questionLineageId": "00000000-0000-4000-8030-000000000042",
+      "questionLineageId": "00000000-0000-4000-8030-000000000030",
       "attempts": 1,
       "correctAttempts": 0,
       "lastStatus": "incorrect",
       "lastGuessed": false,
-      "lastAnsweredAt": "2026-11-23T13:53:14.707Z",
+      "lastAnsweredAt": "2026-11-27T02:27:02.747Z",
       "lastPoints": 0,
       "lastMaxPoints": 1,
       "inReview": false,
-      "lastAttemptId": "00000000-0000-4000-8030-000000000063"
+      "lastAttemptId": "00000000-0000-4000-8030-000000000062"
     },
     {
-      "questionLineageId": "00000000-0000-4000-8030-000000000027",
+      "questionLineageId": "00000000-0000-4000-8030-000000000039",
       "attempts": 1,
       "correctAttempts": 1,
       "lastStatus": "correct",
       "lastGuessed": false,
-      "lastAnsweredAt": "2026-11-23T13:53:14.696Z",
+      "lastAnsweredAt": "2026-11-27T02:27:02.727Z",
       "lastPoints": 1,
       "lastMaxPoints": 1,
       "inReview": false,
-      "lastAttemptId": "00000000-0000-4000-8030-000000000062"
+      "lastAttemptId": "00000000-0000-4000-8030-000000000063"
     }
   ],
   "reviewClears": [
     {
-      "questionLineageId": "00000000-0000-4000-8030-000000000042",
-      "lastAttemptId": "00000000-0000-4000-8030-000000000063",
-      "clearedAt": "2026-11-23T13:53:14.740Z"
+      "questionLineageId": "00000000-0000-4000-8030-000000000036",
+      "lastAttemptId": "00000000-0000-4000-8030-000000000061",
+      "clearedAt": "2026-11-27T02:27:02.820Z"
     },
     {
       "questionLineageId": "00000000-0000-4000-8030-000000000030",
-      "lastAttemptId": "00000000-0000-4000-8030-000000000061",
-      "clearedAt": "2026-11-23T13:53:14.740Z"
+      "lastAttemptId": "00000000-0000-4000-8030-000000000062",
+      "clearedAt": "2026-11-27T02:27:02.820Z"
     }
   ],
   "studyPlace": {
     "courseId": "00000000-0000-4000-8030-000000000002",
-    "updatedAt": "2026-11-23T13:53:14.805Z"
+    "updatedAt": "2026-11-27T02:27:03.028Z"
   }
 }

@@ -30,7 +30,9 @@ extension LocalBankHarness {
     }
 
     /// Every row of a table as text, for a before-and-after comparison.
-    func rows(_ sql: String) throws -> [[StoreValue]] { try store.run(sql).map(\.values) }
+    func rows(_ sql: String, omitting column: String? = nil) throws -> [[StoreValue]] {
+        try store.run(sql).map { row in row.columns.filter { $0 != column }.map { row[$0] } }
+    }
 }
 
 /// A question file as text, written from invented parts.

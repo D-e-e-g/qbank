@@ -1,5 +1,5 @@
 {
-  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
+  "recordedFrom": "d86a61f20f1cc4436c3ad09f655881297bfda187",
   "request": {
     "method": "POST",
     "path": "/api/courses/c0000000-0000-4000-8000-000000000501/exams",
@@ -30,26 +30,26 @@
       "pool": "wrong",
       "practiceWeeks": [],
       "timeLimitSeconds": 270,
-      "startedAt": "2026-11-25T09:50:11.980Z",
-      "endsAt": "2026-11-25T09:54:41.980Z",
+      "startedAt": "2026-11-27T02:26:52.735Z",
+      "endsAt": "2026-11-27T02:31:22.735Z",
       "status": "running",
       "finishedAt": null,
       "endReason": null,
-      "serverNow": "2026-11-25T09:50:11.980Z",
+      "serverNow": "2026-11-27T02:26:52.735Z",
       "questions": [
         {
           "id": "00000000-0000-4000-8021-000000000009",
-          "publicId": "XA01",
+          "publicId": "XA03",
           "position": 1,
           "type": "sata",
-          "topic": "Harder A 1",
+          "topic": "Harder A 3",
           "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
+          "stem": "On a later shift a different invented person shows signs linked to Harder A 3.",
           "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder A 1.",
+          "rationale": "Invented twin rationale for Harder A 3.",
           "takeaway": "Report changes.",
           "body": {
-            "twinOf": "A01",
+            "twinOf": "A03",
             "options": [
               {
                 "t": "Heart rate of 124",
@@ -82,17 +82,17 @@
         },
         {
           "id": "00000000-0000-4000-8021-000000000010",
-          "publicId": "XA03",
+          "publicId": "XA01",
           "position": 2,
           "type": "sata",
-          "topic": "Harder A 3",
+          "topic": "Harder A 1",
           "cj": "Recognize cues",
-          "stem": "On a later shift a different invented person shows signs linked to Harder A 3.",
+          "stem": "On a later shift a different invented person shows signs linked to Harder A 1.",
           "ask": "Which findings need a report? Select all that apply.",
-          "rationale": "Invented twin rationale for Harder A 3.",
+          "rationale": "Invented twin rationale for Harder A 1.",
           "takeaway": "Report changes.",
           "body": {
-            "twinOf": "A03",
+            "twinOf": "A01",
             "options": [
               {
                 "t": "Heart rate of 124",

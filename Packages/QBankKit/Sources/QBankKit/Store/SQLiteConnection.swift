@@ -54,7 +54,7 @@ final class SQLiteConnection {
                 case .null: sqlite3_bind_null(statement, index)
                 case .integer(let number): sqlite3_bind_int64(statement, index, number)
                 case .real(let number): sqlite3_bind_double(statement, index, number)
-                case .text(let text): sqlite3_bind_text(statement, index, text, -1, transient)
+                case .text(let text): sqlite3_bind_text64(statement, index, text, UInt64(text.utf8.count), transient, UInt8(SQLITE_UTF8))
                 }
             guard bound == SQLITE_OK else { throw failure("bind", handle) }
         }
@@ -64,14 +64,22 @@ final class SQLiteConnection {
         while true {
             let step = sqlite3_step(statement)
             if step == SQLITE_DONE { return rows }
-            guard step == SQLITE_ROW else { throw failure("run", handle) }
+            guard step == SQLITE_ROW else {
+                let error = failure("run", handle)
+                // With a trigger, SQLite can undo only the statement on a full disk. Preserve the
+                // store's all-or-nothing transaction even if its caller catches the write error.
+                if step == SQLITE_FULL && inTransaction { sqlite3_exec(handle, "ROLLBACK", nil, nil, nil) }
+                throw error
+            }
             var values: [StoreValue] = []
             for (index, column) in columns.enumerated() {
                 let position = Int32(index)
                 switch sqlite3_column_type(statement, position) {
                 case SQLITE_INTEGER: values.append(.integer(sqlite3_column_int64(statement, position)))
                 case SQLITE_FLOAT: values.append(.real(sqlite3_column_double(statement, position)))
-                case SQLITE_TEXT: values.append(.text(String(cString: sqlite3_column_text(statement, position))))
+                case SQLITE_TEXT:
+                    let bytes = UnsafeBufferPointer(start: sqlite3_column_text(statement, position), count: Int(sqlite3_column_bytes(statement, position)))
+                    values.append(.text(String(decoding: bytes, as: UTF8.self)))
                 case SQLITE_NULL: values.append(.null)
                 default: throw .unsupportedValue(column: column)
                 }

@@ -26,6 +26,8 @@ struct ArchiveField: Sendable {
     let column: String
     let kind: ArchiveKind
     let nullable: Bool
+    /// An absent field reads as SQL NULL and is omitted again. Explicit JSON null is a separate kind.
+    let optional: Bool
 }
 
 /// One of the twelve tables, as the archive and the store both hold it.
@@ -44,7 +46,8 @@ struct ArchiveTable: Sendable {
 
     var columns: String { fields.map(\.column).joined(separator: ", ") }
     var insert: String { "INSERT INTO \(table) (\(columns)) VALUES (\(fields.map { _ in "?" }.joined(separator: ", ")))" }
-    var select: String { "SELECT \(columns) FROM \(table)" + (rowKey.map { " ORDER BY \(column(of: $0))" } ?? "") }
+    // A read-only safety copy can still have the step 1 shape, without the optional field.
+    var select: String { "SELECT * FROM \(table)" + (rowKey.map { " ORDER BY \(column(of: $0))" } ?? "") }
 
     func column(of name: String) -> String { fields.first { $0.name == name }?.column ?? name }
 }
@@ -52,13 +55,13 @@ struct ArchiveTable: Sendable {
 /// The twelve tables, in the archive's order. Each field is named as `docs/on-phone-bank.md` names it
 /// and stored in the column of that name in snake case.
 enum BankArchiveTables {
-    private static func field(_ name: String, _ kind: ArchiveKind, null: Bool = false) -> ArchiveField {
+    private static func field(_ name: String, _ kind: ArchiveKind, null: Bool = false, optional: Bool = false) -> ArchiveField {
         var column = ""
         for character in name {
             if character.isUppercase { column += "_" }
             column += character.lowercased()
         }
-        return ArchiveField(name: name, column: column, kind: kind, nullable: null)
+        return ArchiveField(name: name, column: column, kind: kind, nullable: null, optional: optional)
     }
 
     /// The two marks a delete leaves on a row, both null or both set.
@@ -67,7 +70,8 @@ enum BankArchiveTables {
     private static func list(
         _ key: String, _ table: String, key rowKey: String = "id", _ fields: [ArchiveField], deletable: Bool = false, refs: [(String, String)] = []
     ) -> ArchiveTable {
-        ArchiveTable(key: key, table: table, fields: fields + (deletable ? deletion : []), rowKey: rowKey, references: refs.map { (field: $0.0, target: $0.1) }, single: false)
+        let changeTime = BankChangeTimeStep.tables.contains(table) ? [field("updatedAt", .time, optional: true)] : []
+        return ArchiveTable(key: key, table: table, fields: fields + (deletable ? deletion : []) + changeTime, rowKey: rowKey, references: refs.map { (field: $0.0, target: $0.1) }, single: false)
     }
 
     private static let status = ArchiveKind.choice(["correct", "partial", "incorrect"])

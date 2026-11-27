@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
+  "recordedFrom": "d86a61f20f1cc4436c3ad09f655881297bfda187",
   "world": "session-sign-up",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.842Z",
+      "at": "2026-11-27T02:26:23.618Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T09:49:57.842Z"
+          "expiresAt": "2028-01-01T02:26:23.618Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.888Z",
+      "at": "2026-11-27T02:26:23.679Z",
       "request": {
         "method": "POST",
         "path": "/api/admin/sign-up-emails",
@@ -61,7 +61,7 @@
           "emails": [
             {
               "email": "new.user@example.com",
-              "addedAt": "2026-11-25T09:49:57.888Z",
+              "addedAt": "2026-11-27T02:26:23.679Z",
               "hasAccount": false
             }
           ]
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": "sign-up-short-password",
-      "at": "2026-11-25T09:49:57.891Z",
+      "at": "2026-11-27T02:26:23.685Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -94,7 +94,7 @@
     {
       "step": "request",
       "name": "sign-up-refused",
-      "at": "2026-11-25T09:49:57.891Z",
+      "at": "2026-11-27T02:26:23.686Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -117,7 +117,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.892Z",
+      "at": "2026-11-27T02:26:23.690Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -140,7 +140,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.893Z",
+      "at": "2026-11-27T02:26:23.692Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -163,7 +163,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.894Z",
+      "at": "2026-11-27T02:26:23.698Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -186,7 +186,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.895Z",
+      "at": "2026-11-27T02:26:23.701Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -209,7 +209,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.896Z",
+      "at": "2026-11-27T02:26:23.703Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -235,7 +235,7 @@
     {
       "step": "request",
       "name": "sign-up-locked",
-      "at": "2026-11-25T09:49:57.897Z",
+      "at": "2026-11-27T02:26:23.705Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -261,7 +261,7 @@
     {
       "step": "request",
       "name": "sign-up",
-      "at": "2026-11-25T09:49:57.898Z",
+      "at": "2026-11-27T02:26:23.705Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-up",
@@ -293,7 +293,7 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T09:49:57.898Z"
+          "expiresAt": "2028-01-01T02:26:23.705Z"
         }
       }
     }
