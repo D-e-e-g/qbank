@@ -105,7 +105,7 @@ A column's name is the field's name below in snake case (`sortOrder` is `sort_or
 | `review_clear` (`reviewClears`) | `questionLineageId` (id, the key), `lastAttemptId` (an attempt), `clearedAt` (time) | `schema.ts:424-437` |
 | `study_place` (`studyPlace`) | `courseId` (a course), `updatedAt` (time). At most one row. | `schema.ts:440-448` |
 
-Schema step 2 adds a nullable `updated_at` to `semester`, `course`, `course_exam`, `folder`, `practice_set` and `study_session`. Older rows keep their values and start with no change time. When a routed request inserts or changes a row, the phone stamps it with the engine clock for that transaction. An archive import preserves the times it receives.
+Schema step 2 adds a nullable `updated_at` to `semester`, `course`, `course_exam`, `folder`, `practice_set` and `study_session`, and a one-row `bank_archive` table that keeps the archive `stamp` the bank was last read from. Older rows keep their values and start with no change time. When a routed request inserts or changes a row, the phone stamps it with the engine clock for that transaction. An archive import preserves the times it receives.
 
 Notes for I-11:
 
