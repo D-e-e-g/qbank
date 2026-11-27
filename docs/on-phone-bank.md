@@ -2,7 +2,7 @@
 
 The design record for the bank that lives on the iPhone or iPad: how the screens reach it, what it stores, and the one file format that carries a whole bank between the phone and the server. [cloud.md](cloud.md) is its other half: who has which bank, and the rules for moving one.
 
-This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) and the engine's catalog and sets slices (`Packages/QBankKit/Sources/QBankKit/LocalBank`: semesters, courses, topics, pages and folders in I-12; the import check, import, replace, add beside, restore, reading a set and a course's terms in I-13; answers, a set's sittings and run, Start over, Review, a course's counts and the course used last in I-14; exams in I-15: the plan, the all and wrong pools, start and replace, running, grace and time up from the clock, finish, the result by folder and past exams; deleting a set, folder, page, course, topic or past exam with its preview, confirmation and Undo for 30 days in I-16; filing the app's sample set into a bank that has never held anything, through its own import, in I-22) and the bank archive (I-17, `Packages/QBankKit/Sources/QBankKit/Archive`: writing the bank as bank archive v1 and reading one into a fresh bank, with a count check) exist so far. Settings > Export my bank uses the archive (I-25): a free account writes it from the phone, any other user account downloads it from `GET /api/me/bank`, and either file goes to the share sheet. The move to Cloud uses it too (I-34): the phone uploads its whole bank as one archive and switches to the server's copy only after comparison 3 holds ([cloud.md](cloud.md)). So does the way back once Cloud ends (I-35): the phone downloads the whole bank as one archive into a fresh file and switches to it only once its counts equal the archive's in every table. The app uses the store and the engine only for a free account (I-20): the model knows the three kinds of account and a free one answers the bank's requests from the phone. Sign in with Apple on the first screen makes one (I-30): a store account's bank opens on the phone under Apple's user identifier, also when the server cannot be reached yet. Settings > Delete account erases it, with every other file a move to Cloud or the way back left beside it, such as the safety copy, before the server deletes the account (I-32, [cloud.md](cloud.md#getting-in)). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is server commit `3501671` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`).
+This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) and the engine's catalog and sets slices (`Packages/QBankKit/Sources/QBankKit/LocalBank`: semesters, courses, topics, pages and folders in I-12; the import check, import, replace, add beside, restore, reading a set and a course's terms in I-13; answers, a set's sittings and run, Start over, Review, a course's counts and the course used last in I-14; exams in I-15: the plan, the all and wrong pools, start and replace, running, grace and time up from the clock, finish, the result by folder and past exams; deleting a set, folder, page, course, topic or past exam with its preview, confirmation and Undo for 30 days in I-16; filing the app's sample set into a bank that has never held anything, through its own import, in I-22) and the bank archive (I-17, `Packages/QBankKit/Sources/QBankKit/Archive`: writing the bank as bank archive v1 and reading one into a fresh bank, with a count check) exist so far. Settings > Export my bank uses the archive (I-25): a free account writes it from the phone, any other user account downloads it from `GET /api/me/bank`, and either file goes to the share sheet. The move to Cloud uses it too (I-34): the phone uploads its whole bank as one archive and switches to the server's copy only after comparison 3 holds ([cloud.md](cloud.md)). So does the way back once Cloud ends (I-35): the phone downloads the whole bank as one archive into a fresh file and switches to it only once its counts equal the archive's in every table. The app uses the store and the engine only for a free account (I-20): the model knows the three kinds of account and a free one answers the bank's requests from the phone. Sign in with Apple on the first screen makes one (I-30): a store account's bank opens on the phone under Apple's user identifier, also when the server cannot be reached yet. Settings > Delete account erases it, with every other file a move to Cloud or the way back left beside it, such as the safety copy, before the server deletes the account (I-32, [cloud.md](cloud.md#getting-in)). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is server commit `3501671` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`). The [time of last change](#the-time-of-last-change) and the [combined bank](#a-combined-bank) are newer than that pin: the server has both, read at commit `d86a61f`, and on the phone they are not built (I-37 for the time of last change and the archive's new fields, which also moves the pin; I-38 and I-39 for the combine, [cloud.md](cloud.md#combining-two-banks)).
 
 Ids such as A1, I-11 and S-09 name calls and pull requests in the App Store release plan. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -88,18 +88,18 @@ SQLite through the system library, with no third-party code (A2). One file holds
 
 The tables mirror the server's (`apps/api/src/db/schema.ts`): the same table names, the same column names, the same nullability, the same references, with foreign keys on. So moving a bank is a row copy. Three server columns are left out because one file is one person's bank: `owner_id` (semester, course), `user_id` (study_session, attempt, question_progress, review_clear, study_place) and `practice_set.imported_by`.
 
-A column's name is the field's name below in snake case (`sortOrder` is `sort_order`). A `?` marks a field that may be null. Tables marked *deletable* also carry `deletedAt` (time?) and `deletionId` (id?), both null or both set: one delete marks every row it hides with one id, and Undo clears exactly those (`schema.ts:129-137`).
+A column's name is the field's name below in snake case (`sortOrder` is `sort_order`). A `?` marks a field that may be null. Tables marked *deletable* also carry `deletedAt` (time?) and `deletionId` (id?), both null or both set: one delete marks every row it hides with one id, and Undo clears exactly those (`schema.ts:129-137`). Tables marked *timed* also carry `updatedAt` (time?), [the time of last change](#the-time-of-last-change).
 
 | Table (archive key) | Fields | Server |
 |---|---|---|
-| `semester` (`semesters`) | `id`, `number` (int, 1 to 3, unique), `name`, `startsOn` (date?), `endsOn` (date?), `archivedAt` (time?), `createdAt` (time) | `schema.ts:140-153` |
-| `course` (`courses`), deletable | `id`, `semesterId` (id?, a semester), `kind` (`course` or `topic`), `code` (empty for a topic), `title`, `sortOrder` (int), `archivedAt` (time?), `createdAt` (time). A course has a semester; a topic has none. | `schema.ts:163-179` |
-| `course_exam` (`courseExams`), deletable | `id`, `courseId` (a course), `name`, `sortOrder` (int), `linkUrl` (text?), `badge` (`exam`, `concept`, `study` or null), `createdAt` (time). This is a page. | `schema.ts:263-280` |
-| `folder` (`folders`), deletable | `id`, `courseId` (a course), `name`, `courseExamId` (id?, a page), `sortOrder` (int), `createdAt` (time) | `schema.ts:309-326` |
-| `practice_set` (`practiceSets`), deletable | `id`, `courseId` (a course), `lineageId` (id), `title`, `description`, `weekLabel`, `folderId` (id?, a folder), `sortOrder` (int), `importedAt` (time), `fileHash`, `stats` (json object), `isCurrent` (bool), `replacedAt` (time?), `kind` (`practice` or `exam`) | `schema.ts:181-211` |
+| `semester` (`semesters`), timed | `id`, `number` (int, 1 to 3, unique), `name`, `startsOn` (date?), `endsOn` (date?), `archivedAt` (time?), `createdAt` (time) | `schema.ts:140-153` |
+| `course` (`courses`), deletable, timed | `id`, `semesterId` (id?, a semester), `kind` (`course` or `topic`), `code` (empty for a topic), `title`, `sortOrder` (int), `archivedAt` (time?), `createdAt` (time). A course has a semester; a topic has none. | `schema.ts:163-179` |
+| `course_exam` (`courseExams`), deletable, timed | `id`, `courseId` (a course), `name`, `sortOrder` (int), `linkUrl` (text?), `badge` (`exam`, `concept`, `study` or null), `createdAt` (time). This is a page. | `schema.ts:263-280` |
+| `folder` (`folders`), deletable, timed | `id`, `courseId` (a course), `name`, `courseExamId` (id?, a page), `sortOrder` (int), `createdAt` (time) | `schema.ts:309-326` |
+| `practice_set` (`practiceSets`), deletable, timed | `id`, `courseId` (a course), `lineageId` (id), `title`, `description`, `weekLabel`, `folderId` (id?, a folder), `sortOrder` (int), `importedAt` (time), `fileHash`, `stats` (json object), `isCurrent` (bool), `replacedAt` (time?), `kind` (`practice` or `exam`) | `schema.ts:181-211` |
 | `question` (`questions`) | `id`, `setId` (a set), `lineageId` (id), `publicId`, `position` (int, from 1), `type`, `topic`, `cj` (text?), `clientNeed` (text?), `difficulty` (int?), `weekLabel`, `stem`, `ask`, `body` (json object), `rationale`, `takeaway`, `termKeys` (json list of text), `source` (text?), `contentHash`, `twinOf` (text?), `twinOfLineageId` (id?) | `schema.ts:213-246` |
 | `term` (`terms`) | `id`, `setId` (a set), `key`, `term`, `meaning` | `schema.ts:248-256` |
-| `study_session` (`studySessions`), deletable | `id`, `courseId` (a course), `mode` (`practice`, `exam` or `review`), `setId` (id?, a set), `questionIds` (json list of text), `examWeeks` (json list?), `examFolderIds` (json list?), `timeLimitSeconds` (int?), `startedAt` (time), `finishedAt` (time?), `score` (json object?), `endReason` (`finished`, `left`, `timeout` or null), `examPool` (`all` or `wrong`), `examPracticeWeeks` (json list?), `seededQuestionIds` (json list?) | `schema.ts:329-362` |
+| `study_session` (`studySessions`), deletable, timed | `id`, `courseId` (a course), `mode` (`practice`, `exam` or `review`), `setId` (id?, a set), `questionIds` (json list of text), `examWeeks` (json list?), `examFolderIds` (json list?), `timeLimitSeconds` (int?), `startedAt` (time), `finishedAt` (time?), `score` (json object?), `endReason` (`finished`, `left`, `timeout` or null), `examPool` (`all` or `wrong`), `examPracticeWeeks` (json list?), `seededQuestionIds` (json list?) | `schema.ts:329-362` |
 | `attempt` (`attempts`) | `id`, `clientAttemptId` (id, unique), `studySessionId` (id?, a study session), `questionId` (a question), `response` (json), `shuffle` (json?), `status` (`correct`, `partial` or `incorrect`), `points` (int), `maxPoints` (int), `guessed` (bool), `answeredAt` (time) | `schema.ts:368-389` |
 | `question_progress` (`questionProgress`) | `questionLineageId` (id, the key), `attempts` (int), `correctAttempts` (int), `lastStatus`, `lastGuessed` (bool), `lastAnsweredAt` (time), `lastPoints` (int), `lastMaxPoints` (int), `inReview` (bool), `lastAttemptId` (an attempt) | `schema.ts:395-418` |
 | `review_clear` (`reviewClears`) | `questionLineageId` (id, the key), `lastAttemptId` (an attempt), `clearedAt` (time) | `schema.ts:424-437` |
@@ -112,6 +112,26 @@ Notes for I-11:
 - As built, beyond the table: the tables are `STRICT`, and each column carries a `CHECK` that its text has its kind's exact form (lowercase UUID, the API's time and date forms, `0` or `1`, JSON of the stated shape), that an enum column holds one of the listed values, that a deletable row's two marks are both null or both set, and that a course has a semester exactly when its kind is `course`. `folder.course_exam_id` is `ON DELETE SET NULL`, as on the server. `study_place` holds at most one row through a unique index over a constant. The server defers its folder-name rule to the end of a transaction so two folders can swap names; SQLite checks a unique index at each statement, so the engine swaps through a temporary name. SQLite's `lower()` folds ASCII only, so the topic-title index is a floor and the engine checks the full rule.
 - The file is `Banks/<key>/bank.sqlite` with the default rollback journal (a bank that came back from Cloud is in a dated file beside it, `bank-<UTC time>.sqlite`, which the hand-over record names; [cloud.md](cloud.md)), so it is one file with no side files left at rest. The file and its folder are set to `completeUntilFirstUserAuthentication` and to be kept in the backup every time the store opens. The schema version is SQLite's `user_version`; a file from a newer step than the app knows is refused and left alone. Each step runs with foreign keys off, as SQLite's table rebuild needs, and commits only when `foreign_key_check` finds no broken reference. A transaction that SQLite rolls back on its own (a full disk, an I/O error) runs no further statement and fails its commit, so nothing of it is kept.
 - Stored rows are as written, not as read. An exam whose time ran out keeps a null `finishedAt` until something ends it; the engine works out its end at the read, as the server does.
+
+### The time of last change
+
+A combine keeps the later change of a row both banks hold ([cloud.md](cloud.md#conflicts-which-side-wins)), so each of the six tables a person can change after a row exists keeps when the row last changed. A row with none has the time it was made.
+
+| Table | What can change after the row is made | The time it has until it changes |
+|---|---|---|
+| `semester` | `name`, `startsOn`, `endsOn`, `archivedAt` | `createdAt` |
+| `course` | `semesterId`, `code`, `title`, `sortOrder`, `archivedAt`, the delete marks | `createdAt` |
+| `course_exam` | `name`, `sortOrder`, `linkUrl`, `badge`, the delete marks | `createdAt` |
+| `folder` | `name`, `courseExamId`, `sortOrder`, the delete marks | `createdAt` |
+| `practice_set` | `folderId`, `weekLabel`, `isCurrent`, `replacedAt`, the delete marks | `importedAt` |
+| `study_session` | `finishedAt`, `score`, `endReason`, `examFolderIds`, the delete marks | `startedAt` |
+
+These are the fields the server writes from a combined bank. Every other field is fixed when its row is made.
+
+The other tables keep no time of last change. A question changes only in its `weekLabel`, which follows its folder's name, and only together with its set, so its set's time is its own. A Review clear carries `clearedAt` and the course last used `updatedAt`. Terms and answers never change, and progress is worked out from the answers.
+
+- **On the server** (S-14) each of the six has a nullable `updated_at`, which the database sets on every update that changes the row, to the time of its transaction (`apps/api/src/db/updated-at-migration.ts`). An update that leaves every value as it was keeps the row's time, one that writes a new time itself keeps the time it wrote, and a new row has none.
+- **On the phone** (I-37) schema step 2 adds `updated_at` to the same six tables, and it follows the same rules from the engine's injected clock. It is stamped in one place: every write already goes through one transaction for each request (`Packages/QBankKit/Sources/QBankKit/LocalBank/LocalBank.swift:117`), so the engine's update statements need no change each. Reading an archive, and a combine, store the times they carry.
 
 ### What is not on the phone
 
@@ -140,6 +160,7 @@ One JSON object, UTF-8, with these keys:
 | `writtenBy` | `phone` or `server` |
 | `complete` | A bool: false when the writer had to leave a row out (see Closed, below) |
 | `counts` | An object with the twelve table keys, each an integer |
+| `stamp` | A text, optional: the server's fingerprint of the bank it holds, written on every download. A reader compares it for equality and reads nothing else from it. A combined bank must carry the one it was built from; an upload does not read it. |
 | `semesters`, `courses`, `courseExams`, `folders`, `practiceSets`, `questions`, `terms`, `studySessions`, `attempts`, `questionProgress`, `reviewClears` | Each a list of rows |
 | `studyPlace` | One row, or null |
 
@@ -161,7 +182,7 @@ One JSON object, UTF-8, with these keys:
 
 ### Rows and fields
 
-1. A row is an object with **every field of its table** from the table above, under the field's name as written there, plus `deletedAt` and `deletionId` on a deletable table. A field that may be null is written as `null`, never left out.
+1. A row is an object with **every field of its table** from the table above, under the field's name as written there, plus `deletedAt` and `deletionId` on a deletable table. A field that may be null is written as `null`, never left out. The one exception is `updatedAt` on a timed table: a row that has the time carries it, and a row without one leaves it out, never writes `null`.
 2. A value has the form of its kind: an id is a lowercase UUID, a time is `YYYY-MM-DDTHH:MM:SS.sssZ`, a date is `YYYY-MM-DD`, a bool is `true` or `false`, an int is a JSON integer. The server stores some times with more digits; it writes them cut to milliseconds, as its API already does (`iso`, `apps/api/src/progress/service.ts:1027-1031`).
 3. A json field is the JSON value itself, not text holding JSON, and is carried unchanged. Order inside a list is data and is kept. Images ride inside a question's `body` as data URLs of up to 300 KB each (`packages/questions/src/media.ts:28-31`), so an archive can be large.
 4. **Ids are kept.** Every id and lineage id is the same on both sides of a move. Neither side renumbers.
@@ -191,7 +212,7 @@ Three comparisons, and every one must hold on all twelve keys. A missing key is 
 2. **What was stored against the document.** After writing, inside the same transaction, the reader counts the rows it now holds, by query, and compares with `counts`. A difference rolls the whole write back.
 3. **The other side's answer against the sender's own store.** After an upload the server answers `{ "counts": { ... } }` from the query in step 2. The phone compares that with counts it queries from its own store, which has not changed since the archive was written ([cloud.md](cloud.md), the lease). For a download the phone is the reader, so steps 1 and 2 are the comparison.
 
-Only after the comparisons hold does the authority change ([cloud.md](cloud.md)).
+Only after the comparisons hold does the authority change ([cloud.md](cloud.md)). A combined bank cannot have the counts of either bank it came from, so a combine passes [checks A to D](cloud.md#the-checks-before-a-switch) instead.
 
 ### What a reader checks
 
@@ -210,13 +231,37 @@ The server, on an upload, also requires (S-09):
 8. No id in the document is already on the server, in any account.
 9. Each set passes the import check, the same one `POST /api/imports` runs. The set is rebuilt as a question file from its rows: `title`, `desc` from `description`, `kind`, a `terms` object of `key: [term, meaning]`, and its questions in `position` order, each the `body` object plus the hoisted fields under their file names (`id` from `publicId`, `type`, `topic`, `cj`, `need` from `clientNeed`, `diff` from `difficulty`, `wk` from `weekLabel`, `stem`, `ask`, `rationale`, `takeaway`, `terms` from `termKeys`, `src` from `source`), leaving out a null or empty one (`packages/questions/src/import.ts:30-44`, `apps/api/src/content/import-set.ts:208-235`). A set with an error refuses the whole archive. The server stores the question and term fields the check returns and takes everything else from the rows (ids, lineage ids, positions, times, order, folder, version marks), except `contentHash` and `stats`, which it works out itself (`apps/api/src/content/hash.ts:9-26`, `import-set.ts:348-365`). For a set made by the same rules the result is the rows that were sent.
 
-The phone's reader also refuses a document whose `complete` is false, since a move takes only a complete one, and refuses to write into a bank that already holds a row: an archive is read into a fresh bank, never merged into one.
+The phone's reader also refuses a document whose `complete` is false, since a move takes only a complete one, and refuses to write into a bank that already holds a row: an archive is read into a fresh bank, never merged into one. A combine keeps that: it reads the server's archive into a fresh store first, and combining is a step of its own after the read.
 
 The phone does not run the import check on an archive from the server. A person whose Cloud ended must get their bank back even if a rule was tightened after a set was imported.
 
+### A combined bank
+
+`POST /api/me/bank/combine` (S-15) stores a bank the phone combined with the one the server holds ([cloud.md](cloud.md#combining-two-banks)). The body is an archive that holds every row of both banks and carries the `stamp` of the download it was built from. The route is for a store account with Cloud, and answers `{ "counts": { ... }, "stamp": ... }`, both read back inside its transaction. It applies an upload's checks and its 64 MB limit, with two differences: the account may hold a bank (item 7 still requires `complete`), and only a row new to the account must have an id that no other account uses (item 8). The import check (item 9) runs only on the sets new to the server, so a rule tightened since a set was stored never refuses a bank.
+
+It writes in one transaction or not at all, and removes nothing:
+
+- A row new to the server is inserted.
+- A row both hold is written only when the sent row changed later than the server's: by its `updatedAt`, or without one by the time it was made, as the server holds it; a question by its set's time; a Review clear by `clearedAt`; the course last used by `updatedAt`. Then only the fields a person changes are written. With equal times the server's row stays.
+- Progress is not taken as sent. The server works it out again from the answers for the questions the bank brought something for, and removes no progress row.
+- Before it commits, it checks that every row it held is still there and that each table holds what it held plus what it inserted.
+
+| Refused with | When |
+|---|---|
+| 409 `bank_changed` | The server's bank no longer has the archive's `stamp`, or changed while the combined one was being stored |
+| 409 `bank_rows_missing` | The archive lacks a row the server holds, a progress row included |
+| 409 `bank_rows_older` | A row both hold arrives with other values and an earlier time of last change |
+| 409 `bank_ids_taken` | A row new to the account has an id that is in another account |
+| 400 `invalid_archive` | It breaks a rule of the format or of the server's tables, has no `stamp`, a new set fails the import check, a question or term is new to a set the server holds, or a question whose answers count has no progress row |
+| 413 `archive_too_large` | The body is over 64 MB |
+| 403 `not_store_account` | An invited account |
+| 403 `cloud_required` | A store account without Cloud |
+
+The stamp is made from each table's row count and the latest time of change in each table that keeps one (`apps/api/src/bank/stamp.ts`). It can miss a change whose time is older than another's in the same table, which is why the route also compares each row's time.
+
 ### Versions
 
-`version` goes up when a field is removed or renamed, or when what a field means changes. A new field does not change it, and a reader ignores a field it does not know. That makes a new field safe only if losing it on a round trip through an older app is harmless; a field that must survive needs version 2.
+`version` goes up when a field is removed or renamed, or when what a field means changes. A new field does not change it, and a reader ignores a field it does not know. That makes a new field safe only if losing it on a round trip through an older app is harmless; a field that must survive needs version 2. `updatedAt` and `stamp` are the exception: they joined version 1 while no app that reads version 1 was in the App Store, so every app that ships reads them. Until I-37 the phone's reader ignores them.
 
 A reader refuses a version it does not implement. Apps in the field cannot be changed after they ship, so `GET /api/me/bank` answers version 1 for as long as an app that reads only version 1 is supported, and a later version is asked for by name.
 
@@ -225,3 +270,4 @@ A reader refuses a version it does not implement. Apps in the field cannot be ch
 - **The import rules are one set.** The phone applies the server's import check, with the A11 changes (S-10, I-13), or a set made on the phone could be refused when it moves to Cloud.
 - **`contentHash` must be byte for byte the server's.** On a replace, a question keeps its lineage, and so its answers, only when its hash is unchanged (`import-set.ts:206-216`). The phone has to produce the same hash for the same question, or the first replace after a move would cut every answer loose. It is the SHA-256 of a sorted-key text of twelve fields (`hash.ts:9-41`).
 - **A changed server rule is re-recorded** before the phone is changed (rule 7 of the plan's worker rules).
+- **The combine's rules are written once**, in the phone's package ([cloud.md](cloud.md#combining-two-banks)). The server holds only the guards of [a combined bank](#a-combined-bank), so I-38 proves its output against them with a recorded archive. Its rebuild of progress removes no row, unlike the engine's own after an exam's delete, which drops a question left with no answer that counts (`Packages/QBankKit/Sources/QBankKit/LocalBank/ProgressRebuild.swift:115`): the server refuses a bank that lacks a progress row it holds.
