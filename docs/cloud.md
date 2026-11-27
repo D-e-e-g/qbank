@@ -2,7 +2,7 @@
 
 The design record for who is signed in, where their question bank lives, and how a whole bank moves between the phone and the server. [on-phone-bank.md](on-phone-bank.md) is its other half: the bank on the phone and the bank archive format.
 
-This is a record to build to, not a description of shipped code. Only Getting in (I-30, linking Apple in Settings, I-31, and deleting a store account, I-32), the Cloud purchase (I-33), the move to Cloud (I-34), and Cloud ending and a second device (I-35) exist so far, and their sections say what was built. The combine of two banks ([Combining two banks](#combining-two-banks)) is designed here (I-36): the server's part is live (S-14, S-15, S-16), and the app's part is not built (I-37, I-38, I-39). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`), and those in Combining two banks at app commit `254937b` and server commit `d86a61f`.
+This is a record to build to, not a description of shipped code. Only Getting in (I-30, linking Apple in Settings, I-31, and deleting a store account, I-32), the Cloud purchase (I-33), the move to Cloud (I-34), and Cloud ending and a second device (I-35) exist so far, and their sections say what was built. The combine of two banks ([Combining two banks](#combining-two-banks)) is designed here (I-36): the server's part is live (S-14, S-15, S-16), the phone keeps the time of last change and the archive's stamp (I-37), and the combine itself is not built (I-38, I-39). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`), and those in Combining two banks at app commit `254937b` and server commit `d86a61f`.
 
 Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name owner questions. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -158,7 +158,7 @@ The app still does what these say until I-39 merges. None of it is the design: d
 
 ## Combining two banks
 
-When the phone's own bank and a bank on the server meet, they become one that holds everything from both. This section is the rule set the pull requests that build it work to. The server's part is live: the time of last change on bank rows and the stamp on the download (S-14), `POST /api/me/bank/combine` (S-15), and `bankStamp` and `combinePaused` on `GET /api/me/cloud` (S-16); [on-phone-bank.md](on-phone-bank.md#a-combined-bank) says what each carries. The app's part is not built: the time of last change on the phone (I-37), the combine itself, `BankCombine` (I-38), and the two flows, their screens, the receipt and the pause (I-39).
+When the phone's own bank and a bank on the server meet, they become one that holds everything from both. This section is the rule set the pull requests that build it work to. The server's part is live: the time of last change on bank rows and the stamp on the download (S-14), `POST /api/me/bank/combine` (S-15), and `bankStamp` and `combinePaused` on `GET /api/me/cloud` (S-16); [on-phone-bank.md](on-phone-bank.md#a-combined-bank) says what each carries. On the phone the time of last change and the archive's stamp are built (I-37); the rest of the app's part is not: the combine itself, `BankCombine` (I-38), and the two flows, their screens, the receipt and the pause (I-39).
 
 ### Where it runs
 
