@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import Testing
 
 @testable import QBankKit
@@ -305,6 +306,29 @@ struct LocalStoreTests {
         try transaction.execute(
             "INSERT INTO semester (id, number, name, created_at) VALUES (?, 2, ?, ?)",
             [Fixtures.id(2), .text(String(repeating: "x", count: 200_000)), .text(Fixtures.time)])
+    }
+
+    @Test func aFullDiskOnAStampedInsertRollsBackTheConnection() throws {
+        let connection = try SQLiteConnection(path: ":memory:")
+        try SchemaSteps.upgrade(connection, steps: SchemaSteps.all)
+        try BankWriteTime.install(on: connection)
+        let pages = try #require(connection.run("PRAGMA page_count").first?.int("page_count"))
+        try connection.run("PRAGMA max_page_count = \(pages + 2)")
+        let insert = "INSERT INTO semester (id, number, name, created_at) VALUES (?, ?, ?, ?)"
+
+        try connection.run("BEGIN IMMEDIATE")
+        try connection.run("INSERT INTO bank_write_time VALUES (?)", [.text(Fixtures.time)])
+        try connection.run(insert, [Fixtures.id(1), .integer(1), .text("First"), .text(Fixtures.time)])
+        #expect(try connection.run("SELECT updated_at FROM semester").first?.text("updated_at") == Fixtures.time)
+        do {
+            try connection.run(insert, [Fixtures.id(2), .integer(2), .text(String(repeating: "x", count: 200_000)), .text(Fixtures.time)])
+            Issue.record("The large insert succeeded despite the page limit")
+        } catch {
+            guard case .sqlite(_, let code, _) = error else { throw error }
+            #expect(code == SQLITE_FULL)
+        }
+        #expect(!connection.inTransaction)
+        #expect(try connection.run("SELECT id FROM semester").isEmpty)
     }
 
     @Test func aFullDiskInsideASavepointKeepsNothingOfTheTransaction() throws {
