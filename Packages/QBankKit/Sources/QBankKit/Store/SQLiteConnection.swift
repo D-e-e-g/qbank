@@ -54,7 +54,7 @@ final class SQLiteConnection {
                 case .null: sqlite3_bind_null(statement, index)
                 case .integer(let number): sqlite3_bind_int64(statement, index, number)
                 case .real(let number): sqlite3_bind_double(statement, index, number)
-                case .text(let text): sqlite3_bind_text64(statement, index, text, UInt64(text.utf8.count), transient, UInt8(SQLITE_UTF8))
+                case .text(let text): sqlite3_bind_text(statement, index, text, -1, transient)
                 }
             guard bound == SQLITE_OK else { throw failure("bind", handle) }
         }
@@ -77,9 +77,7 @@ final class SQLiteConnection {
                 switch sqlite3_column_type(statement, position) {
                 case SQLITE_INTEGER: values.append(.integer(sqlite3_column_int64(statement, position)))
                 case SQLITE_FLOAT: values.append(.real(sqlite3_column_double(statement, position)))
-                case SQLITE_TEXT:
-                    let bytes = UnsafeBufferPointer(start: sqlite3_column_text(statement, position), count: Int(sqlite3_column_bytes(statement, position)))
-                    values.append(.text(String(decoding: bytes, as: UTF8.self)))
+                case SQLITE_TEXT: values.append(.text(String(cString: sqlite3_column_text(statement, position))))
                 case SQLITE_NULL: values.append(.null)
                 default: throw .unsupportedValue(column: column)
                 }

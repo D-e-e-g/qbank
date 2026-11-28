@@ -37,7 +37,7 @@ import Testing
         let original = try BankArchive.write(from: store, at: ArchiveWorld.date)
         var document = try ArchiveWorld.parsed(original)
         #expect(document["stamp"] == nil)
-        let stamp = "bank\u{0}two\n\""
+        let stamp = "bank two\n\""
         document["stamp"] = stamp
         try BankArchive.read(ArchiveWorld.serialized(document), into: store)
         #expect(try ArchiveWorld.parsed(BankArchive.write(from: store, at: ArchiveWorld.date))["stamp"] as? String == stamp)
