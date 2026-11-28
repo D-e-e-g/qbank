@@ -203,7 +203,7 @@ It runs the hand-back's own steps (a fresh dated file, a lease naming it, the ba
 
 ### The rule ids
 
-Every row of the two tables below has an id: `ID-n` says when two items are the same, and `WIN-n` which side wins. **Tests cite the ids**: each rule has at least one test in `BankCombineTests` that names it (I-38). An id is never reused or renumbered, and a new rule takes the next number. A person approves the two tables before I-38 is built.
+Every row of the two tables below has an id: `ID-n` says when two items are the same, and `WIN-n` which side wins. **Tests cite the ids**: each rule has at least one test in `BankCombineTests` or `BankCombineConflictTests` that names it (I-38). An id is never reused or renumbered, and a new rule takes the next number. A person approves the two tables before I-38 is built.
 
 ### Identity: when two items are the same
 
