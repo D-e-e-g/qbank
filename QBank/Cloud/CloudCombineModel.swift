@@ -89,9 +89,6 @@ final class CloudCombineModel {
     private(set) var isShown = false
     /// Which way the combine on screen goes.
     private(set) var direction = Direction.up
-    /// The stamp of the bank QBank holds that this phone last took in, as the record beside the bank
-    /// names it: read again whenever the server says what it holds.
-    private(set) var takenIn: String?
 
     @ObservationIgnored weak var app: AppModel?
     /// True while `start()` runs a combine, so one runs at a time.
@@ -110,17 +107,12 @@ final class CloudCombineModel {
     var due: Direction? {
         guard let app, app.kind == .free, !app.awaitsServer, let status = app.cloud.status, let stamp = app.cloud.bank?.stamp else { return nil }
         if status.active { return .up }
-        return stamp != takenIn ? .down : nil
+        return stamp != app.takenInStamp() ? .down : nil
     }
 
     /// Whether Settings offers the combine: one is still to do, and none is on screen.
     var isOffered: Bool {
         due != nil && !isShown && !isRunning && leftOpen == nil
-    }
-
-    /// The server said what it holds: reads again which stamp this phone took in.
-    func statusRead() {
-        takenIn = app?.takenInStamp()
     }
 
     /// After a Sign in with Apple for a person whose bank is on this phone: asks the server what it
@@ -237,7 +229,6 @@ final class CloudCombineModel {
         switch outcome {
         case .returned(_, let store, _, let ledger):
             app.bankCombinedDown(made.key, store: store)
-            statusRead()
             guard isShown else { return }
             if let ledger {
                 phase = .combined(Combined(.down, ledger))
@@ -262,7 +253,6 @@ final class CloudCombineModel {
     func reset() {
         isShown = false
         leftOpen = nil
-        takenIn = nil
         phase = .idle
     }
 

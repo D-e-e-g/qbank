@@ -321,6 +321,27 @@ struct CloudCombineTests {
         #expect(try combined(app).summary == BankSummary(sets: 2, questions: 13, answers: 0))
     }
 
+    @Test func aBankHandedBackWhenCloudEndsLeavesNothingToCombineDown() async throws {
+        let phone = Phone()
+        defer { phone.remove() }
+        let server = try await secondDevice(phone)
+        let app = phone.launch(server, signedIn: false)
+        try await phone.signIn(app)
+        #expect(app.kind == .store)
+        app.cloudCombine.close()
+        server.endApplePersonCloud()
+
+        await app.cloud.refresh()
+        try await waitUntil(timeout: .seconds(20)) {
+            if case .returned = app.cloudReturn.phase { true } else { false }
+        }
+
+        #expect(app.kind == .free)
+        #expect(try phone.record.load().bankStamp != nil, "the record names the bank this phone took in")
+        #expect(app.cloudCombine.due == nil, "the bank QBank holds is the one just taken in")
+        #expect(!app.cloudCombine.isOffered)
+    }
+
     @Test func aFreeAccountWhoseServerHoldsNoBankHasNothingToCombine() async throws {
         let phone = Phone()
         defer { phone.remove() }

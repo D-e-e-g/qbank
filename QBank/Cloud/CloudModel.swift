@@ -240,15 +240,13 @@ final class CloudModel {
     }
 
     /// Cloud's state as the server just said it, for a bank in QBank Cloud: one whose Cloud ended
-    /// comes back to this phone, and one whose Cloud is on again stays. For a bank on this phone, it says
-    /// whether a combine is still to do.
+    /// comes back to this phone, and one whose Cloud is on again stays.
     private func followed(_ status: CloudStatus) {
         if status.active {
             app?.cloudReturn.cloudTurnedOn()
         } else {
             app?.cloudReturn.cloudEnded()
         }
-        app?.cloudCombine.statusRead()
     }
 
     /// Sends a transaction to QBank's server, and finishes it once the server has handled it for good:
