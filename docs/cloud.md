@@ -85,7 +85,7 @@ So the color scheme is the account's and is saved on the server in every mode. W
 
 1. **One authority at a time, and one bank when two meet (A3).** Exactly one side holds a store account's bank at any moment, and there is no continuous sync. A move to a server with no bank, and the way back once Cloud ends, carry the whole bank as one bank archive ([on-phone-bank.md](on-phone-bank.md)). When the phone's own bank meets a bank on the server (Cloud turns on, or Cloud is not active and the server holds a bank the phone has not taken in, as for a new iPhone that signs in to a lapsed account), the phone combines the two item by item: a row changed on both sides keeps the later change, every answer is kept once, nothing is removed, and nothing switches until the checks pass. The app does this without asking first, then shows exactly what was combined ([Combining two banks](#combining-two-banks)). When Cloud ends for a bank that is in Cloud, Cloud's bank already holds everything from the phone's earlier file, so it comes back whole.
 2. **The checks pass before every switch.** A move and a hand-back compare counts, by the three comparisons in [on-phone-bank.md](on-phone-bank.md). A combine passes [checks A to C](#the-checks-before-a-switch), and D when Cloud stores it. The recorded authority changes only after they hold.
-3. **Nothing is deleted.** The side being left is never deleted, and a combine removes no row on either side. After a move or a combine up, the phone's bank file stays on the phone as a dated safety copy. After a move back the server's bank stays on the server (how long is OD2, below). Every earlier copy of a bank stays on the phone: clearing older ones (I-47) is not built for launch and can follow in a later update. Only Delete account removes them (I-32).
+3. **Nothing is deleted.** The side being left is never deleted, and a combine removes no row on either side. After a move or a combine up, the phone's bank file stays on the phone as a dated safety copy. After a move back the server's bank stays on the server until the account is deleted (OD2, below). Every earlier copy of a bank stays on the phone: clearing older ones (I-47) is not built for launch and can follow in a later update. Only Delete account removes them (I-32).
 4. **Any failure changes nothing.** The authority stays where it was, both sides keep what they had, and the app says that nothing was changed. One exception: when the server stored a combine and the switch did not follow (the answer lost, counts that differ, a record that cannot be written), Cloud's bank already holds the phone's items. Nothing is removed by that, the phone keeps using its own bank, and the next try combines the two again and finds nothing of that upload left to add.
 5. **A lease stops edits during a move.** The phone records that a move has started, and in which direction, before it reads the bank, and clears the record when the move ends either way. While it is set the bank takes no writes. It survives a relaunch: at launch the app finishes or abandons the move before anything else (I-34). A combine holds the same lease, in its direction, and one the app was closed during runs again.
 6. **Ids are kept.** A set, a question and an answer that moved have the same id on both sides, which is how a combine knows them again. Where two rows are the same item under two ids, the server's id is kept: a row on the server is never given a new one (ID-18).
@@ -108,7 +108,7 @@ So the color scheme is the account's and is saved on the server in every mode. W
 - **A first launch on a second device makes no phone bank.** When the server says Cloud is active at sign-in, the phone adopts the Cloud bank and the sample set is never added (I-22, I-35).
 - **`cloud_required` is a signal, not an error to show.** A store account in server mode that is refused with `cloud_required` has lost Cloud: the app starts the hand-back, the way `AppModel.handle` already turns an ended session into a route change (`AppModel.swift:480-498`).
 - **Waiting answers are never dropped by a hand-back.** In server mode practice answers given without a connection wait in a queue on the phone, and the queue discards an answer the server refuses with a 4xx (`Packages/QBankKit/Sources/QBankKit/Offline/AttemptQueue.swift:18-25`). After Cloud ends the server would refuse them with `cloud_required`. So a hand-back does not let the queue discard on that code. Once the fresh file is written it replays the waiting answers into the phone's bank through the local engine, which records an answer once per `clientAttemptId` as the server does, and only then clears them.
-- **Work done on the phone after Cloud ended joins the bank on the server.** A returning subscriber whose earlier bank is still on the server combines up: the phone's newer rows win by time, and every answer is kept. Whether a returning subscriber finds a bank on the server at all is OD2.
+- **Work done on the phone after Cloud ended joins the bank on the server.** A returning subscriber whose earlier bank is still on the server combines up: the phone's newer rows win by time, and every answer is kept. A returning subscriber finds their bank on the server, which keeps it until the account is deleted (OD2).
 - **Two devices that both changed during a lapse each combine up in turn.** The later change wins item by item and every answer is kept, whichever device goes first.
 
 ### What each event does to the phone's files
@@ -299,18 +299,13 @@ Cloud accounts keep Saved for offline, since their bank is on the server.
 
 An invited account keeps everything it has today, and a build for the App Store is the same build. Before Make questions or exam twins is first used, the app asks once and names Anthropic (I-26).
 
-## Still open
+## Owner's decisions
 
-One question is the owner's and is not decided. Nothing here assumes an answer. OD1, the address of the privacy and support pages, is decided: https://qbank-app.dimitrygallego.com, served from `site/` ([ci.md](ci.md#public-pages-pagesyml)).
+Both questions for the owner are decided. OD1, the address of the privacy and support pages: https://qbank-app.dimitrygallego.com, served from `site/` ([ci.md](ci.md#public-pages-pagesyml)).
 
 ### OD2. The server's copy of a bank after a subscription ends
 
-The bank goes back to the phone either way, so nobody loses their questions. What is open is the copy left on the server:
-
-- keep it until the person deletes their account (the plan's recommendation for the first release), or
-- delete it a fixed time after the subscription ends.
-
-It decides two things workers will meet: what the privacy policy says (I-43), and which row of the hand-over table a returning subscriber lands in. With the copy kept, they land in "the server already has a bank", and the phone combines up. With the copy deleted, they land in "no bank on the server" and the phone's bank is uploaded whole. The combine works either way.
+The bank goes back to the phone either way, so nobody loses their questions. The owner decided to keep the copy left on the server until the person deletes their account, for the first release; the server deletes nothing on its own. The privacy policy says so (I-43). A returning subscriber therefore lands in "the server already has a bank", and the phone combines up. Deleting the copy a fixed time after the subscription ends could follow in a later release; the combine would work either way.
 
 ## Rules every pull request in this work carries
 
