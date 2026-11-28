@@ -7,13 +7,14 @@ import Synchronization
 /// One side holds the bank at a time. `phone`: the bank on this phone answers every bank request.
 /// `cloud`: QBank Cloud's copy is the one in use, and the bank file on this phone stays as it was, a
 /// safety copy that nothing writes to. The authority changes only at the end of a move whose counts
-/// matched, table by table (`BankMoveToCloud`, `BankHandBack`), or when this phone takes the bank
-/// QBank Cloud already holds, which moves nothing (`BankAdoption`).
+/// matched, table by table (`BankMoveToCloud`, `BankHandBack`), or of a combine whose checks held
+/// (`BankCombineUp`, and `BankHandBack` combining), or when a second device with no bank of its own
+/// takes the bank QBank Cloud holds, which moves nothing.
 ///
-/// A move takes a lease before it reads or writes a bank and gives it back when it ends, whichever
-/// way it ends. A lease found at launch is a move the app was closed during; the app deals with it
-/// before anything else. A bank has no record until its first move, so no record at all is a bank on
-/// this phone, in its first file, with no move under way.
+/// A move or a combine takes a lease before it reads or writes a bank and gives it back when it ends,
+/// whichever way it ends. A lease found at launch is one the app was closed during; the app deals with
+/// it before anything else. A bank has no record until its first move, so no record at all is a bank
+/// on this phone, in its first file, with no move under way.
 public struct BankHandover: Codable, Sendable, Equatable {
     /// The side that holds the bank.
     public enum Authority: String, Codable, Sendable {
@@ -21,13 +22,15 @@ public struct BankHandover: Codable, Sendable, Equatable {
         case cloud
     }
 
-    /// A move under way.
+    /// A move or a combine under way.
     public struct Lease: Codable, Sendable, Equatable {
         /// Which way the bank is moving.
         public enum Direction: String, Codable, Sendable {
-            /// The bank on this phone is being sent to QBank Cloud. While it is, the bank takes no writes.
+            /// The bank on this phone is being sent to QBank Cloud, whole or combined with the bank
+            /// QBank Cloud holds. While it is, the bank takes no writes.
             case toCloud
-            /// QBank Cloud's bank is coming back to this phone, into the fresh file `file`.
+            /// QBank's bank is coming to this phone, into the fresh file `file`: whole once Cloud has
+            /// ended, or combined with the bank on this phone.
             case toPhone
         }
 
@@ -36,11 +39,36 @@ public struct BankHandover: Codable, Sendable, Equatable {
         /// For a move to this phone: the fresh file it writes the bank into, which becomes the bank only
         /// once the switch is recorded. A lease found at launch names the file to take away.
         public let file: String?
+        /// True for a combine of the bank on this phone with QBank's (`docs/cloud.md`, Combining two
+        /// banks), which runs again when the app was closed during it.
+        public let combines: Bool
 
-        public init(direction: Direction, startedAt: Date, file: String? = nil) {
+        public init(direction: Direction, startedAt: Date, file: String? = nil, combines: Bool = false) {
             self.direction = direction
             self.startedAt = startedAt
             self.file = file
+            self.combines = combines
+        }
+
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            direction = try container.decode(Direction.self, forKey: .direction)
+            startedAt = try container.decode(Date.self, forKey: .startedAt)
+            file = try container.decodeIfPresent(String.self, forKey: .file)
+            combines = try container.decodeIfPresent(Bool.self, forKey: .combines) ?? false
+        }
+
+        /// A move's lease is written as it was before combines, which add only their mark.
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(direction, forKey: .direction)
+            try container.encode(startedAt, forKey: .startedAt)
+            try container.encodeIfPresent(file, forKey: .file)
+            if combines { try container.encode(true, forKey: .combines) }
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case direction, startedAt, file, combines
         }
     }
 
@@ -56,27 +84,23 @@ public struct BankHandover: Codable, Sendable, Equatable {
     public let authority: Authority
     /// The move under way, or nil.
     public let lease: Lease?
-    /// When the bank last went to QBank Cloud, by a move or because this phone took the bank QBank
-    /// Cloud already held: from then on the bank file on this phone is a safety copy of the bank as it
-    /// was that day.
+    /// When the bank last went to QBank Cloud, by a move, a combine, or a second device taking the bank
+    /// QBank Cloud held: from then on the bank file on this phone is a safety copy of the bank as it was
+    /// that day.
     public let movedToCloudAt: Date?
     /// The file in the bank's folder that is this phone's own bank: the bank in use while the authority
     /// is the phone's, and the safety copy while it is QBank Cloud's. `LocalStore.firstFile` until the
-    /// bank first comes back from QBank Cloud, into a fresh file.
+    /// bank first comes to this phone from QBank, into a fresh file.
     public let bankFile: String
-    /// When the bank last came back to this phone from QBank Cloud.
+    /// When a bank last came to this phone from QBank, whole or combined.
     public let returnedAt: Date?
-    /// Sets, by id, of the bank file `offeredFile`, that the bank in use did not hold when it became
-    /// the one in use: when this phone took QBank Cloud's bank, or when QBank's bank came to this phone
-    /// in place of the one it had. Offered to add to the bank in use as new sets, until they are added.
-    public let offeredSets: [String]
-    /// The file in the bank's folder that holds `offeredSets`: the safety copy while the bank is QBank
-    /// Cloud's, and that same earlier file once a bank came back to this phone into a fresh one.
-    public let offeredFile: String
+    /// The stamp of QBank's bank this phone last took in, which a hand-back and a combine down write
+    /// with their switch. A bank on the server under any other stamp is one this phone has not taken in.
+    public let bankStamp: String?
 
     public init(
         authority: Authority, lease: Lease? = nil, movedToCloudAt: Date? = nil, bankFile: String = LocalStore.firstFile, returnedAt: Date? = nil,
-        offeredSets: [String] = [], offeredFile: String? = nil
+        bankStamp: String? = nil
     ) {
         version = Self.currentVersion
         self.authority = authority
@@ -84,10 +108,11 @@ public struct BankHandover: Codable, Sendable, Equatable {
         self.movedToCloudAt = movedToCloudAt
         self.bankFile = bankFile
         self.returnedAt = returnedAt
-        self.offeredSets = offeredSets
-        self.offeredFile = offeredFile ?? bankFile
+        self.bankStamp = bankStamp
     }
 
+    /// A record of an earlier build that offered sets reads as one without them: those sets stay in
+    /// the file that held them, untouched.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         version = try container.decode(Int.self, forKey: .version)
@@ -96,8 +121,7 @@ public struct BankHandover: Codable, Sendable, Equatable {
         movedToCloudAt = try container.decodeIfPresent(Date.self, forKey: .movedToCloudAt)
         bankFile = try container.decodeIfPresent(String.self, forKey: .bankFile) ?? LocalStore.firstFile
         returnedAt = try container.decodeIfPresent(Date.self, forKey: .returnedAt)
-        offeredSets = try container.decodeIfPresent([String].self, forKey: .offeredSets) ?? []
-        offeredFile = try container.decodeIfPresent(String.self, forKey: .offeredFile) ?? bankFile
+        bankStamp = try container.decodeIfPresent(String.self, forKey: .bankStamp)
     }
 
     /// A bank on this phone with no move under way: what a bank with no record is.
@@ -105,34 +129,20 @@ public struct BankHandover: Codable, Sendable, Equatable {
 
     /// The same record with `lease` in place of its own.
     public func leased(_ lease: Lease?) -> BankHandover {
-        BankHandover(
-            authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offeredSets,
-            offeredFile: offeredFile)
+        BankHandover(authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, bankStamp: bankStamp)
     }
 
     /// The record once the bank is QBank Cloud's, since `date`, with no lease: this phone's bank file
-    /// is the safety copy from then on. `offering` names its sets that QBank Cloud does not hold; nil
-    /// keeps offering what the record offers already.
-    public func inCloud(since date: Date, offering: [String]? = nil) -> BankHandover {
-        BankHandover(
-            authority: .cloud, movedToCloudAt: date, bankFile: bankFile, returnedAt: returnedAt, offeredSets: offering ?? offeredSets,
-            offeredFile: offering == nil ? offeredFile : bankFile)
+    /// is the safety copy from then on.
+    public func inCloud(since date: Date) -> BankHandover {
+        BankHandover(authority: .cloud, movedToCloudAt: date, bankFile: bankFile, returnedAt: returnedAt, bankStamp: bankStamp)
     }
 
-    /// The record once a bank came to this phone into `file`, at `date`, with no lease: the bank on
-    /// this phone is in that file from then on. `offering` names the sets of the file it replaces that
-    /// it does not hold; nil keeps offering what the record offers already, from the file that holds them.
-    public func onPhone(in file: String, since date: Date, offering: [String]? = nil) -> BankHandover {
-        BankHandover(
-            authority: .phone, movedToCloudAt: movedToCloudAt, bankFile: file, returnedAt: date, offeredSets: offering ?? offeredSets,
-            offeredFile: offering == nil ? offeredFile : bankFile)
-    }
-
-    /// The same record, offering only `sets`.
-    public func offering(_ sets: [String]) -> BankHandover {
-        BankHandover(
-            authority: authority, lease: lease, movedToCloudAt: movedToCloudAt, bankFile: bankFile, returnedAt: returnedAt, offeredSets: sets,
-            offeredFile: offeredFile)
+    /// The record once QBank's bank, under `stamp`, came to this phone into `file`, at `date`, whole or
+    /// combined with the bank that was here, with no lease: the bank on this phone is in that file
+    /// from then on, and the file before it stays as it was.
+    public func onPhone(in file: String, since date: Date, stamp: String?) -> BankHandover {
+        BankHandover(authority: .phone, movedToCloudAt: movedToCloudAt, bankFile: file, returnedAt: date, bankStamp: stamp)
     }
 }
 
@@ -198,7 +208,7 @@ public final class BankHandoverRecord: Sendable {
             throw .unreadableHandover("version \(handover.version), and this app reads versions up to \(BankHandover.currentVersion)")
         }
         // A record names a file only in the bank's own folder.
-        for file in [handover.bankFile, handover.offeredFile] + [handover.lease?.file].compactMap(\.self) {
+        for file in [handover.bankFile] + [handover.lease?.file].compactMap(\.self) {
             guard (try? StoreFiles.validate(fileName: file)) != nil else { throw .unreadableHandover("it names \(file), which is not a bank file") }
         }
         return handover

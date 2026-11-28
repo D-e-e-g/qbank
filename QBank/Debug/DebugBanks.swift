@@ -14,6 +14,8 @@ nonisolated enum DebugBanks {
     }
 
     static let geography = "Geography"
+    /// The name a returning subscriber gave `geography` on this iPhone while Cloud was off.
+    static let renamedGeography = "World geography"
 
     /// A set QBank Cloud holds that the bank on this iPhone does not.
     static let capitals = Set(
@@ -56,6 +58,34 @@ nonisolated enum DebugBanks {
         }
     }
 
+    /// The same, for a caller that can wait, such as a test, rather than block the launch.
+    static func filled(_ bank: LocalBank, sample: String?, with sets: [Set]) async throws {
+        if let sample { try bank.fileSampleSet(sample, inTopic: SampleSet.topic) }
+        try await importAll(sets, into: bank)
+    }
+
+    /// Renames the topic `topic` of `bank` to `name`, as a person does in the app, and waits until it is.
+    static func rename(topic: String, to name: String, in bank: LocalBank) {
+        let failure = Mutex<String?>(nil)
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            do {
+                let catalog = try await answer(bank, "GET", "/api/semesters", nil)
+                guard let id = catalog["topics"]?.arrayValue?.first(where: { $0["title"]?.stringValue == topic })?["id"]?.stringValue else {
+                    throw URLError(.fileDoesNotExist, userInfo: [NSLocalizedDescriptionKey: "no topic \(topic)"])
+                }
+                _ = try await answer(bank, "PATCH", "/api/courses/\(id)", ["title": .string(name)])
+            } catch {
+                failure.withLock { $0 = String(describing: error) }
+            }
+            done.signal()
+        }
+        done.wait()
+        if let failure = failure.withLock({ $0 }) {
+            fatalError("The scenario's topic could not be renamed: \(failure)")
+        }
+    }
+
     private static func importAll(_ sets: [Set], into bank: LocalBank) async throws {
         var topics: [String: String] = [:]
         for set in sets {
@@ -72,17 +102,26 @@ nonisolated enum DebugBanks {
 
     /// Posts `body` to `path` on `bank` and returns the id the answer names.
     private static func send(_ bank: LocalBank, _ path: String, _ body: [String: JSONValue], id: String = "id") async throws -> String {
-        guard let url = URL(string: "https://fake-qbank.invalid\(path)") else { throw URLError(.badURL) }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(JSONValue.object(body))
-        let (data, response) = try await bank.send(request)
-        let answer = try JSONDecoder().decode(JSONValue.self, from: data)
-        guard response.statusCode == 201, let made = answer[id]?.stringValue else {
-            throw URLError(.cannotParseResponse, userInfo: [NSLocalizedDescriptionKey: "\(path) answered \(response.statusCode)"])
+        guard let made = try await answer(bank, "POST", path, body, expecting: 201)[id]?.stringValue else {
+            throw URLError(.cannotParseResponse, userInfo: [NSLocalizedDescriptionKey: "\(path) named no \(id)"])
         }
         return made
+    }
+
+    /// Sends `method` `path` with `body` to `bank` and returns its answer, which must have `status`.
+    private static func answer(_ bank: LocalBank, _ method: String, _ path: String, _ body: [String: JSONValue]?, expecting status: Int = 200) async throws -> JSONValue {
+        guard let url = URL(string: "https://fake-qbank.invalid\(path)") else { throw URLError(.badURL) }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONEncoder().encode(JSONValue.object(body))
+        }
+        let (data, response) = try await bank.send(request)
+        guard response.statusCode == status else {
+            throw URLError(.cannotParseResponse, userInfo: [NSLocalizedDescriptionKey: "\(method) \(path) answered \(response.statusCode)"])
+        }
+        return try JSONDecoder().decode(JSONValue.self, from: data)
     }
 
     /// A question file of single-answer questions, the first choice right.

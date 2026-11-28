@@ -29,7 +29,8 @@ struct HandBackWorld {
         let moved = try await MoveWorld.make()
         let harness = try await ArchiveWorld.make()
         #expect(try await harness.send("POST", "/api/topics", .object(["title": .string("Added in QBank Cloud")])).status == 201)
-        let cloudArchive = try BankArchive.write(from: harness.store, at: ArchiveWorld.date)
+        // As the server sends it, with its stamp.
+        let cloudArchive = try ArchiveWorld.asTheServerSends(try BankArchive.write(from: harness.store, at: ArchiveWorld.date), stamp: CombineWorld.stamp)
         let before = BankHandover.onPhone.inCloud(since: start)
         try moved.record.save(before)
         // In Cloud mode the safety copy is not open.

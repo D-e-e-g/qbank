@@ -12,7 +12,6 @@ import Testing
 struct CloudReturnTests {
     private static let download = "GET /api/me/bank"
     private static let session = "GET /api/session"
-    private static let rivers = #"{"title":"Invented rivers","questions":[{"id":"R1","type":"single","ask":"Which river is longest?","options":[{"t":"The Sile","ok":true},{"t":"The Orne"}]}]}"#
     private static let cloudRequired = QBankError.server(ServerError(status: 403, code: .cloudRequired, message: "This needs Cloud. Your question bank is on this device."))
 
     /// A model whose bank is in QBank Cloud, whose server says Cloud has ended and sends `archive` as
@@ -246,97 +245,6 @@ struct CloudReturnTests {
         #expect(try phone.record.load() == .onPhone)
     }
 
-    // MARK: A new device after Cloud ended
-
-    /// A person whose Cloud has ended signs in on a phone with no bank of theirs, and QBank holds
-    /// their bank: the new bank opens with the sample set, and one screen offers QBank's bank, with
-    /// nothing changed until a tap.
-    private func newDeviceAfterCloudEnded(_ phone: CloudPhone, _ server: StubServer) async throws -> AppModel {
-        try phone.session.clear()
-        server["POST /api/sign-in/apple"] = .ok(Bodies.appleSignedIn(cloud: false))
-        server[Self.download] = CloudPhone.reply(try await CloudPhone.cloudArchive(sample: false, topics: ["Kept in QBank"], sets: [Self.rivers]))
-        let app = phone.launch(server)
-        await AppleSignInModel(app: app).signIn(over: nil)
-        #expect(app.kind == .free)
-        try await waitUntil { if case .offered = app.cloudReturn.phase { true } else { false } }
-        #expect(app.cloudReturn.isShown)
-        #expect(app.cloudReturn.phase == .offered(BankSummary(sets: 1, questions: 1, answers: 0)), "QBank's bank, as the person counts it")
-        #expect(try phone.record.load() == .onPhone, "nothing switches before a tap")
-        #expect(try await app.client.catalog().topics.map(\.title) == [SampleSet.topic])
-        return app
-    }
-
-    @Test func bringingQBanksBankToANewDeviceTakesItsPlaceAndKeepsTheNewBankAsItWas() async throws {
-        let phone = CloudPhone()
-        defer { phone.remove() }
-        let server = StubServer()
-        let app = try await newDeviceAfterCloudEnded(phone, server)
-        let earlier = try phone.bytes()
-        let since = server.calls.count
-        let revision = app.bankRevision
-
-        await app.cloudReturn.start()
-
-        #expect(app.bankRevision != revision, "the kind and key stay the same, and the screens start afresh on the bank that came down all the same")
-
-        #expect(app.cloudReturn.phase == .returned(BankSummary(sets: 1, questions: 1, answers: 0)))
-        let record = try phone.record.load()
-        #expect(record.authority == .phone)
-        #expect(record.lease == nil)
-        #expect(record.bankFile != LocalStore.firstFile, "a fresh file")
-        #expect(app.kind == .free)
-        #expect(try await app.client.catalog().topics.map(\.title) == ["Kept in QBank"])
-        #expect(try phone.bytes() == earlier, "the bank this phone made stays as it was")
-        #expect(record.offeredFile == LocalStore.firstFile)
-        #expect(record.offeredSets.count == 1, "the sample set, which QBank's bank does not hold, is offered")
-        #expect(app.cloudAdopt.offeredCount == 1)
-        let calls = server.calls.dropFirst(since)
-        #expect(calls.filter { $0 == Self.download }.count == 1)
-        #expect(!calls.contains { $0.hasPrefix("DELETE") || $0.hasPrefix("PUT") || $0.hasPrefix("POST") }, "nothing in QBank is changed")
-        app.cloudReturn.close()
-        #expect(!app.cloudReturn.offersServerBank)
-        #expect(app.cloudAdopt.offersSets)
-
-        let relaunched = phone.launch(server)
-        #expect(try await relaunched.client.catalog().topics.map(\.title) == ["Kept in QBank"], "the next launch opens the fresh file")
-    }
-
-    @Test func notNowKeepsTheNewBankAndSettingsOffersQBanksBank() async throws {
-        let phone = CloudPhone()
-        defer { phone.remove() }
-        let server = StubServer()
-        let app = try await newDeviceAfterCloudEnded(phone, server)
-
-        app.cloudReturn.close()
-
-        #expect(!app.cloudReturn.isShown)
-        #expect(app.kind == .free)
-        #expect(try phone.record.load() == .onPhone)
-        #expect(app.cloudReturn.offersServerBank, "Settings offers it")
-        _ = try await app.client.createTopic(title: "Invented Botany")
-        #expect(!server.calls.contains { $0.hasPrefix("DELETE") || $0.hasPrefix("PUT") })
-
-        app.cloudReturn.offerServerBank()
-        #expect(app.cloudReturn.phase == .offered(BankSummary(sets: 1, questions: 1, answers: 0)))
-    }
-
-    @Test func aNewDeviceAfterCloudEndedIsOfferedNothingWhenQBankHoldsNoBank() async throws {
-        let phone = CloudPhone()
-        defer { phone.remove() }
-        try phone.session.clear()
-        let server = StubServer(["POST /api/sign-in/apple": .ok(Bodies.appleSignedIn(cloud: false))])
-        server[Self.download] = CloudPhone.reply(try await CloudPhone.cloudArchive(sample: false))
-        let app = phone.launch(server)
-
-        await AppleSignInModel(app: app).signIn(over: nil)
-        try await waitUntil { server.calls.contains(Self.download) }
-        await app.cloudReturn.lookForServerBank()
-
-        #expect(!app.cloudReturn.isShown)
-        #expect(app.cloudReturn.serverBank == nil)
-        #expect(try phone.record.load() == .onPhone)
-    }
-
     // MARK: The fresh file
 
     @Test func aHandBackTheAppWasClosedDuringIsLetGoOfAtLaunch() async throws {
@@ -364,10 +272,6 @@ struct CloudReturnTests {
 
     @Test func theStepsAndEndingsSayWhatHappenedInPlainWords() {
         let steps: [BankHandBack.Step] = [.downloading, .writing, .checking]
-        #expect(
-            CloudReturnWording.offeredEarlierCopy
-                == "The bank on this \(Device.model) stays on it, unchanged, as an earlier copy. Answers you gave on this \(Device.model) to sets QBank's bank also has stay only in that copy. Sets only in it are offered next, to add as new sets.",
-            "before the tap, it says that answers to sets in both stay only in the earlier copy")
         #expect(steps.map(CloudReturnWording.step) == ["Downloading your bank from QBank Cloud", "Writing it to this \(Device.model)", "Checking that everything arrived"])
         #expect(CloudReturnWording.problem(.countsDiffer([.init(table: "attempts", onPhone: 1, inCloud: 2)])) == "This \(Device.model) did not get the same number of answers as QBank Cloud holds, so it did not switch.")
         #expect(CloudReturnWording.problem(.switchNotRecorded(.closed)) == "Your whole bank arrived, but this \(Device.model) could not note the switch, so it keeps using QBank Cloud's bank.")

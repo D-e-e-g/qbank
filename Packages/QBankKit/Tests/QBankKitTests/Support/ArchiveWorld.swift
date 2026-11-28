@@ -62,6 +62,15 @@ enum ArchiveWorld {
 
     static let date = Date(timeIntervalSince1970: 1_700_000_000)
 
+    /// `archive`, as this phone wrote it, as the server sends it: written by the server, with `stamp`,
+    /// and otherwise byte for byte as it was, so every row reads back exactly.
+    static func asTheServerSends(_ archive: Data, stamp: String) throws -> Data {
+        let text = String(decoding: archive, as: UTF8.self)
+        let mark = "  \"writtenBy\": \"phone\",\n"
+        #expect(text.contains(mark))
+        return Data(text.replacingOccurrences(of: mark, with: "  \"writtenBy\": \"server\",\n  \"stamp\": \"\(stamp)\",\n").utf8)
+    }
+
     static func empty() throws -> LocalStore { try LocalStore.inMemory() }
 
     static func isEmpty(_ store: LocalStore) throws -> Bool {

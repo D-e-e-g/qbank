@@ -140,7 +140,7 @@ struct CloudMoveTests {
 
     /// Each upload that does not end in a confirmed, matching copy in QBank Cloud, with what the move's
     /// screen says, and whether it offers to try again. An account that already has a bank in QBank
-    /// Cloud is asked about that bank instead (`CloudAdoptTests`). What it says is read on the main
+    /// Cloud combines with it instead (`CloudCombineTests`). What it says is read on the main
     /// actor, since a sentence that names the device says "iPhone" or "iPad" as the device the tests
     /// run on does.
     fileprivate nonisolated static let failures: [(name: String, reply: Reply?, says: @MainActor @Sendable () -> String, canRetry: Bool)] = [

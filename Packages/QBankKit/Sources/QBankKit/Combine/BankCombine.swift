@@ -6,11 +6,20 @@ public enum BankCombine {
     public struct Result: Sendable {
         public let archive: Data
         public let ledger: Ledger
+        /// The rows of each table of the combined bank, as stored and checked.
+        public let counts: BankCounts
+        /// The stamp of the server's bank the combine was built on, which the combined archive carries.
+        public let stamp: String
     }
 
     public struct Ledger: Codable, Equatable, Sendable {
         public let joins: [Join]
+        /// Rows whose name, place and delete mark stayed the server's, because the change would have
+        /// given two live rows one name (WIN-14).
         public let namesKept: [KeptName]
+        /// Semesters, courses, topics, pages and folders both banks held whose changeable fields
+        /// differed, which the later change settled (WIN-1), by their id in the result.
+        public let changedInBoth: [KeptName]
         public let phone: BankSummary
         public let server: BankSummary
         public let inBoth: BankSummary
@@ -25,6 +34,7 @@ public enum BankCombine {
         public let rule: String
     }
 
+    /// A row of the result, by its archive table key and id.
     public struct KeptName: Codable, Equatable, Sendable {
         public let table: String
         public let id: String
@@ -47,9 +57,9 @@ public enum BankCombine {
             try plan.check(in: tx)
         }
         let ledger = try Ledger(
-            joins: plan.joins, namesKept: plan.namesKept, phone: incoming.summary, server: held.summary,
+            joins: plan.joins, namesKept: plan.namesKept, changedInBoth: plan.changedInBoth, phone: incoming.summary, server: held.summary,
             inBoth: plan.sharedSummary(), combined: BankSummary.of(store))
-        return try Result(archive: BankArchive.write(from: store, at: date), ledger: ledger)
+        return try Result(archive: BankArchive.write(from: store, at: date), ledger: ledger, counts: BankArchive.counts(of: store), stamp: stamp)
     }
 }
 
@@ -125,6 +135,7 @@ struct CombinePlan {
     var rows: [String: CombineTable]
     var joins: [BankCombine.Join] = []
     var namesKept: [BankCombine.KeptName] = []
+    var changedInBoth: [BankCombine.KeptName] = []
     var aliases: [String: [String: String]] = [:]
     var questionLineages: [String: String] = [:]
 

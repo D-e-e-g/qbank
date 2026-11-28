@@ -22,10 +22,12 @@ nonisolated enum DebugScenarioCatalog {
         .freeFirstLaunch,
         .storedSessionBeforeUpdate,
         .cloudMoveLeftOpen,
-        .cloudMoveRefused,
         .freeDeleteDrops,
         .cloudEnded,
         .cloudSecondDevice,
+        .cloudReturningSubscriber,
+        .cloudLapsedNewIPhone,
+        .cloudLapsed,
         .freeDeleteHeld,
         .signedInDeleteHeld,
     ]

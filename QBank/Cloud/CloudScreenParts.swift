@@ -3,7 +3,7 @@ import QBankKit
 import SwiftUI
 
 /// The screen over the app while the bank moves between this phone and QBank Cloud: the move to QBank
-/// Cloud, taking QBank Cloud's bank, or bringing the bank back. One is shown at a time, the one under
+/// Cloud, a combine of the two banks, or bringing the bank back. One is shown at a time, the one under
 /// way, and none can be closed while it runs, so nothing in the app changes the bank meanwhile.
 struct CloudCoverView: View {
     let app: AppModel
@@ -11,8 +11,8 @@ struct CloudCoverView: View {
     var body: some View {
         if app.cloudReturn.isShown {
             CloudReturnView(app: app)
-        } else if app.cloudAdopt.isShown {
-            CloudAdoptView(app: app)
+        } else if app.cloudCombine.isShown {
+            CloudCombineView(app: app)
         } else {
             CloudMoveView(app: app)
         }

@@ -45,8 +45,9 @@ struct RootView: View {
         )
         // Each screen the route shows runs it once.
         .task(id: model.screen) {
-            // A move the app was closed during is finished before anything else.
+            // A move or a combine the app was closed during is finished before anything else.
             await model.cloudMove.finishLeftOpen()
+            await model.cloudCombine.finishLeftOpen()
             // A session kept from an earlier launch: check the server still accepts it.
             await model.refreshSession()
         }

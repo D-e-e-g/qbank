@@ -2,15 +2,16 @@ import XCTest
 
 /// QBank Cloud for a free account: Settings' Cloud row, the plans sheet, a purchase that the server
 /// turns into Cloud, the move of the bank on this iPhone to QBank Cloud that follows, the bank coming
-/// back once Cloud ends, and a second device taking the bank QBank Cloud holds. The App Store is the
+/// back once Cloud ends, and the bank on this iPhone combined with the one QBank holds: on a second
+/// device, for a returning subscriber, and on a new iPhone after Cloud ended. The App Store is the
 /// fake store and the server the fake one, through the Debug launch seam, so nothing is bought and no
 /// Apple Account is used. A unit test cannot do this job: it is the real sheet, as presented over
 /// Settings, that must show each plan's name, period and price, the renewal terms and the two policy
 /// links, and a real tap through StoreKit's stand-in to the server that must leave Settings saying
 /// Cloud is on; and it is the real launch, the real Sign in with Apple screen and the real screens,
 /// over the bank's files and the server's copy, that must show the bank's screen covering the app
-/// until it ends, then every set where the bank is now: in QBank Cloud after a move or on a second
-/// device, back on this iPhone after Cloud ends, or still on it after a refusal. The sheet's tests run
+/// until it ends, then every set where the bank is now: in QBank Cloud after a move or a combine, back
+/// on this iPhone after Cloud ends, or combined on it. The sheet's tests run
 /// on iPhone and iPad, where the sheet is the same and Settings is reached the same way; a test that
 /// walks Home into a set runs on iPhone, where a course opens over Home.
 final class CloudUITests: XCTestCase {
@@ -18,6 +19,8 @@ final class CloudUITests: XCTestCase {
     private let set = "General knowledge sampler"
     /// The topic of the invented sets a bank gains in QBank Cloud or on this iPhone.
     private let geography = "Geography"
+    /// The name a returning subscriber gave that topic on this iPhone while Cloud was off.
+    private let renamedGeography = "World geography"
 
     /// Each plan as the fake store sells it, as the StoreKit configuration file does: the key of its
     /// controls, its name, how long one payment lasts, and its price.
@@ -181,36 +184,6 @@ final class CloudUITests: XCTestCase {
         XCTAssertTrue(saved.exists)
     }
 
-    /// The server already holds a bank for the account, from another device, and refuses the upload:
-    /// the app says what QBank Cloud holds and what only this iPhone has, and switches nothing on its
-    /// own. Not now keeps the bank on this iPhone, and Settings offers QBank Cloud's bank in place of a
-    /// move the server would refuse again.
-    @MainActor
-    func testARefusedMoveKeepsTheBankOnThisIPhone() throws {
-        try skipOnIPad()
-        let app = launch("cloud-move-refused")
-        let found = app.staticTexts["cloudAdopt.found"]
-        XCTAssertTrue(found.appears(timeout: 15))
-        XCTAssertEqual(found.label, "QBank Cloud already has your bank")
-        XCTAssertEqual(adoptCount(app, "sets").label, "Sets, 1")
-        XCTAssertEqual(adoptCount(app, "questions").label, "Questions, 3")
-        XCTAssertEqual(
-            app.staticTexts["cloudAdopt.onlyHere"].label, "1 set only on this iPhone. Next, you can add it to QBank Cloud as a new set.")
-        XCTAssertTrue(app.staticTexts["cloudAdopt.safetyCopy"].label.contains("safety copy"))
-        attachLooks(app, "move refused, cloud bank found")
-        app.buttons["cloudAdopt.later"].tap()
-        XCTAssertTrue(found.disappears(timeout: 5))
-
-        let sample = openSampleSet(app)
-        waitForLabel(sample, containing: "10")
-        openTab(app, "Settings")
-        let use = app.buttons["settings.useCloudBank"]
-        XCTAssertTrue(use.appears(timeout: 10), "Cloud is on and the bank is still on this iPhone")
-        XCTAssertFalse(app.buttons["settings.moveToCloud"].exists, "QBank Cloud would refuse the same upload again")
-        XCTAssertFalse(app.buttons["settings.savedForOffline"].exists, "the bank is on this iPhone")
-        attach(app, "move refused, settings")
-    }
-
     /// Cloud has ended for an account whose bank is in QBank Cloud: at launch the bank comes back to
     /// this iPhone, covering the app while it does. The first download loses the connection, which
     /// switches nothing and says so; trying again brings the whole bank back, with the set QBank Cloud
@@ -267,60 +240,257 @@ final class CloudUITests: XCTestCase {
         XCTAssertFalse(app.buttons["settings.savedForOffline"].exists, "the bank is on this iPhone")
     }
 
+    // MARK: Combining two banks
+
     /// A second device: this iPhone holds a bank from before the person had Cloud, and QBank Cloud
-    /// holds their bank from another device. After Sign in with Apple the app says what QBank Cloud
-    /// holds and switches only on a tap; then it offers the set only this iPhone has, which goes to
-    /// QBank Cloud as a new set only on a tap. The app then runs on QBank Cloud's bank, with that set in it.
+    /// holds their bank from another device. After Sign in with Apple the two are combined without a
+    /// question: the screen covers the app while it runs, the first combined bank is refused because
+    /// QBank Cloud's changed meanwhile and the combine starts again, and the outcome says what QBank
+    /// Cloud holds now and what this iPhone added. The app then runs on QBank Cloud's bank, every set
+    /// of both in it.
     @MainActor
-    func testASecondDeviceOpensTheCloudBank() throws {
+    func testASecondDeviceCombinesItsBankWithCloud() throws {
         try skipOnIPad()
         let app = launch("cloud-second-device", environment: ["QB_UITEST_APPLE": "returning-person"])
         let apple = app.buttons["welcome.apple"]
         XCTAssertTrue(apple.appears(timeout: 10))
         apple.tap()
 
-        let found = app.staticTexts["cloudAdopt.found"]
-        XCTAssertTrue(found.appears(timeout: 15))
-        XCTAssertEqual(adoptCount(app, "sets").label, "Sets, 2")
-        XCTAssertEqual(adoptCount(app, "questions").label, "Questions, 13")
+        let combining = app.staticTexts["cloudCombine.combining"]
+        XCTAssertTrue(combining.appears(timeout: 10))
+        XCTAssertEqual(combining.label, "Combining your banks")
         XCTAssertEqual(
-            app.staticTexts["cloudAdopt.onlyHere"].label, "1 set only on this iPhone. Next, you can add it to QBank Cloud as a new set.",
-            "the sample set is in QBank Cloud already; only the set this iPhone made is not")
-        attachLooks(app, "second device, cloud bank found")
-        app.buttons["cloudAdopt.use"].tap()
+            app.staticTexts["cloudCombine.lead"].label,
+            "With QBank Cloud on, QBank keeps one bank for you. What is only on this iPhone is added to it. Nothing is removed.")
+        XCTAssertEqual(app.staticTexts["cloudCombine.answers"].label, "Your answers from this iPhone are added too.")
+        XCTAssertEqual(app.staticTexts["cloudCombine.safetyCopy"].label, "The bank on this iPhone stays on it, unchanged, as a safety copy.")
+        XCTAssertEqual(app.staticTexts["cloudCombine.keepOpen"].label, "Keep QBank open. Your bank can't change until this ends.")
+        let steps = app.descendants(matching: .any)
+        XCTAssertEqual(steps["cloudCombine.step.reading"].label, "Reading your bank in QBank Cloud")
+        XCTAssertEqual(steps["cloudCombine.step.combining"].label, "Combining it with the bank on this iPhone")
+        XCTAssertEqual(steps["cloudCombine.step.sending"].label, "Sending what QBank Cloud does not have")
+        XCTAssertEqual(steps["cloudCombine.step.checking"].label, "Checking that everything is there")
+        let tab = tabButton(app, "Settings")
+        XCTAssertFalse(tab.exists && tab.isHittable, "nothing in the app can change the bank while it is combined")
+        attachLooks(app, "second device, combining")
 
-        let offering = app.staticTexts["cloudAdopt.offering"]
-        XCTAssertTrue(offering.appears(timeout: 10))
-        XCTAssertEqual(offering.label, "1 set only on this iPhone")
-        let offered = app.descendants(matching: .any)["cloudAdopt.set.Invented rivers"]
-        XCTAssertTrue(offered.exists)
-        XCTAssertTrue(offered.label.contains("Geography · Unsorted"), offered.label)
-        XCTAssertEqual(app.buttons["cloudAdopt.add"].label, "Add it to QBank Cloud")
-        attachLooks(app, "second device, offer")
-        app.buttons["cloudAdopt.add"].tap()
-        let added = app.staticTexts["cloudAdopt.added"]
-        XCTAssertTrue(added.appears(timeout: 10))
-        XCTAssertEqual(added.label, "Your set is in QBank Cloud")
-        attach(app, "second device, added")
-        app.buttons["cloudAdopt.done"].tap()
-        XCTAssertTrue(added.disappears(timeout: 5))
+        let combined = app.staticTexts["cloudCombine.combined"]
+        XCTAssertTrue(combined.appears(timeout: 30))
+        XCTAssertEqual(combined.label, "Your banks are combined")
+        XCTAssertEqual(
+            app.staticTexts["cloudCombine.body"].label,
+            "QBank Cloud now holds everything from this iPhone and everything it already had. Nothing was removed.")
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 3", "the sample set is in both, and is one set")
+        XCTAssertEqual(combineCount(app, "questions").label, "Questions, 15")
+        XCTAssertEqual(combineCount(app, "answers").label, "Answers, 0")
+        XCTAssertEqual(app.staticTexts["cloudCombine.added"].label, "Added from this iPhone: 1 set, 0 answers")
+        XCTAssertFalse(app.staticTexts["cloudCombine.newerKept"].exists, "nothing was changed in both places")
+        attachLooks(app, "second device, combined")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
 
         // QBank Cloud's bank, with its own set and the one this iPhone added beside it.
-        openTab(app, "Home")
-        let card = app.buttons["home.topic.\(geography)"]
-        XCTAssertTrue(card.appears(timeout: 10))
-        card.tap()
-        XCTAssertTrue(app.navigationBars[geography].appears(timeout: 5))
-        tapVisible(app.buttons["folder.Unsorted"], in: app)
+        openGeography(app)
         XCTAssertTrue(app.buttons["course.set.Invented capitals"].appears(timeout: 5))
         XCTAssertTrue(app.buttons["course.set.Invented rivers"].exists)
         attach(app, "second device, the cloud bank")
         openTab(app, "Settings")
         waitForLabel(app.buttons["settings.cloud"], containing: "On")
-        XCTAssertFalse(app.buttons["settings.addPhoneSets"].exists, "nothing is left to offer")
+        XCTAssertFalse(app.buttons["settings.combineBank"].exists, "nothing is left to combine")
+        XCTAssertFalse(app.buttons["settings.moveToCloud"].exists)
         let saved = app.buttons["settings.savedForOffline"]
         reveal(saved, in: app)
         XCTAssertTrue(saved.exists, "a bank in QBank Cloud is saved for offline")
+    }
+
+    /// A returning subscriber: this iPhone holds the bank that came back when Cloud ended, renamed a
+    /// topic since and answers a question now. Buying Cloud again combines it with the bank QBank Cloud
+    /// kept: the outcome says the newer change was kept, and the app then runs on QBank Cloud's bank,
+    /// with the new name and the answer.
+    @MainActor
+    func testAReturningSubscriberKeepsItsNewerWork() throws {
+        try skipOnIPad()
+        let app = launch("cloud-returning-subscriber")
+
+        // An answer on this iPhone while Cloud is off.
+        let sample = openSampleSet(app)
+        tapVisible(sample, in: app)
+        XCTAssertTrue(app.buttons["practice.close"].appears(timeout: 5))
+        tapVisible(app.buttons["practice.option.1"], in: app)
+        app.buttons["practice.check"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["practice.feedback"].appears(timeout: 5))
+        app.buttons["practice.close"].tap()
+        waitForLabel(sample, containing: "1 of 10 answered")
+        openTab(app, "Home")
+        XCTAssertTrue(app.buttons["home.topic.\(renamedGeography)"].appears(timeout: 10))
+
+        openTab(app, "Settings")
+        let cloud = app.buttons["settings.cloud"]
+        XCTAssertTrue(cloud.appears(timeout: 5))
+        XCTAssertFalse(app.buttons["settings.combineBank"].exists, "this iPhone took in the bank QBank holds")
+        cloud.tap()
+        let subscribe = app.buttons["cloud.plan.monthly.subscribe"]
+        XCTAssertTrue(subscribe.appears(timeout: 5))
+        subscribe.tap()
+
+        let combined = app.staticTexts["cloudCombine.combined"]
+        XCTAssertTrue(combined.appears(timeout: 30))
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 2")
+        XCTAssertEqual(combineCount(app, "questions").label, "Questions, 13")
+        XCTAssertEqual(combineCount(app, "answers").label, "Answers, 1")
+        XCTAssertEqual(app.staticTexts["cloudCombine.added"].label, "Added from this iPhone: 0 sets, 1 answer")
+        XCTAssertEqual(app.staticTexts["cloudCombine.newerKept"].label, "Where something was changed in both places, the newer change was kept.")
+        attachLooks(app, "returning subscriber, combined")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
+
+        // QBank Cloud's bank, with the newer name and the answer given here.
+        openTab(app, "Home")
+        XCTAssertTrue(app.buttons["home.topic.\(renamedGeography)"].appears(timeout: 10))
+        XCTAssertFalse(app.buttons["home.topic.\(geography)"].exists, "the older name is not kept beside it")
+        waitForLabel(openSampleSet(app), containing: "1 of 10 answered")
+        openTab(app, "Settings")
+        waitForLabel(app.buttons["settings.cloud"], containing: "On")
+        let saved = app.buttons["settings.savedForOffline"]
+        reveal(saved, in: app)
+        XCTAssertTrue(saved.exists, "the bank is in QBank Cloud")
+    }
+
+    /// A new iPhone for an account whose Cloud has ended: after Sign in with Apple the bank QBank holds
+    /// is combined into the new bank, into a fresh file on this iPhone, with nothing sent. The first
+    /// download loses the connection, which combines nothing and says so; trying again brings
+    /// everything, and the app then runs on this iPhone with no connection at all.
+    @MainActor
+    func testANewIPhoneBringsDownALapsedBank() throws {
+        try skipOnIPad()
+        let app = launch("cloud-lapsed-new-iphone", environment: ["QB_UITEST_APPLE": "returning-person"])
+        let apple = app.buttons["welcome.apple"]
+        XCTAssertTrue(apple.appears(timeout: 10))
+        apple.tap()
+
+        let combining = app.staticTexts["cloudCombine.combining"]
+        XCTAssertTrue(combining.appears(timeout: 10))
+        XCTAssertFalse(app.descendants(matching: .any)["cloudCombine.step.sending"].exists, "nothing is sent to QBank")
+        XCTAssertFalse(app.staticTexts["cloudCombine.lead"].exists, "QBank Cloud is not on")
+        attachLooks(app, "new iPhone, combining")
+
+        let failed = app.staticTexts["cloudCombine.failed"]
+        XCTAssertTrue(failed.appears(timeout: 20))
+        XCTAssertEqual(failed.label, "Your banks were not combined")
+        XCTAssertEqual(app.staticTexts["cloudCombine.problem"].label, "The connection dropped before your whole bank arrived.")
+        XCTAssertEqual(
+            app.staticTexts["cloudCombine.unchanged"].label,
+            "Nothing on this iPhone or in QBank Cloud was removed. You can keep using the bank on this iPhone.")
+        attachLooks(app, "new iPhone, not combined")
+
+        app.buttons["cloudCombine.retry"].tap()
+        let combined = app.staticTexts["cloudCombine.combined"]
+        XCTAssertTrue(combined.appears(timeout: 20))
+        XCTAssertEqual(
+            app.staticTexts["cloudCombine.body"].label,
+            "Everything QBank held for you is on this iPhone, together with what was already here. Nothing in QBank was changed or deleted.")
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 2", "the sample set this iPhone filed is QBank's, and is one set")
+        XCTAssertEqual(combineCount(app, "questions").label, "Questions, 13")
+        XCTAssertFalse(app.staticTexts["cloudCombine.added"].exists)
+        attachLooks(app, "new iPhone, combined")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
+
+        // The bank is on this iPhone, with the set QBank held, and opens with no network.
+        setNetwork(online: false)
+        openGeography(app)
+        XCTAssertTrue(app.buttons["course.set.Invented capitals"].appears(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["course.offline"].exists, "the bank is on this iPhone")
+        attach(app, "new iPhone, the bank on this iPhone")
+        openTab(app, "Settings")
+        XCTAssertTrue(app.buttons["settings.cloud"].appears(timeout: 5))
+        XCTAssertFalse(app.buttons["settings.combineBank"].exists, "the bank QBank holds is on this iPhone")
+    }
+
+    /// The bank goes to QBank Cloud by a combine, back to this iPhone when Cloud ends, and to QBank
+    /// Cloud again by a combine when Cloud is bought again: each switch keeps every set.
+    @MainActor
+    func testRepeatedSwitchesKeepEverySet() throws {
+        try skipOnIPad()
+        let app = launch("cloud-second-device", environment: ["QB_UITEST_APPLE": "returning-person"])
+        let apple = app.buttons["welcome.apple"]
+        XCTAssertTrue(apple.appears(timeout: 10))
+        apple.tap()
+        let combined = app.staticTexts["cloudCombine.combined"]
+        XCTAssertTrue(combined.appears(timeout: 30))
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 3")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
+
+        // Cloud ends, and the bank comes back to this iPhone once QBank says so.
+        postDebugNotification("com.dimitrygallego.qbank.uitest.cloud.end")
+        openTab(app, "Settings")
+        let returned = app.staticTexts["cloudReturn.returned"]
+        XCTAssertTrue(returned.appears(timeout: 30))
+        let counted = app.descendants(matching: .any)
+        XCTAssertEqual(counted["cloudReturn.count.sets"].label, "Sets, 3")
+        XCTAssertEqual(counted["cloudReturn.count.questions"].label, "Questions, 15")
+        app.buttons["cloudReturn.done"].tap()
+        XCTAssertTrue(returned.disappears(timeout: 5))
+
+        // Cloud is bought again: QBank Cloud holds the bank still, so the two are combined again. The
+        // screens start afresh on the bank that came back.
+        openTab(app, "Settings")
+        let cloud = app.buttons["settings.cloud"]
+        XCTAssertTrue(cloud.appears(timeout: 5))
+        cloud.tap()
+        let subscribe = app.buttons["cloud.plan.monthly.subscribe"]
+        XCTAssertTrue(subscribe.appears(timeout: 5))
+        subscribe.tap()
+        XCTAssertTrue(combined.appears(timeout: 30))
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 3")
+        XCTAssertEqual(combineCount(app, "questions").label, "Questions, 15")
+        XCTAssertEqual(app.staticTexts["cloudCombine.added"].label, "Added from this iPhone: 0 sets, 0 answers", "everything was in both already")
+        attach(app, "repeated switches, combined again")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
+
+        openGeography(app)
+        XCTAssertTrue(app.buttons["course.set.Invented capitals"].appears(timeout: 5))
+        XCTAssertTrue(app.buttons["course.set.Invented rivers"].exists)
+        openTab(app, "Home")
+        XCTAssertTrue(app.buttons["home.topic.\(topic)"].exists)
+    }
+
+    /// A combine of a new iPhone's bank with the one QBank holds that did not finish stays offered in
+    /// Settings, also after QBank is closed and opened again, and runs from there.
+    @MainActor
+    func testALapsedBankIsStillOfferedAfterRelaunch() throws {
+        try skipOnIPad()
+        var app = launch("cloud-lapsed-new-iphone", environment: ["QB_UITEST_APPLE": "returning-person"])
+        let apple = app.buttons["welcome.apple"]
+        XCTAssertTrue(apple.appears(timeout: 10))
+        apple.tap()
+        let failed = app.staticTexts["cloudCombine.failed"]
+        XCTAssertTrue(failed.appears(timeout: 20))
+        app.buttons["cloudCombine.later"].tap()
+        XCTAssertTrue(failed.disappears(timeout: 5))
+        openTab(app, "Settings")
+        var row = app.buttons["settings.combineBank"]
+        XCTAssertTrue(row.appears(timeout: 10))
+        XCTAssertTrue(row.label.contains("Bring my bank to this iPhone"), row.label)
+        XCTAssertTrue(row.label.contains("QBank holds a bank for you that is not on this iPhone yet."), row.label)
+        attachLooks(app, "lapsed, offered")
+
+        // QBank is closed and opened again: the row is still there, and combines.
+        app = launch("cloud-lapsed", keepPhoneData: true)
+        openTab(app, "Settings")
+        row = app.buttons["settings.combineBank"]
+        XCTAssertTrue(row.appears(timeout: 10), "Settings keeps offering it after a relaunch")
+        row.tap()
+        let combined = app.staticTexts["cloudCombine.combined"]
+        XCTAssertTrue(combined.appears(timeout: 20))
+        XCTAssertEqual(combineCount(app, "sets").label, "Sets, 2")
+        app.buttons["cloudCombine.done"].tap()
+        XCTAssertTrue(combined.disappears(timeout: 5))
+        XCTAssertFalse(app.buttons["settings.combineBank"].exists, "nothing is left to combine")
+        openGeography(app)
+        XCTAssertTrue(app.buttons["course.set.Invented capitals"].appears(timeout: 5))
     }
 
     /// Opens the sample set's folder from Home and returns the set's row.
@@ -346,10 +516,21 @@ final class CloudUITests: XCTestCase {
         app.descendants(matching: .any)["cloudMove.count.\(table)"]
     }
 
-    /// A count of QBank Cloud's bank, as the screen that offers it shows it, by what it counts.
+    /// A count of the one bank a combine left, as its screen shows it, by what it counts.
     @MainActor
-    private func adoptCount(_ app: XCUIApplication, _ table: String) -> XCUIElement {
-        app.descendants(matching: .any)["cloudAdopt.count.\(table)"]
+    private func combineCount(_ app: XCUIApplication, _ table: String) -> XCUIElement {
+        app.descendants(matching: .any)["cloudCombine.count.\(table)"]
+    }
+
+    /// Opens the invented sets' folder from Home.
+    @MainActor
+    private func openGeography(_ app: XCUIApplication) {
+        openTab(app, "Home")
+        let card = app.buttons["home.topic.\(geography)"]
+        XCTAssertTrue(card.appears(timeout: 10))
+        card.tap()
+        XCTAssertTrue(app.navigationBars[geography].appears(timeout: 5))
+        tapVisible(app.buttons["folder.Unsorted"], in: app)
     }
 
     /// Opens Settings on the free account's first screen and finds the Cloud row.

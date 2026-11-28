@@ -12,9 +12,10 @@ import QBankKit
 /// A move starts when a purchase or Restore turns Cloud on: once the plans sheet has closed (`isDue`),
 /// or at once when it already has; when the person asks for it in Settings; and at launch, before
 /// anything else, when the app was closed during one (`foundLeftOpen()`). While it runs, its screen covers the app and the
-/// bank takes no writes. When QBank Cloud refuses the bank because it holds one for the account already,
-/// as on a second device or after an upload whose answer was lost, that bank is the authority and the
-/// person is asked about it (`CloudAdoptModel`).
+/// bank takes no writes. When QBank Cloud holds a bank for the account already, as on a second device,
+/// for a returning subscriber or after an upload whose answer was lost, the two banks are combined
+/// instead (`CloudCombineModel`): the server's Cloud status says so before a move starts, and a move
+/// it refuses with `bank_not_empty` gives way to the combine.
 @Observable
 final class CloudMoveModel {
     enum Phase: Equatable {
@@ -51,9 +52,9 @@ final class CloudMoveModel {
     }
 
     /// Whether the bank on this phone can be moved now: a free account's, with Cloud on as the server
-    /// last said, and no move already running or waiting.
+    /// last said, QBank Cloud holding no bank to combine it with, and no move already running or waiting.
     var isOffered: Bool {
-        guard let app, app.kind == .free, !app.awaitsServer, app.cloud.status?.active == true, app.cloudAdopt.found == nil else { return false }
+        guard let app, app.kind == .free, !app.awaitsServer, app.cloud.status?.active == true, app.cloudCombine.due == nil else { return false }
         return !isMoving && !isDue && !isLeftOpen
     }
 
@@ -106,13 +107,19 @@ final class CloudMoveModel {
     }
 
     /// Moves the bank on this phone to QBank Cloud now. `resumed` when it runs again a move the app was
-    /// closed during.
+    /// closed during. When QBank Cloud holds a bank already, the two are combined instead.
     func start(resumed: Bool = false) async {
         guard let app, !isRunning else { return }
         isRunning = true
         defer { isRunning = false }
         isDue = false
         isResumed = resumed
+        // A move the app was closed during holds the bank's writes, and runs as it was.
+        if !resumed, await app.cloudCombine.takesOverMove() {
+            isShown = false
+            phase = .idle
+            return
+        }
         guard let made = app.bankMove() else {
             if isShown { phase = .failed(CloudMoveWording.notOnThisPhone, canRetry: false) }
             return
@@ -131,13 +138,13 @@ final class CloudMoveModel {
             guard isShown else { return }
             phase = .moved(summary)
         case .failed(let failure, _):
-            // QBank Cloud holds a bank for the account already: that bank is the authority, and the
-            // person is asked about it, the bank on this phone still as it was.
+            // QBank Cloud holds a bank for the account already: the two are combined, the bank on this
+            // phone still as it was. The combine's screen takes the place of this one.
             if case .notStored(let error) = failure, error.serverCode == .bankNotEmpty {
-                app.cloudAdopt.moveRefused()
                 isShown = false
                 isResumed = false
                 phase = .idle
+                await app.cloudCombine.moveRefused()
                 return
             }
             // A session that ended signs out, as everywhere; the bank stays on this phone as it was.
