@@ -4,7 +4,7 @@ import Foundation
 /// the progress of the questions it was answered on; the warning's standing is `StandingRules`'s.
 enum ProgressRebuild {
     /// One question lineage's progress, as a rebuild writes it.
-    struct Line {
+    struct Line: Equatable {
         var lineageId: String
         var attempts: Int
         var correctAttempts: Int
@@ -120,6 +120,12 @@ enum ProgressRebuild {
             let gone = chunk.filter { expected[$0] == nil }
             if !gone.isEmpty { try tx.execute("DELETE FROM question_progress WHERE question_lineage_id IN \(Chunks.marks(gone))", gone.map(StoreValue.text)) }
         }
+        try write(expected, in: tx)
+    }
+
+    /// Stores the rebuilt lines. A combine uses this part alone so a line left without a
+    /// counting answer retains the progress from before its exam was deleted.
+    static func write(_ expected: [String: Line], in tx: StoreTransaction) throws {
         for line in expected.values.sorted(by: { $0.lineageId < $1.lineageId }) {
             try tx.execute(
                 """

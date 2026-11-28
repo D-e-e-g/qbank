@@ -2,7 +2,7 @@
 
 The design record for who is signed in, where their question bank lives, and how a whole bank moves between the phone and the server. [on-phone-bank.md](on-phone-bank.md) is its other half: the bank on the phone and the bank archive format.
 
-This is a record to build to, not a description of shipped code. Only Getting in (I-30, linking Apple in Settings, I-31, and deleting a store account, I-32), the Cloud purchase (I-33), the move to Cloud (I-34), and Cloud ending and a second device (I-35) exist so far, and their sections say what was built. The combine of two banks ([Combining two banks](#combining-two-banks)) is designed here (I-36): the server's part is live (S-14, S-15, S-16), the phone keeps the time of last change and the archive's stamp (I-37), and the combine itself is not built (I-38, I-39). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`), and those in Combining two banks at app commit `254937b` and server commit `d86a61f`.
+This is a record to build to, not a description of shipped code. Only Getting in (I-30, linking Apple in Settings, I-31, and deleting a store account, I-32), the Cloud purchase (I-33), the move to Cloud (I-34), and Cloud ending and a second device (I-35) exist so far, and their sections say what was built. The combine of two banks ([Combining two banks](#combining-two-banks)) is designed here (I-36): the server's part is live (S-14, S-15, S-16), the phone keeps the time of last change and the archive's stamp (I-37), and QBankKit implements the combine (I-38). The app flows are planned in I-39. Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`), and those in Combining two banks at app commit `254937b` and server commit `d86a61f`.
 
 Ids such as A3, I-34 and S-03 name calls and pull requests in the App Store release plan, and OD1 and OD2 name owner questions. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -158,11 +158,11 @@ The app still does what these say until I-39 merges. None of it is the design: d
 
 ## Combining two banks
 
-When the phone's own bank and a bank on the server meet, they become one that holds everything from both. This section is the rule set the pull requests that build it work to. The server's part is live: the time of last change on bank rows and the stamp on the download (S-14), `POST /api/me/bank/combine` (S-15), and `bankStamp` and `combinePaused` on `GET /api/me/cloud` (S-16); [on-phone-bank.md](on-phone-bank.md#a-combined-bank) says what each carries. On the phone the time of last change and the archive's stamp are built (I-37); the rest of the app's part is not: the combine itself, `BankCombine` (I-38), and the two flows, their screens, the receipt and the pause (I-39).
+When the phone's own bank and a bank on the server meet, they become one that holds everything from both. This section is the rule set the pull requests that build it work to. The server's part is live: the time of last change on bank rows and the stamp on the download (S-14), `POST /api/me/bank/combine` (S-15), and `bankStamp` and `combinePaused` on `GET /api/me/cloud` (S-16); [on-phone-bank.md](on-phone-bank.md#a-combined-bank) says what each carries. The phone keeps the time of last change and the archive's stamp (I-37). QBankKit implements `BankCombine` over those archives (I-38). The two flows, their screens, saving the receipt and the pause are planned in I-39.
 
 ### Where it runs
 
-**The phone combines, and the server stores.** The rules are written once, in `Packages/QBankKit`, and tested on the Mac with no simulator. The one step is `combine(into: R, from: I)`: R is a fresh store holding the server's bank as downloaded, and I is the phone's own bank, opened only to read. A combine never writes the person's own file.
+**The phone combines, and the server stores.** The rules are written once, in `Packages/QBankKit`, and tested on the Mac with no simulator. The package entry point is `BankCombine.combine(phone:server:at:)`. It takes both complete archives and a clock value, resolves their rows, then writes and checks a fresh in-memory store in one transaction. It returns the combined archive with the download's stamp and a ledger of joins, names kept and counts. The phone supplies its own bank as a read-only snapshot.
 
 It runs on the phone because it must work for an account without Cloud, which may download its bank but store nothing (`apps/api/src/cloud/gate.ts`). A combine on the server would also need a second copy of the rules, and would send a free account's bank to the server. So the server only stores a result, and refuses one that would lose a row. An invited account's bank is only ever on the server, so it is never combined: the route refuses it with `not_store_account`.
 
@@ -203,7 +203,7 @@ It runs the hand-back's own steps (a fresh dated file, a lease naming it, the ba
 
 ### The rule ids
 
-Every row of the two tables below has an id: `ID-n` says when two items are the same, and `WIN-n` which side wins. **Tests cite the ids**: each rule has at least one test in `BankCombineTests` that names it (I-38). An id is never reused or renumbered, and a new rule takes the next number. A person approves the two tables before I-38 is built.
+Every row of the two tables below has an id: `ID-n` says when two items are the same, and `WIN-n` which side wins. **Tests cite the ids**: each rule has at least one test in `BankCombineTests` or `BankCombineConflictTests` that names it (I-38). An id is never reused or renumbered, and a new rule takes the next number. A person approves the two tables before I-38 is built.
 
 ### Identity: when two items are the same
 
@@ -255,6 +255,8 @@ ID-8 joins only that safe case. Otherwise (different folders, or a side that rep
 | WIN-13 | Two exams open (running or in their grace) | An open exam stays open. | The one started later stays open. The other ends as `left`, as starting a new exam ends it (`apps/api/src/exams/service.ts:465`, `LocalBank/ExamRoutes.swift:110`). |
 | WIN-14 | A name would be taken twice | - | A change that would give two live rows of the result one name (a rename, a move to another list or semester, or a delete undone under WIN-8) is not applied. The row keeps the name, place and delete mark it has in the server's bank, and the result screen says a name was kept. |
 | WIN-15 | A row of the result differs from the server's | - | It carries a time of last change later than the server row's: the phone row's own time where that is later, else the later of the combine's clock and one millisecond after the server's time. A question's time is its set's. The server writes a row both hold only when the sent row changed later, so without this it would refuse the bank or keep its own row. |
+
+For WIN-13 the engine scores the earlier exam using its saved answers. During grace the ordinary exam start route records an end as `timeout`. A combine uses the same end time and score and records `left`, as WIN-13 specifies.
 
 ### The checks before a switch
 

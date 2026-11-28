@@ -4,7 +4,7 @@ import Foundation
 /// in those sets, and every answer they gave. A set's earlier versions, and a set deleted or in a
 /// deleted course or folder, are not counted. A move between this phone and QBank Cloud does not check
 /// these: it compares every row of all twelve tables (`BankCounts`).
-public struct BankSummary: Sendable, Equatable {
+public struct BankSummary: Sendable, Equatable, Codable {
     public let sets: Int
     public let questions: Int
     public let answers: Int
