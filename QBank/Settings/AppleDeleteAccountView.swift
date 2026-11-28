@@ -4,8 +4,8 @@ import SwiftUI
 
 /// Delete account for a store account, free or Cloud: what goes, in plain words, that a subscription
 /// goes on until it is cancelled, with Manage subscription, and the delete, which Apple confirms
-/// first. The same screen, on its own, finishes a delete that stopped once this phone's copy was
-/// erased.
+/// first. The same screen, on its own, shows the delete under way once the erase of this phone's copy
+/// began, and finishes a delete that stopped there.
 struct AppleDeleteAccountView: View {
     @State private var model: AppleDeleteAccountModel
     @State private var managesSubscription = false

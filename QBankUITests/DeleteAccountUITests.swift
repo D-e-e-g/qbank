@@ -46,6 +46,41 @@ final class DeleteAccountUITests: XCTestCase {
         XCTAssertFalse(app.buttons["home.topic.\(topic)"].exists, "the bank was erased")
     }
 
+    /// The server can take a while to delete a store account, after this iPhone's copy is erased.
+    /// The delete is under way all that time, so nothing on screen says it stopped.
+    @MainActor
+    func testAFreeAccountsDeleteNeverShowsTheFinishingScreenOnItsWayToSignIn() throws {
+        try skipOnIPad()
+        let app = launch("free-delete-held", environment: samePerson)
+        XCTAssertTrue(app.buttons["home.add"].appears(timeout: 10))
+        openDeleteAccount(app)
+        app.buttons["deleteAccount.delete"].tap()
+
+        watchTheDeleteUnderWay(app)
+        waitForLabel(app.staticTexts["deleteAccount.message"], containing: "deleted for good from QBank's server")
+        XCTAssertFalse(app.tabBars.firstMatch.exists, "no screen of the erased bank stays")
+        attachLooks(app, "delete account, free, under way")
+
+        releaseTheDeleteAndExpectSignIn(app)
+    }
+
+    @MainActor
+    func testAnInvitedAccountsDeleteNeverShowsTheFinishingScreenOnItsWayToSignIn() throws {
+        try skipOnIPad()
+        let app = launch("signed-in-delete-held")
+        XCTAssertTrue(app.navigationBars["NURS 310"].appears(timeout: 10))
+        openDeleteAccount(app)
+        let password = app.secureTextFields["deleteAccount.password"]
+        password.tap()
+        password.typeText("synthetic-pass-1")
+        app.buttons["deleteAccount.delete"].tap()
+
+        watchTheDeleteUnderWay(app)
+        attach(app, "delete account, invited, under way")
+
+        releaseTheDeleteAndExpectSignIn(app)
+    }
+
     @MainActor
     func testADeleteThatStopsAfterTheEraseIsFinishedByTryingAgain() throws {
         try skipOnIPad()
@@ -100,6 +135,35 @@ final class DeleteAccountUITests: XCTestCase {
     }
 
     // MARK: Helpers
+
+    /// With the server's answer held back: the delete shows under way, and not as one to finish.
+    @MainActor
+    private func watchTheDeleteUnderWay(_ app: XCUIApplication) {
+        XCTAssertTrue(app.buttons["Deleting"].appears(timeout: 10), "the delete is under way")
+        expectNoFinishingScreen(app)
+    }
+
+    /// Lets the server's answer through, and looks again and again until sign-in is up, so the
+    /// screens in between are seen too.
+    @MainActor
+    private func releaseTheDeleteAndExpectSignIn(_ app: XCUIApplication) {
+        postDebugNotification("com.dimitrygallego.qbank.uitest.accountDelete.release")
+        let signIn = app.staticTexts["signIn.title"]
+        let deadline = Date(timeIntervalSinceNow: 20)
+        repeat {
+            expectNoFinishingScreen(app)
+        } while !signIn.exists && Date() < deadline
+        XCTAssertTrue(signIn.exists)
+        expectNoFinishingScreen(app)
+    }
+
+    /// Nothing on screen says the account is not deleted yet, or offers to sign out of the delete.
+    @MainActor
+    private func expectNoFinishingScreen(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let unfinished = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "not deleted yet"))
+        XCTAssertEqual(unfinished.count, 0, "the finishing screen's text is on screen", file: file, line: line)
+        XCTAssertFalse(app.buttons["deleteAccount.signOut"].exists, "the finishing screen's Sign out is on screen", file: file, line: line)
+    }
 
     /// Makes a study topic from Home's +, in the bank on the phone.
     @MainActor

@@ -150,6 +150,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         /// connection once that time has passed.
         var downloadDelay = Duration.zero
         var downloadsToDrop = 0
+        /// True while the answer to a request to delete the account is held back.
+        var holdsAccountDeleteReplies = false
     }
 
     let state: Mutex<State>
@@ -329,6 +331,9 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         }
         if method == "PUT", url.path() == "/api/me/bank" {
             try await Task.sleep(for: state.withLock { $0.uploadReplyDelay })
+        }
+        if method == "DELETE", url.path() == "/api/me" {
+            try await waitToAnswerAccountDelete()
         }
         // A lock says how long in its header too, as the server's does.
         if let retryAfter = body["retryAfterSeconds"] as? Int {

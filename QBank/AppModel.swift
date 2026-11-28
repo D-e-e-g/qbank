@@ -33,8 +33,9 @@ import UIKit
 ///
 /// A store account, free or Cloud, is deleted with a fresh Sign in with Apple, in a fixed order: this
 /// phone's copy is erased, then the account on the server, then the session (`deleteAccount(confirmedWith:nonce:)`).
-/// A delete that stopped after the erase began opens as `finishingDeletion`, which offers to finish it
-/// or to sign out, which keeps the account on QBank's server until it is deleted later from Settings.
+/// From the erase on, the delete is on screen by itself, as `deletingAccount`. One that stops there, or
+/// that the app was closed during, is `finishingDeletion`, which offers to finish it or to sign out,
+/// which keeps the account on QBank's server until it is deleted later from Settings.
 @Observable
 final class AppModel {
     enum Route: Equatable {
@@ -43,6 +44,9 @@ final class AppModel {
         /// The owner reset her password: she chooses a new one before anything else.
         case choosingPassword(Account)
         case signedIn(Account)
+        /// A store account's delete under way, from the start of the erase of this phone's copy to the
+        /// server's answer. It ends signed out, or, when it stops, in `finishingDeletion`.
+        case deletingAccount(Account)
         /// A store account's delete that stopped once this phone's copy was erased, or while it was,
         /// before the server deleted the account: finishing the delete, or signing out, is offered.
         case finishingDeletion(Account)
@@ -268,14 +272,23 @@ final class AppModel {
     var account: Account? {
         switch route {
         case .signedOut: nil
-        case .choosingPassword(let account), .signedIn(let account), .finishingDeletion(let account): account
+        case .choosingPassword(let account), .signedIn(let account), .deletingAccount(let account), .finishingDeletion(let account): account
         }
     }
 
-    /// True while a store account's delete is to be finished: this phone's copy is erased, or being
-    /// erased, and the server has not deleted the account yet.
+    /// True while a store account's delete is to be finished: it stopped with this phone's copy erased,
+    /// or partly erased, and the server has not deleted the account.
     var isFinishingDeletion: Bool {
         if case .finishingDeletion = route { true } else { false }
+    }
+
+    /// True from the start of the erase of a store account until the session is forgotten, whether the
+    /// delete is under way or to be finished: nothing opens or reads the account's bank any more.
+    private var hasBegunErasing: Bool {
+        switch route {
+        case .deletingAccount, .finishingDeletion: true
+        case .signedOut, .choosingPassword, .signedIn: false
+        }
     }
 
     /// Who is signed in, as this phone keeps their things apart, such as the sets they are writing: for
@@ -335,8 +348,8 @@ final class AppModel {
             return
         }
         // A free account's session is checked with the server when it signs in; until then the
-        // phone's bank opens as it is. A delete to finish checks it itself.
-        guard account != nil, !kind.bankIsOnPhone, !isFinishingDeletion else { return }
+        // phone's bank opens as it is. A delete checks it itself.
+        guard account != nil, !kind.bankIsOnPhone, !hasBegunErasing else { return }
         do {
             let session = try await client.session()
             route = Self.route(for: session.user)
@@ -775,7 +788,7 @@ final class AppModel {
 
     /// Why deleting a store account stopped: the words to show, or nil when there is nothing more to
     /// say, such as when the person closed Apple's sheet or the screen gave way to sign-in. Whether
-    /// this phone's copy is erased already is the route: `finishingDeletion` once it is.
+    /// the erase of this phone's copy had begun is the route: `finishingDeletion` once it had.
     struct DeletionStop: Error, Equatable {
         let reason: String?
     }
@@ -831,8 +844,9 @@ final class AppModel {
     /// Each step done is kept with the session before the next begins, so a delete that stops is
     /// finished from where it stopped, even after a relaunch, and never deletes twice: the erase runs
     /// until it is done once, and the server deletes only the account this phone's session is
-    /// signed in to, whose session goes with it. Once the erase began, a failure leaves
-    /// `finishingDeletion`, where trying again finishes the delete and signing out leaves it.
+    /// signed in to, whose session goes with it. Once the erase began, the route is `deletingAccount`,
+    /// and a failure leaves `finishingDeletion`, where trying again finishes the delete and signing out
+    /// leaves it.
     func deleteAccount(confirmedWith credential: AppleCredential, nonce: AppleSignInNonce) async throws(DeletionStop) {
         guard let account, !kind.deletesWithPassword, !awaitsServer, let kept = try? server.storedSession(), let appleUser = kept.appleUser
         else { throw DeletionStop(reason: AccountDeletionWording.tryAgain) }
@@ -848,6 +862,10 @@ final class AppModel {
             } catch {
                 throw DeletionStop(reason: AccountDeletionWording.notBegun)
             }
+        }
+        // A delete still under way on the way out of here has stopped.
+        defer {
+            if case .deletingAccount(let account) = route { route = .finishingDeletion(account) }
         }
         if kept.deletion != .phoneErased {
             try await erasePhoneCopy(of: account, appleUser: appleUser)
@@ -872,8 +890,8 @@ final class AppModel {
 
     /// Erases what this phone keeps of the account: its bank and anything kept beside it, the saved
     /// courses and waiting answers of an account whose bank is on the server, and the sets it was
-    /// writing. Nothing reaches the bank again: from here finishing the delete or signing out is on screen, and a
-    /// failure leaves it still at the erase, so trying again erases again.
+    /// writing. Nothing reaches the bank again: from here only the delete is on screen, under way or to
+    /// be finished, and a failure leaves it still at the erase, so trying again erases again.
     private func erasePhoneCopy(of account: Account, appleUser: String) async throws(DeletionStop) {
         let saved = offline
         phoneBank?.bank.close()
@@ -881,7 +899,8 @@ final class AppModel {
         client = server
         connection = network
         phoneCopyErased = false
-        route = .finishingDeletion(account)
+        // A delete being finished stays on its own screen; any other is now under way.
+        if !isFinishingDeletion { route = .deletingAccount(account) }
         await saved?.close()
         do {
             try banks.erase(appleUser)
@@ -996,7 +1015,7 @@ final class AppModel {
     /// Opens the phone's store for the account signed in, keeping it while the account stays. An
     /// ended session closes it but leaves its files, so waiting answers go once she signs in again.
     private func openOffline() {
-        guard kind.savesForOffline, let account, !isFinishingDeletion else {
+        guard kind.savesForOffline, let account, !hasBegunErasing else {
             offline?.stop()
             offline = nil
             return

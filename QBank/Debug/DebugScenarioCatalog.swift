@@ -26,6 +26,8 @@ nonisolated enum DebugScenarioCatalog {
         .freeDeleteDrops,
         .cloudEnded,
         .cloudSecondDevice,
+        .freeDeleteHeld,
+        .signedInDeleteHeld,
     ]
 
     /// The scenario named `name`, or nil when none is.
