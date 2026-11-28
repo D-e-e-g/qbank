@@ -21,7 +21,7 @@ A step can carry two tags (text prepared by a worker, clicked by the owner).
 
 One thing is still open and is named wherever it bites:
 
-- **Later pull requests.** The notification route (S-08), the privacy answers (I-43) and the listing text (I-44) do not exist yet. Steps 10, 12 and 13 name which one they wait on.
+- **Later pull requests.** The notification route (S-08) and the privacy answers (I-43) do not exist yet. Steps 10 and 12 name which one they wait on.
 
 ## The names, in one place
 
@@ -250,12 +250,12 @@ Apple: [Manage app privacy](https://developer.apple.com/help/app-store-connect/m
 
 ### 13. Age rating and content rights
 
-**Owner click, worker-prepared text.** The answers come from I-44, which writes them for a general study tool.
+**Owner click, worker-prepared text.** The answers, for a general study tool, are in [app-store-listing.md](app-store-listing.md#age-rating).
 
 - [ ] **General** > **App Information**. Under **Age Ratings**, **Set Up Age Ratings** (later **Edit** at the top of the page). Apple's questionnaire runs in sections: **In-App Controls** (Parental Controls, Age Assurance), **Capabilities** (Unrestricted Web Access, User-Generated Content, Social Media, Messaging and Chat, Shared Location, Advertising and others), **Mature Themes**, **Medical or Wellness**, **Sexuality or Nudity**, **Violence**, and **Chance-Based Activities**. Each content item takes a frequency. Then **Age Categories and Override**: choose **Not Applicable**, and leave **Age Suitability URL** empty. **Save**.
-- [ ] **Content Rights**, on the same page: whether the app contains, shows or accesses third-party content, from I-44.
+- [ ] **Content Rights**, on the same page: whether the app contains, shows or accesses third-party content, from [app-store-listing.md](app-store-listing.md#content-rights).
 
-The rule for the answers: they describe what the build ships, its sample set, and what people can bring in. Questions a person writes or imports stay private to them and are not shared, so answer the User-Generated Content question on that basis, and I-44 says how. [app-store-listing.md](app-store-listing.md) holds the nursing-era answers; they are replaced, not reused.
+The rule for the answers: they describe what the build ships, its sample set, and what people can bring in. Questions a person writes or imports stay private to them and are not shared, so answer the User-Generated Content question on that basis, as the listing does.
 
 Apple requires the new questionnaire; an app with no rating (**Unrated**) cannot be published. The January 31, 2026 deadline for existing apps has passed. **Made for Kids** cannot be undone once approved, so never pick it.
 
@@ -282,8 +282,8 @@ Apple: [Manage availability for your app](https://developer.apple.com/help/app-s
 
 - [ ] **Pricing and Availability** > **Price Schedule** > **Add Pricing**: base country **United States**, the free price. Apple's pages give no "Free" label, so pick the US$0.00 price point. **Next**, **Next**, **Confirm**.
 - [ ] The version page, **Copyright**: `2026 OWNER_NAME`, the name on the Apple Developer account. Apple adds the copyright symbol.
-- [ ] **App Review Information**, on the version page: first name, last name, phone (international format, `+` and the country code) and email, then the notes. The owner types their real details in App Store Connect only. They never go into this repository. The notes come from I-44.
-- [ ] **Sign-in required**: leave off. The reviewer uses their own Apple Account. If Apple asks for an account for the email-and-password door, make the demo account with the how-to in [app-review.md](app-review.md) and type it into App Store Connect only.
+- [ ] **App Review Information**, on the version page: first name, last name, phone (international format, `+` and the country code) and email, then the notes. The owner types their real details in App Store Connect only. They never go into this repository. The notes are in [app-review.md](app-review.md#review-notes).
+- [ ] **Sign-in required**: leave off. The reviewer uses their own Apple Account. If Apple asks for an account for the email-and-password door, make one with the steps in [app-review.md](app-review.md#if-apple-asks-for-an-email-and-password-account) and type it into App Store Connect only.
 
 Apple allows notes up to 4,000 bytes.
 
@@ -337,7 +337,7 @@ Apple: [About Sign in with Apple](https://developer.apple.com/help/account/capab
 ## What is still open
 
 - **S-08**, the notification route: step 10.
-- **I-43 and I-44**, the privacy answers, the age-rating answers and the review notes: steps 12, 13 and 15.
+- **I-43**, the privacy answers: step 12.
 
 ## Changing this file
 
