@@ -11,7 +11,7 @@ import Testing
 /// server contract (`Fixtures/openapi.json`): what each sends, that every field the kit reads or sends
 /// is the contract's, and that the server's answers decode. There is no recording of a purchase, since
 /// only a transaction Apple signed gets past the route, so the answers here are shaped by the
-/// contract's `CloudStatus` and `Error` schemas. Invented data only.
+/// contract's `CloudBankStatus`, `CloudStatus` and `Error` schemas. Invented data only.
 @Suite("Contract: Cloud")
 struct CloudContractTests {
     /// Answers each "METHOD /path" from a table, and keeps every request.
@@ -33,29 +33,38 @@ struct CloudContractTests {
     }
 
     private static let token = "00000000-0000-4000-8000-000000000001"
-    private static let storeAccount = #"{"active":false,"expiresAt":null,"storeToken":"\#(token)"}"#
+    private static let storeAccount = #"{"active":false,"bankStamp":null,"combinePaused":false,"expiresAt":null,"storeToken":"\#(token)"}"#
+    private static let lapsedWithABank = #"{"active":false,"bankStamp":"opaque/server=7","combinePaused":true,"expiresAt":"2026-12-03T00:00:00.000Z","storeToken":"\#(token)"}"#
     private static let subscribed = #"{"active":true,"expiresAt":"2027-12-03T00:00:00.000Z","storeToken":"\#(token)"}"#
-    private static let invited = #"{"active":true,"expiresAt":null,"storeToken":null}"#
+    private static let invited = #"{"active":true,"bankStamp":"opaque/server=1","combinePaused":false,"expiresAt":null,"storeToken":null}"#
 
     private static func spec() throws -> JSONValue {
         let url = try #require(Bundle.module.url(forResource: "openapi", withExtension: "json", subdirectory: "Fixtures"))
         return try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: url))
     }
 
-    /// A schema of the contract with its `$ref` and `allOf` parts merged: every property it names, and
-    /// the ones it requires.
+    /// A schema of the contract with its `$ref` and `allOf` parts merged, however deep: every property
+    /// it names, and the ones it requires.
     private static func fields(of name: String, in spec: JSONValue) throws -> (properties: Set<String>, required: Set<String>) {
         let schema = try #require(spec["components"]?["schemas"]?[name], "no schema \(name)")
+        return try fields(of: schema, in: spec)
+    }
+
+    private static func fields(of schema: JSONValue, in spec: JSONValue) throws -> (properties: Set<String>, required: Set<String>) {
+        if let ref = schema["$ref"]?.stringValue {
+            return try fields(of: String(ref.split(separator: "/").last ?? ""), in: spec)
+        }
         var properties = Set<String>()
         var required = Set<String>()
-        for part in schema["allOf"]?.arrayValue ?? [schema] {
-            var part = part
-            if let ref = part["$ref"]?.stringValue {
-                part = try #require(spec["components"]?["schemas"]?[String(ref.split(separator: "/").last ?? "")], "\(ref)")
+        if let parts = schema["allOf"]?.arrayValue {
+            for part in parts {
+                let merged = try fields(of: part, in: spec)
+                properties.formUnion(merged.properties)
+                required.formUnion(merged.required)
             }
-            if case .object(let named)? = part["properties"] { properties.formUnion(named.keys) }
-            required.formUnion((part["required"]?.arrayValue ?? []).compactMap(\.stringValue))
         }
+        if case .object(let named)? = schema["properties"] { properties.formUnion(named.keys) }
+        required.formUnion((schema["required"]?.arrayValue ?? []).compactMap(\.stringValue))
         return (properties, required)
     }
 
@@ -80,11 +89,13 @@ struct CloudContractTests {
         #expect(body == "#/components/schemas/CloudTransaction")
     }
 
-    @Test func theKitReadsEveryFieldOfCloudStatusAndNoOther() throws {
-        let (properties, required) = try Self.fields(of: "CloudStatus", in: Self.spec())
+    @Test func theKitReadsEveryFieldOfCloudBankStatusAndNoOther() throws {
+        let (properties, required) = try Self.fields(of: "CloudBankStatus", in: Self.spec())
         let read = Set(CloudStatus.CodingKeys.allCases.map(\.stringValue))
         #expect(read == properties)
         #expect(required == properties, "every field is always sent, null when there is none")
+        let (transaction, _) = try Self.fields(of: "CloudStatus", in: Self.spec())
+        #expect(transaction == ["active", "expiresAt", "storeToken"], "the answer to a transaction says nothing of the bank")
     }
 
     @Test func theKitSendsTheTransactionAsTheContractNamesIt() throws {
@@ -118,7 +129,15 @@ struct CloudContractTests {
         #expect(sent.url?.path == "/api/me/cloud")
         #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-session-token")
         #expect(sent.httpBody == nil)
-        #expect(status == CloudStatus(active: false, expiresAt: nil, storeToken: UUID(uuidString: Self.token)))
+        #expect(status == CloudStatus(active: false, expiresAt: nil, storeToken: UUID(uuidString: Self.token), bank: .init(stamp: nil, combinePaused: false)))
+    }
+
+    @Test func anAccountWithoutCloudReadsTheStampOfItsBankAndWhetherCombiningIsPaused() async throws {
+        let status = try await client(Answers(["GET /api/me/cloud": (200, Self.lapsedWithABank)])).cloudStatus()
+        #expect(!status.active)
+        #expect(status.bank == CloudStatus.Bank(stamp: "opaque/server=7", combinePaused: true))
+        let again = try QBankJSON.decoder.decode(CloudStatus.self, from: QBankJSON.encoder.encode(status))
+        #expect(again == status, "a status kept on the phone reads back as it was")
     }
 
     @Test func anInvitedAccountHasCloudAndNoToken() async throws {
@@ -141,6 +160,7 @@ struct CloudContractTests {
         #expect(status.active)
         #expect(status.expiresAt == QBankJSON.parseDate("2027-12-03T00:00:00.000Z"))
         #expect(status.storeToken == UUID(uuidString: Self.token))
+        #expect(status.bank == nil, "the answer to a transaction says nothing of the bank")
     }
 
     @Test func aTransactionBoughtForAnotherAccountIsRefusedInTheServersWords() async throws {

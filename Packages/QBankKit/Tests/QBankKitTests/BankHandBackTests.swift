@@ -25,7 +25,7 @@ struct BankHandBackTests {
 
         let outcome = await world.handBack(from: cloud).run { await steps.add($0) }
 
-        guard case .returned(let counts, let store, let returnedAt) = outcome else {
+        guard case .returned(let counts, let store, let returnedAt, nil) = outcome else {
             Issue.record("not returned: \(outcome)")
             return
         }
@@ -37,7 +37,8 @@ struct BankHandBackTests {
         let file = StoreFiles.freshFileName(at: HandBackWorld.start)
         #expect(file == "bank-20270115T080000000Z.sqlite")
         #expect(returnedAt == HandBackWorld.start.addingTimeInterval(2))
-        #expect(try world.record.load() == world.before.onPhone(in: file, since: returnedAt))
+        #expect(try world.record.load() == world.before.onPhone(in: file, since: returnedAt, stamp: CombineWorld.stamp), "it names the stamp of the bank it took in")
+        #expect(try BankCombineReceipts(beside: world.record).all().isEmpty, "a bank that comes back whole is not a combine")
         #expect(store.fileURL?.lastPathComponent == file)
         #expect(!store.holdsWrites, "the bank on this phone takes writes again")
         let after = try world.files()
@@ -47,10 +48,10 @@ struct BankHandBackTests {
         #expect(Set(after.keys).subtracting(files.keys) == [file])
     }
 
-    // MARK: In place of a bank on this phone
+    // MARK: Combining down
 
-    /// The hand-back of QBank's bank in place of `world`'s bank on this phone, downloading from `cloud`.
-    private func replacing(_ world: MoveWorld, from cloud: DownloadStandIn) -> BankHandBack {
+    /// The combine down of `world`'s bank on this phone with QBank's, downloading from `cloud`.
+    private func combiningDown(_ world: MoveWorld, from cloud: DownloadStandIn) -> BankHandBack {
         let client = QBankClient(
             configuration: APIConfiguration(baseURL: TestClient.baseURL), transport: cloud,
             sessionStore: InMemorySessionStore(StoredSession(token: "synthetic-session-token")))
@@ -59,51 +60,101 @@ struct BankHandBackTests {
             record: world.record, clock: { HandBackWorld.start }, download: { () throws(QBankError) in try await client.downloadBank() },
             createFile: { file in try LocalStore.create(key: MoveWorld.key, in: root, file: file) },
             removeFile: { file in try? LocalStore.removeUnused(key: MoveWorld.key, in: root, file: file) },
-            replacing: LocalBank(store: world.store))
+            combining: LocalBank(store: world.store))
     }
 
-    @Test func aBankFromQBankTakesThePlaceOfTheOneHereAndOffersTheSetsOnlyThatOneHolds() async throws {
-        let world = try await MoveWorld.make()
-        defer { try? FileManager.default.removeItem(at: world.root) }
-        // QBank's bank holds no set, so every current set of the one here is offered.
-        let phoneSets = try world.store.read { try BankOffer.currentSets(in: $0) }.map(\.set.id)
-        #expect(!phoneSets.isEmpty)
+    /// QBank's bank for a combine down: a topic the bank on this phone does not have, as the server
+    /// sends it, with its stamp.
+    private func serverBank() async throws -> (archive: Data, store: LocalStore) {
         let harness = LocalBankHarness(store: try LocalStore.inMemory(), idPrefix: "cc000000")
         #expect(try await harness.send("POST", "/api/topics", .object(["title": .string("Kept in QBank")])).status == 201)
-        let cloud = harness.store
-        let archive = try BankArchive.write(from: cloud, at: ArchiveWorld.date)
+        return (try CombineWorld.archive(harness.store, server: true), harness.store)
+    }
 
-        let outcome = await replacing(world, from: DownloadStandIn(.sends(archive))).run()
+    @Test func aCombineDownWritesBothBanksIntoAFreshFileAndKeepsTheOneHereAsItWas() async throws {
+        let world = try await MoveWorld.make()
+        defer { world.remove() }
+        let before = try world.bankBytes()
+        let phone = try BankArchive.counts(of: world.store)
+        let (archive, cloud) = try await serverBank()
+        let steps = HandBackSteps()
 
-        guard case .returned(_, let store, let at) = outcome else {
-            Issue.record("not returned: \(outcome)")
+        let outcome = await combiningDown(world, from: DownloadStandIn(.sends(archive))).run { await steps.add($0) }
+
+        guard case .returned(let counts, let store, let at, let combined?) = outcome else {
+            Issue.record("not combined: \(outcome)")
             return
         }
+        #expect(await steps.all == [.downloading, .combining, .writing, .checking])
         let file = StoreFiles.freshFileName(at: HandBackWorld.start)
-        #expect(try world.record.load() == BankHandover.onPhone.onPhone(in: file, since: at, offering: phoneSets))
-        #expect(try BankArchive.counts(of: store) == BankArchive.counts(of: cloud))
+        #expect(try world.record.load() == BankHandover.onPhone.onPhone(in: file, since: at, stamp: CombineWorld.stamp), "the record names the bank it took in")
+        let held = try BankArchive.counts(of: cloud)
+        for table in BankArchive.tableKeys where table != "studyPlace" {
+            #expect(counts[table] == (phone[table] ?? 0) + (held[table] ?? 0), "\(table): the two banks share nothing, so both are whole in the fresh file")
+        }
+        #expect(try BankArchive.counts(of: store) == counts)
+        #expect(combined.combined == (try BankSummary.of(store)))
+        #expect(try world.bankBytes() == before, "the bank that was here is only read")
         #expect(world.store.holdsWrites, "the earlier bank takes no writes; the fresh one is the bank in use")
+        let receipt = try #require(try BankCombineReceipts(beside: world.record).all().first)
+        #expect(receipt == BankCombineReceipt(direction: .down, combinedAt: at, serverStamp: CombineWorld.stamp, ledger: combined, counts: counts))
     }
 
-    @Test func aBankFromQBankThatFailsLeavesTheOneHereInUseAndTakingWrites() async throws {
+    @Test func aCombineDownThatFailsLeavesTheOneHereInUseAndTakingWrites() async throws {
         let world = try await MoveWorld.make()
-        defer { try? FileManager.default.removeItem(at: world.root) }
+        defer { world.remove() }
+        let before = try world.bankBytes()
+        let (archive, _) = try await serverBank()
+        var unstamped = try ArchiveWorld.parsed(archive)
+        unstamped["stamp"] = nil
+        let downloads: [(String, DownloadStandIn.Behavior)] = [
+            ("no connection", .fails(.notConnectedToInternet)),
+            ("a download cut off", .sends(archive.prefix(archive.count / 2))),
+            ("a bank with no stamp to build on", .sends(try ArchiveWorld.serialized(unstamped))),
+        ]
+        for (name, behavior) in downloads {
+            let outcome = await combiningDown(world, from: DownloadStandIn(behavior)).run()
 
-        let outcome = await replacing(world, from: DownloadStandIn(.fails(.notConnectedToInternet))).run()
+            guard case .failed(let failure, leaseReleased: true) = outcome else {
+                Issue.record("\(name): \(outcome)")
+                continue
+            }
+            switch failure {
+            case .notDownloaded, .notCombined: break
+            default: Issue.record("\(name): \(failure)")
+            }
+            #expect(try world.record.load() == .onPhone, "\(name)")
+            #expect(!world.store.holdsWrites, "\(name)")
+            #expect(try world.bankBytes() == before, "\(name)")
+            #expect(try FileManager.default.contentsOfDirectory(atPath: world.folder.path).allSatisfy { !$0.hasPrefix("bank-") && !$0.hasPrefix("combine-") }, "\(name)")
+        }
+    }
 
-        guard case .failed(.notDownloaded, let released) = outcome else {
-            Issue.record("not failed: \(outcome)")
+    /// The app was closed during a combine down: the next launch lets go of its fresh file, says it was
+    /// a combine, and the combine runs again from the start.
+    @Test func aCombineDownTheAppWasClosedDuringIsLetGoAndRunsAgain() async throws {
+        let world = try await MoveWorld.make()
+        defer { world.remove() }
+        let left = "bank-20270115T075900000Z.sqlite"
+        try LocalStore.create(key: MoveWorld.key, in: world.root, file: left).close()
+        try world.record.save(BankHandover.onPhone.leased(.init(direction: .toPhone, startedAt: HandBackWorld.start, file: left, combines: true)))
+
+        let lease = try BankHandBack.letGoLeftOpen(record: world.record) { try? LocalStore.removeUnused(key: MoveWorld.key, in: world.root, file: $0) }
+        #expect(lease?.combines == true)
+        #expect(try world.record.load() == .onPhone)
+        #expect(!FileManager.default.fileExists(atPath: world.folder.appendingPathComponent(left).path))
+
+        let (archive, _) = try await serverBank()
+        guard case .returned(_, _, _, .some) = await combiningDown(world, from: DownloadStandIn(.sends(archive))).run() else {
+            Issue.record("the combine did not run again")
             return
         }
-        #expect(released)
-        #expect(try world.record.load() == .onPhone)
-        #expect(!world.store.holdsWrites)
-        #expect(try FileManager.default.contentsOfDirectory(atPath: world.root.appendingPathComponent("Banks/\(MoveWorld.key)").path).allSatisfy { !$0.hasPrefix("bank-") })
+        #expect(try world.record.load().bankStamp == CombineWorld.stamp)
     }
 
-    @Test func aBankOnThisPhoneIsNotReplacedWithoutBeingNamed() async throws {
+    @Test func aBankOnThisPhoneIsNotCombinedWithoutBeingNamed() async throws {
         let world = try await MoveWorld.make()
-        defer { try? FileManager.default.removeItem(at: world.root) }
+        defer { world.remove() }
         let client = QBankClient(
             configuration: APIConfiguration(baseURL: TestClient.baseURL), transport: DownloadStandIn(.fails(.notConnectedToInternet)),
             sessionStore: InMemorySessionStore(StoredSession(token: "synthetic-session-token")))
@@ -119,7 +170,7 @@ struct BankHandBackTests {
     @Test func aBankThatComesBackOpensFromItsRecordAtTheNextLaunch() async throws {
         let world = try await HandBackWorld.make()
         defer { world.remove() }
-        guard case .returned(_, let store, _) = await world.handBack(from: DownloadStandIn(.sends(world.cloudArchive))).run() else {
+        guard case .returned(_, let store, _, _) = await world.handBack(from: DownloadStandIn(.sends(world.cloudArchive))).run() else {
             Issue.record("not returned")
             return
         }
@@ -145,7 +196,7 @@ struct BankHandBackTests {
         let kept = try #require(seen.value)
         #expect(kept.authority == .cloud, "the answers are kept before this phone is the authority")
         #expect(kept.counts == world.cloudCounts, "into the checked copy of QBank Cloud's bank")
-        guard case .returned(let counts, _, _) = outcome else {
+        guard case .returned(let counts, _, _, _) = outcome else {
             Issue.record("not returned: \(outcome)")
             return
         }
@@ -233,7 +284,7 @@ struct BankHandBackTests {
         let found = try record.load()
         #expect(found.authority == .cloud)
         #expect(found.lease?.direction == .toPhone, "the next launch finds the lease and lets go of its file")
-        #expect(try BankHandBack.letGoLeftOpen(record: record) { try? LocalStore.removeUnused(key: HandBackWorld.key, in: world.root, file: $0) })
+        #expect(try BankHandBack.letGoLeftOpen(record: record) { try? LocalStore.removeUnused(key: HandBackWorld.key, in: world.root, file: $0) } != nil)
         #expect(try record.load() == world.before)
         #expect(try world.files().keys.sorted() == ["bank.sqlite", "handover.json"])
     }
@@ -286,10 +337,10 @@ struct BankHandBackTests {
         try world.record.save(world.before.leased(.init(direction: .toPhone, startedAt: HandBackWorld.start, file: left)))
 
         let removeFile: @Sendable (String) -> Void = { try? LocalStore.removeUnused(key: HandBackWorld.key, in: world.root, file: $0) }
-        #expect(try BankHandBack.letGoLeftOpen(record: world.record, removeFile: removeFile))
+        #expect(try BankHandBack.letGoLeftOpen(record: world.record, removeFile: removeFile)?.combines == false)
         #expect(try world.record.load() == world.before, "QBank Cloud's bank is still the one in use")
         #expect(try world.files().keys.sorted() == files.keys.sorted(), "the file that never became the bank is gone")
-        #expect(try !BankHandBack.letGoLeftOpen(record: world.record, removeFile: removeFile), "nothing is left to let go of")
+        #expect(try BankHandBack.letGoLeftOpen(record: world.record, removeFile: removeFile) == nil, "nothing is left to let go of")
 
         guard case .returned = await world.handBack(from: DownloadStandIn(.sends(world.cloudArchive))).run() else {
             Issue.record("the hand-back did not run again")
@@ -314,7 +365,7 @@ struct BankHandBackTests {
         }
         #expect(try world.files() == files, "a failure takes away only the file it made")
 
-        guard case .returned(_, let store, _) = await world.handBack(from: DownloadStandIn(.sends(world.cloudArchive)), fixedClock: true).run() else {
+        guard case .returned(_, let store, _, _) = await world.handBack(from: DownloadStandIn(.sends(world.cloudArchive)), fixedClock: true).run() else {
             Issue.record("not returned")
             return
         }

@@ -17,12 +17,17 @@ enum StoreFiles {
     /// The name of a fresh file for a bank that comes back from QBank Cloud, dated to the
     /// millisecond in UTC, such as `bank-20261126T143705123Z.sqlite`.
     static func freshFileName(at date: Date) -> String {
+        "bank-\(dated(date)).sqlite"
+    }
+
+    /// `date` to the millisecond in UTC, as a file name dates it: `20261126T143705123Z`.
+    static func dated(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "UTC")
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.dateFormat = "yyyyMMdd'T'HHmmssSSS'Z'"
-        return "bank-\(formatter.string(from: date)).sqlite"
+        return formatter.string(from: date)
     }
 
     /// A bank file's name is `bank.sqlite` or a fresh file's name, so it can only name a file in

@@ -6,9 +6,10 @@ import QBankKit
 /// words: it needs Cloud, it writes only into an account that has no bank yet, and it stores the whole
 /// archive or none of it, answering the counts it then holds. The bank it stores is a real `LocalBank`,
 /// which answers the account's bank requests from then on, as the server's copy of a moved bank does,
-/// and `GET /api/me/bank` downloads it again. A store account without Cloud is refused on the bank's
-/// routes with `cloud_required`, but may still download its bank, so it can come back to the phone.
-/// An invited account always has a bank here: the fake's courses. Compiled only into Debug builds.
+/// and `GET /api/me/bank` downloads it again, with its stamp, as the server writes it. A store account
+/// without Cloud is refused on the bank's routes with `cloud_required`, but may still download its
+/// bank, so it can come back to the phone. An invited account always has a bank here: the fake's
+/// courses. Compiled only into Debug builds.
 nonisolated extension FakeQBankServer {
     static let notEmpty = "This account already has a question bank on the server, so the upload was refused. Nothing was changed."
     static let notABank = "This is not a bank archive QBank can store. Nothing was changed."
@@ -29,23 +30,23 @@ nonisolated extension FakeQBankServer {
         } catch {
             return (400, ["error": "invalid_archive", "message": Self.notABank, "problems": [String(describing: error)]])
         }
-        state.withLock { $0.cloudBanks[account.id] = LocalBank(store: store) }
+        state.withLock { $0.cloudBanks[account.id] = FakeCloudBank(store: store) }
         return (200, ["counts": counts.values])
     }
 
     /// The account's Cloud bank answers `request` when it is one of the bank's requests, or the
     /// download of the whole bank, from an account whose bank moved to Cloud.
     func cloudBank(answering request: URLRequest) -> (any HTTPTransport)? {
-        guard let path = request.url?.path(), let account = requester(of: request), let bank = state.withLock({ $0.cloudBanks[account.id] }) else {
+        guard let path = request.url?.path(), let account = requester(of: request), let held = state.withLock({ $0.cloudBanks[account.id] }) else {
             return nil
         }
-        if BankRoutedTransport.isBankPath(path) { return bank }
+        if BankRoutedTransport.isBankPath(path) { return held.bank }
         guard request.httpMethod == "GET", path == "/api/me/bank" else { return nil }
         let (delay, drops) = state.withLock { state in
             defer { state.downloadsToDrop = max(0, state.downloadsToDrop - 1) }
             return (state.downloadDelay, state.downloadsToDrop > 0)
         }
-        return Download(bank: bank, delay: delay, drops: drops)
+        return Download(held: held, stamp: bankStamp(of: account), delay: delay, drops: drops)
     }
 
     /// Whether `request` is one of the bank's, from a store account without Cloud, which the server
@@ -56,7 +57,7 @@ nonisolated extension FakeQBankServer {
     }
 
     /// The account whose session sent `request`.
-    private func requester(of request: URLRequest) -> Account? {
+    func requester(of request: URLRequest) -> Account? {
         guard let token = request.value(forHTTPHeaderField: "Authorization")?.replacingOccurrences(of: "Bearer ", with: "") else { return nil }
         return account(for: token)
     }
@@ -74,9 +75,13 @@ nonisolated extension FakeQBankServer {
     /// the account has Cloud, and its download at any time.
     func giveApplePersonACloudBank(sample: String?, sets: [DebugBanks.Set]) {
         guard let store = try? LocalStore.inMemory() else { fatalError("The fake server's Cloud bank could not be made.") }
-        let bank = LocalBank(store: store)
-        DebugBanks.fill(bank, sample: sample, with: sets)
-        state.withLock { $0.cloudBanks["fake-apple-person"] = bank }
+        DebugBanks.fill(LocalBank(store: store), sample: sample, with: sets)
+        giveApplePersonACloudBank(store)
+    }
+
+    /// The store account `applePerson` has the bank in `store` in Cloud already, as a test made it.
+    func giveApplePersonACloudBank(_ store: LocalStore) {
+        state.withLock { $0.cloudBanks["fake-apple-person"] = FakeCloudBank(store: store) }
     }
 
     /// The store account `applePerson`'s Cloud ended yesterday, as when a subscription lapses.
@@ -117,9 +122,10 @@ nonisolated extension FakeQBankServer {
     }
 
     /// The whole Cloud bank as one archive, as `GET /api/me/bank` answers it, after `delay`, or the
-    /// connection lost then when it `drops`.
+    /// connection lost then when it `drops`: written by the server, with the bank's stamp.
     private struct Download: HTTPTransport {
-        let bank: LocalBank
+        let held: FakeCloudBank
+        let stamp: String?
         let delay: Duration
         let drops: Bool
 
@@ -131,7 +137,7 @@ nonisolated extension FakeQBankServer {
             else {
                 throw URLError(.badServerResponse)
             }
-            return (try bank.exportArchive(), response)
+            return (try held.archive(stamp: stamp), response)
         }
     }
 }

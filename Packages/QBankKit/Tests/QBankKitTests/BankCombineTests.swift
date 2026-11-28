@@ -147,8 +147,22 @@ struct BankCombineTests {
                 "INSERT INTO folder (id, name, course_id, course_exam_id, sort_order, created_at) SELECT ?, ?, course_id, course_exam_id, ?, created_at FROM folder WHERE id = ?",
                 [.text(StudySet.attemptID(index)), .text(name), .integer(Int64(2 - index)), .text(phone.folder)])
         }
-        let (store, _) = try phone.combine(into: server)
+        let (store, ledger) = try phone.combine(into: server)
         #expect(try store.run("SELECT name, sort_order FROM folder ORDER BY sort_order").map(\.values) == [["Week", 7], ["Server extra", 8], ["First", 9], ["Second", 10]])
+        #expect(ledger.changedInBoth == [.init(table: "folders", id: phone.folder)], "the folder both hold differed; the new ones are only the phone's")
+    }
+
+    @Test("WIN-1: the result names every row both banks hold whose fields differed, and only those")
+    func changedInBoth() async throws {
+        let server = try await World.make("cc000000")
+        let phone = try server.copy()
+        #expect(try phone.combine(into: server).1.changedInBoth.isEmpty, "two equal banks differ nowhere")
+        try phone.store.run("UPDATE course SET title = 'Renamed', updated_at = ? WHERE id = ?", [.text(World.later), .text(phone.topic)])
+        try server.store.run("UPDATE folder SET name = 'Renamed in QBank', updated_at = ?", [.text(World.later)])
+        let (store, ledger) = try phone.combine(into: server)
+        #expect(Set(ledger.changedInBoth.map(\.table)) == ["courses", "folders"])
+        #expect(ledger.changedInBoth.contains(.init(table: "courses", id: phone.topic)))
+        #expect(try store.run("SELECT title FROM course WHERE id = ?", [.text(phone.topic)]).first?[0] == "Renamed", "the later change was kept")
     }
 
     @Test("WIN-14: a rename, move, or undelete that takes another live name keeps the server's place and marks")

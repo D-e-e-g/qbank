@@ -11,8 +11,9 @@ import UIKit
 /// refused it for a reason sending it again would not change. One the server gave no lasting answer
 /// for stays unfinished: the App Store gives it to the app again at the next launch, and `refresh()`
 /// sends it again. The app shows Cloud as on only when the server says so. Once a purchase or Restore
-/// here turns it on, the bank on this phone moves to QBank Cloud (`CloudMoveModel`); once the server
-/// says it has ended, a bank in QBank Cloud comes back to this phone (`CloudReturnModel`).
+/// here turns it on, the bank on this phone moves to QBank Cloud (`CloudMoveModel`), or is combined with
+/// the bank QBank Cloud holds already (`CloudCombineModel`); once the server says it has ended, a bank
+/// in QBank Cloud comes back to this phone (`CloudReturnModel`).
 ///
 /// One model serves the whole app, as the App Store's updates do. It follows the account signed in
 /// (`follow(_:)`), so what it says of one account is gone when another signs in.
@@ -25,6 +26,10 @@ final class CloudModel {
     private(set) var isLoadingPlans = false
     /// How the account stands with Cloud, as QBank's server last said; nil until it has said.
     private(set) var status: CloudStatus?
+    /// What QBank's server last said of the account's bank there, from `GET /api/me/cloud`: whether it
+    /// holds one, under which stamp, and whether combining is paused. Nil until it has said; the answer
+    /// to a purchase does not say, and leaves it as it was.
+    private(set) var bank: CloudStatus.Bank?
     /// The plan being bought, while its purchase runs.
     private(set) var buying: String?
     private(set) var isRestoring = false
@@ -57,6 +62,7 @@ final class CloudModel {
         guard accountID != self.accountID else { return }
         self.accountID = accountID
         status = nil
+        bank = nil
         problem = nil
         notice = nil
     }
@@ -76,18 +82,26 @@ final class CloudModel {
     /// Asks the server how the account stands, after sending it each transaction the App Store still
     /// holds unfinished, such as a purchase the server could not confirm when it was made.
     func refresh() async {
-        guard case let (client, owner)? = reach() else { return }
+        guard case let (client, _)? = reach() else { return }
         for transaction in await store.unfinished() {
             _ = try? await send(transaction, with: client)
         }
         do {
-            let status = try await client.cloudStatus()
-            guard owner == accountID else { return }
-            self.status = status
-            followed(status)
+            try await read()
         } catch {
             app?.handle(error)
         }
+    }
+
+    /// Asks the server how the account stands now, and what it holds of the account's bank, without
+    /// sending any transaction. Throws when the server cannot say, and when Cloud is not offered.
+    func read() async throws(QBankError) {
+        guard case let (client, owner)? = reach() else { throw .notSignedIn }
+        let status = try await client.cloudStatus()
+        guard owner == accountID else { return }
+        self.status = status
+        if let bank = status.bank { self.bank = bank }
+        followed(status)
     }
 
     /// Loads the plans from the App Store, unless they are already here.
@@ -226,13 +240,15 @@ final class CloudModel {
     }
 
     /// Cloud's state as the server just said it, for a bank in QBank Cloud: one whose Cloud ended
-    /// comes back to this phone, and one whose Cloud is on again stays.
+    /// comes back to this phone, and one whose Cloud is on again stays. For a bank on this phone, it says
+    /// whether a combine is still to do.
     private func followed(_ status: CloudStatus) {
         if status.active {
             app?.cloudReturn.cloudTurnedOn()
         } else {
             app?.cloudReturn.cloudEnded()
         }
+        app?.cloudCombine.statusRead()
     }
 
     /// Sends a transaction to QBank's server, and finishes it once the server has handled it for good:
@@ -257,7 +273,10 @@ final class CloudModel {
     private func storeToken(_ client: QBankClient, for owner: String) async throws(QBankError) -> UUID {
         if let token = status?.storeToken { return token }
         let status = try await client.cloudStatus()
-        if owner == accountID { self.status = status }
+        if owner == accountID {
+            self.status = status
+            if let bank = status.bank { self.bank = bank }
+        }
         guard let token = status.storeToken else {
             throw .unexpectedResponse(status: 200, detail: "The server gave this store account no storeToken")
         }

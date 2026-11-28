@@ -57,6 +57,7 @@ extension CombinePlan {
             var settled = server[table]
             for id in incoming.keys.sorted() {
                 guard let held = settled[id], let row = incoming[id] else { continue }
+                noteDifference(catalog, held, row, at: id)
                 settled[id] = settle(held, row, fields: catalog.fields)
                 join(table, id, to: id, rule: catalog.rule(row))
             }
@@ -71,6 +72,7 @@ extension CombinePlan {
             for id in incoming.keys.sorted() where server[table][id] == nil {
                 guard let row = incoming[id] else { continue }
                 if let name = catalog.name(of: row), let target = named[name], let held = settled[target] {
+                    noteDifference(catalog, held, row, at: target)
                     settled[target] = settle(held, row, fields: catalog.fields)
                     join(table, id, to: target, rule: catalog.rule(row))
                 } else {
@@ -81,6 +83,14 @@ extension CombinePlan {
             try Self.checkNames(catalog, settled)
             rows[table] = settled
         }
+    }
+
+    /// A row both banks hold whose changeable fields differ: the later change settles it, and the
+    /// result screen says so. Each row is named once.
+    private mutating func noteDifference(_ catalog: CatalogTable, _ held: CombineRow, _ incoming: CombineRow, at id: String) {
+        let changed = BankCombine.KeptName(table: catalog.rawValue, id: id)
+        guard catalog.fields.contains(where: { held[$0] != incoming[$0] }), !changedInBoth.contains(changed) else { return }
+        changedInBoth.append(changed)
     }
 
     /// Evaluate renames together so a swap is legal. Restoring an old name can in turn displace

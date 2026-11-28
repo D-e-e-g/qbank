@@ -24,7 +24,8 @@ nonisolated extension FakeQBankServer {
     }
 
     /// `GET /api/me/cloud`: whether the account has Cloud, with the token a store account buys with,
-    /// issued at its first read.
+    /// issued at its first read, the stamp of the account's bank on the server, or null for none, and
+    /// whether combining is paused.
     func cloudStatus(of account: Account) -> Reply {
         let current = state.withLock { state -> Account? in
             guard let index = state.accounts.firstIndex(where: { $0.id == account.id }) else { return nil }
@@ -34,7 +35,10 @@ nonisolated extension FakeQBankServer {
             return state.accounts[index]
         }
         guard let current else { return failure(401, "unauthenticated", "Sign in to continue.") }
-        return (200, current.cloudStatus)
+        var body = current.cloudStatus
+        body["bankStamp"] = json(bankStamp(of: current))
+        body["combinePaused"] = state.withLock { $0.combinePaused }
+        return (200, body)
     }
 
     /// `POST /api/me/cloud/transactions`: records the period a Cloud transaction pays for, and answers

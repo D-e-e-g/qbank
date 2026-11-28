@@ -16,8 +16,7 @@ public struct BankSummary: Sendable, Equatable, Codable {
     }
 
     /// The sets a person can open, as `s`, with their course `c` and folder `f`: a set's current
-    /// version, not deleted, and not in a deleted course or folder. The sets Home lists, and the ones
-    /// QBank Cloud may be offered (`BankOffer`).
+    /// version, not deleted, and not in a deleted course or folder. The sets Home lists.
     static let openSets = """
         practice_set s
         JOIN course c ON c.id = s.course_id

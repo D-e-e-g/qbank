@@ -96,6 +96,9 @@ public struct ServerError: Error, Sendable, Equatable {
         public static let cloudRequired: Code = "cloud_required"
         /// An upload of a whole bank into an account that already has one on the server.
         public static let bankNotEmpty: Code = "bank_not_empty"
+        /// A combined bank built on a download of a bank the server no longer holds: another device
+        /// changed it meanwhile, so the phone downloads it and combines again.
+        public static let bankChanged: Code = "bank_changed"
         public static let samePassword: Code = "same_password"
         public static let authFailed: Code = "auth_failed"
         public static let authUnavailable: Code = "auth_unavailable"

@@ -141,7 +141,12 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         var wrongDeletePasswords: [String: Int] = [:]
         /// Store accounts' banks uploaded to Cloud, by account id. Each answers its account's bank
         /// requests from then on, as the server's copy does.
-        var cloudBanks: [String: LocalBank] = [:]
+        var cloudBanks: [String: FakeCloudBank] = [:]
+        /// While true, `GET /api/me/cloud` says combining is paused.
+        var combinePaused = false
+        /// How many combines still to refuse with `bank_changed`, each as if another device wrote to
+        /// the bank just before it arrived.
+        var combinesToRefuse = 0
         /// Store accounts that already have a bank on the server, which refuses an upload into them.
         var bankHolders: Set<String> = []
         /// How long the answer to an upload takes to arrive.
@@ -329,7 +334,7 @@ nonisolated final class FakeQBankServer: HTTPTransport {
         if saveReplyDelay > .zero, method == "POST", url.path() == "/api/attempts" || url.path().hasSuffix("/start-over") {
             try await Task.sleep(for: saveReplyDelay)
         }
-        if method == "PUT", url.path() == "/api/me/bank" {
+        if (method == "PUT" && url.path() == "/api/me/bank") || (method == "POST" && url.path() == "/api/me/bank/combine") {
             try await Task.sleep(for: state.withLock { $0.uploadReplyDelay })
         }
         if method == "DELETE", url.path() == "/api/me" {
@@ -385,6 +390,8 @@ nonisolated final class FakeQBankServer: HTTPTransport {
             return recordCloudTransaction(body["signedTransaction"] as? String ?? "", for: account)
         case ("PUT", "/api/me/bank"):
             return storeBank(rawBody, for: account)
+        case ("POST", "/api/me/bank/combine"):
+            return combineBank(rawBody, for: account)
         default:
             break
         }

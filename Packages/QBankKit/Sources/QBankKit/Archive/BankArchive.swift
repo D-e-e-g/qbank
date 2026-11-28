@@ -34,6 +34,15 @@ public enum BankArchive {
     public static func counts(of store: LocalStore) throws -> BankCounts {
         try store.read { try BankArchiveWriter.counts(in: $0) }
     }
+
+    /// The `stamp` of the archive the bank in `store` was read from, which the bank keeps and writes
+    /// back: the server's fingerprint of the bank it sent. Nil for a bank made on the phone.
+    public static func stamp(of store: LocalStore) throws -> String? {
+        try store.read { tx in
+            guard case .text(let stamp)? = try tx.value("SELECT stamp FROM bank_archive") else { return nil }
+            return stamp
+        }
+    }
 }
 
 /// How many rows each of the twelve tables holds. `studyPlace` is 1 or 0.

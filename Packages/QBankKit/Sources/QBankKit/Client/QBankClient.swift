@@ -773,10 +773,24 @@ public struct QBankClient: Sendable {
         return stored.counts
     }
 
+    /// Stores `archive`, the account's bank as the phone combined it with the one the server holds, in
+    /// place of that one, and returns what the account holds then: the counts read back inside the
+    /// server's transaction and the stamp of the bank it stored. The archive carries the `stamp` of the
+    /// download it was built from, and holds every row of both banks (`BankCombine`). The server writes
+    /// all of it or none, removes nothing, and needs Cloud. Every refusal stores nothing: 409
+    /// `bank_changed` when its bank no longer has that stamp, as after another device wrote to it, and
+    /// `bank_rows_missing`, `bank_rows_older` or `bank_ids_taken`; 400 `invalid_archive`; 403
+    /// `cloud_required` or `not_store_account`; and 413 `archive_too_large`. The archive is sent as it
+    /// is, byte for byte, with as long a wait as an upload.
+    public func combineBank(_ archive: Data) async throws(QBankError) -> BankCombined {
+        try await send(Request(.post, "/api/me/bank/combine", rawBody: archive, timeout: max(configuration.timeout, Self.bankUploadTimeout)))
+    }
+
     // MARK: Cloud
 
     /// Whether the account has Cloud now, as the server decides it, with the token a store account buys
-    /// Cloud with. A store account without Cloud may read it; its first read issues that token.
+    /// Cloud with, and what it holds of the account's bank: its stamp, or none, and whether combining is
+    /// paused. A store account without Cloud may read it; its first read issues that token.
     public func cloudStatus() async throws(QBankError) -> CloudStatus {
         try await send(Request(.get, "/api/me/cloud"))
     }
@@ -914,6 +928,19 @@ private struct StartOverResult: Decodable {
 /// The body of `PUT /api/me/bank`'s answer: what the account holds once the bank was stored.
 private struct BankStored: Decodable {
     let counts: BankCounts
+}
+
+/// The answer of `POST /api/me/bank/combine`: what the account holds once the combined bank was stored.
+public struct BankCombined: Decodable, Sendable, Equatable {
+    /// The rows of each table, read back inside the server's transaction.
+    public let counts: BankCounts
+    /// The stamp of the bank the account holds now, the one its next download carries.
+    public let stamp: String
+
+    public init(counts: BankCounts, stamp: String) {
+        self.counts = counts
+        self.stamp = stamp
+    }
 }
 
 /// The body of `PUT /api/courses/{id}/folder-order`'s answer: one list's folders in the new order.
