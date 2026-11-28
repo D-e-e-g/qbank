@@ -86,7 +86,7 @@ Steps 4 to 9 come before the first upload. Each is done once unless it says othe
 
   Then delete the `.p8` from Downloads and empty the Trash. The vault holds the only copy; if it is lost, revoke the key and make a new one under the same names.
 - [ ] **10. Allow each upload** when Automic Vault asks. This repeats for every upload.
-- [ ] **Later, before the App Store (phase 4):** the Apple steps for the store release, with the Cloud subscription, are in [app-store-setup.md](app-store-setup.md). Decide to submit, answer App Privacy in App Store Connect from [privacy-manifest.md](privacy-manifest.md), make the demo account in [app-review.md](app-review.md), confirm with the tester whether her questions may appear in public screenshots, and press **Submit for Review**.
+- [ ] **Later, before the App Store (phase 4):** the Apple steps for the store release, with the Cloud subscription, are in [app-store-setup.md](app-store-setup.md). Decide to submit, answer App Privacy in App Store Connect from [privacy-manifest.md](privacy-manifest.md), follow [app-review.md](app-review.md#before-submitting) (no demo account unless App Review asks for one), and press **Submit for Review**.
 
 ### Workers
 
