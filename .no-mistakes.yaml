@@ -1,4 +1,4 @@
-# no-mistakes reads these two from main, not from the pushed branch.
+# The pipeline reads these settings from main.
 ci:
   instructions: |
     A pull request's Mac check is the quick check in docs/ci.md, unless the change touches
@@ -12,3 +12,5 @@ test:
     Run named tests with test/only-testing.sh rather than the full suite, and never rerun the full
     suite to check one fix. docs/testing.md has the rule. Every simulator goes through test/sim.sh.
     A new UI test says why a unit test cannot do the job.
+commit:
+  fix_message: "{{.Step}}: {{.Summary}}"
