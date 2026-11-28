@@ -456,6 +456,26 @@ struct AppleDeleteAccountTests {
         #expect(phone.app.route == .finishingDeletion(.store()))
     }
 
+    /// The screen that saw the delete under way, still fading after it stopped, stays the finishing
+    /// screen once signing out ends it: it never says the kept account is being deleted.
+    @Test func aStoppedDeleteSignedOutOfStaysFinishingOnTheScreenThatSawItUnderWay() async throws {
+        let phone = try await freePhone()
+        phone.server.script("DELETE /api/me", [.offline])
+        phone.server.hold("DELETE /api/me")
+        let deleting = Task { await AppleDeleteAccountModel(app: phone.app).delete(over: nil) }
+        try await waitUntil { phone.server.calls.contains("DELETE /api/me") }
+        let underWay = AppleDeleteAccountModel(app: phone.app)
+        phone.server.release("DELETE /api/me")
+        await deleting.value
+
+        await AppleDeleteAccountModel(app: phone.app).signOut()
+        #expect(phone.app.route == .signedOut)
+        #expect(underWay.isFinishing, "the fading screen stays the finishing one")
+        #expect(!underWay.isDeleting)
+        #expect(underWay.message == AccountDeletionWording.finishing(phoneErased: true))
+        #expect(underWay.problem == "No connection. Check Wi-Fi or cellular data and try again.")
+    }
+
     /// The screen that finishes a delete stays itself while it tries again: it never turns back into
     /// the delete under way.
     @Test func tryingAgainStaysOnTheFinishingScreen() async throws {

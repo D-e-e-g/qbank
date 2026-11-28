@@ -22,12 +22,16 @@ final class AppleDeleteAccountModel {
     /// True when the screen opened on a delete under way, so it stays under way while the sign-in
     /// screen that ends the delete fades it away.
     private let opensUnderWay: Bool
+    /// How many deletes had stopped when the screen opened, so one that stops later keeps it the
+    /// finishing screen while signing out fades it away.
+    private let stopsSeen: Int
 
     init(app: AppModel) {
         self.app = app
         bankIsOnPhone = app.kind.bankIsOnPhone
         opensFinishing = app.isFinishingDeletion
         if case .deletingAccount = app.route { opensUnderWay = true } else { opensUnderWay = false }
+        stopsSeen = app.deletesStopped
     }
 
     /// Settings offers it to a store account, which has no password. The admin is never one.
@@ -37,7 +41,7 @@ final class AppleDeleteAccountModel {
 
     /// True while a delete runs, whichever screen began it.
     var isDeleting: Bool {
-        app.isDeletingAccount || (opensUnderWay && !app.isFinishingDeletion)
+        app.isDeletingAccount || (opensUnderWay && !isFinishing)
     }
 
     /// Why the last try stopped, or nil. Once the delete is to be finished, it is the app's, so the
@@ -49,7 +53,7 @@ final class AppleDeleteAccountModel {
     /// True once a delete stopped with this phone's copy erased, or partly erased: finishing the
     /// delete or signing out is offered. A delete under way is not one to finish.
     var isFinishing: Bool {
-        opensFinishing || app.isFinishingDeletion
+        opensFinishing || app.isFinishingDeletion || app.deletesStopped != stopsSeen
     }
 
     /// What the screen says: what goes, for where this account's bank is, or what is left to finish.

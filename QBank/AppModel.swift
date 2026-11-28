@@ -104,6 +104,9 @@ final class AppModel {
     /// True once a delete to finish has erased this phone's copy of the account. Kept past the
     /// sign-out that ends the delete, so the finishing screen says it until it is gone.
     private(set) var phoneCopyErased = false
+    /// How many store account deletes stopped once under way. Kept past the sign-out that ends the
+    /// delete, so a screen that saw it under way says it stopped until it is gone.
+    private(set) var deletesStopped = 0
     /// Who asks Apple to sign the person in.
     let appleSignIn: any AppleSignInProvider
     /// Light or dark, chosen in Settings and kept on this phone.
@@ -865,7 +868,10 @@ final class AppModel {
         }
         // A delete still under way on the way out of here has stopped.
         defer {
-            if case .deletingAccount(let account) = route { route = .finishingDeletion(account) }
+            if case .deletingAccount(let account) = route {
+                route = .finishingDeletion(account)
+                deletesStopped += 1
+            }
         }
         if kept.deletion != .phoneErased {
             try await erasePhoneCopy(of: account, appleUser: appleUser)
