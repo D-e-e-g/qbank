@@ -18,9 +18,10 @@ struct RootView: View {
             case .signedIn:
                 SignedInView(app: model)
                     .routeScreen(of: model)
-            case .finishingDeletion:
-                // This phone's copy of a store account is erased and the server has not deleted the
-                // account yet: finishing the delete or signing out is offered.
+            case .deletingAccount, .finishingDeletion:
+                // This phone's copy of a store account is erased, or being erased, and the server has
+                // not deleted the account yet: the delete is under way, or, once it stopped,
+                // finishing it or signing out is offered.
                 NavigationStack {
                     AppleDeleteAccountView(app: model)
                 }
@@ -116,6 +117,7 @@ private extension AppModel {
         case .signedOut: "signed out"
         case .choosingPassword: "choosing password"
         case .signedIn(let account): "signed in \(phoneKey ?? account.id) \(signIns) \(kind.rawValue) \(bankRevision)"
+        case .deletingAccount: "deleting account"
         case .finishingDeletion: "finishing deletion"
         }
     }

@@ -27,5 +27,23 @@ nonisolated extension FakeQBankServer {
         }
         return deleted ? (200, ["status": "deleted"]) : refused
     }
+
+    /// Holds back the answer to each request to delete an account, until
+    /// `releaseAccountDeleteReplies()`: the server has done what was asked, and the app has not heard.
+    func holdAccountDeleteReplies() {
+        state.withLock { $0.holdsAccountDeleteReplies = true }
+    }
+
+    /// Sends the answers `holdAccountDeleteReplies()` held back, and holds none from now on.
+    func releaseAccountDeleteReplies() {
+        state.withLock { $0.holdsAccountDeleteReplies = false }
+    }
+
+    /// Returns once no answer to a delete is held back.
+    func waitToAnswerAccountDelete() async throws {
+        while state.withLock({ $0.holdsAccountDeleteReplies }) {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+    }
 }
 #endif

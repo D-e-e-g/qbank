@@ -242,11 +242,17 @@ extension XCTestCase {
         UIDevice.current.userInterfaceIdiom == .pad ? app.buttons[name].firstMatch : app.tabBars.buttons[name]
     }
 
+    /// Chooses a tab, and taps again while it is not the chosen one. A tap made as a system prompt
+    /// slides away, such as the offer to save a password, can be dropped before the app hears it.
     @MainActor
     func openTab(_ app: XCUIApplication, _ name: String, timeout: TimeInterval = 5) {
         let tab = tabButton(app, name)
         XCTAssertTrue(tab.appears(timeout: timeout))
-        tab.tap()
+        for _ in 0..<3 {
+            tab.tap()
+            if tab.isSelected || tab.wait(for: \.isSelected, toEqual: true, timeout: 3) { return }
+        }
+        XCTFail("The \(name) tab was never chosen")
     }
 
     /// Steps back from the screen titled `title`, and waits until it has gone, so the next tap
