@@ -108,6 +108,9 @@ import Testing
             ("another format", try edited { $0["format"] = "nclex-qbank-progress" }, { $0 == .notAnArchive }),
             ("a bank that left rows out", try edited { $0["complete"] = false }, { $0 == .incomplete }),
             ("complete as text", try edited { $0["complete"] = "true" }, invalid),
+            ("stamp is null", try edited { $0["stamp"] = NSNull() }, invalid),
+            ("updatedAt is null", try edited { setting(&$0, "semesters", "updatedAt", NSNull()) }, invalid),
+            ("updatedAt is not a time", try edited { setting(&$0, "folders", "updatedAt", "today") }, invalid),
             ("exportedAt that is not a time", try edited { $0["exportedAt"] = "yesterday" }, invalid),
             ("writtenBy anyone else", try edited { $0["writtenBy"] = "someone" }, invalid),
         ]

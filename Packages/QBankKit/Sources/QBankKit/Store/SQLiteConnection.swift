@@ -64,7 +64,13 @@ final class SQLiteConnection {
         while true {
             let step = sqlite3_step(statement)
             if step == SQLITE_DONE { return rows }
-            guard step == SQLITE_ROW else { throw failure("run", handle) }
+            guard step == SQLITE_ROW else {
+                let error = failure("run", handle)
+                // With a trigger, SQLite can undo only the statement on a full disk. Preserve the
+                // store's all-or-nothing transaction even if its caller catches the write error.
+                if step == SQLITE_FULL && inTransaction { sqlite3_exec(handle, "ROLLBACK", nil, nil, nil) }
+                throw error
+            }
             var values: [StoreValue] = []
             for (index, column) in columns.enumerated() {
                 let position = Int32(index)

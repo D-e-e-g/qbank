@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import Testing
 
 @testable import QBankKit
@@ -19,7 +20,7 @@ struct LocalStoreTests {
 
     // MARK: Opening
 
-    @Test func opensANewFileWithTheTwelveTablesAtTheLatestStep() throws {
+    @Test func opensANewFileWithTheBankTablesAtTheLatestStep() throws {
         let directory = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let store = try LocalStore.open(directory: directory)
@@ -28,7 +29,7 @@ struct LocalStoreTests {
         #expect(try store.schemaVersion == SchemaSteps.all.count)
 
         let tables = try store.run("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").compactMap { $0.text("name") }
-        #expect(tables == Self.tableNames)
+        #expect(tables == (Self.tableNames + ["bank_archive"]).sorted())
         #expect(try store.run("PRAGMA foreign_keys").first?.int("foreign_keys") == 1)
         #expect(try store.run("PRAGMA journal_mode").first?.text("journal_mode") == "delete")
     }
@@ -78,6 +79,40 @@ struct LocalStoreTests {
     }
 
     // MARK: Upgrading
+
+    @Test func stepTwoPreservesEveryRowAndLeavesItsChangeTimeUnknown() throws {
+        let directory = Fixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let old = try LocalStore.open(directory: directory, steps: [BankTablesStep.step])
+        // Fill the real step 1 file from the recorded bank, including old versions, delete marks and answers.
+        let recording = try BankArchiveCheck.check(ArchiveScanner.scan(ArchiveWorld.recording()))
+        try old.transaction { tx in
+            for (table, rows) in zip(BankArchiveTables.all, recording.rows) {
+                let columns = try tx.rows("PRAGMA table_info(\(table.table))").compactMap { $0.text("name") }
+                let indices = try columns.map { column in try #require(table.fields.firstIndex { $0.column == column }) }
+                let insert = "INSERT INTO \(table.table) VALUES (\(columns.map { _ in "?" }.joined(separator: ", ")))"
+                for row in rows { try tx.execute(insert, indices.map { row[$0] }) }
+            }
+        }
+        let before = try ArchiveWorld.dump(old)
+        #expect(before.count == 12 && before.values.allSatisfy { !$0.isEmpty })
+        old.close()
+
+        // An earlier safety copy can be exported without upgrading it.
+        let copy = try LocalStore.readOnly(directory: directory, file: LocalStore.firstFile)
+        let archive = try BankArchive.write(from: copy, at: ArchiveWorld.date)
+        #expect(try copy.schemaVersion == 1)
+        copy.close()
+
+        let upgraded = try LocalStore.open(directory: directory)
+        #expect(try upgraded.schemaVersion == 2)
+        let after = try ArchiveWorld.dump(upgraded)
+        let changed = ["semesters", "courses", "courseExams", "folders", "practiceSets", "studySessions"]
+        for (key, rows) in before {
+            #expect(after[key] == (changed.contains(key) ? rows.map { $0 + [.null] } : rows), "\(key) changed")
+        }
+        #expect(try BankArchive.write(from: upgraded, at: ArchiveWorld.date) == archive)
+    }
 
     @Test func upgradesFromEveryEarlierStepToTheLatest() throws {
         let later = [Self.laterStep(SchemaSteps.all.count + 1), Self.laterStep(SchemaSteps.all.count + 2)]
@@ -141,7 +176,7 @@ struct LocalStoreTests {
         before.close()
 
         // SQLite's documented way to change a table: make the new one, copy, drop the old, rename.
-        let columns = "id, course_id, name, sort_order, link_url, badge, created_at, deleted_at, deletion_id"
+        let columns = "id, course_id, name, sort_order, link_url, badge, created_at, deleted_at, deletion_id, updated_at"
         let rebuild = SchemaStep(
             number: SchemaSteps.all.count + 1, name: "rebuild course_exam",
             statements: [
@@ -150,6 +185,7 @@ struct LocalStoreTests {
                     [
                         Column.id("id", key: true), Column.id("course_id", references: "course (id)"), Column.text("name"), Column.int("sort_order"),
                         Column.text("link_url", null: true), Column.text("badge", null: true, oneOf: ["exam", "concept", "study"]), Column.time("created_at"), Column.text("note", null: true),
+                        Column.time("updated_at", null: true),
                     ] + Column.deletion),
                 "INSERT INTO course_exam_new (\(columns)) SELECT \(columns) FROM course_exam",
                 "DROP TABLE course_exam",
@@ -270,6 +306,29 @@ struct LocalStoreTests {
         try transaction.execute(
             "INSERT INTO semester (id, number, name, created_at) VALUES (?, 2, ?, ?)",
             [Fixtures.id(2), .text(String(repeating: "x", count: 200_000)), .text(Fixtures.time)])
+    }
+
+    @Test func aFullDiskOnAStampedInsertRollsBackTheConnection() throws {
+        let connection = try SQLiteConnection(path: ":memory:")
+        try SchemaSteps.upgrade(connection, steps: SchemaSteps.all)
+        try BankWriteTime.install(on: connection)
+        let pages = try #require(connection.run("PRAGMA page_count").first?.int("page_count"))
+        try connection.run("PRAGMA max_page_count = \(pages + 2)")
+        let insert = "INSERT INTO semester (id, number, name, created_at) VALUES (?, ?, ?, ?)"
+
+        try connection.run("BEGIN IMMEDIATE")
+        try connection.run("INSERT INTO bank_write_time VALUES (?)", [.text(Fixtures.time)])
+        try connection.run(insert, [Fixtures.id(1), .integer(1), .text("First"), .text(Fixtures.time)])
+        #expect(try connection.run("SELECT updated_at FROM semester").first?.text("updated_at") == Fixtures.time)
+        do {
+            try connection.run(insert, [Fixtures.id(2), .integer(2), .text(String(repeating: "x", count: 200_000)), .text(Fixtures.time)])
+            Issue.record("The large insert succeeded despite the page limit")
+        } catch {
+            guard case .sqlite(_, let code, _) = error else { throw error }
+            #expect(code == SQLITE_FULL)
+        }
+        #expect(!connection.inTransaction)
+        #expect(try connection.run("SELECT id FROM semester").isEmpty)
     }
 
     @Test func aFullDiskInsideASavepointKeepsNothingOfTheTransaction() throws {

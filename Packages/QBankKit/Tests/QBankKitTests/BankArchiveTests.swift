@@ -32,6 +32,19 @@ import Testing
         #expect(try ArchiveWorld.isEmpty(fresh))
     }
 
+    @Test func anEmptyBankKeepsTheExactDownloadStampAndAnOlderArchiveHasNone() throws {
+        let store = try ArchiveWorld.empty()
+        let original = try BankArchive.write(from: store, at: ArchiveWorld.date)
+        var document = try ArchiveWorld.parsed(original)
+        #expect(document["stamp"] == nil)
+        let stamp = "bank two\n\""
+        document["stamp"] = stamp
+        try BankArchive.read(ArchiveWorld.serialized(document), into: store)
+        #expect(try ArchiveWorld.parsed(BankArchive.write(from: store, at: ArchiveWorld.date))["stamp"] as? String == stamp)
+        try BankArchive.read(original, into: store)
+        #expect(try BankArchive.write(from: store, at: ArchiveWorld.date) == original)
+    }
+
     @Test func aSetWithOneTermKeyTwiceRoundTripsWithBothTerms() async throws {
         let world = try await ArchiveWorld.make()
         // The format and the server's term table name no unique key in a set, so a second definition of a key is a row like any other.
@@ -81,8 +94,9 @@ import Testing
             let keys = rows.compactMap { row in table.rowKey.flatMap { row.fields?[$0]?.string } }
             #expect(keys == keys.sorted(), "\(table.key) is not in key order")
             for row in rows {
-                // Every field, a null written as null; and a deletable row's two marks.
-                #expect(Set(try #require(row.fields).keys) == Set(table.fields.map(\.name)))
+                let keys = Set(try #require(row.fields).keys)
+                #expect(Set(table.fields.filter { !$0.optional }.map(\.name)).isSubset(of: keys))
+                #expect(keys.isSubset(of: Set(table.fields.map(\.name))))
             }
         }
     }
@@ -116,11 +130,17 @@ import Testing
 
     @Test func theRecordedBankWrittenAgainHoldsTheSameRows() throws {
         let recording = try ArchiveWorld.recording()
-        let fresh = try ArchiveWorld.empty()
-        try BankArchive.read(recording, into: fresh)
+        let directory = StoreFixtures.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let imported = try LocalStore.open(directory: directory)
+        try BankArchive.read(recording, into: imported)
+        imported.close()
+        let fresh = try LocalStore.open(directory: directory)
         let written = try ArchiveWorld.parsed(BankArchive.write(from: fresh, at: ArchiveWorld.date))
         let recorded = try ArchiveWorld.parsed(recording)
         #expect(written["writtenBy"] as? String == "phone" && recorded["writtenBy"] as? String == "server")
+        let stamp = try #require(recorded["stamp"] as? String)
+        #expect(written["stamp"] as? String == stamp)
         // Equal as JSON, with each list in key order: readers never depend on order, and the recording's ids were renumbered after the server sorted it.
         func canonical(_ document: [String: Any], _ key: String, by rowKey: String?) throws -> Data {
             var value = document[key] as Any

@@ -71,9 +71,11 @@ struct CloudContractTests {
         let spec = try Self.spec()
         let read = try #require(spec["paths"]?["/api/me/cloud"]?["get"])
         let record = try #require(spec["paths"]?["/api/me/cloud/transactions"]?["post"])
-        for operation in [read, record] {
-            #expect(operation["responses"]?["200"]?["content"]?["application/json"]?["schema"]?["$ref"]?.stringValue == "#/components/schemas/CloudStatus")
+        for (operation, schema) in [(read, "CloudBankStatus"), (record, "CloudStatus")] {
+            #expect(operation["responses"]?["200"]?["content"]?["application/json"]?["schema"]?["$ref"]?.stringValue == "#/components/schemas/\(schema)")
         }
+        let bankStatus = try #require(spec["components"]?["schemas"]?["CloudBankStatus"]?["allOf"]?.arrayValue)
+        #expect(bankStatus.contains { $0["$ref"]?.stringValue == "#/components/schemas/CloudStatus" })
         let body = try #require(record["requestBody"]?["content"]?["application/json"]?["schema"]?["$ref"]?.stringValue)
         #expect(body == "#/components/schemas/CloudTransaction")
     }

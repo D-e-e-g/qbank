@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
+  "recordedFrom": "d86a61f20f1cc4436c3ad09f655881297bfda187",
   "world": "session-palette",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:49:57.218Z",
+      "at": "2026-11-27T02:26:22.497Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T09:49:57.218Z"
+          "expiresAt": "2028-01-01T02:26:22.497Z"
         }
       }
     },
     {
       "step": "request",
       "name": "palette",
-      "at": "2026-11-25T09:49:57.271Z",
+      "at": "2026-11-27T02:26:22.555Z",
       "request": {
         "method": "PUT",
         "path": "/api/me/palette",
@@ -78,7 +78,7 @@
     {
       "step": "request",
       "name": "session-slate",
-      "at": "2026-11-25T09:49:57.274Z",
+      "at": "2026-11-27T02:26:22.560Z",
       "request": {
         "method": "GET",
         "path": "/api/session",
@@ -106,7 +106,7 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T09:49:57.218Z"
+          "expiresAt": "2028-01-01T02:26:22.497Z"
         }
       }
     }

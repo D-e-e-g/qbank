@@ -1,11 +1,11 @@
 {
-  "recordedFrom": "3501671a3e21bd48bf69f6b6f0b831b5d90506c6",
+  "recordedFrom": "d86a61f20f1cc4436c3ad09f655881297bfda187",
   "world": "organize-imports",
   "steps": [
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.176Z",
+      "at": "2026-11-27T02:26:34.477Z",
       "request": {
         "method": "POST",
         "path": "/api/sign-in/password",
@@ -37,14 +37,14 @@
               "password"
             ]
           },
-          "expiresAt": "2027-12-30T09:50:06.176Z"
+          "expiresAt": "2028-01-01T02:26:34.477Z"
         }
       }
     },
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.220Z",
+      "at": "2026-11-27T02:26:34.528Z",
       "request": {
         "method": "POST",
         "path": "/api/semesters",
@@ -71,7 +71,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.225Z",
+      "at": "2026-11-27T02:26:34.535Z",
       "request": {
         "method": "POST",
         "path": "/api/courses",
@@ -107,7 +107,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.228Z",
+      "at": "2026-11-27T02:26:34.540Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -134,7 +134,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.234Z",
+      "at": "2026-11-27T02:26:34.547Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/folders",
@@ -161,7 +161,7 @@
     {
       "step": "request",
       "name": null,
-      "at": "2026-11-25T09:50:06.238Z",
+      "at": "2026-11-27T02:26:34.553Z",
       "request": {
         "method": "POST",
         "path": "/api/courses/c0000000-0000-4000-8000-000000000301/course-exams",
@@ -195,7 +195,7 @@
     {
       "step": "request",
       "name": "import-check",
-      "at": "2026-11-25T09:50:06.244Z",
+      "at": "2026-11-27T02:26:34.563Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -236,7 +236,7 @@
     {
       "step": "request",
       "name": "import-check-errors",
-      "at": "2026-11-25T09:50:06.246Z",
+      "at": "2026-11-27T02:26:34.566Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -279,7 +279,7 @@
     {
       "step": "request",
       "name": "import-check-not-json",
-      "at": "2026-11-25T09:50:06.247Z",
+      "at": "2026-11-27T02:26:34.567Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -319,7 +319,7 @@
     {
       "step": "request",
       "name": "import-check-exam",
-      "at": "2026-11-25T09:50:06.248Z",
+      "at": "2026-11-27T02:26:34.569Z",
       "request": {
         "method": "POST",
         "path": "/api/imports/check",
@@ -355,7 +355,7 @@
     {
       "step": "request",
       "name": "import",
-      "at": "2026-11-25T09:50:06.250Z",
+      "at": "2026-11-27T02:26:34.571Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -391,7 +391,7 @@
     {
       "step": "request",
       "name": "import-folder",
-      "at": "2026-11-25T09:50:06.256Z",
+      "at": "2026-11-27T02:26:34.578Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -429,7 +429,7 @@
     {
       "step": "request",
       "name": "import-new-folder",
-      "at": "2026-11-25T09:50:06.262Z",
+      "at": "2026-11-27T02:26:34.585Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -466,7 +466,7 @@
     {
       "step": "request",
       "name": "import-new-course",
-      "at": "2026-11-25T09:50:06.267Z",
+      "at": "2026-11-27T02:26:34.592Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -506,7 +506,7 @@
     {
       "step": "request",
       "name": "import-conflict",
-      "at": "2026-11-25T09:50:06.273Z",
+      "at": "2026-11-27T02:26:34.600Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -540,7 +540,7 @@
     {
       "step": "request",
       "name": "import-replace",
-      "at": "2026-11-25T09:50:06.277Z",
+      "at": "2026-11-27T02:26:34.604Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -577,7 +577,7 @@
     {
       "step": "request",
       "name": "import-separate",
-      "at": "2026-11-25T09:50:06.282Z",
+      "at": "2026-11-27T02:26:34.612Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -614,7 +614,7 @@
     {
       "step": "request",
       "name": "import-invalid",
-      "at": "2026-11-25T09:50:06.287Z",
+      "at": "2026-11-27T02:26:34.621Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",
@@ -642,7 +642,7 @@
     {
       "step": "request",
       "name": "import-exam",
-      "at": "2026-11-25T09:50:06.290Z",
+      "at": "2026-11-27T02:26:34.624Z",
       "request": {
         "method": "POST",
         "path": "/api/imports",

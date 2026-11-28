@@ -101,8 +101,12 @@ struct DeleteWorld {
     }
 
     /// Every row of every table, in the order stored.
-    func snapshot() throws -> [String: [[StoreValue]]] {
-        Dictionary(uniqueKeysWithValues: try Self.tables.map { ($0, try harness.rows("SELECT * FROM \($0) ORDER BY rowid")) })
+    func snapshot(omittingChangeTimes: Bool = false) throws -> [String: [[StoreValue]]] {
+        Dictionary(
+            uniqueKeysWithValues: try Self.tables.map { table in
+                let omit = omittingChangeTimes && BankChangeTimeStep.tables.contains(table)
+                return (table, try harness.rows("SELECT * FROM \(table) ORDER BY rowid", omitting: omit ? "updated_at" : nil))
+            })
     }
 
     func send(_ method: String, _ path: String, _ body: JSONValue? = nil) async throws -> (status: Int, body: JSONValue) { try await harness.send(method, path, body) }

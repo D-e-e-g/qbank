@@ -18,6 +18,10 @@ enum BankArchiveReader {
                 for (table, rows) in zip(BankArchiveTables.all, checked.rows) {
                     for row in rows { try transaction.execute(table.insert, row) }
                 }
+                try transaction.execute("DELETE FROM bank_archive")
+                if let stamp = checked.stamp {
+                    try transaction.execute("INSERT INTO bank_archive (singleton, stamp) VALUES (1, ?)", [.text(stamp)])
+                }
                 // Comparison 2: what the bank now holds against the document, inside the transaction.
                 let stored = try BankArchiveWriter.counts(in: transaction)
                 for key in BankArchive.tableKeys where stored[key] != checked.counts[key] {
@@ -37,6 +41,7 @@ enum BankArchiveReader {
 /// table by table in the archive's order.
 struct CheckedArchive {
     let counts: BankCounts
+    let stamp: String?
     let rows: [[[StoreValue]]]
 }
 
@@ -56,6 +61,7 @@ enum BankArchiveCheck {
         guard let exportedAt = top["exportedAt"]?.string, isTime(exportedAt) else { throw BankArchiveError.invalid("exportedAt is not a time.") }
         guard let writtenBy = top["writtenBy"]?.string, writtenBy == "phone" || writtenBy == "server" else { throw BankArchiveError.invalid("writtenBy is neither phone nor server.") }
         guard let complete = top["complete"]?.bool else { throw BankArchiveError.invalid("complete is not true or false.") }
+        if let stamp = top["stamp"], stamp.string == nil { throw BankArchiveError.invalid("stamp is not text.") }
         let counts = try declaredCounts(top["counts"])
         var nodes: [[ArchiveNode]] = []
         for table in BankArchiveTables.all {
@@ -82,7 +88,7 @@ enum BankArchiveCheck {
 
         // 4 and 5. Keys, references, marks and the server's rules for these tables.
         try ArchiveRules(rows: rows).check()
-        return CheckedArchive(counts: counts, rows: rows)
+        return CheckedArchive(counts: counts, stamp: top["stamp"]?.string, rows: rows)
     }
 
     private static func declaredCounts(_ node: ArchiveNode?) throws -> BankCounts {
@@ -99,7 +105,10 @@ enum BankArchiveCheck {
     private static func row(_ node: ArchiveNode, number: Int, of table: ArchiveTable, in document: ArchiveDocument) throws -> [StoreValue] {
         guard let fields = node.fields else { throw BankArchiveError.invalid("\(table.key) row \(number) is not an object, or names a field twice.") }
         return try table.fields.map { field in
-            guard let value = fields[field.name] else { throw BankArchiveError.invalid("\(table.key) row \(number) has no \(field.name).") }
+            guard let value = fields[field.name] else {
+                if field.optional { return .null }
+                throw BankArchiveError.invalid("\(table.key) row \(number) has no \(field.name).")
+            }
             guard let stored = storeValue(value, field, in: document) else {
                 throw BankArchiveError.invalid("\(table.key) row \(number): \(field.name) is not \(field.nullable ? "null or " : "")\(ArchiveKindText.article(field.kind)).")
             }

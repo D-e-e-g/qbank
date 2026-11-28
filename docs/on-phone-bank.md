@@ -2,7 +2,7 @@
 
 The design record for the bank that lives on the iPhone or iPad: how the screens reach it, what it stores, and the one file format that carries a whole bank between the phone and the server. [cloud.md](cloud.md) is its other half: who has which bank, and the rules for moving one.
 
-This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) and the engine's catalog and sets slices (`Packages/QBankKit/Sources/QBankKit/LocalBank`: semesters, courses, topics, pages and folders in I-12; the import check, import, replace, add beside, restore, reading a set and a course's terms in I-13; answers, a set's sittings and run, Start over, Review, a course's counts and the course used last in I-14; exams in I-15: the plan, the all and wrong pools, start and replace, running, grace and time up from the clock, finish, the result by folder and past exams; deleting a set, folder, page, course, topic or past exam with its preview, confirmation and Undo for 30 days in I-16; filing the app's sample set into a bank that has never held anything, through its own import, in I-22) and the bank archive (I-17, `Packages/QBankKit/Sources/QBankKit/Archive`: writing the bank as bank archive v1 and reading one into a fresh bank, with a count check) exist so far. Settings > Export my bank uses the archive (I-25): a free account writes it from the phone, any other user account downloads it from `GET /api/me/bank`, and either file goes to the share sheet. The move to Cloud uses it too (I-34): the phone uploads its whole bank as one archive and switches to the server's copy only after comparison 3 holds ([cloud.md](cloud.md)). So does the way back once Cloud ends (I-35): the phone downloads the whole bank as one archive into a fresh file and switches to it only once its counts equal the archive's in every table. The app uses the store and the engine only for a free account (I-20): the model knows the three kinds of account and a free one answers the bank's requests from the phone. Sign in with Apple on the first screen makes one (I-30): a store account's bank opens on the phone under Apple's user identifier, also when the server cannot be reached yet. Settings > Delete account erases it, with every other file a move to Cloud or the way back left beside it, such as the safety copy, before the server deletes the account (I-32, [cloud.md](cloud.md#getting-in)). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is server commit `3501671` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`). The [time of last change](#the-time-of-last-change) and the [combined bank](#a-combined-bank) are newer than that pin: the server has both, read at commit `d86a61f`, and on the phone they are not built (I-37 for the time of last change and the archive's new fields, which also moves the pin; I-38 and I-39 for the combine, [cloud.md](cloud.md#combining-two-banks)).
+This is a record to build to, not a description of shipped code. Only the store (I-11, `Packages/QBankKit/Sources/QBankKit/Store`) and the engine's catalog and sets slices (`Packages/QBankKit/Sources/QBankKit/LocalBank`: semesters, courses, topics, pages and folders in I-12; the import check, import, replace, add beside, restore, reading a set and a course's terms in I-13; answers, a set's sittings and run, Start over, Review, a course's counts and the course used last in I-14; exams in I-15: the plan, the all and wrong pools, start and replace, running, grace and time up from the clock, finish, the result by folder and past exams; deleting a set, folder, page, course, topic or past exam with its preview, confirmation and Undo for 30 days in I-16; filing the app's sample set into a bank that has never held anything, through its own import, in I-22) and the bank archive (I-17, `Packages/QBankKit/Sources/QBankKit/Archive`: writing the bank as bank archive v1 and reading one into a fresh bank, with a count check) exist so far. Settings > Export my bank uses the archive (I-25): a free account writes it from the phone, any other user account downloads it from `GET /api/me/bank`, and either file goes to the share sheet. The move to Cloud uses it too (I-34): the phone uploads its whole bank as one archive and switches to the server's copy only after comparison 3 holds ([cloud.md](cloud.md)). So does the way back once Cloud ends (I-35): the phone downloads the whole bank as one archive into a fresh file and switches to it only once its counts equal the archive's in every table. The app uses the store and the engine only for a free account (I-20): the model knows the three kinds of account and a free one answers the bank's requests from the phone. Sign in with Apple on the first screen makes one (I-30): a store account's bank opens on the phone under Apple's user identifier, also when the server cannot be reached yet. Settings > Delete account erases it, with every other file a move to Cloud or the way back left beside it, such as the safety copy, before the server deletes the account (I-32, [cloud.md](cloud.md#getting-in)). Statements about today's code name the file and line; they were read at app commit `45ec726` and server commit `b913bcc` (`D-e-e-g/qbank-server`, whose paths start with `apps/` or `packages/`). The contract this repository pins is server commit `d86a61f` (`Packages/QBankKit/Tests/QBankKitTests/Fixtures/pin.json`). The phone keeps the [time of last change](#the-time-of-last-change) and the archive's `updatedAt` and `stamp` (I-37); the [combined bank](#a-combined-bank) is not built on the phone (I-38 and I-39, [cloud.md](cloud.md#combining-two-banks)).
 
 Ids such as A1, I-11 and S-09 name calls and pull requests in the App Store release plan. The maintainers keep that plan outside this repository, and a worker's brief says where.
 
@@ -105,6 +105,8 @@ A column's name is the field's name below in snake case (`sortOrder` is `sort_or
 | `review_clear` (`reviewClears`) | `questionLineageId` (id, the key), `lastAttemptId` (an attempt), `clearedAt` (time) | `schema.ts:424-437` |
 | `study_place` (`studyPlace`) | `courseId` (a course), `updatedAt` (time). At most one row. | `schema.ts:440-448` |
 
+Schema step 2 adds a nullable `updated_at` to `semester`, `course`, `course_exam`, `folder`, `practice_set` and `study_session`, and a one-row `bank_archive` table that keeps the archive `stamp` the bank was last read from. Older rows keep their values and start with no change time. When a routed request inserts or changes a row, the phone stamps it with the engine clock for that transaction. An archive import preserves the times it receives.
+
 Notes for I-11:
 
 - A folder's name is unique within its list, counting each delete apart: the server's constraint is `unique nulls not distinct (course_id, course_exam_id, name, deletion_id)` (`apps/api/src/db/deletion-migration.ts:19`). SQLite treats nulls as distinct, so the phone needs a unique index over expressions that fold null to a fixed value.
@@ -131,7 +133,7 @@ These are the fields the server writes from a combined bank. Every other field i
 The other tables keep no time of last change. A question changes only in its `weekLabel`, which follows its folder's name, and only together with its set, so its set's time is its own. A Review clear carries `clearedAt` and the course last used `updatedAt`. Terms and answers never change, and progress is worked out from the answers.
 
 - **On the server** (S-14) each of the six has a nullable `updated_at`, which the database sets on every update that changes the row, to the time of its transaction (`apps/api/src/db/updated-at-migration.ts`). An update that leaves every value as it was keeps the row's time, one that writes a new time itself keeps the time it wrote, and a new row has none.
-- **On the phone** (I-37) schema step 2 adds `updated_at` to the same six tables, and it follows the same rules from the engine's injected clock. It is stamped in one place: every write already goes through one transaction for each request (`Packages/QBankKit/Sources/QBankKit/LocalBank/LocalBank.swift:117`), so the engine's update statements need no change each. Reading an archive, and a combine, store the times they carry.
+- **On the phone** (I-37) schema step 2 adds `updated_at` to the same six tables, and it follows the same rules for updates from the engine's injected clock. A new row differs: the phone stamps it with the time it was made, where the server leaves it absent. The two mean the same to a combine, because under WIN-1 a row with no time of last change has the time it was made. It is stamped in one place: every write already goes through one transaction for each request (`Packages/QBankKit/Sources/QBankKit/LocalBank/LocalBank.swift:119`), so the engine's update statements need no change each. Reading an archive, and a combine, store the times they carry.
 
 ### What is not on the phone
 
@@ -160,7 +162,7 @@ One JSON object, UTF-8, with these keys:
 | `writtenBy` | `phone` or `server` |
 | `complete` | A bool: false when the writer had to leave a row out (see Closed, below) |
 | `counts` | An object with the twelve table keys, each an integer |
-| `stamp` | A text, optional: the server's fingerprint of the bank it holds, written on every download. A reader compares it for equality and reads nothing else from it. A combined bank must carry the one it was built from; an upload does not read it. |
+| `stamp` | A text, optional: the server's fingerprint of the bank it holds, written on every download. A reader compares it for equality and reads nothing else from it. A combined bank must carry the one it was built from; an upload does not read it. The phone keeps the one it read and writes it back; a bank made on the phone has none. |
 | `semesters`, `courses`, `courseExams`, `folders`, `practiceSets`, `questions`, `terms`, `studySessions`, `attempts`, `questionProgress`, `reviewClears` | Each a list of rows |
 | `studyPlace` | One row, or null |
 
@@ -178,7 +180,7 @@ One JSON object, UTF-8, with these keys:
 }
 ```
 
-(The other lists are left out of the example. A real document has every key.)
+(The other lists are left out of the example. A real document has every table key.)
 
 ### Rows and fields
 
@@ -219,8 +221,8 @@ Only after the comparisons hold does the authority change ([cloud.md](cloud.md))
 A reader stores an archive whole or not at all, in one transaction. It refuses the document, and stores nothing, unless all of this holds:
 
 1. It is one JSON object, `format` is `qbank-bank-archive`, and `version` is a version the reader implements.
-2. Every key of the document is present, and `counts` passes comparison 1.
-3. Every row has every field with a value of the field's kind. A field the reader does not know is ignored.
+2. Every required key of the document is present, and `counts` passes comparison 1.
+3. Every row has its required fields, and each known field present has a value of its declared kind. A field the reader does not know is ignored.
 4. Keys are unique within a table, and `clientAttemptId` is unique among attempts.
 5. The document is closed, a deletable row's two marks are both null or both set, and a course has a semester exactly when its kind is `course`.
 6. Comparison 2 holds.
@@ -261,7 +263,7 @@ The stamp is made from each table's row count and the latest time of change in e
 
 ### Versions
 
-`version` goes up when a field is removed or renamed, or when what a field means changes. A new field does not change it, and a reader ignores a field it does not know. That makes a new field safe only if losing it on a round trip through an older app is harmless; a field that must survive needs version 2. `updatedAt` and `stamp` are the exception: they joined version 1 while no app that reads version 1 was in the App Store, so every app that ships reads them. Until I-37 the phone's reader ignores them.
+`version` goes up when a field is removed or renamed, or when what a field means changes. A new field does not change it, and a reader ignores a field it does not know. That makes a new field safe only if losing it on a round trip through an older app is harmless; a field that must survive needs version 2. `updatedAt` and `stamp` are the exception: they joined version 1 while no app that reads version 1 was in the App Store, so every app that ships reads them.
 
 A reader refuses a version it does not implement. Apps in the field cannot be changed after they ship, so `GET /api/me/bank` answers version 1 for as long as an app that reads only version 1 is supported, and a later version is asked for by name.
 

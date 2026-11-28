@@ -18,14 +18,14 @@ struct LocalStoreSchemaTests {
         func columns(_ table: String) throws -> [String] {
             try store.run("SELECT name FROM pragma_table_info('\(table)') ORDER BY cid").compactMap { $0.text("name") }
         }
-        #expect(try columns("semester") == ["id", "number", "name", "starts_on", "ends_on", "archived_at", "created_at"])
-        #expect(try columns("course") == ["id", "semester_id", "kind", "code", "title", "sort_order", "archived_at", "created_at", "deleted_at", "deletion_id"])
-        #expect(try columns("course_exam") == ["id", "course_id", "name", "sort_order", "link_url", "badge", "created_at", "deleted_at", "deletion_id"])
-        #expect(try columns("folder") == ["id", "course_id", "name", "course_exam_id", "sort_order", "created_at", "deleted_at", "deletion_id"])
+        #expect(try columns("semester") == ["id", "number", "name", "starts_on", "ends_on", "archived_at", "created_at", "updated_at"])
+        #expect(try columns("course") == ["id", "semester_id", "kind", "code", "title", "sort_order", "archived_at", "created_at", "deleted_at", "deletion_id", "updated_at"])
+        #expect(try columns("course_exam") == ["id", "course_id", "name", "sort_order", "link_url", "badge", "created_at", "deleted_at", "deletion_id", "updated_at"])
+        #expect(try columns("folder") == ["id", "course_id", "name", "course_exam_id", "sort_order", "created_at", "deleted_at", "deletion_id", "updated_at"])
         #expect(
             try columns("practice_set") == [
                 "id", "course_id", "lineage_id", "title", "description", "week_label", "folder_id", "sort_order", "imported_at", "file_hash", "stats", "is_current",
-                "replaced_at", "kind", "deleted_at", "deletion_id",
+                "replaced_at", "kind", "deleted_at", "deletion_id", "updated_at",
             ])
         #expect(
             try columns("question") == [
@@ -36,7 +36,7 @@ struct LocalStoreSchemaTests {
         #expect(
             try columns("study_session") == [
                 "id", "course_id", "mode", "set_id", "question_ids", "exam_weeks", "exam_folder_ids", "time_limit_seconds", "started_at", "finished_at", "score",
-                "end_reason", "exam_pool", "exam_practice_weeks", "seeded_question_ids", "deleted_at", "deletion_id",
+                "end_reason", "exam_pool", "exam_practice_weeks", "seeded_question_ids", "deleted_at", "deletion_id", "updated_at",
             ])
         #expect(
             try columns("attempt") == [

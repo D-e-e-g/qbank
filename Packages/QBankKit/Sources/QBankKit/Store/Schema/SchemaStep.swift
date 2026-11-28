@@ -11,7 +11,7 @@ struct SchemaStep: Sendable {
 
 enum SchemaSteps {
     /// Every step, oldest first.
-    static let all: [SchemaStep] = [BankTablesStep.step]
+    static let all: [SchemaStep] = [BankTablesStep.step, BankChangeTimeStep.step]
 
     static func validate(_ steps: [SchemaStep]) throws(StoreError) {
         guard steps.enumerated().allSatisfy({ $0.element.number == $0.offset + 1 }) else { throw .invalidSteps }
