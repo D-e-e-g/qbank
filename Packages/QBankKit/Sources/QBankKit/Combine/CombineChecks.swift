@@ -37,12 +37,12 @@ extension CombinePlan {
         return affected
     }
 
-    func rebuildAndCheck(in tx: StoreTransaction) throws {
-        let lineages = try tx.rows("SELECT DISTINCT lineage_id FROM question").map { $0.string("lineage_id") }
-        let expected = try ProgressRebuild.expected(tx, lineageIDs: lineages)
-        let affected = affectedProgress()
-        try ProgressRebuild.write(expected.filter { affected.contains($0.key) }, in: tx)
+    /// WIN-10: progress is worked out again only where the combine changed its answers.
+    func rebuildProgress(in tx: StoreTransaction) throws {
+        try ProgressRebuild.write(ProgressRebuild.expected(tx, lineageIDs: Array(affectedProgress())), in: tx)
+    }
 
+    func check(in tx: StoreTransaction) throws {
         // A and B are measured on the stored result, against the original inputs and actual
         // joins. A missing progress row or an accidental extra row also fails these checks.
         let counts = try BankArchiveWriter.counts(in: tx)
@@ -62,8 +62,10 @@ extension CombinePlan {
                 counts[table.key] == held.count + incoming.count - matches.count
             else { throw BankArchiveError.invalid("the combined \(table.key) do not account for both banks.") }
         }
-        // C. The engine may keep an old line when every answer belonged to a deleted exam.
-        // Every line with a counting answer must agree in every field with the engine.
+        // C. Every question the combine gave a changed answer, clear or delete mark agrees in every
+        // field with a fresh rebuild. A line whose answers all belong to a deleted exam keeps its row,
+        // and a row the combine did not touch is the server's own and never stops a switch.
+        let expected = try ProgressRebuild.expected(tx, lineageIDs: Array(affectedProgress()))
         let progress = try tx.rows("SELECT * FROM question_progress").map(ProgressRebuild.Line.init)
         let stored = Dictionary(uniqueKeysWithValues: progress.map { ($0.lineageId, $0) })
         guard expected.allSatisfy({ stored[$0.key] == $0.value }) else {

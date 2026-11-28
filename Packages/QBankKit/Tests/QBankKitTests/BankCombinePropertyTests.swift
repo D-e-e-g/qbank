@@ -33,34 +33,50 @@ extension BankCombineTests {
         let answers = try stored.run("SELECT client_attempt_id FROM attempt")
         #expect(Set(answers.map { $0.string("client_attempt_id") }) == expectedAnswers)
         #expect(answers.count == expectedAnswers.count)
-        let joins = Dictionary(grouping: first.ledger.joins, by: \.table)
+        // The worlds differ only in their ids and, when the file is not shared, the folder's name.
+        // A row of either bank is the same item as one of the other when it has the same place in
+        // what both built: the semester number, the course code or topic title, the page and folder
+        // name, a set's folder and file, a question's position, a term's key and an answer's client id.
+        let set = "(SELECT lower(f.name) || '/' || ps.file_hash FROM practice_set ps JOIN folder f ON f.id = ps.folder_id WHERE ps.id = %@)"
+        let question = "(SELECT \(set.replacingOccurrences(of: "%@", with: "q.set_id")) || '#' || q.position FROM question q WHERE q.lineage_id = %@ LIMIT 1)"
+        let places: [String: String] = [
+            "semesters": "SELECT id AS key, CAST(number AS TEXT) AS place FROM semester",
+            "courses": "SELECT id AS key, kind || ':' || lower(CASE kind WHEN 'topic' THEN title ELSE code END) AS place FROM course",
+            "courseExams": "SELECT id AS key, lower(name) AS place FROM course_exam",
+            "folders": "SELECT id AS key, lower(name) AS place FROM folder",
+            "practiceSets": "SELECT id AS key, \(set.replacingOccurrences(of: "%@", with: "practice_set.id")) AS place FROM practice_set",
+            "questions": "SELECT id AS key, \(set.replacingOccurrences(of: "%@", with: "question.set_id")) || '#' || position AS place FROM question",
+            "terms": "SELECT id AS key, \(set.replacingOccurrences(of: "%@", with: "term.set_id")) || '#' || key AS place FROM term",
+            "studySessions": "SELECT id AS key, id AS place FROM study_session",
+            "attempts": "SELECT id AS key, client_attempt_id AS place FROM attempt",
+            "questionProgress": "SELECT question_lineage_id AS key, \(question.replacingOccurrences(of: "%@", with: "question_lineage_id")) AS place FROM question_progress",
+            "reviewClears": "SELECT question_lineage_id AS key, \(question.replacingOccurrences(of: "%@", with: "question_lineage_id")) AS place FROM review_clear",
+            "studyPlace": "SELECT 'place' AS key, 'place' AS place FROM study_place",
+        ]
+        // Progress and clears follow their question to the server's lineage even when only the phone has a row.
+        let lineages = Dictionary(
+            uniqueKeysWithValues: try server.store.run("SELECT DISTINCT o.lineage_id AS key, \(question.replacingOccurrences(of: "%@", with: "o.lineage_id")) AS place FROM question o")
+                .compactMap { row in row.text("place").map { ($0, row.string("key")) } })
         let counts = try BankArchive.counts(of: stored)
-        let localCounts = try BankArchive.counts(of: phone.store)
-        let remoteCounts = try BankArchive.counts(of: server.store)
+        var joined = 0
         for table in BankArchiveTables.all {
+            let sql = try #require(places[table.key])
             let key = table.rowKey.map(table.column(of:)) ?? "'place'"
-            let sql = "SELECT \(key) AS key FROM \(table.table)"
-            let resultKeys = Set(try stored.run(sql).map { $0.string("key") })
-            let serverKeys = Set(try server.store.run(sql).map { $0.string("key") })
-            let phoneKeys = Set(try phone.store.run(sql).map { $0.string("key") })
-            let pairs = Dictionary(uniqueKeysWithValues: (joins[table.key] ?? []).map { ($0.phoneKey, $0.serverKey) })
-            #expect(serverKeys.isSubset(of: resultKeys))
-            // A progress row can acquire the other import's question lineage even when only
-            // the phone answered that question. Read its canonical lineage through the question.
-            var mapped: Set<String> = []
-            for source in phoneKeys {
-                if table.key == "questionProgress", pairs[source] == nil, sharedFile {
-                    let sql = "SELECT position FROM question WHERE lineage_id = ?"
-                    let position = try #require(try phone.store.run(sql, [.text(source)]).first?[0])
-                    let target = try #require(try server.store.run("SELECT lineage_id FROM question WHERE position = ?", [position]).first?.text("lineage_id"))
-                    mapped.insert(target)
-                } else {
-                    mapped.insert(pairs[source] ?? source)
-                }
+            let resultKeys = Set(try stored.run("SELECT \(key) AS key FROM \(table.table)").map { $0.string("key") })
+            func read(_ store: LocalStore) throws -> [(key: String, place: String)] {
+                try store.run(sql).map { row in (row.string("key"), try #require(row.text("place"))) }
             }
-            #expect(resultKeys == serverKeys.union(mapped))
-            #expect(counts[table.key] == (localCounts[table.key] ?? 0) + (remoteCounts[table.key] ?? 0) - pairs.count)
+            let held = try read(server.store)
+            let serverByPlace = Dictionary(uniqueKeysWithValues: held.map { ($0.place, $0.key) })
+            let incoming = try read(phone.store)
+            let follows = table.key == "questionProgress" || table.key == "reviewClears" ? lineages : serverByPlace
+            let mapped = Set(incoming.map { follows[$0.place] ?? $0.key })
+            let paired = incoming.filter { serverByPlace[$0.place] != nil }.count
+            joined += paired
+            #expect(resultKeys == Set(held.map(\.key)).union(mapped), "\(table.key)")
+            #expect(counts[table.key] == held.count + incoming.count - paired, "\(table.key)")
         }
+        #expect(joined > 0)
         let beforeRebuild = try stored.run("SELECT * FROM question_progress ORDER BY question_lineage_id")
         try stored.transaction { tx in
             let ids = try tx.rows("SELECT lineage_id FROM question").map { $0.string("lineage_id") }

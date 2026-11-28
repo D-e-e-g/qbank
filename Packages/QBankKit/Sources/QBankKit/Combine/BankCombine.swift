@@ -43,7 +43,8 @@ public enum BankCombine {
         try store.transaction { tx in
             try plan.store(in: tx, stamp: stamp)
             try plan.closeCompetingExams(in: tx)
-            try plan.rebuildAndCheck(in: tx)
+            try plan.rebuildProgress(in: tx)
+            try plan.check(in: tx)
         }
         let ledger = try Ledger(
             joins: plan.joins, namesKept: plan.namesKept, phone: incoming.summary, server: held.summary,

@@ -140,19 +140,68 @@ extension BankCombineTests {
         #expect(throws: BankArchiveError.incomplete) { try BankCombine.combine(phone: local, server: ArchiveWorld.serialized(incomplete), at: World.date) }
     }
 
-    @Test("Check C refuses missing progress and leaves the free bank file as it was")
+    @Test("WIN-10: check C covers the questions the combine changed, so a server progress row it left alone never stops a switch")
+    func untouchedServerProgress() async throws {
+        let server = try await World.make("cc000000")
+        try await server.study.answer(0, choice: 2, number: 1)
+        try await server.study.answer(1, choice: 2, number: 2)
+        let other = try #require(try server.store.run("SELECT lineage_id FROM question WHERE id = ?", [.text(server.study.questions[1])]).first?[0])
+        // A row the server keeps by its own rules, which a rebuild from its one answer would not give.
+        try server.store.run("UPDATE question_progress SET attempts = 5, in_review = 0 WHERE question_lineage_id = ?", [other])
+        let phone = try await World.make("dd000000")
+        phone.study.harness.set(World.date.addingTimeInterval(10))
+        try await phone.study.answer(0, choice: 0, number: 3)
+        let (store, _) = try phone.combine(into: server)
+        let sql = "SELECT attempts, in_review FROM question_progress WHERE question_lineage_id = ?"
+        #expect(try store.run(sql, [other]) == server.store.run(sql, [other]))
+        let changed = try #require(try store.run("SELECT lineage_id FROM question WHERE id = ?", [.text(server.study.questions[0])]).first?[0])
+        #expect(try store.run("SELECT attempts, correct_attempts, last_status FROM question_progress WHERE question_lineage_id = ?", [changed]).first?.values == [2, 1, "correct"])
+    }
+
+    @Test("WIN-10: check C refuses a stored progress row of a question the combine changed that differs from a fresh rebuild")
+    func wrongAffectedProgress() async throws {
+        let server = try await World.make("cc000000")
+        try await server.study.answer(1, choice: 2, number: 1)
+        let phone = try await World.make("dd000000")
+        try await phone.study.answer(0, choice: 0, number: 2)
+        let changed = try #require(try server.store.run("SELECT lineage_id FROM question WHERE id = ?", [.text(server.study.questions[0])]).first?[0])
+        let untouched = try #require(try server.store.run("SELECT lineage_id FROM question WHERE id = ?", [.text(server.study.questions[1])]).first?[0])
+        for (lineage, refused) in [(changed, true), (untouched, false)] {
+            var plan = try CombinePlan(phone: CombineBank(World.archive(phone.store)), server: CombineBank(World.archive(server.store, server: true)), now: World.date)
+            try plan.combineCatalog()
+            try plan.combineSets()
+            try plan.combineStudy()
+            try LocalStore.inMemory().transaction { tx in
+                try plan.store(in: tx, stamp: World.stamp)
+                try plan.closeCompetingExams(in: tx)
+                try plan.rebuildProgress(in: tx)
+                try plan.check(in: tx)
+                try tx.execute("UPDATE question_progress SET attempts = attempts + 1 WHERE question_lineage_id = ?", [lineage])
+                #expect(try tx.rows("SELECT attempts FROM question_progress WHERE question_lineage_id = ?", [lineage]).first?.integer("attempts") == 2)
+                if refused {
+                    #expect(throws: BankArchiveError.self) { try plan.check(in: tx) }
+                } else {
+                    try plan.check(in: tx)
+                }
+            }
+        }
+    }
+
+    @Test("A refused combine leaves the free bank file as it was")
     func failurePreservesFreeBank() async throws {
         let initial = try await World.make("dd000000")
         try await initial.study.answer(0, choice: 1, number: 1)
+        try await initial.study.answer(1, choice: 0, number: 2)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let disk = try LocalStore.open(directory: directory)
         try BankArchive.read(World.archive(initial.store), into: disk)
         let before = try World.archive(disk)
-        let other = try await World.make("cc000000")
-        try await other.study.answer(1, choice: 0, number: 2)
-        try other.store.run("DELETE FROM question_progress")
+        // ID-14: matching by id and by client id would pick different answers.
+        let other = try initial.copy()
+        try other.store.run("UPDATE attempt SET client_attempt_id = ? WHERE client_attempt_id = ?", [.text(StudySet.attemptID(3)), .text(StudySet.attemptID(2))])
+        try other.store.run("UPDATE attempt SET client_attempt_id = ? WHERE client_attempt_id = ?", [.text(StudySet.attemptID(2)), .text(StudySet.attemptID(1))])
         #expect(throws: BankArchiveError.self) { try BankCombine.combine(phone: before, server: World.archive(other.store, server: true), at: World.date) }
         #expect(try World.archive(disk) == before)
         #expect(try ArchiveWorld.dump(disk) == ArchiveWorld.dump(initial.store))
